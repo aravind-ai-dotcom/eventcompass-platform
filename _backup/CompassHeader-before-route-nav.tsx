@@ -18,15 +18,13 @@ type EnrollState = "new" | "enrolled";
 const NAV_ENROLLED = [
   { href: "/experience",    label: "My Experience" },
   { href: "/explore",       label: "Explore" },
-  { href: "/sessions",      label: "Sessions" },
-  { href: "/champions",     label: "Champions" },
+  { href: "/sessions",      label: "Session Guide" },
   { href: "/pulse",         label: "Pulse" },
 ];
 
 const NAV_NEW = [
   { href: "/explore",       label: "Explore" },
-  { href: "/sessions",      label: "Sessions" },
-  { href: "/champions",     label: "Champions" },
+  { href: "/sessions",      label: "Session Guide" },
   { href: "/pulse",         label: "Pulse" },
 ];
 
