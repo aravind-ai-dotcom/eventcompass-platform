@@ -30,10 +30,11 @@
 // =============================================================================
 
 import type {
-  NextBestMove as NextBestMoveType,
+  NextBestMove as NextBestMoveData,
   ScoredSession,
   ScoredChampion,
 } from "@/types";
+
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NextBestMoveProps {
-  nextBestMove:   NextBestMoveType;
+  nextBestMove: NextBestMoveData;
   topSession?:    ScoredSession | null;
   topChampion?:   ScoredChampion | null;
   onSkip?:        () => void;
@@ -49,12 +50,22 @@ interface NextBestMoveProps {
   onViewDetails?: () => void;
 }
 
+interface Props {
+  nextBestMove: NextBestMoveData;
+  topSession?: any;
+  topChampion?: any;
+  onSkip?: () => void;
+  onDone?: () => void;
+  onViewDetails?: () => void;
+
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Type badge metadata — one entry per NextBestMoveType value
+// Type badge metadata — one entry per NextBestMoveData value
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TYPE_META: Record<
-  NextBestMoveType["type"],
+  NextBestMoveData["type"],
   { label: string; symbol: string }
 > = {
   session:   { label: "Session",   symbol: "▶" },
@@ -68,7 +79,7 @@ const TYPE_META: Record<
 // TypeBadge — accent-outlined pill with symbol + label
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TypeBadge({ type }: { type: NextBestMoveType["type"] }) {
+function TypeBadge({ type }: { type: NextBestMoveData["type"] }) {
   const { label, symbol } = TYPE_META[type];
   return (
     <span
@@ -185,120 +196,77 @@ export default function NextBestMove({
         }}
       >
 
-        {/* Left column: all recommendation copy + actions */}
-        <div>
 
-          {/* Row: kicker + type badge */}
-          <div
-            style={{
-              display:      "flex",
-              alignItems:   "center",
-              gap:          "12px",
-              marginBottom: "18px",
-              flexWrap:     "wrap",
-            }}
-          >
-            <span
-              className="next-best-move-label"
-              style={{ margin: 0, display: "block" }}
-            >
-              Your next best move
-            </span>
-            <TypeBadge type={nextBestMove.type} />
-          </div>
-
-          {/* Headline — the primary action */}
-          <h2
-            style={{
-              fontSize:      "clamp(1.8rem, 3.2vw, 2.8rem)",
-              lineHeight:    1.0,
-              letterSpacing: "-0.048em",
-              fontWeight:    520,
-              margin:        "0 0 12px",
-              color:         "var(--text)",
-            }}
-          >
-            {nextBestMove.headline}
-          </h2>
-
-          {/* Subline — logistics: time, room, org, availability */}
-          {nextBestMove.subline && (
-            <p
-              style={{
-                color:      "var(--soft)",
-                fontSize:   "1rem",
-                lineHeight: 1.5,
-                margin:     "0 0 18px",
-              }}
-            >
-              {nextBestMove.subline}
-            </p>
-          )}
-
-          {/* Reason — why Compass surfaced this */}
-          {nextBestMove.reason && (
-            <div
-              style={{
-                display:    "flex",
-                gap:        "10px",
-                alignItems: "flex-start",
-                marginBottom: "22px",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  color:         "var(--accent)",
-                  fontSize:      "0.68rem",
-                  fontWeight:    680,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  paddingTop:    "3px",
-                  flexShrink:    0,
-                  minWidth:      "30px",
-                }}
-              >
-                Why
-              </span>
-              <p
-                style={{
-                  color:      "var(--muted)",
-                  fontSize:   "0.95rem",
-                  lineHeight: 1.58,
-                  margin:     0,
-                }}
-              >
-                {nextBestMove.reason}
-              </p>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div
-            style={{
-              display:  "flex",
-              gap:      "10px",
-              flexWrap: "wrap",
-            }}
-          >
-            <ActionButton
-              label="View Details"
-              variant="primary"
-              onClick={onViewDetails}
-            />
-            <ActionButton
-              label="Done"
-              variant="secondary"
-              onClick={onDone}
-            />
-            <ActionButton
-              label="Skip"
-              variant="secondary"
-              onClick={onSkip}
-              muted
-            />
-          </div>
+return (
+  <div
+    style={{
+      border: "1px solid var(--accent)",
+      background: "var(--panel)",
+    }}
+  >
+    <div
+      style={{
+        padding: "28px 28px 26px",
+        display: "grid",
+        gridTemplateColumns: hasScore ? "minmax(0, 1fr) auto" : "minmax(0, 1fr)",
+        gap: "24px",
+        alignItems: "start",
+      }}
+    >
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px", flexWrap: "wrap" }}>
+          <span className="next-best-move-label" style={{ margin: 0, display: "block" }}>
+            Your next best move
+          </span>
+          <TypeBadge type={nextBestMove.type} />
         </div>
+
+        <h2 style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)", lineHeight: 1, letterSpacing: "-0.048em", fontWeight: 520, margin: "0 0 12px", color: "var(--text)" }}>
+          {nextBestMove.headline}
+        </h2>
+
+        {nextBestMove.subline && (
+          <p style={{ color: "var(--soft)", fontSize: "1rem", lineHeight: 1.5, margin: "0 0 18px" }}>
+            {nextBestMove.subline}
+          </p>
+        )}
+
+        {nextBestMove.reason && (
+          <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "22px" }}>
+            <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: "0.68rem", fontWeight: 680, letterSpacing: "0.1em", textTransform: "uppercase", paddingTop: "3px", flexShrink: 0, minWidth: "30px" }}>
+              Why
+            </span>
+            <p style={{ color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.58, margin: 0 }}>
+              {nextBestMove.reason}
+            </p>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <ActionButton label="View Details" variant="primary" onClick={onViewDetails} />
+          <ActionButton label="Done" variant="secondary" onClick={onDone} />
+          <ActionButton label="Skip" variant="secondary" onClick={onSkip} muted />
+        </div>
+      </div>
+
+      {hasScore && <ScoreBadge score={nextBestMove.score as number} />}
+    </div>
+
+    <div style={{ height: "1px", background: "var(--line)" }} />
+
+    <div style={{ padding: "24px" }}>
+      <VoiceCompassButton
+        nextBestMove={nextBestMove}
+        topSession={topSession ?? null}
+        topChampion={topChampion ?? null}
+        onDismiss={onSkip}
+        onMarkAttended={onDone}
+      />
+    </div>
+  </div>
+);
+
+
 
         {/* Right column: score badge */}
         {hasScore && <ScoreBadge score={nextBestMove.score as number} />}
@@ -346,7 +314,6 @@ export default function NextBestMove({
           />
         </div>
       </div>
-
     </div>
   );
 }

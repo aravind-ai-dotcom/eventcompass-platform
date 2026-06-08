@@ -24,7 +24,7 @@
 // =============================================================================
 
 import { useEffect, useState } from "react";
-import { db } from "../../src/lib/firebase";
+import { db } from "../../lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
 
@@ -516,7 +516,7 @@ function PillarSection({
 
 // ── Next best move ──────────────────────────────────────────────────────────────
 
-function NextBestMove({ session }: { session: ScoredSession }) {
+function LegacyNextBestMove({ session }: { session: ScoredSession }) {
   const type  = sessionTypeLabel(session);
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
@@ -792,20 +792,22 @@ export default function ExperiencePage() {
               <h2>Your next best move.</h2>
             </div>
           </div>
-<NextBestMoveCard
+          <NextBestMoveCard
 
   nextBestMove={{
     type: "session",
     headline: nextBestMove.title,
-    subline: `${sessionTypeLabel(nextBestMove)} · ${sessionMeta(nextBestMove)}`,
+    subline: sessionMeta(nextBestMove),
     reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
     score: nextBestMove.compass_score,
     entityId: nextBestMove.id,
 
   }}
   topSession={nextBestMove}
-  topChampion={champions[0] ?? null}
-/>        </section>
+  topChampion={champions[0]}
+
+/>
+        </section>
       )}
 
       {/* ── Learning pillar ───────────────────────────────────────────────── */}
