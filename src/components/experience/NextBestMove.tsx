@@ -12,9 +12,11 @@ import type {
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 
 interface NextBestMoveProps {
-  nextBestMove: NextBestMoveData;
-  topSession?: ScoredSession | null;
-  topChampion?: ScoredChampion | null;
+  nextBestMove:        NextBestMoveData;
+  topSession?:         ScoredSession | null;
+  topChampion?:        ScoredChampion | null;
+  participantGoals?:   string[];
+  participantTracks?:  string[];
   onSkip?: () => void;
   onDone?: () => void;
   onViewDetails?: () => void;
@@ -113,6 +115,8 @@ export default function NextBestMove({
   nextBestMove,
   topSession,
   topChampion,
+  participantGoals,
+  participantTracks,
   onSkip,
   onDone,
   onViewDetails,
@@ -251,6 +255,8 @@ export default function NextBestMove({
           nextBestMove={nextBestMove}
           topSession={topSession ?? null}
           topChampion={topChampion ?? null}
+          participantGoals={participantGoals ?? []}
+          participantTracks={participantTracks ?? []}
           onDismiss={onSkip}
           onMarkAttended={onDone}
         />

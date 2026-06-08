@@ -50,6 +50,8 @@ interface VoiceCompassButtonProps {
   nextBestMove?:           NextBestMove | null;
   topSession?:             ScoredSession | null;
   topChampion?:            ScoredChampion | null;
+  participantGoals?:       string[];
+  participantTracks?:      string[];
   onDismiss?:              () => void;
   onMarkAttended?:         () => void;
   onNavigateExperience?:   () => void;
@@ -141,6 +143,8 @@ export default function VoiceCompassButton({
   nextBestMove,
   topSession,
   topChampion,
+  participantGoals,
+  participantTracks,
   onDismiss,
   onMarkAttended,
   onNavigateExperience,
@@ -193,9 +197,11 @@ export default function VoiceCompassButton({
     setTimeout(() => {
       const classified = classifyVoiceIntent(text);
       const voiceResp  = buildVoiceResponse(classified, {
-        nextBestMove: nextBestMove ?? null,
-        topSession:   topSession   ?? null,
-        topChampion:  topChampion  ?? null,
+        nextBestMove:       nextBestMove      ?? null,
+        topSession:         topSession        ?? null,
+        topChampion:        topChampion       ?? null,
+        participantGoals:   participantGoals  ?? [],
+        participantTracks:  participantTracks ?? [],
       });
 
       setResponse(voiceResp);
@@ -212,8 +218,21 @@ export default function VoiceCompassButton({
       if (voiceResp.action === "mark_attended" && onMarkAttended) {
         onMarkAttended();
       }
+      if (voiceResp.action === "show_day" && onNavigateExperience) {
+        onNavigateExperience();
+      }
     }, 300);
-  }, [nextBestMove, topSession, topChampion, speak, onDismiss, onMarkAttended, onNavigateExperience]);
+  }, [
+  nextBestMove,
+  topSession,
+  topChampion,
+  participantGoals,
+  participantTracks,
+  speak,
+  onDismiss,
+  onMarkAttended,
+  onNavigateExperience,
+]);
 
   // ── Start listening ─────────────────────────────────────────────────────────
   const startListening = useCallback(() => {
