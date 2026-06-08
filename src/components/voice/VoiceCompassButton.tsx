@@ -300,31 +300,9 @@ export default function VoiceCompassButton({
   const showError    = voiceState === "error";
   const unsupported  = voiceState === "unsupported";
 
-console.log("VoiceCompassButton state:", voiceState);
-
   return (
     <>
-    <div
-
-  style={{
-
-    padding: "12px",
-
-    marginBottom: "12px",
-
-    border: "2px solid red",
-
-    color: "red",
-
-    fontWeight: 700,
-
-  }}
-
->
-
-  VOICE COMPONENT IS LOADED
-
-</div>
+    
       {/* Keyframe injection — scoped, no external stylesheet needed */}
       <style>{`
         @keyframes compass-pulse {
@@ -337,12 +315,11 @@ console.log("VoiceCompassButton state:", voiceState);
         }
       `}</style>
 
-      <div
-        style={{
-          border:     "1px solid var(--line)",
-          background: "var(--panel)",
-          padding:    "24px",
-        }}
+<div
+  style={{
+    background: "transparent",
+    padding: "24px 28px 28px",
+  }}
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <div
