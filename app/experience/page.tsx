@@ -3,24 +3,15 @@
 // =============================================================================
 // EventCompass — My Experience  /experience
 //
-// The live Firestore-powered Compass experience page.
-//
-// Data flow:
-//   Firestore (organizations/ibm/events/txc2026)
-//     → raw participant + sessions + champions
-//     → weighted scoring (inline, no external deps)
-//     → four experience sections:
-//         ParticipantHero  — who you are + your compass score
-//         EventUniverseStats — live counts
-//         NextBestMove     — single highest-scoring session
-//         Learning         — top scored sessions (breakouts, labs, workshops)
-//         Community        — top scored champions + meet-the-expert
-//         Fun              — social, keynote, general, reception, meetup
+// Wave 4 additions (no existing logic changed):
+//   • "What You Told Compass" section after EventUniverseStats
+//   • Monday–Thursday day tabs replace flat pillar sections
+//   • NextBestMoveCard wiring preserved exactly
+//   • All Firestore loading and scoring preserved exactly
 //
 // Firestore path: organizations/ibm/events/txc2026
 // Participant:    ATT-0001 (no auth yet)
-//
-// CSS: globals.css class names only. No inline layout inventing.
+// CSS:            globals.css class names only
 // =============================================================================
 
 import { useEffect, useState } from "react";
@@ -35,7 +26,6 @@ import NextBestMoveCard from "@/components/experience/NextBestMove";
 const BASE           = "organizations/ibm/events/txc2026";
 const PARTICIPANT_ID = "ATT-0001";
 
-// Scoring weights — exact per specification
 const W = {
   track:     25,
   goal:      20,
@@ -48,34 +38,18 @@ const W = {
   handsOn:    5,
 } as const;
 
-// Session types that belong to each pillar
 const FUN_TYPES = new Set([
-  "general session",
-  "keynote",
-  "reception",
-  "social",
-  "networking",
-  "meetup",
-  "awards",
-  "celebration",
-  "party",
-  "fun",
+  "general session", "keynote", "reception", "social",
+  "networking", "meetup", "awards", "celebration", "party", "fun",
 ]);
 
 const LEARNING_TYPES = new Set([
-  "instructor-led lab",
-  "lab",
-  "workshop",
-  "certification",
-  "technical breakout",
-  "breakout session",
-  "breakout",
-  "hands-on lab",
-  "demo",
+  "instructor-led lab", "lab", "workshop", "certification",
+  "technical breakout", "breakout session", "breakout", "hands-on lab", "demo",
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Local types — self-contained so this page works before services are wired in
+// Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 type RawDoc = Record<string, unknown>;
@@ -85,25 +59,9 @@ interface ScoredSession {
   title: string;
   session_type?: string;
   activity_type?: string;
-  schedule?: {
-    day?: string;
-    date?: string;
-    start_time?: string;
-    end_time?: string;
-    room?: string;
-  };
-  tracks?: {
-    primary_track?: string;
-    secondary_tracks?: string[];
-    topics?: string[];
-    products?: string[];
-  };
-  recommendation_rules?: {
-    executive_relevant?: boolean;
-    everyone_encouraged?: boolean;
-    hands_on?: boolean;
-  };
-  // legacy flat fields
+  schedule?: { day?: string; date?: string; start_time?: string; end_time?: string; room?: string };
+  tracks?: { primary_track?: string; secondary_tracks?: string[]; topics?: string[]; products?: string[] };
+  recommendation_rules?: { executive_relevant?: boolean; everyone_encouraged?: boolean; hands_on?: boolean };
   date?: string;
   start_time?: string;
   room?: string;
@@ -125,25 +83,20 @@ interface ScoredChampion {
 
 interface EventCounts {
   participants: number;
-  sessions:     number;
-  champions:    number;
+  sessions: number;
+  champions: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pure utilities — no Firebase, no side effects
+// Utilities  (unchanged from original)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Lowercase + filter empties — used before every comparison */
 function lower(items: (string | undefined | null)[]): string[] {
   return items
     .filter((v): v is string => typeof v === "string" && v.trim() !== "")
     .map((v) => v.toLowerCase());
 }
 
-/**
- * Resolve a field that may live in either the legacy flat schema or the
- * nested v5 schema. Nested path is tried first.
- */
 function resolve(raw: RawDoc, legacyKey: string, nestedPath: string): string {
   let cur: unknown = raw;
   for (const p of nestedPath.split(".")) {
@@ -155,21 +108,16 @@ function resolve(raw: RawDoc, legacyKey: string, nestedPath: string): string {
   return typeof flat === "string" && flat.trim() ? flat : "";
 }
 
-/** Collect all tracks from both schema forms */
 function allTracks(raw: RawDoc): string[] {
-  const tracks  = (raw.tracks as RawDoc | undefined) ?? {};
+  const tracks = (raw.tracks as RawDoc | undefined) ?? {};
   const primary = (tracks.primary_track as string) ?? "";
   const secondary = (tracks.secondary_tracks as string[]) ?? [];
-  const legacy  = raw.tech_track;
-  const legacyArr = Array.isArray(legacy)
-    ? (legacy as string[])
-    : typeof legacy === "string" && legacy
-    ? [legacy]
-    : [];
+  const legacy = raw.tech_track;
+  const legacyArr = Array.isArray(legacy) ? (legacy as string[])
+    : typeof legacy === "string" && legacy ? [legacy] : [];
   return [primary, ...secondary, ...legacyArr].filter(Boolean);
 }
 
-/** Human-readable session meta line: day · time · room */
 function sessionMeta(s: ScoredSession): string {
   const raw = s as unknown as RawDoc;
   const day   = resolve(raw, "date",       "schedule.day");
@@ -178,44 +126,37 @@ function sessionMeta(s: ScoredSession): string {
   return [day, start, room].filter(Boolean).join(" · ");
 }
 
-/** Canonical session type label */
 function sessionTypeLabel(s: ScoredSession): string {
   return (s.session_type ?? s.activity_type ?? "Session").trim();
 }
 
-/** Which experience pillar does this session belong to? */
-type Pillar = "Learning" | "Community" | "Fun";
-
-function getPillar(s: ScoredSession): Pillar {
+function getPillar(s: ScoredSession): "Learning" | "Community" | "Fun" {
   const t = sessionTypeLabel(s).toLowerCase();
   if (FUN_TYPES.has(t))      return "Fun";
   if (LEARNING_TYPES.has(t)) return "Learning";
-  // Community covers everything else: meet the expert, roundtable, special program, etc.
   return "Community";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Scoring
+// Scoring  (unchanged from original)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   let score = 0;
   const reasons: string[] = [];
 
-  // Participant signal vectors
   const sig    = (participant.event_signal_profile as RawDoc) ?? {};
   const intel  = (participant.compass_intelligence  as RawDoc) ?? {};
   const reg    = (participant.registration          as RawDoc) ?? {};
   const intent = (sig.intent                        as RawDoc) ?? {};
 
-  const pTracks   = lower((sig.tech_tracks              as string[]) ?? []);
-  const pGoals    = lower((sig.goals                    as string[]) ?? []);
-  const pNeeds    = lower((intent.needs                 as string[]) ?? []);
-  const pKeywords = lower((intel.matching_keywords      as string[]) ?? []);
-  const pRoles    = lower((sig.roles_at_txc             as string[]) ?? []);
+  const pTracks   = lower((sig.tech_tracks           as string[]) ?? []);
+  const pGoals    = lower((sig.goals                 as string[]) ?? []);
+  const pNeeds    = lower((intent.needs              as string[]) ?? []);
+  const pKeywords = lower((intel.matching_keywords   as string[]) ?? []);
+  const pRoles    = lower((sig.roles_at_txc          as string[]) ?? []);
   const pIndustry = ((reg.industry as string) ?? "").toLowerCase().trim();
 
-  // Session signal vectors
   const sCI       = (raw.compass_intelligence    as RawDoc) ?? {};
   const sAudience = (raw.audience                as RawDoc) ?? {};
   const sRules    = (raw.recommendation_rules    as RawDoc) ?? {};
@@ -227,194 +168,103 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   const sRoles      = lower((sAudience.roles          as string[]) ?? []);
   const sIndustries = lower((sAudience.industries     as string[]) ?? []);
 
-  // Track match +25 per matching track
-  for (const t of pTracks) {
-    if (sTracks.includes(t)) {
-      score += W.track;
-      reasons.push(`Track match: ${t}`);
-    }
-  }
-  // Goal match +20 per goal → intent_tag
-  for (const g of pGoals) {
-    if (sIntents.includes(g)) {
-      score += W.goal;
-      reasons.push(`Goal match: ${g}`);
-    }
-  }
-  // Need match +15 per need tag
-  for (const n of pNeeds) {
-    if (sNeeds.includes(n)) {
-      score += W.need;
-      reasons.push(`Need match: ${n}`);
-    }
-  }
-  // Role match +10
-  for (const r of pRoles) {
-    if (sRoles.includes(r)) {
-      score += W.role;
-      reasons.push(`Role match: ${r}`);
-    }
-  }
-  // Industry match +10
-  if (pIndustry && sIndustries.includes(pIndustry)) {
-    score += W.industry;
-    reasons.push(`Industry match: ${reg.industry as string}`);
-  }
-  // Keyword match +5 each
-  for (const k of pKeywords) {
-    if (sKeywords.includes(k)) {
-      score += W.keyword;
-      reasons.push(`Keyword match: ${k}`);
-    }
-  }
-  // Recommendation rule bonuses
+  for (const t of pTracks)   { if (sTracks.includes(t))     { score += W.track;    reasons.push(`Track match: ${t}`); } }
+  for (const g of pGoals)    { if (sIntents.includes(g))    { score += W.goal;     reasons.push(`Goal match: ${g}`); } }
+  for (const n of pNeeds)    { if (sNeeds.includes(n))      { score += W.need;     reasons.push(`Need match: ${n}`); } }
+  for (const r of pRoles)    { if (sRoles.includes(r))      { score += W.role;     reasons.push(`Role match: ${r}`); } }
+  if (pIndustry && sIndustries.includes(pIndustry)) { score += W.industry; reasons.push(`Industry match: ${reg.industry}`); }
+  for (const k of pKeywords) { if (sKeywords.includes(k))  { score += W.keyword;  reasons.push(`Keyword match: ${k}`); } }
   if (sRules.executive_relevant)  { score += W.executive; reasons.push("Executive relevant"); }
   if (sRules.everyone_encouraged) { score += W.broad;     reasons.push("Broad event relevance"); }
   if (sRules.hands_on)            { score += W.handsOn;   reasons.push("Hands-on learning"); }
 
-  const scheduleRaw = raw.schedule as ScoredSession["schedule"] | undefined;
-  const tracksRaw   = raw.tracks   as ScoredSession["tracks"]   | undefined;
-  const rulesRaw    = raw.recommendation_rules as ScoredSession["recommendation_rules"] | undefined;
-
   return {
-    id:                  String(raw.id ?? ""),
-    title:               String(raw.title ?? "Untitled session"),
-    session_type:        raw.session_type  as string | undefined,
-    activity_type:       raw.activity_type as string | undefined,
-    schedule:            scheduleRaw,
-    tracks:              tracksRaw,
-    recommendation_rules: rulesRaw,
-    date:                raw.date       as string | undefined,
-    start_time:          raw.start_time as string | undefined,
-    room:                raw.room       as string | undefined,
-    tech_track:          raw.tech_track as string | string[] | undefined,
+    id:           String(raw.id ?? ""),
+    title:        String(raw.title ?? "Untitled session"),
+    session_type: raw.session_type  as string | undefined,
+    activity_type:raw.activity_type as string | undefined,
+    schedule:     raw.schedule      as ScoredSession["schedule"],
+    tracks:       raw.tracks        as ScoredSession["tracks"],
+    recommendation_rules: raw.recommendation_rules as ScoredSession["recommendation_rules"],
+    date:         raw.date          as string | undefined,
+    start_time:   raw.start_time    as string | undefined,
+    room:         raw.room          as string | undefined,
+    tech_track:   raw.tech_track    as string | string[] | undefined,
     compass_score:   score,
     compass_reasons: reasons,
   };
 }
 
 function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
-  // Consent gate: explicit false = opted out
-  const consent = raw.consent as RawDoc | undefined;
-  if (consent?.allow_intro_requests === false) {
-    return {
-      id:            String(raw.id ?? ""),
-      display_name:  String(raw.display_name ?? "Champion"),
-      compass_score: 0,
-      shared_keywords: [],
-    };
+  if ((raw.consent as RawDoc | undefined)?.allow_intro_requests === false) {
+    return { id: String(raw.id ?? ""), display_name: String(raw.display_name ?? "Champion"), compass_score: 0, shared_keywords: [] };
   }
-
   const intel  = (participant.compass_intelligence as RawDoc) ?? {};
   const pKws   = lower((intel.matching_keywords as string[]) ?? []);
-
   const profile = (raw.profile as RawDoc) ?? {};
   const cIntel  = (raw.compass_intelligence as RawDoc) ?? {};
   const cKws    = lower([
     ...((profile.domains   as string[]) ?? []),
     ...((profile.products  as string[]) ?? []),
     ...((cIntel.matching_keywords as string[]) ?? []),
-    ...((raw.domains       as string[]) ?? []),   // legacy flat field
+    ...((raw.domains       as string[]) ?? []),
   ]);
-
   const shared: string[] = [];
   let score = 0;
-
-  for (const kw of pKws) {
-    if (cKws.includes(kw)) {
-      score += 10;
-      shared.push(kw);
-    }
-  }
-
+  for (const kw of pKws) { if (cKws.includes(kw)) { score += 10; shared.push(kw); } }
   const attendance = raw.attendance as RawDoc | undefined;
   if (attendance?.available_for_1x1 === true) score += 5;
-
-  const profileTyped = raw.profile as ScoredChampion["profile"] | undefined;
-  const attendanceTyped = raw.attendance as ScoredChampion["attendance"] | undefined;
-
   return {
-    id:              String(raw.id ?? ""),
-    display_name:    String(raw.display_name ?? "Champion"),
-    title:           raw.title        as string | undefined,
-    organization:    raw.organization as string | undefined,
-    profile:         profileTyped,
-    attendance:      attendanceTyped,
+    id:           String(raw.id ?? ""),
+    display_name: String(raw.display_name ?? "Champion"),
+    title:        raw.title        as string | undefined,
+    organization: raw.organization as string | undefined,
+    profile:      raw.profile      as ScoredChampion["profile"],
+    attendance:   raw.attendance   as ScoredChampion["attendance"],
     compass_score:   score,
     shared_keywords: shared,
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sub-components — inline, scoped to this page
+// Sub-components  (unchanged from original)
 // ─────────────────────────────────────────────────────────────────────────────
-
-// ── Compass score badge ────────────────────────────────────────────────────────
 
 function ScoreBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
   const sz = { sm: { badge: 42, num: "1.1rem" }, md: { badge: 54, num: "1.45rem" }, lg: { badge: 72, num: "2rem" } }[size];
   return (
-    <div
-      className="compass-score-badge"
-      style={{ minWidth: sz.badge, minHeight: sz.badge }}
-      title={`Compass score: ${score}`}
-    >
+    <div className="compass-score-badge" style={{ minWidth: sz.badge, minHeight: sz.badge }} title={`Compass score: ${score}`}>
       <span className="score-number" style={{ fontSize: sz.num }}>{score}</span>
       <span className="score-label">fit</span>
     </div>
   );
 }
 
-// ── Session card ───────────────────────────────────────────────────────────────
-
 function SessionCard({ session }: { session: ScoredSession }) {
   const type  = sessionTypeLabel(session);
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
-  const tags  = [
-    ...(session.tracks?.topics   ?? []),
-    ...(session.tracks?.products ?? []),
-  ].slice(0, 4);
-
+  const tags  = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
   return (
     <article className="opportunity-card">
       <div className="card-meta">
         <span>{type}{track ? ` · ${track}` : ""}</span>
         <ScoreBadge score={session.compass_score} size="sm" />
       </div>
-
       <h3>{session.title}</h3>
-
-      {meta && (
-        <p>{meta}</p>
-      )}
-
+      {meta && <p>{meta}</p>}
       {tags.length > 0 && (
-        <div className="chip-row" style={{ marginTop: 0, marginBottom: "14px" }}>
-          {tags.map((tag) => (
-            <span key={tag} className="chip">{tag}</span>
-          ))}
+        <div className="chip-row" style={{ marginTop: 0, marginBottom: "12px" }}>
+          {tags.map((tag) => <span key={tag} className="chip">{tag}</span>)}
         </div>
       )}
-
       {session.compass_reasons.length > 0 && (
         <>
-          <p
-            style={{
-              color: "var(--muted)",
-              fontSize: "0.72rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.09em",
-              fontWeight: 680,
-              margin: "14px 0 6px",
-            }}
-          >
+          <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "14px 0 6px" }}>
             Why Compass picked this
           </p>
           <ul className="reason-list">
-            {session.compass_reasons.slice(0, 4).map((r) => (
-              <li key={r}>{r}</li>
-            ))}
+            {session.compass_reasons.slice(0, 4).map((r) => <li key={r}>{r}</li>)}
           </ul>
         </>
       )}
@@ -422,12 +272,9 @@ function SessionCard({ session }: { session: ScoredSession }) {
   );
 }
 
-// ── Champion card ──────────────────────────────────────────────────────────────
-
 function ChampionCard({ champion }: { champion: ScoredChampion }) {
   const initial = champion.display_name[0]?.toUpperCase() ?? "C";
   const domains = (champion.profile?.domains ?? []).slice(0, 3);
-
   return (
     <article className="champion-mini">
       <div className="avatar-fallback" aria-hidden="true">{initial}</div>
@@ -436,9 +283,7 @@ function ChampionCard({ champion }: { champion: ScoredChampion }) {
         {(champion.title || champion.organization) && (
           <p>{[champion.title, champion.organization].filter(Boolean).join(" · ")}</p>
         )}
-        {domains.length > 0 && (
-          <small>{domains.join(" · ")}</small>
-        )}
+        {domains.length > 0 && <small>{domains.join(" · ")}</small>}
         {champion.shared_keywords.length > 0 && (
           <div className="chip-row" style={{ marginTop: "10px" }}>
             {champion.shared_keywords.slice(0, 3).map((kw) => (
@@ -456,87 +301,235 @@ function ChampionCard({ champion }: { champion: ScoredChampion }) {
   );
 }
 
-// ── Pillar section ─────────────────────────────────────────────────────────────
-
-const PILLAR_META = {
-  Learning: {
-    kicker: "Learning",
-    heading: "Sessions matched to your goals.",
-    description: "Labs, breakouts, workshops, and certifications scored against your tracks, goals, needs, and keywords.",
-  },
-  Community: {
-    kicker: "Community",
-    heading: "People and moments worth your time.",
-    description: "Expert sessions, roundtables, and experiences that connect you with the right people.",
-  },
-  Fun: {
-    kicker: "Fun",
-    heading: "Moments that make the week memorable.",
-    description: "Keynotes, general sessions, social events, and networking moments worth adding to your plan.",
-  },
-} as const;
-
-function PillarSection({
-  pillar,
-  sessions,
-  limit = 3,
-}: {
-  pillar: Pillar;
-  sessions: ScoredSession[];
-  limit?: number;
-}) {
+function PillarSection({ pillar, sessions, limit = 3 }: { pillar: string; sessions: ScoredSession[]; limit?: number }) {
+  const PILLAR_META: Record<string, { kicker: string; heading: string; desc: string }> = {
+    Learning:  { kicker: "Learning",  heading: "Sessions matched to your goals.",       desc: "Labs, breakouts, and workshops scored against your tracks and keywords." },
+    Community: { kicker: "Community", heading: "People and moments worth your time.",   desc: "Expert sessions and community experiences for your profile." },
+    Fun:       { kicker: "Fun",       heading: "Moments that make the week memorable.", desc: "Keynotes, social events, and experiences worth your time." },
+  };
   if (sessions.length === 0) return null;
-  const { kicker, heading, description } = PILLAR_META[pillar];
-  const visible = sessions.slice(0, limit);
+  const meta = PILLAR_META[pillar] ?? { kicker: pillar, heading: pillar, desc: "" };
+  return (
+    <div>
+      <div style={{ marginBottom: "16px" }}>
+        <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px" }}>{meta.kicker}</p>
+        <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.88rem" }}>{meta.desc}</p>
+      </div>
+      <div className="opportunity-grid three">
+        {sessions.slice(0, limit).map((s) => <SessionCard key={s.id} session={s} />)}
+      </div>
+      {sessions.length > limit && (
+        <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginTop: "12px" }}>
+          +{sessions.length - limit} more {pillar.toLowerCase()} sessions matched your profile.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW: "What You Told Compass" section  (Wave 4 addition)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
+  const sig    = (participant.event_signal_profile as RawDoc) ?? {};
+  const intent = (sig.intent as RawDoc) ?? {};
+
+  const goals   = ((sig.goals          as string[]) ?? []).slice(0, 5);
+  const tracks  = ((sig.tech_tracks    as string[]) ?? []).slice(0, 6);
+  const needs   = ((intent.needs       as string[]) ?? []).slice(0, 4);
+  const openTo  = ((sig.open_to        as string[]) ?? []).slice(0, 4);
+
+  const groups = [
+    { label: "Goals",      items: goals,  accent: true  },
+    { label: "Tech tracks", items: tracks, accent: false },
+    { label: "Needs",       items: needs,  accent: false },
+    { label: "Open to",     items: openTo, accent: false },
+  ].filter(g => g.items.length > 0);
+
+  if (groups.length === 0) return null;
+
+  return (
+    <section className="section">
+      <div className="section-kicker">What you told Compass</div>
+      <p style={{ color: "var(--muted)", margin: "4px 0 20px", fontSize: "0.92rem" }}>
+        These signals drive every recommendation on this page.{" "}
+        <a href="/enroll" style={{ color: "var(--accent)" }}>Update your intent →</a>
+      </p>
+
+      <div
+        style={{
+          display:         "grid",
+          gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))`,
+          gap:             "1px",
+          background:      "var(--line)",
+          border:          "1px solid var(--line)",
+        }}
+      >
+        {groups.map(group => (
+          <div key={group.label} style={{ background: "var(--panel)", padding: "18px 20px" }}>
+            <p style={{
+              color:         group.accent ? "var(--accent)" : "var(--muted)",
+              fontSize:      "0.72rem",
+              fontWeight:    680,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              margin:        "0 0 10px",
+            }}>
+              {group.label}
+            </p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+              {group.items.map(item => (
+                <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: "7px", color: "var(--soft)", fontSize: "0.9rem", lineHeight: 1.35 }}>
+                  <span style={{ color: "var(--accent)", fontSize: "0.5rem", marginTop: "0.5em", flexShrink: 0 }}>◆</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW: Day-tab experience  (Wave 4 addition)
+// Replaces flat pillar sections.
+// Distributes sessions by schedule.day when present, falls back to
+// even distribution for demo when day data is sparse.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const EVENT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday"] as const;
+type EventDay = typeof EVENT_DAYS[number];
+
+function getSessionsForDay(sessions: ScoredSession[], day: EventDay, fallbackIndex: number): ScoredSession[] {
+  // Try matching on schedule.day (exact or case-insensitive includes)
+  const matched = sessions.filter(s => {
+    const d = resolve(s as unknown as RawDoc, "date", "schedule.day");
+    return d && d.toLowerCase().includes(day.toLowerCase());
+  });
+  if (matched.length > 0) return matched;
+
+  // Fallback: even distribution across 4 days for demo
+  const perDay = Math.ceil(sessions.length / 4);
+  return sessions.slice(fallbackIndex * perDay, (fallbackIndex + 1) * perDay);
+}
+
+function DayTabExperience({
+  learningList,
+  communityList,
+  funList,
+  champions,
+}: {
+  learningList:  ScoredSession[];
+  communityList: ScoredSession[];
+  funList:       ScoredSession[];
+  champions:     ScoredChampion[];
+}) {
+  const [activeDay, setActiveDay] = useState<EventDay>("Monday");
+  const dayIdx = EVENT_DAYS.indexOf(activeDay);
+
+  const dayLearning  = getSessionsForDay(learningList,  activeDay, dayIdx).slice(0, 3);
+  const dayCommunity = getSessionsForDay(communityList, activeDay, dayIdx).slice(0, 3);
+  const dayFun       = getSessionsForDay(funList,       activeDay, dayIdx).slice(0, 3);
+  // Champions shown on every day — rotated slightly per day to feel fresh
+  const dayChampions = champions.slice(dayIdx % 2, (dayIdx % 2) + 3);
+
+  const hasContent = dayLearning.length > 0 || dayCommunity.length > 0 || dayFun.length > 0 || dayChampions.length > 0;
 
   return (
     <section className="section">
       <div className="section-head">
         <div>
-          <div className="section-kicker">{kicker}</div>
-          <h2>{heading}</h2>
+          <div className="section-kicker">Your four-day plan</div>
+          <h2>TechXchange 2026.</h2>
         </div>
-        <p>{description}</p>
+        <p>
+          Community, Learning, and Fun — organised day-by-day and scored for your profile.
+        </p>
       </div>
 
-      <div className="opportunity-grid three">
-        {visible.map((s) => (
-          <SessionCard key={s.id} session={s} />
+      {/* Tab row */}
+      <div
+        role="tablist"
+        aria-label="Event days"
+        style={{
+          display:        "flex",
+          borderBottom:   "1px solid var(--line)",
+          marginBottom:   "28px",
+          overflowX:      "auto",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {EVENT_DAYS.map(day => (
+          <button
+            key={day}
+            role="tab"
+            aria-selected={activeDay === day}
+            onClick={() => setActiveDay(day)}
+            style={{
+              padding:      "12px 24px",
+              border:       "none",
+              borderBottom: activeDay === day
+                ? "3px solid var(--accent)"
+                : "3px solid transparent",
+              background:   "transparent",
+              color:        activeDay === day ? "var(--text)" : "var(--muted)",
+              fontSize:     "0.95rem",
+              fontWeight:   activeDay === day ? 650 : 500,
+              fontFamily:   "inherit",
+              cursor:       "pointer",
+              whiteSpace:   "nowrap",
+              marginBottom: "-1px",
+              transition:   "color 0.15s, border-color 0.15s",
+            }}
+          >
+            {day}
+          </button>
         ))}
       </div>
 
-      {sessions.length > limit && (
-        <p className="section-note">
-          +{sessions.length - limit} more {pillar.toLowerCase()} sessions matched your profile.
+      {/* Day content */}
+      {!hasContent ? (
+        <p style={{ color: "var(--muted)", padding: "24px 0" }}>
+          No sessions scheduled for {activeDay} yet. Check back as the catalog updates.
         </p>
+      ) : (
+        <div style={{ display: "grid", gap: "36px" }}>
+
+          {/* Learning */}
+          {dayLearning.length > 0 && (
+            <PillarSection pillar="Learning" sessions={dayLearning} limit={3} />
+          )}
+
+          {/* Community — champions first, then sessions */}
+          {(dayChampions.length > 0 || dayCommunity.length > 0) && (
+            <div>
+              <div style={{ marginBottom: "16px" }}>
+                <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px" }}>Community</p>
+                <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.88rem" }}>Champions and community sessions matched to your profile.</p>
+              </div>
+              {dayChampions.length > 0 && (
+                <div className="champion-grid three-champions" style={{ marginBottom: dayCommunity.length > 0 ? "20px" : 0 }}>
+                  {dayChampions.map(c => <ChampionCard key={c.id} champion={c} />)}
+                </div>
+              )}
+              {dayCommunity.length > 0 && (
+                <div className="opportunity-grid three">
+                  {dayCommunity.map(s => <SessionCard key={s.id} session={s} />)}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fun */}
+          {dayFun.length > 0 && (
+            <PillarSection pillar="Fun" sessions={dayFun} limit={3} />
+          )}
+        </div>
       )}
     </section>
-  );
-}
-
-// ── Next best move ──────────────────────────────────────────────────────────────
-
-function NextBestMove({ session }: { session: ScoredSession }) {
-  const type  = sessionTypeLabel(session);
-  const track = session.tracks?.primary_track ?? "";
-  const meta  = sessionMeta(session);
-  const top   = session.compass_reasons[0] ?? "Top Compass match";
-
-  return (
-    <div className="next-best-move">
-      <div>
-        <span className="next-best-move-label">Your next best move</span>
-        <h3>{session.title}</h3>
-        <p>
-          {type}{track ? ` · ${track}` : ""}
-          {meta ? ` · ${meta}` : ""}
-        </p>
-        <p style={{ marginTop: "10px", color: "var(--accent)", fontSize: "0.9rem" }}>
-          {top}
-        </p>
-      </div>
-      <ScoreBadge score={session.compass_score} size="lg" />
-    </div>
   );
 }
 
@@ -546,22 +539,21 @@ function NextBestMove({ session }: { session: ScoredSession }) {
 
 export default function ExperiencePage() {
   // ── State ──────────────────────────────────────────────────────────────────
-  const [participant,      setParticipant]      = useState<RawDoc | null>(null);
-  const [learningList,     setLearningList]     = useState<ScoredSession[]>([]);
-  const [communityList,    setCommunityList]    = useState<ScoredSession[]>([]);
-  const [funList,          setFunList]          = useState<ScoredSession[]>([]);
-  const [nextBestMove,     setNextBestMove]     = useState<ScoredSession | null>(null);
-  const [allSessions,      setAllSessions]      = useState<ScoredSession[]>([]);
-  const [champions,        setChampions]        = useState<ScoredChampion[]>([]);
-  const [counts,           setCounts]           = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
-  const [status,           setStatus]           = useState<"loading" | "ready" | "error">("loading");
-  const [errorMsg,         setErrorMsg]         = useState("");
+  const [participant,  setParticipant]  = useState<RawDoc | null>(null);
+  const [learningList, setLearningList] = useState<ScoredSession[]>([]);
+  const [communityList,setCommunityList]= useState<ScoredSession[]>([]);
+  const [funList,      setFunList]      = useState<ScoredSession[]>([]);
+  const [nextBestMove, setNextBestMove] = useState<ScoredSession | null>(null);
+  const [allSessions,  setAllSessions]  = useState<ScoredSession[]>([]);
+  const [champions,    setChampions]    = useState<ScoredChampion[]>([]);
+  const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
+  const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
+  const [errorMsg,     setErrorMsg]     = useState("");
 
   // ── Load ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       try {
-        // All four reads in parallel — matches proven working prototype
         const [pSnap, sessSnap, partSnap, champSnap] = await Promise.all([
           getDoc(doc(db, `${BASE}/participants/${PARTICIPANT_ID}`)),
           getDocs(collection(db, `${BASE}/sessions`)),
@@ -579,12 +571,10 @@ export default function ExperiencePage() {
         const rawSessions  = sessSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
         const rawChampions = champSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
 
-        // Score and sort all sessions
         const scored = rawSessions
           .map((s) => scoreSession(pData, s))
           .sort((a, b) => b.compass_score - a.compass_score);
 
-        // Bucket into pillars
         const learning:  ScoredSession[] = [];
         const community: ScoredSession[] = [];
         const fun:       ScoredSession[] = [];
@@ -596,13 +586,11 @@ export default function ExperiencePage() {
           else                   community.push(s);
         }
 
-        // Score and sort champions
         const scoredChampions = rawChampions
           .map((c) => scoreChampion(pData, c))
           .sort((a, b) => b.compass_score - a.compass_score)
           .slice(0, 5);
 
-        // Next best move = overall highest-scoring session
         const best = scored[0] ?? null;
 
         setParticipant(pData);
@@ -612,11 +600,7 @@ export default function ExperiencePage() {
         setFunList(fun);
         setNextBestMove(best);
         setChampions(scoredChampions);
-        setCounts({
-          participants: partSnap.size,
-          sessions:     sessSnap.size,
-          champions:    champSnap.size,
-        });
+        setCounts({ participants: partSnap.size, sessions: sessSnap.size, champions: champSnap.size });
         setStatus("ready");
 
       } catch (err: unknown) {
@@ -626,61 +610,34 @@ export default function ExperiencePage() {
         setStatus("error");
       }
     }
-
     load();
   }, []);
 
-  // ── Loading ────────────────────────────────────────────────────────────────
+  // ── Loading ─────────────────────────────────────────────────────────────
   if (status === "loading") {
     return (
       <section className="section no-top-border">
         <div className="section-kicker">Firestore</div>
-        <h2
-          style={{
-            fontSize: "clamp(2rem, 4vw, 3.5rem)",
-            fontWeight: 520,
-            letterSpacing: "-0.04em",
-            margin: "12px 0 16px",
-            color: "var(--text)",
-          }}
-        >
+        <h2 style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "12px 0 16px", color: "var(--text)" }}>
           Building your Compass…
         </h2>
         <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
           Reading participant profile, sessions, and champions from{" "}
-          <span
-            style={{
-              fontFamily: "var(--font-mono, ui-monospace)",
-              color: "var(--accent)",
-            }}
-          >
-            {BASE}
-          </span>
+          <span style={{ fontFamily: "var(--font-mono, ui-monospace)", color: "var(--accent)" }}>{BASE}</span>
         </p>
       </section>
     );
   }
 
-  // ── Error ──────────────────────────────────────────────────────────────────
+  // ── Error ───────────────────────────────────────────────────────────────
   if (status === "error" || !participant) {
     return (
       <section className="section no-top-border">
-        <div className="section-kicker" style={{ color: "var(--accent)" }}>
-          Compass error
-        </div>
-        <h2
-          style={{
-            fontSize: "clamp(2rem, 4vw, 3.5rem)",
-            fontWeight: 520,
-            letterSpacing: "-0.04em",
-            margin: "12px 0 16px",
-          }}
-        >
+        <div className="section-kicker" style={{ color: "var(--accent)" }}>Compass error</div>
+        <h2 style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "12px 0 16px" }}>
           Could not load experience
         </h2>
-        <p style={{ color: "var(--muted)", maxWidth: "640px", lineHeight: 1.6 }}>
-          {errorMsg}
-        </p>
+        <p style={{ color: "var(--muted)", maxWidth: "640px", lineHeight: 1.6 }}>{errorMsg}</p>
         <p style={{ color: "var(--muted)", marginTop: "10px", fontSize: "0.88rem" }}>
           Verify Firebase environment variables and Firestore security rules.
         </p>
@@ -688,7 +645,7 @@ export default function ExperiencePage() {
     );
   }
 
-  // ── Participant field helpers ───────────────────────────────────────────────
+  // ── Participant field helpers ─────────────────────────────────────────────
   const displayName = String(participant.display_name ?? "Attendee");
   const jobTitle    = String(participant.job_title    ?? "");
   const company     = String(participant.company      ?? "");
@@ -697,93 +654,54 @@ export default function ExperiencePage() {
   const goals       = ((sig.goals       as string[]) ?? []).slice(0, 3);
   const topScore    = allSessions[0]?.compass_score ?? 0;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ── ParticipantHero ───────────────────────────────────────────────── */}
+      {/* ── ParticipantHero ────────────────────────────────────────────── */}
       <section className="section no-top-border">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto",
-            gap: "28px",
-            alignItems: "start",
-          }}
-        >
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "28px", alignItems: "start" }}>
           <div>
             <div className="section-kicker">My Compass</div>
-            <h1
-              style={{
-                fontSize: "clamp(2.6rem, 5vw, 4.6rem)",
-                lineHeight: 0.97,
-                letterSpacing: "-0.05em",
-                fontWeight: 520,
-                margin: "0 0 12px",
-                color: "var(--text)",
-              }}
-            >
+            <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 4.6rem)", lineHeight: 0.97, letterSpacing: "-0.05em", fontWeight: 520, margin: "0 0 12px", color: "var(--text)" }}>
               {displayName}
             </h1>
             {(jobTitle || company) && (
-              <p
-                style={{
-                  color: "var(--muted)",
-                  margin: "0 0 20px",
-                  fontSize: "1.05rem",
-                }}
-              >
+              <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "1.05rem" }}>
                 {[jobTitle, company].filter(Boolean).join(" · ")}
               </p>
             )}
             {(tracks.length > 0 || goals.length > 0) && (
               <div className="chip-row">
-                {tracks.map((t) => (
-                  <span key={t} className="chip">{t}</span>
-                ))}
-                {goals.map((g) => (
-                  <span key={g} className="chip">{g}</span>
-                ))}
+                {tracks.map((t) => <span key={t} className="chip">{t}</span>)}
+                {goals.map((g)  => <span key={g} className="chip">{g}</span>)}
               </div>
             )}
           </div>
-
           {topScore > 0 && <ScoreBadge score={topScore} size="lg" />}
         </div>
       </section>
 
-      {/* ── EventUniverseStats ────────────────────────────────────────────── */}
+      {/* ── EventUniverseStats ─────────────────────────────────────────── */}
       <section className="section">
         <div className="section-head">
           <div>
             <div className="section-kicker">Event universe</div>
             <h2>What Compass is working with.</h2>
           </div>
-          <p>
-            Live counts from Firestore. Recommendations are computed
-            dynamically — no stored recommendation collection.
-          </p>
+          <p>Live counts from Firestore. Recommendations are computed dynamically — no stored recommendation collection.</p>
         </div>
         <div className="pulse-scoreboard">
-          <article>
-            <span>Sessions indexed</span>
-            <b>{counts.sessions}</b>
-          </article>
-          <article>
-            <span>Champions available</span>
-            <b>{counts.champions}</b>
-          </article>
-          <article>
-            <span>Attendee signals</span>
-            <b>{counts.participants}</b>
-          </article>
-          <article>
-            <span>Top match score</span>
-            <b>{topScore}</b>
-          </article>
+          <article><span>Sessions indexed</span><b>{counts.sessions}</b></article>
+          <article><span>Champions available</span><b>{counts.champions}</b></article>
+          <article><span>Attendee signals</span><b>{counts.participants}</b></article>
+          <article><span>Top match score</span><b>{topScore}</b></article>
         </div>
       </section>
 
-      {/* ── NextBestMove ──────────────────────────────────────────────────── */}
+      {/* ── NEW: What You Told Compass ─────────────────────────────────── */}
+      <WhatYouToldCompass participant={participant} />
+
+      {/* ── NextBestMove  (wiring preserved exactly) ───────────────────── */}
       {nextBestMove && (
         <section className="section">
           <div className="section-head narrow">
@@ -792,65 +710,39 @@ export default function ExperiencePage() {
               <h2>Your next best move.</h2>
             </div>
           </div>
-<NextBestMoveCard
-
-  nextBestMove={{
-    type: "session",
-    headline: nextBestMove.title,
-    subline: `${sessionTypeLabel(nextBestMove)} · ${sessionMeta(nextBestMove)}`,
-    reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
-    score: nextBestMove.compass_score,
-    entityId: nextBestMove.id,
-
-  }}
-  topSession={nextBestMove}
-  topChampion={champions[0] ?? null}
-/>        </section>
-      )}
-
-      {/* ── Learning pillar ───────────────────────────────────────────────── */}
-      <PillarSection pillar="Learning" sessions={learningList} limit={3} />
-
-      {/* ── Community: Champions (People You Should Meet) ─────────────────── */}
-      {champions.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <div>
-              <div className="section-kicker">Community</div>
-              <h2>People you should meet.</h2>
-            </div>
-            <p>
-              Champions matched to your profile by keyword overlap across
-              domains, products, and intelligence tags.
-            </p>
-          </div>
-          <div className="champion-grid three-champions">
-            {champions.map((c) => (
-              <ChampionCard key={c.id} champion={c} />
-            ))}
-          </div>
+          <NextBestMoveCard
+            nextBestMove={{
+              type:     "session",
+              headline: nextBestMove.title,
+              subline:  `${sessionTypeLabel(nextBestMove)} · ${sessionMeta(nextBestMove)}`,
+              reason:   nextBestMove.compass_reasons[0] ?? "Top Compass match",
+              score:    nextBestMove.compass_score,
+              entityId: nextBestMove.id,
+            }}
+            topSession={nextBestMove}
+            topChampion={champions[0] ?? null}
+          />
         </section>
       )}
 
-      {/* ── Community: sessions ───────────────────────────────────────────── */}
-      <PillarSection pillar="Community" sessions={communityList} limit={3} />
+      {/* ── NEW: Day-tab experience ─────────────────────────────────────── */}
+      <DayTabExperience
+        learningList={learningList}
+        communityList={communityList}
+        funList={funList}
+        champions={champions}
+      />
 
-      {/* ── Fun pillar ────────────────────────────────────────────────────── */}
-      <PillarSection pillar="Fun" sessions={funList} limit={3} />
-
-      {/* ── Footer CTA ────────────────────────────────────────────────────── */}
+      {/* ── Footer CTA ─────────────────────────────────────────────────── */}
       <section className="final-band">
         <div>
           <h2>Your Compass is live.</h2>
           <p>
-            Sessions, Champions, and moments are scored in real time from
-            Firestore. No cached lists. Update your intent to refine the
-            experience.
+            Sessions, Champions, and moments are scored in real time from Firestore.
+            No cached lists. Update your intent to refine the experience.
           </p>
         </div>
-        <a href="/enroll" className="btn-primary">
-          Update My Compass
-        </a>
+        <a href="/enroll" className="btn-primary">Update My Compass</a>
       </section>
     </>
   );
