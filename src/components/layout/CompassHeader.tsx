@@ -8,7 +8,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import Link  from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
 type Theme = "dark" | "light";
@@ -58,6 +59,16 @@ export default function CompassHeader() {
     <header className="site-header">
       {/* Brand */}
       <Link href="/" className="brand" aria-label="Compass home">
+        {/* Logo mark — swaps between white (dark theme) and black (light theme) */}
+        <Image
+          src={theme === "dark" ? "/compass-mark-white.jpeg" : "/compass-mark-black.png"}
+          alt=""
+          aria-hidden="true"
+          width={28}
+          height={28}
+          style={{ objectFit: "contain", flexShrink: 0 }}
+          priority
+        />
         <span className="brand-word">Compass</span>
       </Link>
 

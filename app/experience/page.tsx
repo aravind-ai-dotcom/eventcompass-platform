@@ -17,7 +17,15 @@
 import { useEffect, useState } from "react";
 import { db } from "../../src/lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
+import EventHighlights    from "@/components/experience/EventHighlights";
+import TechXchangeBanner  from "@/components/experience/TechXchangeBanner";
+import CommunityVoices    from "@/components/experience/CommunityVoices";
+import PeopleRecommendations from "@/components/experience/PeopleRecommendations";
+import ExperienceBalance  from "@/components/experience/ExperienceBalance";
+import PrintExport        from "@/components/experience/PrintExport";
+import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -86,6 +94,26 @@ interface EventCounts {
   sessions: number;
   champions: number;
 }
+
+
+type FeaturedChampion = {
+  id: string;
+  display_name?: string;
+  title?: string;
+  organization?: string;
+  photo_url?: string;
+  quote?: string;
+  topics?: string[];
+  linkedin_url?: string;
+  featured?: boolean;
+  homepage_priority?: number;
+  consent?: {
+    featured_champion?: boolean;
+    show_photo?: boolean;
+  };
+};
+
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilities  (unchanged from original)
@@ -546,6 +574,7 @@ export default function ExperiencePage() {
   const [nextBestMove, setNextBestMove] = useState<ScoredSession | null>(null);
   const [allSessions,  setAllSessions]  = useState<ScoredSession[]>([]);
   const [champions,    setChampions]    = useState<ScoredChampion[]>([]);
+  const [featuredChampions, setFeaturedChampions] = useState<FeaturedChampion[]>([]);
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
   const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,     setErrorMsg]     = useState("");
@@ -603,6 +632,14 @@ export default function ExperiencePage() {
         setCounts({ participants: partSnap.size, sessions: sessSnap.size, champions: champSnap.size });
         setStatus("ready");
 
+        // Load featured champions for CommunityVoices section
+        try {
+          const featured = await getFeaturedChampions();
+          setFeaturedChampions(featured);
+        } catch {
+          // Non-fatal — section renders nothing if this fails
+        }
+
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string };
         console.error("[ExperiencePage] Firestore error:", err);
@@ -653,6 +690,17 @@ export default function ExperiencePage() {
   const tracks      = ((sig.tech_tracks as string[]) ?? []).slice(0, 5);
   const goals       = ((sig.goals       as string[]) ?? []).slice(0, 3);
   const topScore    = allSessions[0]?.compass_score ?? 0;
+
+  // Pillar counts for ExperienceBalance
+  const pillarCounts = {
+    learning:  learningList.length,
+    community: communityList.length,
+    fun:       funList.length,
+  };
+
+  // Goals and tracks for voice context
+  const pGoals  = (sig.goals        as string[]) ?? [];
+  const pTracks = (sig.tech_tracks  as string[]) ?? [];
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -721,6 +769,8 @@ export default function ExperiencePage() {
             }}
             topSession={nextBestMove}
             topChampion={champions[0] ?? null}
+            participantGoals={pGoals}
+            participantTracks={pTracks}
           />
         </section>
       )}
@@ -732,6 +782,48 @@ export default function ExperiencePage() {
         funList={funList}
         champions={champions}
       />
+
+      {/* ── TechXchange Banner ────────────────────────────────────────── */}
+      <section className="section">
+        <TechXchangeBanner />
+      </section>
+
+      {/* ── Event Highlights ───────────────────────────────────────────── */}
+      <section className="section">
+        <EventHighlights />
+      </section>
+
+      {/* ── Experience Balance + Export row ────────────────────────────── */}
+      <section className="section">
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "16px", alignItems: "start" }}>
+          <ExperienceBalance sessionCounts={pillarCounts} />
+          <div style={{ display: "grid", gap: "14px" }}>
+            <PrintExport participantId={PARTICIPANT_ID} hasPinnedSessions={allSessions.length > 0} />
+            <TechXchangeTV />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Community Voices ───────────────────────────────────────────── */}
+      <section className="section">
+        <CommunityVoices champions={featuredChampions} />
+      </section>
+
+      {/* ── People Recommendations ─────────────────────────────────────── */}
+      <section className="section">
+        <PeopleRecommendations
+          people={champions.map(c => ({
+            id:           c.id,
+            display_name: c.display_name,
+            title:        c.title,
+            organization: c.organization,
+            categories:   ["Champions", ...(c.profile?.domains ?? [])],
+            shared_keywords: c.shared_keywords,
+            is_champion:  true,
+          }))}
+          currentUserId={PARTICIPANT_ID}
+        />
+      </section>
 
       {/* ── Footer CTA ─────────────────────────────────────────────────── */}
       <section className="final-band">
