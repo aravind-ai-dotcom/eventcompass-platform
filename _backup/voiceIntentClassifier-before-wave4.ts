@@ -9,11 +9,11 @@
 //   buildVoiceResponse(classified: ClassifiedIntent, ctx: VoiceResponseContext): VoiceResponse
 //   type VoiceResponse
 //
-// Wave 4 additions:
-//   SHOW_DAY intent      — "show my day", "what does today look like"
-//   WHY_RECOMMENDED      — "why was this recommended", "explain this"
-//   participantGoals + participantTracks in context → goal-aware responses
-//   UNKNOWN fallback updated to mention all supported questions
+// Design:
+//   - classifyVoiceIntent  — deterministic keyword pattern matching
+//   - buildVoiceResponse   — builds spoken + display strings from scored data
+//   - No audio stored, transmitted, or logged
+//   - Each function is independently testable
 // =============================================================================
 
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
@@ -28,131 +28,161 @@ export type VoiceIntent =
   | "CURRENT_SCHEDULE"
   | "NEXT_SCHEDULED"
   | "FULL_SCHEDULE"
-  | "SHOW_DAY"
-  | "WHY_RECOMMENDED"
   | "DISMISS"
   | "MARK_ATTENDED"
   | "UNKNOWN";
 
 export interface ClassifiedIntent {
   intent:     VoiceIntent;
-  transcript: string;
-  confidence: "high" | "low";
+  transcript: string;           // original, unmodified
+  confidence: "high" | "low";  // high = keyword hit, low = UNKNOWN fallback
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VoiceResponse  (same shape — VoiceCompassButton.tsx unchanged)
+// VoiceResponse type — consumed by VoiceCompassButton.tsx
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type VoiceResponseAction =
   | "navigate_experience"
   | "show_champions"
   | "show_sessions"
-  | "show_day"
   | "dismiss"
   | "mark_attended";
 
 export interface VoiceResponse {
-  spoken:  string;
+  /** Spoken aloud via SpeechSynthesis — concise, natural sentence */
+  spoken: string;
+  /** Shown in the UI result area — may include extra detail */
   display: string;
+  /** Optional UI action to trigger after response is delivered */
   action?: VoiceResponseAction;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Context  (participantGoals + participantTracks are new optional fields)
+// Context passed from VoiceCompassButton
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface VoiceResponseContext {
-  nextBestMove:        NextBestMove | null;
-  topSession:          ScoredSession | null;
-  topChampion:         ScoredChampion | null;
-  participantGoals?:   string[];
-  participantTracks?:  string[];
+  nextBestMove: NextBestMove | null;
+  topSession:   ScoredSession | null;
+  topChampion:  ScoredChampion | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pattern table
+// Each row: [intent, string[]]
+// Evaluated top-to-bottom — first match wins.
+// More specific phrases listed before broad ones within each intent.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const INTENT_PATTERNS: Array<[VoiceIntent, string[]]> = [
 
+  // MARK_ATTENDED — checked before DISMISS (both contain "done")
   ["MARK_ATTENDED", [
-    "i went to that", "i attended", "i was there", "i did that",
-    "already went", "already attended", "been to that",
-    "mark as attended", "mark attended", "attended that",
+    "i went to that",
+    "i attended",
+    "i was there",
+    "i did that",
+    "already went",
+    "already attended",
+    "been to that",
+    "mark as attended",
+    "mark attended",
+    "attended that",
   ]],
 
+  // DISMISS
   ["DISMISS", [
-    "skip this", "skip that", "not interested", "not for me",
-    "dismiss this", "dismiss that", "remove this", "don't want that",
-    "ignore this", "pass on this", "pass on that", "next one",
-    "something else", "done",
+    "skip this",
+    "skip that",
+    "not interested",
+    "not for me",
+    "dismiss this",
+    "dismiss that",
+    "remove this",
+    "don't want that",
+    "ignore this",
+    "pass on this",
+    "pass on that",
+    "next one",
+    "something else",
+    "done",
   ]],
 
-  ["WHY_RECOMMENDED", [
-    "why was this recommended",
-    "why did compass recommend",
-    "why is this recommended",
-    "why this session",
-    "why this champion",
-    "explain this recommendation",
-    "why did you pick this",
-    "why compass picked",
-    "how did you choose",
-    "what made you recommend",
-  ]],
-
-  ["SHOW_DAY", [
-    "show me my day",
-    "show my day",
-    "what is my day",
-    "what's my day",
-    "my day plan",
-    "day plan",
-    "what does today look like",
-    "today's plan",
-    "show today",
-    "what is today",
-    "what's today",
-  ]],
-
+  // FULL_SCHEDULE
   ["FULL_SCHEDULE", [
-    "show me my plan", "show my plan", "my full plan", "my full schedule",
-    "see my schedule", "show my schedule", "open my experience",
-    "my experience", "full schedule", "everything today",
-    "what is my plan", "what's my plan",
+    "show me my plan",
+    "show my plan",
+    "my full plan",
+    "my full schedule",
+    "see my schedule",
+    "show my schedule",
+    "open my experience",
+    "my experience",
+    "full schedule",
+    "everything today",
+    "what is my plan",
+    "what's my plan",
   ]],
 
+  // NEXT_SCHEDULED — checked before CURRENT_SCHEDULE
   ["NEXT_SCHEDULED", [
-    "what's next on my schedule", "what is next on my schedule",
-    "next on my schedule", "what's after this", "what is after this",
-    "what comes next", "next scheduled", "after this",
-    "what session is next", "what's my next session",
+    "what's next on my schedule",
+    "what is next on my schedule",
+    "next on my schedule",
+    "what's after this",
+    "what is after this",
+    "what comes next",
+    "next scheduled",
+    "after this",
   ]],
 
+  // CURRENT_SCHEDULE
   ["CURRENT_SCHEDULE", [
-    "where am i going", "where am i going now",
-    "where should i go now", "where do i go",
-    "what room", "where is my session", "where is it",
-    "what is my next session", "where am i heading",
+    "where am i going",
+    "where am i going now",
+    "where should i go now",
+    "where do i go",
+    "what room",
+    "where is my session",
+    "where is it",
+    "what's my next session",
+    "what is my next session",
   ]],
 
+  // CHAMPION_MATCH
   ["CHAMPION_MATCH", [
-    "who should i meet", "who can i meet", "who should i talk to",
-    "who should i connect with", "introduce me", "find me someone",
-    "who is available", "meet a champion", "any champions",
-    "people i should meet", "who to meet", "networking",
-    "who do you recommend i meet",
+    "who should i meet",
+    "who can i meet",
+    "who should i talk to",
+    "who should i connect with",
+    "introduce me",
+    "find me someone",
+    "who is available",
+    "meet a champion",
+    "any champions",
+    "people i should meet",
+    "who to meet",
+    "networking",
   ]],
 
+  // NEXT_BEST_MOVE — broadest intent, checked last
   ["NEXT_BEST_MOVE", [
-    "what should i do next", "what should i do",
-    "what do i do next", "what do i do now",
-    "next best move", "what's next", "what is next",
-    "help me decide", "what now", "recommend something",
-    "give me a recommendation", "what session",
-    "which session", "what should i attend", "what to do",
-    "guide me", "help me",
+    "what should i do next",
+    "what should i do",
+    "what do i do next",
+    "what do i do now",
+    "next best move",
+    "what's next",
+    "what is next",
+    "help me decide",
+    "what now",
+    "recommend something",
+    "give me a recommendation",
+    "what session",
+    "which session",
+    "what should i attend",
+    "what to do",
   ]],
 ];
 
@@ -160,71 +190,105 @@ const INTENT_PATTERNS: Array<[VoiceIntent, string[]]> = [
 // classifyVoiceIntent
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Normalise a transcript for pattern matching.
+ * Lowercases, strips punctuation except apostrophes, collapses whitespace.
+ */
 function normalise(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9'\s]/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9'\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
+/**
+ * Classify a speech transcript into a VoiceIntent.
+ *
+ * @param transcript  Raw text from SpeechRecognition.results
+ * @returns           ClassifiedIntent — intent, original transcript, confidence
+ *
+ * Strategy:
+ *   1. Normalise the transcript (lowercase, strip punctuation)
+ *   2. Walk INTENT_PATTERNS in order — first substring match wins
+ *   3. No match → UNKNOWN with confidence "low"
+ */
 export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
   const norm = normalise(transcript);
+
   for (const [intent, patterns] of INTENT_PATTERNS) {
     for (const pattern of patterns) {
-      if (norm.includes(pattern)) return { intent, transcript, confidence: "high" };
+      if (norm.includes(pattern)) {
+        return { intent, transcript, confidence: "high" };
+      }
     }
   }
+
   return { intent: "UNKNOWN", transcript, confidence: "low" };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Field resolution helpers — dual-schema safe
+// Sessions may carry flat legacy fields or nested v5 schedule fields.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function resolveDay(session: ScoredSession): string {
+function resolveSessionDay(session: ScoredSession): string {
   const raw = session as unknown as Record<string, unknown>;
-  return session.schedule?.day ?? (typeof raw.date === "string" ? raw.date : "") ?? "";
-}
-function resolveStart(session: ScoredSession): string {
-  const raw = session as unknown as Record<string, unknown>;
-  return session.schedule?.start_time ?? (typeof raw.start_time === "string" ? raw.start_time : "") ?? "";
-}
-function resolveRoom(session: ScoredSession): string {
-  const raw = session as unknown as Record<string, unknown>;
-  return session.schedule?.room ?? (typeof raw.room === "string" ? raw.room : "") ?? "";
+  return session.schedule?.day
+    ?? (typeof raw.date === "string" ? raw.date : "")
+    ?? "";
 }
 
-function goalContext(ctx: VoiceResponseContext): string {
-  const goals  = (ctx.participantGoals  ?? []).slice(0, 2);
-  const tracks = (ctx.participantTracks ?? []).slice(0, 2);
-  const items  = [...goals, ...tracks];
-  if (items.length === 0) return "";
-  return `You told Compass that ${items.join(" and ")} ${items.length > 1 ? "are" : "is"} important to you. `;
+function resolveSessionStart(session: ScoredSession): string {
+  const raw = session as unknown as Record<string, unknown>;
+  return session.schedule?.start_time
+    ?? (typeof raw.start_time === "string" ? raw.start_time : "")
+    ?? "";
+}
+
+function resolveSessionRoom(session: ScoredSession): string {
+  const raw = session as unknown as Record<string, unknown>;
+  return session.schedule?.room
+    ?? (typeof raw.room === "string" ? raw.room : "")
+    ?? "";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // buildVoiceResponse
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Build the spoken + display response for a classified intent.
+ *
+ * @param classified  Output of classifyVoiceIntent()
+ * @param ctx         Pre-scored data from the experience page
+ * @returns           VoiceResponse — spoken text, display text, optional action
+ *
+ * All data comes from ctx — no Firestore access, no side effects.
+ */
 export function buildVoiceResponse(
   classified: ClassifiedIntent,
   ctx: VoiceResponseContext
 ): VoiceResponse {
   const { intent } = classified;
-  const gc = goalContext(ctx);
 
   switch (intent) {
 
+    // ── NEXT_BEST_MOVE ────────────────────────────────────────────────────────
     case "NEXT_BEST_MOVE": {
       const nbm = ctx.nextBestMove;
       if (!nbm) {
         return {
           spoken:  "I don't have a recommendation ready yet. Open your Experience page to load your Compass.",
-          display: "No recommendation available. Open your Experience page.",
+          display: "No recommendation available. Open your Experience page to load your Compass.",
         };
       }
-      const spoken  = `${gc}That's why your next move is ${nbm.headline}. ${nbm.subline}. ${nbm.reason}.`;
+      const spoken  = `Your next move is ${nbm.headline}. ${nbm.subline}. ${nbm.reason}.`;
       const display = `${nbm.headline} · ${nbm.subline} · ${nbm.reason}`;
       return { spoken, display };
     }
 
+    // ── CHAMPION_MATCH ────────────────────────────────────────────────────────
     case "CHAMPION_MATCH": {
       const champion = ctx.topChampion;
       if (!champion) {
@@ -237,11 +301,12 @@ export function buildVoiceResponse(
       const keywords  = champion.shared_keywords?.slice(0, 2).join(" and ") ?? "";
       const matchLine = keywords ? ` You match on ${keywords}.` : "";
       const fromLine  = org ? ` from ${org}` : "";
-      const spoken    = `${gc}You should meet ${champion.display_name}${fromLine}.${matchLine}`;
+      const spoken    = `You should meet ${champion.display_name}${fromLine}.${matchLine}`;
       const display   = `Meet ${champion.display_name}${fromLine}${matchLine}`;
       return { spoken, display, action: "show_champions" };
     }
 
+    // ── CURRENT_SCHEDULE / NEXT_SCHEDULED ────────────────────────────────────
     case "CURRENT_SCHEDULE":
     case "NEXT_SCHEDULED": {
       const session = ctx.topSession;
@@ -251,16 +316,19 @@ export function buildVoiceResponse(
           display: "No upcoming session found. Check your Experience page.",
         };
       }
-      const day   = resolveDay(session);
-      const start = resolveStart(session);
-      const room  = resolveRoom(session);
+      const day   = resolveSessionDay(session);
+      const start = resolveSessionStart(session);
+      const room  = resolveSessionRoom(session);
       const when  = [day, start].filter(Boolean).join(" at ");
       const where = room ? ` in ${room}` : "";
       const spoken  = `Your next session is ${session.title}${when ? `, ${when}` : ""}${where}.`;
-      const display = [session.title, session.tracks?.primary_track, when, room].filter(Boolean).join(" · ");
+      const display = [session.title, session.tracks?.primary_track, when, room]
+        .filter(Boolean)
+        .join(" · ");
       return { spoken, display };
     }
 
+    // ── FULL_SCHEDULE ─────────────────────────────────────────────────────────
     case "FULL_SCHEDULE": {
       return {
         spoken:  "I'll show your full experience plan.",
@@ -269,43 +337,7 @@ export function buildVoiceResponse(
       };
     }
 
-    case "SHOW_DAY": {
-      const nbm     = ctx.nextBestMove;
-      const session = ctx.topSession;
-      const topItem = nbm?.headline ?? session?.title;
-      if (!topItem) {
-        return {
-          spoken:  "Open your Experience page to see your full day plan across Community, Learning, and Fun.",
-          display: "Open My Experience to see your day plan.",
-          action:  "navigate_experience",
-        };
-      }
-      const spoken  = `Your day is organised around ${topItem}. Open My Experience to see the full Community, Learning, and Fun schedule.`;
-      const display = `Top: ${topItem}. Open My Experience for your full day plan.`;
-      return { spoken, display, action: "navigate_experience" };
-    }
-
-    case "WHY_RECOMMENDED": {
-      const nbm     = ctx.nextBestMove;
-      const session = ctx.topSession;
-      if (nbm?.reason) {
-        const spoken  = `${gc}That's why Compass recommended this: ${nbm.reason}.`;
-        const display = `${gc}${nbm.reason}`;
-        return { spoken, display };
-      }
-      if (session?.compass_reasons && session.compass_reasons.length > 0) {
-        const reasons = session.compass_reasons.slice(0, 2).join(". ");
-        const spoken  = `${gc}Here's why Compass picked this: ${reasons}.`;
-        const display = `${gc}${reasons}`;
-        return { spoken, display };
-      }
-      return {
-        spoken:  `${gc}Compass matched this based on your profile signals. Open My Experience to see the full reasons.`,
-        display: `${gc}Open My Experience to see scoring reasons.`,
-        action:  "navigate_experience",
-      };
-    }
-
+    // ── DISMISS ───────────────────────────────────────────────────────────────
     case "DISMISS": {
       return {
         spoken:  "Got it. I'll use that to adjust your plan.",
@@ -314,6 +346,7 @@ export function buildVoiceResponse(
       };
     }
 
+    // ── MARK_ATTENDED ─────────────────────────────────────────────────────────
     case "MARK_ATTENDED": {
       return {
         spoken:  "Done. I'll mark that as attended in a future version.",
@@ -322,11 +355,12 @@ export function buildVoiceResponse(
       };
     }
 
+    // ── UNKNOWN ───────────────────────────────────────────────────────────────
     case "UNKNOWN":
     default: {
       return {
-        spoken:  "I can help with what to do next, who to meet, where to go, why something was recommended, or your day plan.",
-        display: "Try: What should I do next? · Who should I meet? · Why was this recommended? · Show me my day.",
+        spoken:  "I can help with what to do next, who to meet, or where to go now.",
+        display: "Try asking: What should I do next? · Who should I meet? · Where am I going now?",
       };
     }
   }
