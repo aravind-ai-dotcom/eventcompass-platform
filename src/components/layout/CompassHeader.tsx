@@ -11,6 +11,8 @@ import { usePathname } from "next/navigation";
 import Link  from "next/link";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { useAuth }   from "@/context/AuthContext";
+import { logOut }    from "@/lib/auth";
 
 type Theme = "dark" | "light";
 type EnrollState = "new" | "enrolled";
@@ -34,6 +36,7 @@ const NAV_NEW = [
 export default function CompassHeader() {
   const pathname = usePathname();
 
+  const { user }     = useAuth();
   const [theme, setTheme]       = useState<Theme>("dark");
   const [enrollState, setEnroll] = useState<EnrollState>("new");
 
@@ -105,9 +108,19 @@ export default function CompassHeader() {
           </a>
         </div>
 
-        <Link href="/enroll" className="btn-primary primary-link">
-          {ctaLabel}
-        </Link>
+        {user ? (
+          <button
+            onClick={async () => { try { await logOut(); } catch {} }}
+            className="btn-secondary"
+            style={{ fontSize:"0.84rem", minHeight:"32px", padding:"0 12px" }}
+          >
+            Sign out
+          </button>
+        ) : (
+          <Link href="/enroll" className="btn-primary primary-link">
+            {ctaLabel}
+          </Link>
+        )}
       </div>
     </header>
   );

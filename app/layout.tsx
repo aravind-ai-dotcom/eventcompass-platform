@@ -15,6 +15,7 @@ import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import CompassHeader from "@/components/layout/CompassHeader";
 import CompassFooter from "@/components/layout/CompassFooter";
+import { AuthProvider } from "@/context/AuthContext";
 
 // IBM Plex Sans — primary typeface for all body, headings, nav, buttons
 const ibmPlexSans = IBM_Plex_Sans({
@@ -52,14 +53,16 @@ export default function RootLayout({
             "var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif)",
         }}
       >
-        <CompassHeader />
-        {/*
-          compass-main sets width: min(1180px, calc(100% - 40px)) and centers
-          the content — defined in globals.css. Pages render inside this
-          container and do not need their own max-width wrapper.
-        */}
-        <main className="compass-main">{children}</main>
-        <CompassFooter />
+        <AuthProvider>
+          <CompassHeader />
+          {/*
+            compass-main sets width: min(1180px, calc(100% - 40px)) and centers
+            the content — defined in globals.css. Pages render inside this
+            container and do not need their own max-width wrapper.
+          */}
+          <main className="compass-main">{children}</main>
+          <CompassFooter />
+        </AuthProvider>
       </body>
     </html>
   );

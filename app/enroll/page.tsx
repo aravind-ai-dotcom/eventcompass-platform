@@ -2,12 +2,15 @@
 // =============================================================================
 // EventCompass — Intent & Enrollment  /enroll
 //
-// Wave 4 upgrade: full intent-capture UI.
-// Captures: Goals · Tech tracks · Needs · Community interests · Pillar balance
-// No Firestore writes yet (Phase 7).
+// Auth gate added (Phase 7):
+//   Step 1 — AuthPanel (sign in / create account)
+//   Step 2 — Intent builder (goals, tracks, needs, community, balance)
+//   Step 3 — Confirm screen
 // =============================================================================
 import { useState } from "react";
-import Link from "next/link";
+import Link       from "next/link";
+import AuthPanel  from "@/components/auth/AuthPanel";
+import { useAuth } from "@/context/AuthContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Signal options
@@ -155,14 +158,6 @@ function ConfirmScreen({
           </div>
         )}
 
-        <div style={{ border: "1px solid var(--accent)", background: "var(--panel)", padding: "14px 18px", marginBottom: "28px" }}>
-          <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 4px" }}>Prototype</p>
-          <p style={{ color: "var(--soft)", margin: 0, fontSize: "0.88rem", lineHeight: 1.5 }}>
-            In the full version these signals write to Firestore and immediately update scoring.
-            For now, open My Experience to see live recommendations for profile ATT-0001.
-          </p>
-        </div>
-
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <Link href="/experience" className="btn-primary">Open My Compass →</Link>
           <button onClick={onEdit} className="btn-secondary">Edit my intent</button>
@@ -178,7 +173,37 @@ function ConfirmScreen({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function EnrollPage() {
-  const [screen,    setScreen]    = useState<"form" | "confirm">("form");
+  const { user, loading } = useAuth();
+  const [screen, setScreen] = useState<"form" | "confirm">("form");
+  const [authed, setAuthed]  = useState(false);
+
+  // Show loading state while Firebase resolves auth
+  if (loading) {
+    return (
+      <section className="section no-top-border">
+        <div className="section-kicker">Compass</div>
+        <p style={{ color: "var(--muted)", marginTop: "12px" }}>Loading…</p>
+      </section>
+    );
+  }
+
+  // Auth gate — show AuthPanel until signed in
+  const isAuthenticated = !!(user || authed);
+  if (!isAuthenticated) {
+    return (
+      <>
+        <section className="compact-hero">
+          <div className="section-kicker">Build My Compass</div>
+          <h1>Tell Compass what matters to you.</h1>
+          <p>Sign in or create an account to save your intent, agenda, and recommendations.</p>
+        </section>
+        <section className="section no-top-border">
+          <AuthPanel onAuthenticated={() => setAuthed(true)} />
+        </section>
+        <div style={{ height: "64px" }} />
+      </>
+    );
+  }
   const [goals,     setGoals]     = useState<string[]>([]);
   const [tracks,    setTracks]    = useState<string[]>([]);
   const [needs,     setNeeds]     = useState<string[]>([]);
@@ -216,18 +241,7 @@ export default function EnrollPage() {
 
       <div style={{ maxWidth: "800px" }}>
 
-        {/* Prototype notice */}
-        <section className="section no-top-border">
-          <div style={{ border: "1px solid var(--accent)", background: "var(--panel)", padding: "14px 18px" }}>
-            <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 4px" }}>
-              Prototype note
-            </p>
-            <p style={{ color: "var(--soft)", margin: 0, fontSize: "0.88rem", lineHeight: 1.5 }}>
-              Firestore writes and IBM ID authentication are added in the next phase.
-              The experience page currently loads participant <strong>ATT-0001</strong> directly.
-            </p>
-          </div>
-        </section>
+</section>
 
         {/* ── Step 1: Goals ─────────────────────────────────────────────── */}
         <section className="section">

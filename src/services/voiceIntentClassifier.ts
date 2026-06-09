@@ -30,6 +30,11 @@ export type VoiceIntent =
   | "FULL_SCHEDULE"
   | "SHOW_DAY"
   | "WHY_RECOMMENDED"
+  | "ADD_TO_AGENDA"
+  | "SHOW_CONFLICTS"
+  | "SHOW_GAPS"
+  | "SHOW_AFTERNOON"
+  | "MEET_BEFORE_LUNCH"
   | "DISMISS"
   | "MARK_ATTENDED"
   | "UNKNOWN";
@@ -143,6 +148,58 @@ const INTENT_PATTERNS: Array<[VoiceIntent, string[]]> = [
     "who is available", "meet a champion", "any champions",
     "people i should meet", "who to meet", "networking",
     "who do you recommend i meet",
+  ]],
+
+  ["ADD_TO_AGENDA", [
+    "add this session",
+    "add to my agenda",
+    "add to agenda",
+    "save this session",
+    "put this in my calendar",
+    "schedule this",
+    "add this to my plan",
+    "add this",
+  ]],
+
+  ["SHOW_CONFLICTS", [
+    "any conflicts",
+    "do i have conflicts",
+    "show conflicts",
+    "check my schedule",
+    "schedule conflicts",
+    "any clashes",
+    "overlapping sessions",
+  ]],
+
+  ["SHOW_GAPS", [
+    "what should i do between sessions",
+    "any free time",
+    "open slots",
+    "open time",
+    "what can i do in the gap",
+    "fill my gap",
+    "between sessions",
+    "free slot",
+    "open window",
+  ]],
+
+  ["SHOW_AFTERNOON", [
+    "show me my afternoon",
+    "what is this afternoon",
+    "afternoon plan",
+    "afternoon schedule",
+    "my afternoon",
+    "what's this afternoon",
+    "later today",
+  ]],
+
+  ["MEET_BEFORE_LUNCH", [
+    "who should i meet before lunch",
+    "meet someone before lunch",
+    "any meetings before lunch",
+    "who can i meet this morning",
+    "people to meet this morning",
+    "connect before lunch",
   ]],
 
   ["NEXT_BEST_MOVE", [
@@ -319,6 +376,63 @@ export function buildVoiceResponse(
         spoken:  "Done. I'll mark that as attended in a future version.",
         display: "Done. Compass will mark that as attended in a future update.",
         action:  "mark_attended",
+      };
+    }
+
+    case "ADD_TO_AGENDA": {
+      return {
+        spoken:  "To add sessions to your agenda, open a session card and tap Add to Agenda. Your plan will update immediately.",
+        display: "Open a session card → Add to Agenda. Your Compass plan updates in real time.",
+        action:  "navigate_experience",
+      };
+    }
+
+    case "SHOW_CONFLICTS": {
+      return {
+        spoken:  "Open My Experience to see your agenda and any schedule conflicts Compass has detected.",
+        display: "Compass checks your agenda for conflicts. Open My Experience to review.",
+        action:  "navigate_experience",
+      };
+    }
+
+    case "SHOW_GAPS": {
+      return {
+        spoken:  "Compass looks for open windows in your schedule and suggests champions, community events, and activities to fill them.",
+        display: "Open My Experience → My Agenda to see open slots and what Compass recommends filling them with.",
+        action:  "navigate_experience",
+      };
+    }
+
+    case "SHOW_AFTERNOON": {
+      const session = ctx.topSession;
+      const hasSession = session && ctx.topSession;
+      const spoken = hasSession
+        ? `This afternoon, your top recommendation is ${session!.title}. Open My Experience to see your full afternoon plan.`
+        : "Open My Experience to see your full afternoon schedule and open opportunities.";
+      return {
+        spoken,
+        display: hasSession
+          ? `Afternoon top pick: ${session!.title}. Open My Experience for your full plan.`
+          : "Open My Experience to see your afternoon plan.",
+        action: "navigate_experience",
+      };
+    }
+
+    case "MEET_BEFORE_LUNCH": {
+      const champion = ctx.topChampion;
+      if (champion) {
+        const org = champion.organization ?? champion.company ?? "";
+        const spoken = `Before lunch, consider meeting ${champion.display_name}${org ? ` from ${org}` : ""}. ${gc}They are available for a conversation.`;
+        return {
+          spoken,
+          display: `Meet ${champion.display_name}${org ? ` · ${org}` : ""} before lunch. Open Champions to connect.`,
+          action: "show_champions",
+        };
+      }
+      return {
+        spoken:  "Check the Champions page to find someone worth meeting before lunch today.",
+        display: "Browse Champions to find morning connections.",
+        action:  "show_champions",
       };
     }
 
