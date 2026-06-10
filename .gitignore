@@ -42,4 +42,4 @@ next-env.d.ts
 
 serviceAccountKey.json
 data/*.json
-data/**/*.json
+data/**/*.jsonreview/
