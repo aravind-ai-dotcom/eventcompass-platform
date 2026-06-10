@@ -5,15 +5,17 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-   EmailAuthProvider,
-    reauthenticateWithCredential,
-    updateEmail,
-    updatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updateEmail,
+  updatePassword,
   type AuthError,
 } from "firebase/auth";
 
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+
+const EVENT_BASE = "organizations/ibm/events/txc2026";
 
 export interface UserProfile {
   uid: string;
@@ -33,6 +35,65 @@ export interface UserProfile {
   };
   createdAt?: unknown;
   updatedAt?: unknown;
+}
+
+type ExtendedParticipantProfile = Partial<UserProfile> & {
+  tracks?: string[];
+  needs?: string[];
+  openTo?: string[];
+  aspiration?: string;
+  linkedin_url?: string;
+  education?: {
+    institution: string;
+    degree?: string;
+    field?: string;
+    graduation_year?: string;
+  }[];
+  past_employers?: {
+    company: string;
+    role?: string;
+    years?: string;
+  }[];
+  career_interests?: string[];
+  networking_identity?: {
+    open_to_alumni_connections?: boolean;
+    open_to_past_colleague_connections?: boolean;
+    open_to_university_connections?: boolean;
+    open_to_career_conversations?: boolean;
+  };
+};
+
+function splitDisplayName(displayName: string): {
+  first_name: string;
+  last_name: string;
+  display_name: string;
+} {
+  const clean = displayName.trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+
+  return {
+    first_name: parts[0] ?? "",
+    last_name: parts.slice(1).join(" "),
+    display_name: clean,
+  };
+}
+
+function buildMatchingKeywords(profile: ExtendedParticipantProfile): string[] {
+  return [
+    ...(profile.goals ?? []),
+    ...(profile.tracks ?? []),
+    ...(profile.needs ?? []),
+    ...(profile.openTo ?? []),
+    ...(profile.career_interests ?? []),
+    ...(profile.education ?? []).map((e) => e.institution),
+    ...(profile.past_employers ?? []).map((e) => e.company),
+    profile.organization ?? "",
+    profile.role ?? "",
+    profile.persona ?? "",
+    profile.aspiration ?? "",
+  ]
+    .filter(Boolean)
+    .map((v) => String(v).toLowerCase());
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -72,7 +133,10 @@ export async function ensureUserProfile(profile: UserProfile): Promise<UserProfi
 }
 
 export function friendlyAuthError(error: unknown): string {
-  const code = (error as AuthError)?.code ?? "";
+  const code =
+    typeof error === "string"
+      ? error
+      : (error as AuthError | { code?: string } | undefined)?.code ?? "";
 
   switch (code) {
     case "auth/invalid-email":
@@ -92,14 +156,14 @@ export function friendlyAuthError(error: unknown): string {
       return "Sign-in was cancelled.";
     case "auth/operation-not-allowed":
       return "This sign-in method is not enabled yet.";
-default:
-  console.error("Firebase auth error:", error);
-  return `Auth error: ${code || "unknown"}`;
+    default:
+      console.error("Firebase auth error:", error);
+      return `Auth error: ${code || "unknown"}`;
   }
 }
 
 export async function signUpWithEmail(input: {
-      email: string;
+  email: string;
   password: string;
   displayName: string;
   organization?: string;
@@ -112,58 +176,83 @@ export async function signUpWithEmail(input: {
     input.password
   );
 
+  const safeDisplayName = input.displayName.trim() || input.email;
+  const nameParts = splitDisplayName(safeDisplayName);
+
   await createUserProfile({
     uid: cred.user.uid,
     email: input.email,
-    displayName: input.displayName,
+    displayName: safeDisplayName,
     organization: input.organization ?? "",
     role: input.role ?? "",
     persona: input.persona ?? "",
     authProvider: "password",
   });
 
- const participantRef = doc(
-  db,
-  `organizations/ibm/events/txc2026/participants/${cred.user.uid}`
-);
+  await setDoc(
+    doc(db, `${EVENT_BASE}/participants/${cred.user.uid}`),
+    {
+      participant_id: cred.user.uid,
+      id: cred.user.uid,
 
-await setDoc(
-  participantRef,
-  {
-    id: cred.user.uid,
-    display_name: input.displayName,
-    email: input.email,
-    job_title: input.role ?? "",
-    company: input.organization ?? "",
-    persona: input.persona ?? "",
+      first_name: nameParts.first_name,
+      last_name: nameParts.last_name,
+      display_name: nameParts.display_name,
 
-    event_signal_profile: {
-      goals: [],
-      tech_tracks: [],
-      roles_at_txc: input.role ? [input.role] : [],
-      open_to: [],
-      intent: {
-        needs: [],
+      email: input.email,
+      job_title: input.role ?? "",
+      company: input.organization ?? "",
+      organization: input.organization ?? "",
+      persona: input.persona ?? "",
+
+      linkedin_url: "",
+      education: [],
+      past_employers: [],
+      career_interests: [],
+
+      networking_identity: {
+        open_to_alumni_connections: false,
+        open_to_past_colleague_connections: false,
+        open_to_university_connections: false,
+        open_to_career_conversations: false,
       },
-    },
 
-    compass_intelligence: {
-      matching_keywords: [],
-    },
+      event_signal_profile: {
+        goals: [],
+        tech_tracks: [],
+        roles_at_txc: input.role ? [input.role] : [],
+        open_to: [],
+        intent: {
+          needs: [],
+          aspiration: "",
+        },
+      },
 
-    registration: {
-      attending: true,
-      industry: "",
-    },
+      compass_intelligence: {
+        matching_keywords: buildMatchingKeywords({
+          displayName: safeDisplayName,
+          email: input.email,
+          organization: input.organization ?? "",
+          role: input.role ?? "",
+          persona: input.persona ?? "",
+        }),
+      },
 
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  },
-  { merge: true }
-);
+      registration: {
+        attending: true,
+        registered: true,
+        industry: "",
+      },
+
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 
   return cred;
 }
+
 export async function sendPasswordReset(email: string): Promise<void> {
   await sendPasswordResetEmail(auth, email);
 }
@@ -197,22 +286,47 @@ export async function updateUserProfile(
 
 export async function updateParticipantProfile(
   uid: string,
-  profile: Partial<UserProfile> & {
-    tracks?: string[];
-    needs?: string[];
-    openTo?: string[];
-    aspiration?: string;
-  }
+  profile: ExtendedParticipantProfile
 ): Promise<void> {
+  const safeDisplayName =
+    profile.displayName?.trim() ||
+    profile.email?.trim() ||
+    "Attendee";
+
+  const nameParts = splitDisplayName(safeDisplayName);
+
   await setDoc(
-    doc(db, "organizations/ibm/events/txc2026/participants", uid),
+    doc(db, `${EVENT_BASE}/participants/${uid}`),
     {
+      participant_id: uid,
       id: uid,
-      display_name: profile.displayName ?? "",
+
+      first_name: nameParts.first_name,
+      last_name: nameParts.last_name,
+      display_name: nameParts.display_name,
+
       email: profile.email ?? "",
       job_title: profile.role ?? "",
       company: profile.organization ?? "",
+      organization: profile.organization ?? "",
       persona: profile.persona ?? "",
+
+      linkedin_url: profile.linkedin_url ?? "",
+      education: profile.education ?? [],
+      past_employers: profile.past_employers ?? [],
+      career_interests: profile.career_interests ?? [],
+
+      networking_identity: {
+        open_to_alumni_connections:
+          profile.networking_identity?.open_to_alumni_connections ?? false,
+        open_to_past_colleague_connections:
+          profile.networking_identity?.open_to_past_colleague_connections ?? false,
+        open_to_university_connections:
+          profile.networking_identity?.open_to_university_connections ?? false,
+        open_to_career_conversations:
+          profile.networking_identity?.open_to_career_conversations ?? false,
+      },
+
       event_signal_profile: {
         goals: profile.goals ?? [],
         tech_tracks: profile.tracks ?? [],
@@ -223,17 +337,17 @@ export async function updateParticipantProfile(
           aspiration: profile.aspiration ?? "",
         },
       },
+
       compass_intelligence: {
-        matching_keywords: [
-          ...(profile.goals ?? []),
-          ...(profile.tracks ?? []),
-          ...(profile.needs ?? []),
-          ...(profile.openTo ?? []),
-          profile.aspiration ?? "",
-        ]
-          .filter(Boolean)
-          .map((v) => String(v).toLowerCase()),
+        matching_keywords: buildMatchingKeywords(profile),
       },
+
+      registration: {
+        attending: true,
+        registered: true,
+        industry: "",
+      },
+
       updatedAt: serverTimestamp(),
     },
     { merge: true }
@@ -279,7 +393,7 @@ export async function updateUserEmail(
   );
 
   await setDoc(
-    doc(db, "organizations/ibm/events/txc2026/participants", user.uid),
+    doc(db, `${EVENT_BASE}/participants/${user.uid}`),
     {
       email: newEmail,
       updatedAt: serverTimestamp(),
