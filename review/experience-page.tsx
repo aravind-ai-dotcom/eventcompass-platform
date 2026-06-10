@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { db } from "../../src/lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
+import { useAuth }              from "@/context/AuthContext";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
 import EventHighlights    from "@/components/experience/EventHighlights";
 import TechXchangeBanner  from "@/components/experience/TechXchangeBanner";
@@ -26,14 +27,13 @@ import PeopleRecommendations from "@/components/experience/PeopleRecommendations
 import ExperienceBalance  from "@/components/experience/ExperienceBalance";
 import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
-import { useAuth } from "@/context/AuthContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BASE           = "organizations/ibm/events/txc2026";
-const DEV_FALLBACK_ID = "ATT-0001";
+const PARTICIPANT_ID = "ATT-0001";
 
 const W = {
   track:     25,
@@ -95,26 +95,6 @@ interface EventCounts {
   sessions: number;
   champions: number;
 }
-
-
-type FeaturedChampion = {
-  id: string;
-  display_name?: string;
-  title?: string;
-  organization?: string;
-  photo_url?: string;
-  quote?: string;
-  topics?: string[];
-  linkedin_url?: string;
-  featured?: boolean;
-  homepage_priority?: number;
-  consent?: {
-    featured_champion?: boolean;
-    show_photo?: boolean;
-  };
-};
-
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilities  (unchanged from original)
@@ -567,6 +547,9 @@ function DayTabExperience({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function ExperiencePage() {
+  // ── Auth guard ────────────────────────────────────────────────────────────
+  const { user, loading: authLoading } = useAuth();
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [participant,  setParticipant]  = useState<RawDoc | null>(null);
   const [learningList, setLearningList] = useState<ScoredSession[]>([]);
@@ -575,27 +558,25 @@ export default function ExperiencePage() {
   const [nextBestMove, setNextBestMove] = useState<ScoredSession | null>(null);
   const [allSessions,  setAllSessions]  = useState<ScoredSession[]>([]);
   const [champions,    setChampions]    = useState<ScoredChampion[]>([]);
-  const [featuredChampions, setFeaturedChampions] = useState<FeaturedChampion[]>([]);
+  const [featuredChampions, setFeaturedChampions] = useState<import("@/types").Champion[]>([]);
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
   const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,     setErrorMsg]     = useState("");
-  const { user } = useAuth();
-  
-  const participantId = user?.uid ?? DEV_FALLBACK_ID;
 
   // ── Load ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       try {
         const [pSnap, sessSnap, partSnap, champSnap] = await Promise.all([
-          getDoc(doc(db, `${BASE}/participants/${participantId}`)),
+          getDoc(doc(db, `${BASE}/participants/${PARTICIPANT_ID}`)),
           getDocs(collection(db, `${BASE}/sessions`)),
           getDocs(collection(db, `${BASE}/participants`)),
           getDocs(collection(db, `${BASE}/champions`)),
         ]);
 
         if (!pSnap.exists()) {
-          setErrorMsg(`Participant "${participantId}" not found at ${BASE}/participants/${participantId}`);          setStatus("error");
+          setErrorMsg(`Participant "${PARTICIPANT_ID}" not found at ${BASE}/participants/${PARTICIPANT_ID}`);
+          setStatus("error");
           return;
         }
 
@@ -651,7 +632,25 @@ export default function ExperiencePage() {
       }
     }
     load();
-}, [participantId]);
+  }, []);
+
+  // ── Auth redirect ───────────────────────────────────────────────────────
+  // Soft guard: prompts sign-in but doesn't hard-block (ATT-0001 still works
+  // during development when auth is not yet fully wired)
+  if (!authLoading && !user) {
+    return (
+      <section className="section no-top-border">
+        <div className="section-kicker">Compass</div>
+        <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.8rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "12px 0 16px" }}>
+          Sign in to access My Experience.
+        </h2>
+        <p style={{ color: "var(--muted)", marginBottom: "24px" }}>
+          Your personalized Compass experience requires an account.
+        </p>
+        <a href="/login" className="btn-primary">Sign in or create account</a>
+      </section>
+    );
+  }
 
   // ── Loading ─────────────────────────────────────────────────────────────
   if (status === "loading") {
@@ -801,7 +800,7 @@ export default function ExperiencePage() {
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "16px", alignItems: "start" }}>
           <ExperienceBalance sessionCounts={pillarCounts} />
           <div style={{ display: "grid", gap: "14px" }}>
-            <PrintExport participantId={participantId} hasPinnedSessions={allSessions.length > 0} />
+            <PrintExport participantId={PARTICIPANT_ID} hasPinnedSessions={allSessions.length > 0} />
             <TechXchangeTV />
           </div>
         </div>
@@ -824,7 +823,7 @@ export default function ExperiencePage() {
             shared_keywords: c.shared_keywords,
             is_champion:  true,
           }))}
-          currentUserId={participantId}
+          currentUserId={PARTICIPANT_ID}
         />
       </section>
 
