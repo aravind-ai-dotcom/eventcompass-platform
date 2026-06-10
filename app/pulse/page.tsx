@@ -412,8 +412,105 @@ export default function PulsePage() {
             );
           })()}
 
-          {/* ── 4. Open-to-connection counts ──────────────────────────────── */}
-          {(data.openToAlumni + data.openToColleague + data.openToUniversity + data.openToCareer > 0) && (
+          {/* ── 4. Career Interests ───────────────────────────────────────── */}
+{Object.keys(data.topCareerInterests).length > 0 && (() => {
+  const rows = top(data.topCareerInterests, 15);
+  const max  = rows[0]?.[1] ?? 1;
+
+  return (
+    <section className="section">
+      <div style={{ marginBottom: "20px" }}>
+        <div className="section-kicker">Career signal</div>
+        <h2
+          style={{
+            fontSize: "clamp(1.6rem,2.8vw,2.2rem)",
+            fontWeight: 520,
+            letterSpacing: "-0.04em",
+            margin: "4px 0 0",
+            color: "var(--text)",
+          }}
+        >
+          Career interests emerging.
+        </h2>
+      </div>
+
+      <div style={{ display: "grid", gap: "6px" }}>
+        {rows.map(([interest, count]) => {
+          const pct = Math.max(4, Math.round((count / max) * 100));
+
+          return (
+            <div
+              key={interest}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 3.2rem",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "var(--soft)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {interest}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    height: "7px",
+                    background: "var(--line)",
+                    overflow: "hidden",
+                    borderRadius: "2px",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${pct}%`,
+                      background: "#7C3AED",
+                      borderRadius: "2px",
+                      transition: "width 0.6s ease-out",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <span
+                style={{
+                  fontFamily: "var(--font-mono, ui-monospace)",
+                  fontSize: "0.84rem",
+                  color: "var(--muted)",
+                  textAlign: "right",
+                }}
+              >
+                {count}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
+        Aggregate career interests only. No individual information is shown.
+      </p>
+    </section>
+  );
+})()}
+
+{/* ── 5. Open-to-connection counts ──────────────────────────────── */}          {(data.openToAlumni + data.openToColleague + data.openToUniversity + data.openToCareer > 0) && (
             <section className="section">
               <div style={{ marginBottom: "20px" }}>
                 <div className="section-kicker">Connection intent</div>
@@ -421,8 +518,7 @@ export default function PulsePage() {
                   Open to connections.
                 </h2>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))", gap: "12px" }}>
-                {[
+<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>                {[
                   { label: "Alumni connections",  val: data.openToAlumni,     color: "#6D28D9" },
                   { label: "Past colleagues",      val: data.openToColleague,  color: "#2563EB" },
                   { label: "University community", val: data.openToUniversity, color: "#0D9488" },

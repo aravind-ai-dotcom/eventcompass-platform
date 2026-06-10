@@ -15,7 +15,13 @@ import {
 
 type RawDoc = Record<string, unknown>;
 
-interface MatchWithPhoto extends NetworkMatchResult { photo_url?: string }
+interface MatchWithPhoto extends NetworkMatchResult {
+  photo_url?:          string;
+  consent_public:      boolean;  // identity visible gate
+  linkedin_url_visible:boolean;  // stricter gate — all four conditions met
+  job_title?:          string;
+  industry?:           string;
+}
 
 interface Props {
   participant:     RawDoc;
@@ -31,24 +37,60 @@ function LIIcon() {
 }
 
 function MatchCard({ match }: { match: MatchWithPhoto }) {
-  const initial = (match.display_name[0] ?? "?").toUpperCase();
+  const isPublic = match.consent_public;
+  const initial  = (match.display_name[0] ?? "?").toUpperCase();
+
+  // What to show in the identity row depends on consent
+  const nameDisplay    = isPublic ? match.display_name : null;
+  const orgDisplay     = isPublic ? match.current_org  : null;
+
+  // Anonymous teaser — derived from reasons when not public
+  const anonRole    = match.job_title  ?? (match.reasons.find(r => r.toLowerCase().includes("career")) ? "Career professional" : null);
+  const anonIndustry= match.industry   ?? null;
+  const anonTeaser  = [anonRole, anonIndustry].filter(Boolean).join(" · ") ||
+    (match.reasons.length > 0 ? "Attendee at TechXchange" : "Anonymous match");
+
   return (
     <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+      {/* Identity row */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-        {match.photo_url ? (
+        {isPublic && match.photo_url ? (
           <div style={{ width: 40, height: 40, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid var(--accent)" }}>
-            <Image src={match.photo_url} alt={match.display_name} width={40} height={40} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+            <Image src={match.photo_url} alt={nameDisplay ?? "Match"} width={40} height={40} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
           </div>
         ) : (
-          <div className="avatar-fallback" style={{ width: 40, height: 40, fontSize: "0.95rem", flexShrink: 0 }} aria-hidden>{initial}</div>
+          // Anonymous or no photo — show initial only when public, lock icon when anon
+          <div className="avatar-fallback" style={{ width: 40, height: 40, fontSize: isPublic ? "0.95rem" : "1rem", flexShrink: 0 }} aria-hidden>
+            {isPublic ? initial : "🔒"}
+          </div>
         )}
+
         <div style={{ minWidth: 0, flex: 1 }}>
-          <p style={{ margin: "0 0 2px", fontWeight: 620, fontSize: "0.92rem", color: "var(--text)", letterSpacing: "-0.01em" }}>{match.display_name}</p>
-          {match.current_org && <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.78rem" }}>{match.current_org}</p>}
+          {isPublic ? (
+            <>
+              <p style={{ margin: "0 0 2px", fontWeight: 620, fontSize: "0.92rem", color: "var(--text)", letterSpacing: "-0.01em" }}>
+                {nameDisplay}
+              </p>
+              {orgDisplay && <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.78rem" }}>{orgDisplay}</p>}
+            </>
+          ) : (
+            <>
+              <p style={{ margin: "0 0 2px", fontWeight: 620, fontSize: "0.92rem", color: "var(--text)", letterSpacing: "-0.01em" }}>
+                {anonTeaser}
+              </p>
+              <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.76rem", fontStyle: "italic" }}>
+                Profile visible after mutual connection
+              </p>
+            </>
+          )}
         </div>
-        <span style={{ flexShrink: 0, fontSize: "0.68rem", fontWeight: 680, color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 6px" }}>{match.score}</span>
+
+        <span style={{ flexShrink: 0, fontSize: "0.68rem", fontWeight: 680, color: "var(--accent)", border: "1px solid var(--accent)", padding: "1px 6px" }}>
+          {match.score}
+        </span>
       </div>
 
+      {/* Why matched */}
       {match.reasons.length > 0 && (
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "3px" }}>
           {match.reasons.slice(0, 3).map(r => (
@@ -59,17 +101,6 @@ function MatchCard({ match }: { match: MatchWithPhoto }) {
         </ul>
       )}
 
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        {match.linkedin_url && (
-          <a href={match.linkedin_url} target="_blank" rel="noopener noreferrer"
-            style={{ display: "inline-flex", alignItems: "center", gap: "5px", height: "28px", padding: "0 10px", border: "1px solid #0A66C2", color: "#0A66C2", fontSize: "0.76rem", fontWeight: 650, textDecoration: "none", whiteSpace: "nowrap" }}>
-            <LIIcon /> Connect
-          </a>
-        )}
-        <button style={{ display: "inline-flex", alignItems: "center", height: "28px", padding: "0 10px", border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.76rem", fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" }}>
-          Save contact
-        </button>
-      </div>
     </div>
   );
 }
@@ -97,13 +128,69 @@ export default function NetworkPanel({ participant, allParticipants }: Props) {
     );
   }
 
-  const matches: MatchWithPhoto[] = allParticipants
-    .map(p => {
-      const sig    = getParticipantNetworkSignals({ ...p, id: p.id ?? p.uid });
-      const result = scoreNetworkMatch(currentSig, sig);
-      return { ...result, photo_url: typeof p.photo_url === "string" ? p.photo_url : undefined };
-    })
-    .filter(m => m.score > 0)
+ 
+const matches: MatchWithPhoto[] = allParticipants
+  .map((p): MatchWithPhoto => {
+    const sig = getParticipantNetworkSignals({ ...p, id: p.id ?? p.uid });
+    const result = scoreNetworkMatch(currentSig, sig);
+
+    const consent = (p.consent as Record<string, unknown>) ?? {};
+    const ni = (p.networking_identity as Record<string, unknown>) ?? {};
+    const registration = (p.registration as Record<string, unknown>) ?? {};
+
+    const isPublic = Boolean(
+      consent.networking ||
+      consent.public_profile ||
+      consent.show_public_profile ||
+      consent.allow_intro_requests
+    );
+
+    const hasLinkedIn =
+      typeof p.linkedin_url === "string" && p.linkedin_url.trim() !== "";
+
+    const liNotBlocked = consent.show_linkedin !== false;
+
+    const profileNotHidden =
+      consent.public_profile !== false ||
+      consent.show_public_profile !== false;
+
+    const hasOpenTo = Boolean(
+      ni.open_to_alumni_connections ||
+      ni.open_to_past_colleague_connections ||
+      ni.open_to_university_connections ||
+      ni.open_to_career_conversations
+    );
+
+    const linkedin_url_visible =
+      hasLinkedIn &&
+      liNotBlocked &&
+      profileNotHidden &&
+      hasOpenTo;
+
+    const jobTitle =
+      typeof p.job_title === "string" ? p.job_title : undefined;
+
+    const industry =
+      typeof p.industry === "string"
+        ? p.industry
+        : typeof registration.industry === "string"
+          ? String(registration.industry)
+          : undefined;
+
+    return {
+      ...result,
+      photo_url: typeof p.photo_url === "string" ? p.photo_url : undefined,
+      consent_public: isPublic,
+      linkedin_url: typeof p.linkedin_url === "string" ? p.linkedin_url : undefined,
+      linkedin_url_visible,
+      job_title: jobTitle,
+      industry,
+    };
+  })
+  .filter((m) => m.score > 0)
+
+
+
     .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
