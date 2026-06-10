@@ -6,7 +6,7 @@
 // Full implementation in Phase 5 (Communities + Pulse).
 // =============================================================================
 import { useEffect, useState } from "react";
-import { db } from "../../src/lib/firebase";
+import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 

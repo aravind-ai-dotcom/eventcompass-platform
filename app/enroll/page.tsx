@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import AuthPanel from "@/components/auth/AuthPanel";
 import { useAuth } from "@/context/AuthContext";
@@ -80,6 +80,17 @@ function Chip({
   );
 }
 
+function splitName(name: string) {
+  const clean = name.trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+
+  return {
+    firstName: parts[0] ?? "",
+    lastName: parts.slice(1).join(" "),
+    displayName: clean,
+  };
+}
+
 export default function EnrollPage() {
   const { user, loading } = useAuth();
 
@@ -108,10 +119,42 @@ export default function EnrollPage() {
     try {
       const uid = user.uid;
 
+      const existingParticipant = await getDoc(doc(db, `${BASE}/participants/${uid}`));
+      const existing = existingParticipant.exists()
+        ? (existingParticipant.data() as Record<string, unknown>)
+        : {};
+
+      const existingDisplayName =
+        typeof existing.display_name === "string" && existing.display_name.trim()
+          ? existing.display_name.trim()
+          : "";
+
+      const existingCompany =
+        typeof existing.company === "string" && existing.company.trim()
+          ? existing.company.trim()
+          : typeof existing.organization === "string" && existing.organization.trim()
+            ? existing.organization.trim()
+            : "";
+
+      const existingRole =
+        typeof existing.job_title === "string" && existing.job_title.trim()
+          ? existing.job_title.trim()
+          : "";
+
+      const safeName =
+        existingDisplayName ||
+        user.displayName?.trim() ||
+        user.email?.split("@")[0] ||
+        "Attendee";
+
+      const { firstName, lastName, displayName } = splitName(safeName);
+
       await Promise.all([
         setDoc(
           doc(db, "users", uid),
           {
+            displayName,
+            email: user.email ?? "",
             goals,
             interests: tracks,
             updatedAt: serverTimestamp(),
@@ -123,8 +166,18 @@ export default function EnrollPage() {
           doc(db, `${BASE}/participants/${uid}`),
           {
             id: uid,
+            participant_id: uid,
+
             email: user.email ?? "",
-            display_name: user.displayName ?? user.email ?? "Attendee",
+
+            first_name: firstName,
+            last_name: lastName,
+            display_name: displayName,
+
+            company: existingCompany,
+            organization: existingCompany,
+            job_title: existingRole,
+
             event_signal_profile: {
               goals,
               tech_tracks: tracks,
@@ -134,6 +187,7 @@ export default function EnrollPage() {
                 aspiration,
               },
             },
+
             compass_intelligence: {
               matching_keywords: [
                 ...goals,
@@ -141,15 +195,19 @@ export default function EnrollPage() {
                 ...needs,
                 ...community,
                 aspiration,
+                existingCompany,
+                existingRole,
               ]
                 .filter(Boolean)
-                .map((v) => v.toLowerCase()),
+                .map((v) => String(v).toLowerCase()),
             },
+
             registration: {
               attending: true,
               registered: true,
               industry: "",
             },
+
             updatedAt: serverTimestamp(),
           },
           { merge: true }

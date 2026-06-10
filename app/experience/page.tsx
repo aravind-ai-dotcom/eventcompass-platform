@@ -579,9 +579,8 @@ export default function ExperiencePage() {
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
   const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,     setErrorMsg]     = useState("");
-  const { user } = useAuth();
-  
-  const participantId = user?.uid ?? DEV_FALLBACK_ID;
+  const { user, loading: authLoading } = useAuth();
+  const participantId = user?.uid ?? "";
 
   // ── Load ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -650,8 +649,10 @@ export default function ExperiencePage() {
         setStatus("error");
       }
     }
-    load();
-}, [participantId]);
+if (!authLoading && participantId) {
+  load();
+}
+}, [authLoading, participantId]);
 
   // ── Loading ─────────────────────────────────────────────────────────────
   if (status === "loading") {
@@ -686,9 +687,22 @@ export default function ExperiencePage() {
   }
 
   // ── Participant field helpers ─────────────────────────────────────────────
-  const displayName = String(participant.display_name ?? "Attendee");
+
+const displayName = String(
+  participant.display_name ??
+  participant.displayName ??
+  participant.email ??
+  "Attendee"
+);
+
   const jobTitle    = String(participant.job_title    ?? "");
-  const company     = String(participant.company      ?? "");
+
+  const company = String(
+  participant.company ??
+  participant.organization ??
+  ""
+);
+
   const sig         = (participant.event_signal_profile as RawDoc) ?? {};
   const tracks      = ((sig.tech_tracks as string[]) ?? []).slice(0, 5);
   const goals       = ((sig.goals       as string[]) ?? []).slice(0, 3);
