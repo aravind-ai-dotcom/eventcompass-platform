@@ -159,11 +159,12 @@ export default function ProfilePage() {
       };
       await updateUserProfile(user.uid, updates);
       await updateParticipantProfile(user.uid, {
-        display_name: displayName,
-        job_title:    role,
-        company:      organization,
-        event_signal_profile: { goals, tech_tracks: tracks },
-      });
+      displayName,
+      role,
+      organization,
+      goals,
+      tracks,
+});
       await refreshProfile();
       showToast("Profile saved.", true);
     } catch (err: unknown) {

@@ -111,8 +111,14 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: Props) {
     if (!validate()) return;
     setGlobalError(""); setLoading(true);
     try {
-      await signUpWithEmail({ fullName, email: email.trim(), password, organization, role, persona });
-      onSuccess();
+      await signUpWithEmail({
+    displayName: fullName,
+    email: email.trim(),
+    password,
+    organization,
+    role,
+    persona,
+});      onSuccess();
     } catch (err: unknown) {
       setGlobalError(friendlyAuthError((err as { code?: string }).code ?? ""));
     } finally {

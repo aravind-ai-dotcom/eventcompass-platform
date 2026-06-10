@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-    EmailAuthProvider,
+   EmailAuthProvider,
     reauthenticateWithCredential,
     updateEmail,
     updatePassword,
@@ -179,4 +179,111 @@ export async function logOut(): Promise<void> {
 export async function signInWithIBM() {
   const provider = new OAuthProvider("oidc.ibm");
   return signInWithPopup(auth, provider);
+}
+
+export async function updateUserProfile(
+  uid: string,
+  profile: Partial<UserProfile>
+): Promise<void> {
+  await setDoc(
+    doc(db, "users", uid),
+    {
+      ...profile,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function updateParticipantProfile(
+  uid: string,
+  profile: Partial<UserProfile> & {
+    tracks?: string[];
+    needs?: string[];
+    openTo?: string[];
+    aspiration?: string;
+  }
+): Promise<void> {
+  await setDoc(
+    doc(db, "organizations/ibm/events/txc2026/participants", uid),
+    {
+      id: uid,
+      display_name: profile.displayName ?? "",
+      email: profile.email ?? "",
+      job_title: profile.role ?? "",
+      company: profile.organization ?? "",
+      persona: profile.persona ?? "",
+      event_signal_profile: {
+        goals: profile.goals ?? [],
+        tech_tracks: profile.tracks ?? [],
+        open_to: profile.openTo ?? [],
+        roles_at_txc: profile.role ? [profile.role] : [],
+        intent: {
+          needs: profile.needs ?? [],
+          aspiration: profile.aspiration ?? "",
+        },
+      },
+      compass_intelligence: {
+        matching_keywords: [
+          ...(profile.goals ?? []),
+          ...(profile.tracks ?? []),
+          ...(profile.needs ?? []),
+          ...(profile.openTo ?? []),
+          profile.aspiration ?? "",
+        ]
+          .filter(Boolean)
+          .map((v) => String(v).toLowerCase()),
+      },
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function updateUserPassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const user = auth.currentUser;
+
+  if (!user || !user.email) {
+    throw new Error("No authenticated user.");
+  }
+
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+  await updatePassword(user, newPassword);
+}
+
+export async function updateUserEmail(
+  currentPassword: string,
+  newEmail: string
+): Promise<void> {
+  const user = auth.currentUser;
+
+  if (!user || !user.email) {
+    throw new Error("No authenticated user.");
+  }
+
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+  await updateEmail(user, newEmail);
+
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      email: newEmail,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  await setDoc(
+    doc(db, "organizations/ibm/events/txc2026/participants", user.uid),
+    {
+      email: newEmail,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }
