@@ -4,6 +4,11 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signOut,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    updateEmail,
+    updatePassword,
   type AuthError,
 } from "firebase/auth";
 
@@ -165,6 +170,10 @@ export async function sendPasswordReset(email: string): Promise<void> {
 
 export async function signInWithEmail(email: string, password: string) {
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+export async function logOut(): Promise<void> {
+  await signOut(auth);
 }
 
 export async function signInWithIBM() {
