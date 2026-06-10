@@ -28,6 +28,8 @@ import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
 
+import NetworkPanel from "@/components/experience/NetworkPanel";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
@@ -419,6 +421,7 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
         ))}
       </div>
     </section>
+
   );
 }
 
