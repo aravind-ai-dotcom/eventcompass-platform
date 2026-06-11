@@ -260,7 +260,7 @@ export default function PulsePage() {
         <section className="section">
           <div className="section-head">
             <div><div className="section-kicker">Session movement</div><h2>Where attention is gathering.</h2></div>
-            <p>Track and topic distribution across the full session catalog.</p>
+            <p>Topic distribution across the full session catalog.</p>
           </div>
           <div className="pulse-columns">
             <div className="pulse-column">
@@ -332,7 +332,7 @@ export default function PulsePage() {
             <article>
               <span>Limited sessions</span>
               <b>{data.limited}</b>
-              <p>Capacity-sensitive sessions Compass prioritises carefully.</p>
+              <p>Capacity-sensitive sessions Compass prioritizes carefully.</p>
             </article>
             <article>
               <span>Scoring signals</span>

@@ -326,12 +326,13 @@ function SessionActionBar({ session, sched, compact = false }: {
 // ScoreBadge
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Match badge — answers: "How relevant is this recommendation to me?"
 function ScoreBadge({ score }: { score: number }) {
   if (score === 0) return null;
   return (
-    <div className="compass-score-badge" style={{ minWidth: "46px", minHeight: "46px", flexShrink: 0 }} title={`Compass score: ${score}`}>
+    <div className="compass-score-badge" style={{ minWidth: "46px", minHeight: "46px", flexShrink: 0 }} title={`Match: ${score}`}>
       <span className="score-number" style={{ fontSize: "1.15rem" }}>{score}</span>
-      <span className="score-label">fit</span>
+      <span className="score-label">match</span>
     </div>
   );
 }
@@ -401,7 +402,7 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
         <p>
           {room}
           {session.compass_score > 0 && (
-            <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>Score {session.compass_score}</span></>
+            <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>Match {session.compass_score}</span></>
           )}
           {session.compass_reasons[0] && <> · {session.compass_reasons[0]}</>}
         </p>
@@ -707,7 +708,7 @@ export default function SessionsPage() {
             <div className="section-kicker">{isFiltered ? "Filtered catalog" : "All sessions"}</div>
             <h2>{isFiltered ? `${catalogSessions.length} session${catalogSessions.length !== 1 ? "s" : ""}` : `All ${totalCount} sessions`}</h2>
           </div>
-          <p>Sorted by Compass score &#8212; highest match first.</p>
+          <p>Sorted by Match score &#8212; highest first.</p>
         </div>
 
         {catalogSessions.length === 0 ? (
