@@ -1077,8 +1077,7 @@ function getSessionsForDay(sessions: ScoredSession[], day: EventDay, fallbackInd
     return d && d.toLowerCase().includes(day.toLowerCase());
   });
   if (matched.length > 0) return matched;
-  const perDay = Math.ceil(sessions.length / 4);
-  return sessions.slice(fallbackIndex * perDay, (fallbackIndex + 1) * perDay);
+return [];
 }
 
 function DayTabExperience({
