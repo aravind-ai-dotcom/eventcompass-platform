@@ -2,45 +2,28 @@
 // =============================================================================
 // EventCompass — Build My Compass / Refine My Compass  /enroll
 //
-// Schema v1 full enrollment flow:
-//   Auth gate  (+ "Forgot password?" reset via sendPasswordResetEmail)
-//   → Step 00 Identity       first_name, last_name, mobile_phone, country, city
-//   → Step 01 Professional   organization, job_title, persona, linkedin_url
-//   → Step 02 Background     education[], past_employers[], career_interests[],
-//                            networking_identity{}
-//   → Step 03 Goals
-//   → Step 04 Technology tracks
-//   → Step 05 What I need
-//   → Step 06 Community
-//   → Step 07 Aspiration
-//   → Consent
-//   → Save → Confirm
+// Single source of truth for all attendee Compass intake.
 //
-// Query param: /enroll?mode=edit
-//   • Skips enrolled-user redirect to /experience
-//   • Pre-populates all fields from participants/{uid}
-//   • Shows "Refine My Compass" copy instead of "Build My Compass"
-//   • Confirm screen shows "Compass updated" messaging
+// ?mode=edit   → prefills from Firestore, skips the "already enrolled" redirect,
+//                shows "Update My Compass" CTA instead of "Build My Compass".
+// (no param)   → fresh enrollment; redirects to /experience if already enrolled.
 //
-// Writes to:
-//   users/{uid}                                          (setDoc merge:true)
-//   organizations/ibm/events/txc2026/participants/{uid}  (setDoc merge:true)
+// Prefill order:
+//   1. participants/{uid}  — full schema v1 (takes priority)
+//   2. users/{uid}         — identity fields set at account creation
 //
-// Rules:
-//   display_name = first_name + " " + last_name
-//   participant_id = Firebase uid
-//   linkedin_url blank if no valid handle
-//   Profile and Enroll write identical participant fields
+// Writes (setDoc merge:true):
+//   organizations/ibm/events/txc2026/participants/{uid}
+//   users/{uid}
 // =============================================================================
 
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams }    from "next/navigation";
-import Link                              from "next/link";
-import AuthPanel                         from "@/components/auth/AuthPanel";
-import { useAuth }                       from "@/context/AuthContext";
-import { db, auth }                      from "@/lib/firebase";
+import { useState, useEffect, useRef } from "react";
+import { useRouter }                    from "next/navigation";
+import Link                             from "next/link";
+import AuthPanel                        from "@/components/auth/AuthPanel";
+import { useAuth }                      from "@/context/AuthContext";
+import { db }                           from "@/lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { sendPasswordResetEmail }        from "firebase/auth";
 
 const BASE = "organizations/ibm/events/txc2026";
 
@@ -63,6 +46,13 @@ function cleanLinkedInHandle(raw: string): string {
 const PERSONAS = [
   "Technical Practitioner", "Architect", "Business Decision Maker",
   "IT Leader", "Developer", "Student / Early Career",
+];
+
+const INDUSTRIES = [
+  "Financial Services", "Healthcare & Life Sciences", "Retail & Consumer",
+  "Manufacturing", "Energy & Utilities", "Telecommunications",
+  "Government & Public Sector", "Education", "Technology", "Consulting",
+  "Media & Entertainment", "Transportation & Logistics", "Other",
 ];
 
 const CAREER_INTERESTS = [
@@ -111,7 +101,7 @@ const COMMUNITY = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shared UI primitives
+// Design tokens
 // ─────────────────────────────────────────────────────────────────────────────
 
 const iS: React.CSSProperties = {
@@ -127,6 +117,19 @@ const twoCol: React.CSSProperties = {
   gap: "14px",
 };
 
+const kicker: React.CSSProperties = {
+  color: "var(--accent)", fontSize: "0.7rem", fontWeight: 700,
+  textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px",
+};
+
+const reviewVal: React.CSSProperties = {
+  color: "var(--text)", fontSize: "0.9rem", lineHeight: 1.5, margin: 0,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared UI components
+// ─────────────────────────────────────────────────────────────────────────────
+
 function StepLabel({ step, title, subtitle }: { step: string; title: string; subtitle: string }) {
   return (
     <div style={{ marginBottom: "20px" }}>
@@ -141,6 +144,14 @@ function StepLabel({ step, title, subtitle }: { step: string; title: string; sub
   );
 }
 
+function SubLabel({ title }: { title: string }) {
+  return (
+    <p style={{ color: "var(--soft)", fontSize: "0.84rem", fontWeight: 600, margin: "0 0 10px" }}>
+      {title}
+    </p>
+  );
+}
+
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <span style={{ color: "var(--soft)", fontSize: "0.84rem", fontWeight: 600 }}>
@@ -149,7 +160,9 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Chip({ label, icon, selected, onClick }: { label: string; icon?: string; selected: boolean; onClick: () => void }) {
+function Chip({ label, icon, selected, onClick }: {
+  label: string; icon?: string; selected: boolean; onClick: () => void;
+}) {
   return (
     <button type="button" onClick={onClick} aria-pressed={selected} style={{
       display: "inline-flex", alignItems: "center", gap: "6px",
@@ -167,16 +180,33 @@ function Chip({ label, icon, selected, onClick }: { label: string; icon?: string
   );
 }
 
-function CheckRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function CheckRow({ label, checked, onChange }: {
+  label: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
   return (
     <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={e => onChange(e.target.checked)}
-        style={{ marginTop: 3, flexShrink: 0 }}
-      />
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)}
+        style={{ marginTop: 3, flexShrink: 0 }} />
       <span style={{ color: "var(--soft)", fontSize: "0.88rem", lineHeight: 1.45 }}>{label}</span>
+    </label>
+  );
+}
+
+function ConsentItem({ label, description, checked, onChange }: {
+  label: string; description: string; checked: boolean; onChange: (v: boolean) => void;
+}) {
+  return (
+    <label style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "pointer" }}>
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)}
+        style={{ marginTop: 4, flexShrink: 0 }} />
+      <div>
+        <span style={{ color: "var(--soft)", fontSize: "0.88rem", fontWeight: 600, display: "block", lineHeight: 1.4 }}>
+          {label}
+        </span>
+        <span style={{ color: "var(--muted)", fontSize: "0.8rem", display: "block", lineHeight: 1.45, marginTop: "2px" }}>
+          {description}
+        </span>
+      </div>
     </label>
   );
 }
@@ -184,12 +214,21 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
 function ConsentGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 8px" }}>
+      <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 12px" }}>
         {label}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "9px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
         {children}
       </div>
+    </div>
+  );
+}
+
+function IntentSubsection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ paddingTop: "20px", borderTop: "1px solid var(--line)" }}>
+      <SubLabel title={title} />
+      {children}
     </div>
   );
 }
@@ -204,49 +243,33 @@ function tog(arr: string[], set: (v: string[]) => void, val: string) {
 
 function ConfirmScreen({
   firstName,
-  editMode,
+  isEditMode,
   onEdit,
 }: {
   firstName: string;
-  editMode: boolean;
+  isEditMode: boolean;
   onEdit: () => void;
 }) {
-  if (editMode) {
-    return (
-      <>
-        <section className="compact-hero">
-          <div className="section-kicker">Compass updated</div>
-          <h1>Compass refined{firstName ? `, ${firstName}` : ""}.</h1>
-          <p>
-            Your updated signals are live. Sessions, Champions, and your four-day plan
-            now reflect your latest profile.
-          </p>
-        </section>
-        <section className="section no-top-border">
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-            <Link href="/experience" className="btn-primary">Open My Compass →</Link>
-            <button onClick={onEdit} className="btn-secondary">Edit again</button>
-          </div>
-        </section>
-        <div style={{ height: "64px" }} />
-      </>
-    );
-  }
-
   return (
     <>
       <section className="compact-hero">
-        <div className="section-kicker">Compass ready</div>
-        <h1>Your Compass is ready{firstName ? `, ${firstName}` : ""}.</h1>
+        <div className="section-kicker">Compass {isEditMode ? "updated" : "ready"}</div>
+        <h1>
+          {isEditMode
+            ? `Your Compass has been updated${firstName ? `, ${firstName}` : ""}.`
+            : `Your Compass is ready${firstName ? `, ${firstName}` : ""}.`}
+        </h1>
         <p>
-          Sessions, champions, and your Next Best Move are now scored for your profile.
-          Open My Experience to see your personalised TechXchange plan.
+          Sessions, champions, and your Next Best Move are now personalised for you.
+          Open My Experience to see your TechXchange plan.
         </p>
       </section>
       <section className="section no-top-border">
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <Link href="/experience" className="btn-primary">Open My Compass →</Link>
-          <button onClick={onEdit} className="btn-secondary">Edit my signal</button>
+          <button onClick={onEdit} className="btn-secondary">
+            {isEditMode ? "Make more changes" : "Edit my signal"}
+          </button>
         </div>
       </section>
       <div style={{ height: "64px" }} />
@@ -255,42 +278,41 @@ function ConfirmScreen({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Inner page component (uses useSearchParams — requires Suspense wrapper)
+// Page
 // ─────────────────────────────────────────────────────────────────────────────
 
-function EnrollPageInner() {
-  const searchParams = useSearchParams();
-  const editMode     = searchParams.get("mode") === "edit";
-
-  const { user, enrolled, loading, refreshProfile } = useAuth();
+export default function EnrollPage() {
+  const { user, enrolled, loading } = useAuth();
   const router = useRouter();
 
-  const [authed,  setAuthed]  = useState(false);
-  const [screen,  setScreen]  = useState<"form" | "confirm">("form");
-  const [saving,  setSaving]  = useState(false);
-  const [saveErr, setSaveErr] = useState("");
+  // ── Mode detection (window.location avoids Next.js useSearchParams/Suspense) ──
+  const [isEditMode,  setIsEditMode]  = useState<boolean | null>(null);
+  useEffect(() => {
+    setIsEditMode(new URLSearchParams(window.location.search).get("mode") === "edit");
+  }, []);
 
-  // ── Password reset ─────────────────────────────────────────────────────────
-  const [showPwReset,    setShowPwReset]    = useState(false);
-  const [pwResetEmail,   setPwResetEmail]   = useState("");
-  const [pwResetMsg,     setPwResetMsg]     = useState("");
-  const [pwResetIsErr,   setPwResetIsErr]   = useState(false);
-  const [pwResetSending, setPwResetSending] = useState(false);
+  const [authed,     setAuthed]     = useState(false);
+  const [screen,     setScreen]     = useState<"form" | "confirm">("form");
+  const [saving,     setSaving]     = useState(false);
+  const [saveErr,    setSaveErr]    = useState("");
+  const [prefilling, setPrefilling] = useState(false);
+  const prefillDone = useRef(false);
 
-  // ── Step 00 · Identity ─────────────────────────────────────────────────────
+  // ── 01 · About You ──────────────────────────────────────────────────────────
   const [firstName,   setFirstName]   = useState("");
   const [lastName,    setLastName]    = useState("");
   const [mobilePhone, setMobilePhone] = useState("");
   const [country,     setCountry]     = useState("");
   const [city,        setCity]        = useState("");
 
-  // ── Step 01 · Professional ─────────────────────────────────────────────────
+  // ── 02 · Professional Context ───────────────────────────────────────────────
   const [organization,   setOrganization]   = useState("");
   const [jobTitle,       setJobTitle]       = useState("");
+  const [industry,       setIndustry]       = useState("");
   const [persona,        setPersona]        = useState("");
   const [linkedinHandle, setLinkedinHandle] = useState("");
 
-  // ── Step 02 · Background ───────────────────────────────────────────────────
+  // ── 03 · Your Background ────────────────────────────────────────────────────
   const [university,     setUniversity]     = useState("");
   const [pastEmployer,   setPastEmployer]   = useState("");
   const [careerInterest, setCareerInterest] = useState<string[]>([]);
@@ -301,136 +323,133 @@ function EnrollPageInner() {
   const [openUniversity, setOpenUniversity] = useState(false);
   const [openCareer,     setOpenCareer]     = useState(false);
 
-  // ── Consent v1 ─────────────────────────────────────────────────────────────
-  const [consentPublicProfile,          setConsentPublicProfile]          = useState(true);
-  const [consentShowLinkedin,           setConsentShowLinkedin]           = useState(false);
-  const [consentAllowIntroRequests,     setConsentAllowIntroRequests]     = useState(false);
-  const [consentAllowAlumniMatching,    setConsentAllowAlumniMatching]    = useState(false);
-  const [consentAllowEmployerMatching,  setConsentAllowEmployerMatching]  = useState(false);
-  const [consentAllowUniversityMatching,setConsentAllowUniversityMatching]= useState(false);
-  const [consentAllowSmsUpdates,        setConsentAllowSmsUpdates]        = useState(false);
-  const [consentAllowEventNotifications,setConsentAllowEventNotifications]= useState(true);
-
-  // ── Steps 03–07 · Event signal ─────────────────────────────────────────────
+  // ── 04 · Your TechXchange Intent ────────────────────────────────────────────
   const [goals,      setGoals]      = useState<string[]>([]);
   const [tracks,     setTracks]     = useState<string[]>([]);
   const [needs,      setNeeds]      = useState<string[]>([]);
   const [community,  setCommunity]  = useState<string[]>([]);
   const [aspiration, setAspiration] = useState("");
 
-  // ── Redirect: enrolled users go to /experience unless in edit mode ─────────
+  // ── 05 · Consent & Privacy ──────────────────────────────────────────────────
+  const [consentPublicProfile,           setConsentPublicProfile]           = useState(true);
+  const [consentShowLinkedin,            setConsentShowLinkedin]            = useState(false);
+  const [consentAllowIntroRequests,      setConsentAllowIntroRequests]      = useState(false);
+  const [consentShareWithMatched,        setConsentShareWithMatched]        = useState(false);
+  const [consentAllowAlumniMatching,     setConsentAllowAlumniMatching]     = useState(false);
+  const [consentAllowEmployerMatching,   setConsentAllowEmployerMatching]   = useState(false);
+  const [consentAllowUniversityMatching, setConsentAllowUniversityMatching] = useState(false);
+  const [consentAllowSmsUpdates,         setConsentAllowSmsUpdates]         = useState(false);
+  const [consentAllowEventNotifications, setConsentAllowEventNotifications] = useState(true);
+
+  // ── Enrolled redirect — skip when in edit mode ────────────────────────────
   useEffect(() => {
-    if (!loading && user && enrolled && !editMode) {
+    if (isEditMode === null) return; // wait for mode to resolve
+    if (!loading && user && enrolled && !isEditMode) {
       router.replace("/experience");
     }
-  }, [loading, user, enrolled, editMode, router]);
+  }, [loading, user, enrolled, isEditMode, router]);
 
-  // ── Pre-populate form when editMode is active ──────────────────────────────
+  // ── Prefill from Firestore ────────────────────────────────────────────────
   useEffect(() => {
-    if (!editMode || !user || loading) return;
-    let cancelled = false;
+    if (!user || prefillDone.current) return;
+    prefillDone.current = true;
 
-    (async () => {
+    async function prefill() {
+      setPrefilling(true);
       try {
-        const snap = await getDoc(doc(db, `${BASE}/participants/${user.uid}`));
-        if (cancelled || !snap.exists()) return;
-        const d      = snap.data() as Record<string, unknown>;
-        const esp    = (d.event_signal_profile as Record<string, unknown>) ?? {};
-        const intent = (esp.intent as Record<string, unknown>) ?? {};
-        const ni     = (d.networking_identity as Record<string, boolean>) ?? {};
-        const consent = (d.consent as Record<string, boolean>) ?? {};
-        const edu    = (d.education as { institution?: string }[]) ?? [];
-        const emp    = (d.past_employers as { company?: string }[]) ?? [];
+        const [partSnap, userSnap] = await Promise.all([
+          getDoc(doc(db, `${BASE}/participants/${user!.uid}`)),
+          getDoc(doc(db, `users/${user!.uid}`)),
+        ]);
+
+        const p = partSnap.exists() ? partSnap.data() : null;
+        const u = userSnap.exists()  ? userSnap.data()  : null;
 
         // Identity
-        setFirstName(String(d.first_name ?? ""));
-        setLastName(String(d.last_name ?? ""));
-        setMobilePhone(String(d.mobile_phone ?? ""));
-        setCountry(String(d.country ?? ""));
-        setCity(String(d.city ?? ""));
+        const firebaseParts = (user?.displayName ?? "").trim().split(/\s+/).filter(Boolean);
+        const fn = (p?.first_name || u?.first_name || firebaseParts[0] || "");
+        const ln = (p?.last_name  || u?.last_name  || firebaseParts.slice(1).join(" ") || "");
+        if (fn) setFirstName(fn);
+        if (ln) setLastName(ln);
+
+        const phone = p?.mobile_phone || u?.mobile_phone || "";
+        if (phone) setMobilePhone(phone);
+        const ctry = p?.country || u?.country || "";
+        if (ctry) setCountry(ctry);
+        const ct = p?.city || u?.city || "";
+        if (ct) setCity(ct);
 
         // Professional
-        setOrganization(String(d.organization ?? d.company ?? ""));
-        setJobTitle(String(d.job_title ?? ""));
-        setPersona(String(d.persona ?? ""));
-        const liUrl = String(d.linkedin_url ?? "");
-        setLinkedinHandle(
-          liUrl
-            .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, "")
-            .replace(/\/+$/, "")
-            .trim()
-        );
+        const orgVal = p?.organization || u?.organization || "";
+        if (orgVal) setOrganization(orgVal);
+        const jt = p?.job_title || u?.role || "";
+        if (jt) setJobTitle(jt);
+        const ind = p?.industry || (p?.registration as Record<string,string> | undefined)?.industry || u?.industry || "";
+        if (ind) setIndustry(ind);
+        const per = p?.persona || u?.persona || "";
+        if (per) setPersona(per);
+        const liUrl = p?.linkedin_url || u?.linkedin_url || "";
+        if (liUrl) setLinkedinHandle(cleanLinkedInHandle(liUrl));
 
         // Background
-        setUniversity(edu[0]?.institution ?? "");
-        setPastEmployer(emp[0]?.company ?? "");
-        setCareerInterest((d.career_interests as string[]) ?? []);
-        setOpenAlumni(ni.open_to_alumni_connections ?? false);
-        setOpenColleague(ni.open_to_past_colleague_connections ?? false);
-        setOpenUniversity(ni.open_to_university_connections ?? false);
-        setOpenCareer(ni.open_to_career_conversations ?? false);
+        const uni = (p?.education as Array<{institution?: string}> | undefined)?.[0]?.institution || "";
+        if (uni) setUniversity(uni);
+        const pastEmp = (p?.past_employers as Array<{company?: string}> | undefined)?.[0]?.company || "";
+        if (pastEmp) setPastEmployer(pastEmp);
+        const ci = (p?.career_interests || u?.career_interests || []) as string[];
+        if (ci.length) setCareerInterest(ci);
 
-        // Goals — stored as labels → map back to IDs
-        const savedGoalLabels = (esp.goals as string[]) ?? [];
-        setGoals(GOALS.filter(g => savedGoalLabels.includes(g.label)).map(g => g.id));
+        // Networking identity
+        const ni = (p?.networking_identity || u?.networking_identity || {}) as Record<string, boolean>;
+        if (ni.open_to_alumni_connections         !== undefined) setOpenAlumni(ni.open_to_alumni_connections);
+        if (ni.open_to_past_colleague_connections !== undefined) setOpenColleague(ni.open_to_past_colleague_connections);
+        if (ni.open_to_university_connections     !== undefined) setOpenUniversity(ni.open_to_university_connections);
+        if (ni.open_to_career_conversations       !== undefined) setOpenCareer(ni.open_to_career_conversations);
 
-        // Tracks — stored as strings
-        setTracks((esp.tech_tracks as string[]) ?? []);
+        // Event signal — map labels → IDs
+        const esp = (p?.event_signal_profile || {}) as Record<string, unknown>;
+        const goalLabels = (esp.goals || []) as string[];
+        const matchedGoals = GOALS.filter(g => goalLabels.includes(g.label)).map(g => g.id);
+        if (matchedGoals.length) setGoals(matchedGoals);
 
-        // Needs — stored as labels → map back to IDs
-        const savedNeedLabels = (intent.needs as string[]) ?? [];
-        setNeeds(NEEDS.filter(n => savedNeedLabels.includes(n.label)).map(n => n.id));
+        const techTracks = (esp.tech_tracks || []) as string[];
+        if (techTracks.length) setTracks(techTracks);
 
-        // Community — stored as labels → map back to IDs
-        const savedCommLabels = (esp.open_to as string[]) ?? [];
-        setCommunity(COMMUNITY.filter(c => savedCommLabels.includes(c.label)).map(c => c.id));
+        const needLabels = ((esp.intent as Record<string,unknown> | undefined)?.needs || []) as string[];
+        const matchedNeeds = NEEDS.filter(n => needLabels.includes(n.label)).map(n => n.id);
+        if (matchedNeeds.length) setNeeds(matchedNeeds);
 
-        // Aspiration
-        setAspiration(String(intent.aspiration ?? ""));
+        const commLabels = (esp.open_to || []) as string[];
+        const matchedComm = COMMUNITY.filter(c => commLabels.includes(c.label)).map(c => c.id);
+        if (matchedComm.length) setCommunity(matchedComm);
+
+        const asp = ((esp.intent as Record<string,unknown> | undefined)?.aspiration || "") as string;
+        if (asp) setAspiration(asp);
 
         // Consent
-        setConsentPublicProfile(consent.public_profile ?? true);
-        setConsentShowLinkedin(consent.show_linkedin ?? false);
-        setConsentAllowIntroRequests(consent.allow_intro_requests ?? false);
-        setConsentAllowAlumniMatching(consent.allow_alumni_matching ?? false);
-        setConsentAllowEmployerMatching(consent.allow_employer_matching ?? false);
-        setConsentAllowUniversityMatching(consent.allow_university_matching ?? false);
-        setConsentAllowSmsUpdates(consent.allow_sms_updates ?? false);
-        setConsentAllowEventNotifications(consent.allow_event_notifications ?? true);
+        const cv1 = (p?.consent || u?.consent || {}) as Record<string, boolean>;
+        if (cv1.public_profile              !== undefined) setConsentPublicProfile(cv1.public_profile);
+        if (cv1.show_linkedin               !== undefined) setConsentShowLinkedin(cv1.show_linkedin);
+        if (cv1.allow_intro_requests        !== undefined) setConsentAllowIntroRequests(cv1.allow_intro_requests);
+        if (cv1.share_with_matched_attendees !== undefined) setConsentShareWithMatched(cv1.share_with_matched_attendees);
+        if (cv1.allow_alumni_matching       !== undefined) setConsentAllowAlumniMatching(cv1.allow_alumni_matching);
+        if (cv1.allow_employer_matching     !== undefined) setConsentAllowEmployerMatching(cv1.allow_employer_matching);
+        if (cv1.allow_university_matching   !== undefined) setConsentAllowUniversityMatching(cv1.allow_university_matching);
+        if (cv1.allow_sms_updates           !== undefined) setConsentAllowSmsUpdates(cv1.allow_sms_updates);
+        if (cv1.allow_event_notifications   !== undefined) setConsentAllowEventNotifications(cv1.allow_event_notifications);
+
       } catch {
-        // silent — form stays at defaults
+        // non-fatal; user can fill form from scratch
+      } finally {
+        setPrefilling(false);
       }
-    })();
-
-    return () => { cancelled = true; };
-  }, [editMode, user, loading]);
-
-  // ── Password reset handler ─────────────────────────────────────────────────
-  async function handlePasswordReset() {
-    const email = pwResetEmail.trim();
-    if (!email) {
-      setPwResetIsErr(true);
-      setPwResetMsg("Please enter your email address.");
-      return;
     }
-    setPwResetSending(true);
-    setPwResetMsg("");
-    setPwResetIsErr(false);
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setPwResetIsErr(false);
-      setPwResetMsg("Reset link sent — check your inbox.");
-      setPwResetEmail("");
-    } catch (err: unknown) {
-      setPwResetIsErr(true);
-      setPwResetMsg((err as { message?: string }).message ?? "Could not send reset email.");
-    } finally {
-      setPwResetSending(false);
-    }
-  }
 
-  // ── Auth loading ───────────────────────────────────────────────────────────
-  if (loading) {
+    prefill();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auth loading ─────────────────────────────────────────────────────────
+  if (loading || isEditMode === null) {
     return (
       <section className="section no-top-border">
         <div className="section-kicker">Compass</div>
@@ -439,116 +458,39 @@ function EnrollPageInner() {
     );
   }
 
-  // ── Auth gate ──────────────────────────────────────────────────────────────
+  // ── Auth gate ─────────────────────────────────────────────────────────────
   if (!user && !authed) {
     return (
       <>
         <section className="compact-hero">
-          <div className="section-kicker">
-            {editMode ? "Refine My Compass" : "Build My Compass"}
-          </div>
-          <h1>Tell Compass what matters to you.</h1>
-          <p>Sign in or create an account to save your intent, agenda, and recommendations.</p>
+          <div className="section-kicker">Build My Compass</div>
+          <h1>Your personalised TechXchange starts here.</h1>
+          <p>
+            Sign in to build your Compass profile. Your intent, background, and goals
+            power personalised session scores, champion matches, and your Next Best Move.
+          </p>
         </section>
-
         <section className="section no-top-border">
           <AuthPanel onAuthenticated={() => setAuthed(true)} />
-
-          {/* ── Forgot password ─────────────────────────────────────────── */}
-          <div style={{ marginTop: "28px", paddingTop: "22px", borderTop: "1px solid var(--line)" }}>
-            {!showPwReset ? (
-              <button
-                type="button"
-                onClick={() => setShowPwReset(true)}
-                style={{
-                  background: "transparent", border: 0, padding: 0,
-                  color: "var(--accent)", fontSize: "0.88rem",
-                  fontFamily: "inherit", cursor: "pointer",
-                }}
-              >
-                Forgot your password?
-              </button>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "360px" }}>
-                <p style={{ color: "var(--soft)", fontSize: "0.88rem", fontWeight: 600, margin: 0 }}>
-                  Reset your password
-                </p>
-                <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: 0 }}>
-                  Enter the email on your account and we&apos;ll send a reset link.
-                </p>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={pwResetEmail}
-                  onChange={e => setPwResetEmail(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handlePasswordReset()}
-                  style={iS}
-                />
-                {pwResetMsg && (
-                  <p style={{
-                    fontSize: "0.85rem", margin: 0,
-                    color: pwResetIsErr ? "#c0392b" : "var(--accent)",
-                  }}>
-                    {pwResetMsg}
-                  </p>
-                )}
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                  <button
-                    type="button"
-                    onClick={handlePasswordReset}
-                    disabled={pwResetSending}
-                    style={{
-                      height: "38px", padding: "0 16px",
-                      background: "var(--accent)", color: "var(--accent-text)",
-                      border: "none", fontFamily: "inherit", fontSize: "0.88rem",
-                      fontWeight: 650,
-                      cursor: pwResetSending ? "not-allowed" : "pointer",
-                      opacity: pwResetSending ? 0.7 : 1,
-                    }}
-                  >
-                    {pwResetSending ? "Sending…" : "Send reset link"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPwReset(false);
-                      setPwResetMsg("");
-                      setPwResetEmail("");
-                      setPwResetIsErr(false);
-                    }}
-                    style={{
-                      height: "38px", padding: "0 14px",
-                      background: "transparent", border: "1px solid var(--line)",
-                      color: "var(--soft)", fontFamily: "inherit", fontSize: "0.88rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </section>
-
         <div style={{ height: "64px" }} />
       </>
     );
   }
 
-  // ── Confirm ────────────────────────────────────────────────────────────────
+  // ── Confirm ───────────────────────────────────────────────────────────────
   if (screen === "confirm") {
-    const fallbackFirst = (user?.displayName ?? user?.email ?? "").split(/\s+/)[0] ?? "";
+    const firebaseParts = (user?.displayName ?? "").trim().split(/\s+/).filter(Boolean);
     return (
       <ConfirmScreen
-        firstName={firstName.trim() || fallbackFirst}
-        editMode={editMode}
+        firstName={firstName.trim() || firebaseParts[0] || ""}
+        isEditMode={isEditMode}
         onEdit={() => setScreen("form")}
       />
     );
   }
 
-  // ── Save handler ───────────────────────────────────────────────────────────
+  // ── Save ──────────────────────────────────────────────────────────────────
   const canSubmit = goals.length > 0 || tracks.length > 0;
 
   async function handleSave() {
@@ -558,43 +500,37 @@ function EnrollPageInner() {
 
     try {
       const firebaseNameParts = (user?.displayName ?? "").trim().split(/\s+/).filter(Boolean);
-
-      const first = firstName.trim() || firebaseNameParts[0] || "";
-      const last  = lastName.trim()  || firebaseNameParts.slice(1).join(" ");
-
-      const displayName =
-        [first, last].filter(Boolean).join(" ") ||
-        user?.email?.split("@")[0] ||
-        "Attendee";
+      const first       = firstName.trim()  || firebaseNameParts[0] || "";
+      const last        = lastName.trim()   || firebaseNameParts.slice(1).join(" ");
+      const displayName = [first, last].filter(Boolean).join(" ")
+                        || user?.email?.split("@")[0]
+                        || "Attendee";
 
       const handle      = cleanLinkedInHandle(linkedinHandle);
       const linkedinUrl = handle ? `https://www.linkedin.com/in/${handle}` : "";
 
-      // Expand chip IDs → labels
       const goalLabels = GOALS.filter(o => goals.includes(o.id)).map(o => o.label);
       const needLabels = NEEDS.filter(o => needs.includes(o.id)).map(o => o.label);
       const commLabels = COMMUNITY.filter(o => community.includes(o.id)).map(o => o.label);
 
-      // Keyword bag for scoring engine
       const keywords = [
         ...goalLabels, ...tracks, ...needLabels, ...commLabels,
         university, pastEmployer, ...careerInterest,
-        organization, jobTitle, persona, aspiration, country, city,
+        organization, jobTitle, industry, persona, aspiration, country, city,
       ].filter(Boolean).map(v => v.toLowerCase());
 
-      // ── Shared consent object (v1) ─────────────────────────────────────────
       const consentV1 = {
-        public_profile:           consentPublicProfile,
-        show_linkedin:            consentShowLinkedin,
-        allow_intro_requests:     consentAllowIntroRequests,
-        allow_alumni_matching:    consentAllowAlumniMatching,
-        allow_employer_matching:  consentAllowEmployerMatching,
-        allow_university_matching:consentAllowUniversityMatching,
-        allow_sms_updates:        consentAllowSmsUpdates,
-        allow_event_notifications:consentAllowEventNotifications,
+        public_profile:               consentPublicProfile,
+        show_linkedin:                consentShowLinkedin,
+        allow_intro_requests:         consentAllowIntroRequests,
+        share_with_matched_attendees: consentShareWithMatched,
+        allow_alumni_matching:        consentAllowAlumniMatching,
+        allow_employer_matching:      consentAllowEmployerMatching,
+        allow_university_matching:    consentAllowUniversityMatching,
+        allow_sms_updates:            consentAllowSmsUpdates,
+        allow_event_notifications:    consentAllowEventNotifications,
       };
 
-      // ── Shared networking identity ─────────────────────────────────────────
       const networkingIdentity = {
         open_to_alumni_connections:         openAlumni,
         open_to_past_colleague_connections: openColleague,
@@ -602,11 +538,10 @@ function EnrollPageInner() {
         open_to_career_conversations:       openCareer,
       };
 
-      // ── participants/{uid} — full schema v1 ───────────────────────────────
+      // ── participants/{uid} — schema v1 ────────────────────────────────────
       await setDoc(
         doc(db, `${BASE}/participants/${uid}`),
         {
-          // Identity
           id:               uid,
           participant_id:   uid,
           participant_type: "attendee",
@@ -615,32 +550,19 @@ function EnrollPageInner() {
           display_name:     displayName,
           email:            user?.email ?? "",
           mobile_phone:     mobilePhone.trim(),
-
-          // Professional
           organization,
           company:          organization,
           job_title:        jobTitle,
+          industry:         industry.trim(),
           persona,
           linkedin_url:     linkedinUrl,
-
-          // Location
-          country: country.trim(),
-          city:    city.trim(),
-
-          // Education & employment
-          education:      university.trim() ? [{ institution: university.trim() }] : [],
-          past_employers: pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
-
-          // Career
+          country:          country.trim(),
+          city:             city.trim(),
+          education:        university.trim() ? [{ institution: university.trim() }] : [],
+          past_employers:   pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
           career_interests: careerInterest,
-
-          // Consent v1
-          consent: consentV1,
-
-          // Networking identity
+          consent:          consentV1,
           networking_identity: networkingIdentity,
-
-          // Event signal profile
           event_signal_profile: {
             goals:        goalLabels,
             tech_tracks:  tracks,
@@ -651,19 +573,16 @@ function EnrollPageInner() {
               aspiration,
             },
           },
-
-          // Scoring engine
           compass_intelligence: {
             matching_keywords: [...new Set(keywords)],
             intent_narrative:  { aspiration },
           },
-
           registration: {
-            attending:  true,
-            registered: true,
-            industry:   "",
+            attending:     true,
+            registered:    true,
+            attendee_type: "general",
+            industry:      industry.trim(),
           },
-
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -674,30 +593,28 @@ function EnrollPageInner() {
         doc(db, `users/${uid}`),
         {
           displayName,
-          first_name:   first,
-          last_name:    last,
-          email:        user?.email ?? "",
-          mobile_phone: mobilePhone.trim(),
-          country:      country.trim(),
-          city:         city.trim(),
+          first_name:       first,
+          last_name:        last,
+          email:            user?.email ?? "",
+          mobile_phone:     mobilePhone.trim(),
+          country:          country.trim(),
+          city:             city.trim(),
           organization,
-          role:         jobTitle,
+          role:             jobTitle,
+          industry:         industry.trim(),
           persona,
-          goals:        goalLabels,
-          interests:    tracks,
-          linkedin_url: linkedinUrl,
-          education:      university.trim() ? [{ institution: university.trim() }] : [],
-          past_employers: pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
+          goals:            goalLabels,
+          interests:        tracks,
+          linkedin_url:     linkedinUrl,
+          education:        university.trim() ? [{ institution: university.trim() }] : [],
+          past_employers:   pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
           career_interests: careerInterest,
           networking_identity: networkingIdentity,
-          consent: consentV1,
-          updatedAt: serverTimestamp(),
+          consent:          consentV1,
+          updatedAt:        serverTimestamp(),
         },
         { merge: true }
       );
-
-      // Refresh AuthContext so profile reflects updated data
-      await refreshProfile();
 
       setScreen("confirm");
     } catch (err: unknown) {
@@ -707,123 +624,115 @@ function EnrollPageInner() {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
   // Form
-  // ──────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  const goalLabelsPreview = GOALS.filter(o => goals.includes(o.id)).map(o => o.label);
+  const needLabelsPreview = NEEDS.filter(o => needs.includes(o.id)).map(o => o.label);
+  const commLabelsPreview = COMMUNITY.filter(o => community.includes(o.id)).map(o => o.label);
+
   return (
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
+      {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="compact-hero">
         <div className="section-kicker">
-          {editMode ? "Refine My Compass" : "Build My Compass"}
+          {isEditMode ? "Refine My Compass" : "Build My Compass"}
         </div>
         <h1>
-          {editMode
-            ? "Update the signals that drive your Compass."
+          {isEditMode
+            ? "Update your Compass profile."
             : "Tell Compass what matters to you."}
         </h1>
         <p>
-          {editMode
-            ? "Any changes take effect immediately — sessions, champion matches, and your Next Best Move are re-scored as soon as you save."
-            : "These signals become your Compass profile. Every session score, champion match, and Next Best Move is computed from what you share here."}
+          {isEditMode
+            ? "Your changes will immediately update your session scores, champion matches, and Next Best Move."
+            : "Compass uses your profile to score every session, surface relevant champions, and surface your Next Best Move. The more you share, the sharper your plan."}
         </p>
       </section>
 
+      {prefilling && (
+        <section className="section no-top-border">
+          <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Loading your profile…</p>
+        </section>
+      )}
+
       <div style={{ maxWidth: "800px" }}>
 
-        {/* ── Step 00 · Identity ──────────────────────────────────────────── */}
+        {/* ── 01 · About You ────────────────────────────────────────────── */}
         <section className="section no-top-border">
           <StepLabel
-            step="00 · Identity"
-            title="Tell us who you are."
-            subtitle="Your display name is derived from first and last name and shown to other attendees."
+            step="01 · About You"
+            title="Let's start with the basics."
+            subtitle="Your name and location help Compass personalise your badge, introduce you to nearby attendees, and surface region-relevant sessions."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
             <div style={twoCol}>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>First name</FieldLabel>
-                <input
-                  type="text" value={firstName}
-                  onChange={e => setFirstName(e.target.value)}
-                  placeholder="Maya"
-                  style={iS}
-                />
+                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+                  placeholder="Maya" style={iS} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Last name</FieldLabel>
-                <input
-                  type="text" value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  placeholder="Patel"
-                  style={iS}
-                />
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)}
+                  placeholder="Patel" style={iS} />
               </label>
             </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>Mobile phone</FieldLabel>
-              <input
-                type="tel" value={mobilePhone}
-                onChange={e => setMobilePhone(e.target.value)}
-                placeholder="+1 555 000 0000"
-                style={iS}
-              />
+              <input type="tel" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)}
+                placeholder="+1 555 000 0000 — international format" style={iS} />
             </label>
 
             <div style={twoCol}>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Country</FieldLabel>
-                <input
-                  type="text" value={country}
-                  onChange={e => setCountry(e.target.value)}
-                  placeholder="United States"
-                  style={iS}
-                />
+                <input type="text" value={country} onChange={e => setCountry(e.target.value)}
+                  placeholder="United States" style={iS} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>City</FieldLabel>
-                <input
-                  type="text" value={city}
-                  onChange={e => setCity(e.target.value)}
-                  placeholder="Atlanta"
-                  style={iS}
-                />
+                <input type="text" value={city} onChange={e => setCity(e.target.value)}
+                  placeholder="Atlanta" style={iS} />
               </label>
             </div>
 
           </div>
         </section>
 
-        {/* ── Step 01 · Professional ──────────────────────────────────────── */}
+        {/* ── 02 · Professional Context ─────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="01 · Professional"
-            title="Your professional context."
-            subtitle="Used to personalise session scores and surface relevant champions."
+            step="02 · Professional Context"
+            title="Your role shapes your Compass."
+            subtitle="Compass uses your title, industry, and persona to weight session recommendations, match you with relevant IBM Champions, and surface community conversations that fit your career stage."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>Organization / Company</FieldLabel>
-              <input
-                type="text" value={organization}
-                onChange={e => setOrganization(e.target.value)}
-                placeholder="Acme Corp"
-                style={iS}
-              />
+              <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
+                placeholder="Acme Corp" style={iS} />
             </label>
 
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Job title</FieldLabel>
-              <input
-                type="text" value={jobTitle}
-                onChange={e => setJobTitle(e.target.value)}
-                placeholder="Platform Engineer"
-                style={iS}
-              />
-            </label>
+            <div style={twoCol}>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Job title</FieldLabel>
+                <input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)}
+                  placeholder="Platform Engineer" style={iS} />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Industry</FieldLabel>
+                <select value={industry} onChange={e => setIndustry(e.target.value)} style={iS}>
+                  <option value="">Select…</option>
+                  {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </label>
+            </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>Persona</FieldLabel>
@@ -833,31 +742,23 @@ function EnrollPageInner() {
               </select>
             </label>
 
-            {/* LinkedIn — fixed prefix + handle-only input */}
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>LinkedIn</FieldLabel>
               <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", background: "var(--panel)", overflow: "hidden" }}>
                 <span style={{
-                  padding: "0 12px", height: "42px",
-                  display: "flex", alignItems: "center", flexShrink: 0,
-                  borderRight: "1px solid var(--line)",
-                  color: "var(--muted)", fontSize: "0.88rem",
-                  whiteSpace: "nowrap", userSelect: "none",
+                  padding: "0 12px", height: "42px", display: "flex", alignItems: "center",
+                  flexShrink: 0, borderRight: "1px solid var(--line)",
+                  color: "var(--muted)", fontSize: "0.88rem", whiteSpace: "nowrap", userSelect: "none",
                 }}>
                   linkedin.com/in/
                 </span>
                 <input
-                  type="text"
-                  value={linkedinHandle}
+                  type="text" value={linkedinHandle}
                   onChange={e => setLinkedinHandle(cleanLinkedInHandle(e.target.value))}
-                  placeholder="yourhandle"
-                  autoComplete="off"
-                  style={{
-                    flex: 1, height: "42px", padding: "0 12px",
-                    border: "none", background: "transparent",
-                    color: "var(--text)", fontSize: "0.95rem",
-                    fontFamily: "inherit", outline: "none", minWidth: 0,
-                  }}
+                  placeholder="yourhandle" autoComplete="off"
+                  style={{ flex: 1, height: "42px", padding: "0 12px", border: "none",
+                    background: "transparent", color: "var(--text)", fontSize: "0.95rem",
+                    fontFamily: "inherit", outline: "none", minWidth: 0 }}
                 />
               </div>
             </label>
@@ -865,37 +766,29 @@ function EnrollPageInner() {
           </div>
         </section>
 
-        {/* ── Step 02 · Background ────────────────────────────────────────── */}
+        {/* ── 03 · Your Background ──────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="02 · Background"
+            step="03 · Your Background"
             title="Find your hidden network."
-            subtitle="Unlocks alumni, past-colleague, and career-path connections at TechXchange."
+            subtitle="Your education and career history unlock alumni, past-colleague, and peer connections you wouldn't find on a conference badge. The more Compass knows about your journey, the better it can find people who share it."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>University / School</FieldLabel>
-              <input
-                type="text" value={university}
-                onChange={e => setUniversity(e.target.value)}
-                placeholder="e.g. Georgia Tech, University of Toronto, MIT"
-                style={iS}
-              />
+              <input type="text" value={university} onChange={e => setUniversity(e.target.value)}
+                placeholder="e.g. Georgia Tech, University of Toronto, MIT" style={iS} />
             </label>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>Most recent past employer</FieldLabel>
-              <input
-                type="text" value={pastEmployer}
-                onChange={e => setPastEmployer(e.target.value)}
-                placeholder="e.g. Accenture, Red Hat, Deloitte"
-                style={iS}
-              />
+              <input type="text" value={pastEmployer} onChange={e => setPastEmployer(e.target.value)}
+                placeholder="e.g. Accenture, Red Hat, Deloitte" style={iS} />
             </label>
 
             <div>
-              <p style={{ color: "var(--soft)", fontSize: "0.84rem", fontWeight: 600, margin: "0 0 8px" }}>Career interests</p>
+              <SubLabel title="Career interests" />
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {CAREER_INTERESTS.map(ci => (
                   <Chip key={ci} label={ci}
@@ -905,125 +798,227 @@ function EnrollPageInner() {
               </div>
             </div>
 
-            {/* Networking identity */}
-            <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
-              <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: "0 0 4px" }}>
+            <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: 0 }}>
                 Open to connections
               </p>
-              <CheckRow label="Connect with alumni from my university"   checked={openAlumni}     onChange={setOpenAlumni} />
-              <CheckRow label="Connect with past colleagues"              checked={openColleague}  onChange={setOpenColleague} />
-              <CheckRow label="Connect with university community"         checked={openUniversity} onChange={setOpenUniversity} />
-              <CheckRow label="Career conversations at TechXchange"       checked={openCareer}    onChange={setOpenCareer} />
+              <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.5, margin: 0 }}>
+                These settings control which background-based connections Compass will surface for you at TechXchange.
+              </p>
+              <CheckRow label="Connect with alumni from my university"  checked={openAlumni}     onChange={setOpenAlumni} />
+              <CheckRow label="Connect with past colleagues"             checked={openColleague}  onChange={setOpenColleague} />
+              <CheckRow label="Connect with my university community"     checked={openUniversity} onChange={setOpenUniversity} />
+              <CheckRow label="Open to career conversations"             checked={openCareer}    onChange={setOpenCareer} />
             </div>
 
           </div>
         </section>
 
-        {/* ── Step 03 · Goals ─────────────────────────────────────────────── */}
+        {/* ── 04 · Your TechXchange Intent ──────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="03 · Goals"
-            title="Why are you attending TechXchange?"
-            subtitle="Compass weights recommendations toward these outcomes."
+            step="04 · Your TechXchange Intent"
+            title="What do you want to get out of TechXchange?"
+            subtitle="This is the core of your Compass. Goals and tech tracks are the highest-weighted signals — they drive session scores, champion relevance, and your personalised schedule. The more you select, the more Compass can do."
           />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {GOALS.map(o => (
-              <Chip key={o.id} label={o.label} icon={o.icon}
-                selected={goals.includes(o.id)} onClick={() => tog(goals, setGoals, o.id)} />
-            ))}
-          </div>
+
+          <IntentSubsection title="Goals — why are you attending?">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {GOALS.map(o => (
+                <Chip key={o.id} label={o.label} icon={o.icon}
+                  selected={goals.includes(o.id)} onClick={() => tog(goals, setGoals, o.id)} />
+              ))}
+            </div>
+          </IntentSubsection>
+
+          <IntentSubsection title="Technology — which tracks are most relevant?">
+            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+              Tech tracks carry the highest scoring weight (+25 per match). Select every track where you want to go deep.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {TRACKS.map(tr => (
+                <Chip key={tr} label={tr}
+                  selected={tracks.includes(tr)} onClick={() => tog(tracks, setTracks, tr)} />
+              ))}
+            </div>
+          </IntentSubsection>
+
+          <IntentSubsection title="What I need from TechXchange">
+            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+              Compass matches these against session need tags (+15 per match).
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {NEEDS.map(o => (
+                <Chip key={o.id} label={o.label}
+                  selected={needs.includes(o.id)} onClick={() => tog(needs, setNeeds, o.id)} />
+              ))}
+            </div>
+          </IntentSubsection>
+
+          <IntentSubsection title="Community — who do you want to meet?">
+            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+              Compass surfaces IBM Champions, community events, and networking moments that match your connection goals.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {COMMUNITY.map(o => (
+                <Chip key={o.id} label={o.label}
+                  selected={community.includes(o.id)} onClick={() => tog(community, setCommunity, o.id)} />
+              ))}
+            </div>
+          </IntentSubsection>
+
+          <IntentSubsection title="In your own words — optional">
+            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+              What would make TechXchange 2026 worth your time? Compass reads this as your aspiration signal.
+            </p>
+            <textarea
+              value={aspiration} onChange={e => setAspiration(e.target.value)}
+              placeholder="A few strong connections, one breakthrough insight, and leaving with a clearer direction."
+              rows={3}
+              style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </IntentSubsection>
+
         </section>
 
-        {/* ── Step 04 · Technology tracks ─────────────────────────────────── */}
+        {/* ── 05 · Consent & Privacy ────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="04 · Technology interests"
-            title="Which tech tracks are most relevant?"
-            subtitle="The highest-weighted signal (+25) in session scoring."
+            step="05 · Consent & Privacy"
+            title="Your data, your choice."
+            subtitle="Compass only uses your profile for personalisation within this event. None of your data is sold or shared outside TechXchange. These settings are yours to change at any time."
           />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {TRACKS.map(tr => (
-              <Chip key={tr} label={tr}
-                selected={tracks.includes(tr)} onClick={() => tog(tracks, setTracks, tr)} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Step 05 · What I need ───────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="05 · What I need"
-            title="What kind of experience are you looking for?"
-            subtitle="Compass uses these to match need tags in sessions (+15 per match)."
-          />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {NEEDS.map(o => (
-              <Chip key={o.id} label={o.label}
-                selected={needs.includes(o.id)} onClick={() => tog(needs, setNeeds, o.id)} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Step 06 · Community ─────────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="06 · Community"
-            title="Who do you want to meet?"
-            subtitle="Compass surfaces champions and community events that match your connection goals."
-          />
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {COMMUNITY.map(o => (
-              <Chip key={o.id} label={o.label}
-                selected={community.includes(o.id)} onClick={() => tog(community, setCommunity, o.id)} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Step 07 · Aspiration ────────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="07 · In your own words"
-            title="What would make TechXchange 2026 worth your time?"
-            subtitle="Optional. Compass reads this as your aspiration signal."
-          />
-          <textarea
-            value={aspiration} onChange={e => setAspiration(e.target.value)}
-            placeholder="A few strong connections, one breakthrough insight, and leaving with a clearer direction."
-            rows={3}
-            style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
-          />
-        </section>
-
-        {/* ── Consent ─────────────────────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="Consent"
-            title="How do you want your profile used?"
-            subtitle="You can update these at any time from your profile page."
-          />
-          <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "20px 20px", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
             <ConsentGroup label="Profile visibility">
-              <CheckRow label="Make my profile visible to other attendees"  checked={consentPublicProfile}  onChange={setConsentPublicProfile} />
-              <CheckRow label="Show my LinkedIn profile to my matches"       checked={consentShowLinkedin}   onChange={setConsentShowLinkedin} />
+              <ConsentItem
+                label="Make my profile visible to other attendees"
+                description="Your name, role, and goals are shown to other registered TechXchange attendees. Your contact details are never exposed."
+                checked={consentPublicProfile}
+                onChange={setConsentPublicProfile}
+              />
+              <ConsentItem
+                label="Show my LinkedIn profile to my matches"
+                description="Your LinkedIn URL is shared with attendees Compass recommends you connect with — only when you're matched."
+                checked={consentShowLinkedin}
+                onChange={setConsentShowLinkedin}
+              />
             </ConsentGroup>
 
-            <ConsentGroup label="Matching">
-              <CheckRow label="Allow other attendees to request introductions"  checked={consentAllowIntroRequests}      onChange={setConsentAllowIntroRequests} />
-              <CheckRow label="Match me with fellow alumni"                      checked={consentAllowAlumniMatching}     onChange={setConsentAllowAlumniMatching} />
-              <CheckRow label="Match me with people from past employers"         checked={consentAllowEmployerMatching}   onChange={setConsentAllowEmployerMatching} />
-              <CheckRow label="Match me with my university community"            checked={consentAllowUniversityMatching} onChange={setConsentAllowUniversityMatching} />
+            <ConsentGroup label="Networking & matching">
+              <ConsentItem
+                label="Allow other attendees to request introductions"
+                description="Other attendees can send you a Compass introduction request. You choose whether to accept."
+                checked={consentAllowIntroRequests}
+                onChange={setConsentAllowIntroRequests}
+              />
+              <ConsentItem
+                label="Share my profile with my matches"
+                description="When Compass matches you with another attendee, your profile summary is shared with them — and theirs with you."
+                checked={consentShareWithMatched}
+                onChange={setConsentShareWithMatched}
+              />
+              <ConsentItem
+                label="Match me with fellow alumni"
+                description="Compass looks for attendees who share your university background and can surface those connections."
+                checked={consentAllowAlumniMatching}
+                onChange={setConsentAllowAlumniMatching}
+              />
+              <ConsentItem
+                label="Match me with people from past employers"
+                description="Compass uses your past employer to find attendees who share that professional history."
+                checked={consentAllowEmployerMatching}
+                onChange={setConsentAllowEmployerMatching}
+              />
+              <ConsentItem
+                label="Match me with my university community"
+                description="Compass uses your university to surface alumni and community connections at TechXchange."
+                checked={consentAllowUniversityMatching}
+                onChange={setConsentAllowUniversityMatching}
+              />
             </ConsentGroup>
 
-            <ConsentGroup label="Notifications">
-              <CheckRow label="Receive SMS updates about my schedule"  checked={consentAllowSmsUpdates}        onChange={setConsentAllowSmsUpdates} />
-              <CheckRow label="Receive event notifications"            checked={consentAllowEventNotifications} onChange={setConsentAllowEventNotifications} />
+            <ConsentGroup label="Event communications">
+              <ConsentItem
+                label="Receive SMS updates about my schedule"
+                description="Get a text message for session reminders and last-minute schedule changes. Standard rates apply."
+                checked={consentAllowSmsUpdates}
+                onChange={setConsentAllowSmsUpdates}
+              />
+              <ConsentItem
+                label="Receive event notifications"
+                description="Get email or push notifications for TechXchange announcements, session updates, and Compass recommendations."
+                checked={consentAllowEventNotifications}
+                onChange={setConsentAllowEventNotifications}
+              />
             </ConsentGroup>
 
           </div>
         </section>
 
-        {/* ── Save ────────────────────────────────────────────────────────── */}
+        {/* ── Review ────────────────────────────────────────────────────── */}
+        {canSubmit && (
+          <section className="section">
+            <StepLabel
+              step="Review"
+              title="Your Compass at a glance."
+              subtitle="Here's what Compass will use to personalise your TechXchange experience. You can edit any section above before saving."
+            />
+            <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+              {(firstName || lastName || organization || jobTitle) && (
+                <div>
+                  <p style={kicker}>Identity</p>
+                  <p style={reviewVal}>
+                    {[firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || "(name not entered)"}
+                    {jobTitle     ? ` · ${jobTitle}` : ""}
+                    {organization ? ` · ${organization}` : ""}
+                  </p>
+                </div>
+              )}
+
+              {goalLabelsPreview.length > 0 && (
+                <div>
+                  <p style={kicker}>Goals ({goalLabelsPreview.length})</p>
+                  <p style={reviewVal}>{goalLabelsPreview.join(", ")}</p>
+                </div>
+              )}
+
+              {tracks.length > 0 && (
+                <div>
+                  <p style={kicker}>Technology tracks ({tracks.length})</p>
+                  <p style={reviewVal}>{tracks.join(", ")}</p>
+                </div>
+              )}
+
+              {needLabelsPreview.length > 0 && (
+                <div>
+                  <p style={kicker}>What I need ({needLabelsPreview.length})</p>
+                  <p style={reviewVal}>{needLabelsPreview.join(", ")}</p>
+                </div>
+              )}
+
+              {commLabelsPreview.length > 0 && (
+                <div>
+                  <p style={kicker}>Community ({commLabelsPreview.length})</p>
+                  <p style={reviewVal}>{commLabelsPreview.join(", ")}</p>
+                </div>
+              )}
+
+              {aspiration.trim() && (
+                <div>
+                  <p style={kicker}>Aspiration</p>
+                  <p style={{ ...reviewVal, color: "var(--muted)", fontStyle: "italic" }}>
+                    &ldquo;{aspiration.trim()}&rdquo;
+                  </p>
+                </div>
+              )}
+
+            </div>
+          </section>
+        )}
+
+        {/* ── Save ──────────────────────────────────────────────────────── */}
         <section className="section">
           {saveErr && (
             <div style={{ padding: "10px 14px", background: "#FEE2E2", border: "1px solid #DC2626", marginBottom: "16px" }}>
@@ -1032,7 +1027,7 @@ function EnrollPageInner() {
           )}
           {!canSubmit && (
             <p style={{ color: "var(--muted)", fontSize: "0.84rem", marginBottom: "12px" }}>
-              Select at least one goal or tech track to save your Compass.
+              Select at least one goal or technology track to {isEditMode ? "update" : "build"} your Compass.
             </p>
           )}
           <div style={{ display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
@@ -1055,20 +1050,16 @@ function EnrollPageInner() {
                 }} />
               )}
               {saving
-                ? "Saving…"
-                : editMode
-                  ? "Save and Refine My Compass →"
-                  : "Save and Build My Compass →"}
+                ? (isEditMode ? "Updating your Compass…" : "Building your Compass…")
+                : (isEditMode ? "Update My Compass →"    : "Build My Compass →")}
             </button>
-            {editMode ? (
-              <Link href="/experience" className="btn-secondary">Back to My Compass</Link>
-            ) : (
-              <Link href="/" className="btn-secondary">Back to home</Link>
-            )}
+            {isEditMode
+              ? <Link href="/profile" className="btn-secondary">Back to profile</Link>
+              : <Link href="/" className="btn-secondary">Back to home</Link>}
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px", lineHeight: 1.5 }}>
-            Your profile is saved to your account and powers personalised recommendations.
-            Update it any time from your{" "}
+            Your Compass profile is saved to your account and used only to personalise
+            your TechXchange experience. Update it any time from your{" "}
             <a href="/profile" style={{ color: "var(--accent)" }}>profile</a>.
           </p>
         </section>
@@ -1076,24 +1067,5 @@ function EnrollPageInner() {
         <div style={{ height: "48px" }} />
       </div>
     </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Page export — Suspense wrapper required for useSearchParams in App Router
-// ─────────────────────────────────────────────────────────────────────────────
-
-export default function EnrollPage() {
-  return (
-    <Suspense
-      fallback={
-        <section className="section no-top-border">
-          <div className="section-kicker">Compass</div>
-          <p style={{ color: "var(--muted)", marginTop: "12px" }}>Loading…</p>
-        </section>
-      }
-    >
-      <EnrollPageInner />
-    </Suspense>
   );
 }
