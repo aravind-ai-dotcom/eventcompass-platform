@@ -5,9 +5,10 @@
 // Placeholder v1 — full implementation in Phase 5 (Communities).
 // =============================================================================
 import { useEffect, useState } from "react";
-import { db } from "../../src/lib/firebase";
+import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 const BASE = "organizations/ibm/events/txc2026";
 
@@ -25,6 +26,7 @@ const NAV_CARDS = [
 ];
 
 export default function ExplorePage() {
+  const { user, enrolled } = useAuth();
   const [counts, setCounts] = useState({ sessions: 0, champions: 0, participants: 0 });
 
   useEffect(() => {
@@ -119,10 +121,22 @@ export default function ExplorePage() {
 
       <section className="final-band">
         <div>
-          <h2>Tell Compass your intent.</h2>
-          <p>Once Compass knows what you want from TechXchange, Explore becomes personal.</p>
+          {user && enrolled ? (
+            <>
+              <h2>Your Compass is live.</h2>
+              <p>Sessions, Champions, and your personalised plan are ready for you.</p>
+            </>
+          ) : (
+            <>
+              <h2>Tell Compass your intent.</h2>
+              <p>Once Compass knows what you want from TechXchange, Explore becomes personal.</p>
+            </>
+          )}
         </div>
-        <Link href="/enroll" className="btn-primary">Build my Compass</Link>
+        {user && enrolled
+          ? <Link href="/experience" className="btn-primary">Open My Compass →</Link>
+          : <Link href="/enroll"     className="btn-primary">Build My Compass →</Link>
+        }
       </section>
     </>
   );
