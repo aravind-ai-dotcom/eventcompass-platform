@@ -32,23 +32,33 @@ type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
   | "ingest"    | "exports"     | "audit"
-  | "participants" | "sessions-table" | "quality";
+  | "participants" | "sessions-table" | "quality"
+  | "health" | "command" | "champion-intel" | "consent-intel"
+  | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
 
 const NAV: { id: AdminView; label: string; icon: string }[] = [
-  { id: "dashboard", label: "Dashboard",   icon: "◈" },
-  { id: "content",   label: "Content",     icon: "✎" },
-  { id: "ingest",    label: "Data Ingest", icon: "⬆" },
-  { id: "personas",  label: "Personas",    icon: "◎" },
-  { id: "champions", label: "Champions",   icon: "★" },
-  { id: "snapshots", label: "Snapshots",   icon: "◷" },
-  { id: "capacity",  label: "Capacity",    icon: "▦" },
-  { id: "consent",        label: "Consent",      icon: "◻" },
-  { id: "participants",   label: "Participants", icon: "▤" },
-  { id: "sessions-table", label: "Sessions",     icon: "▣" },
-  { id: "quality",        label: "Data Quality", icon: "⚑" },
-  { id: "activity",       label: "Activity",     icon: "◉" },
-  { id: "exports",   label: "Exports",     icon: "⬇" },
-  { id: "audit",     label: "Audit Log",   icon: "≡" },
+  { id: "dashboard",      label: "Dashboard",        icon: "◈" },
+  { id: "exec-snapshot",  label: "Exec Snapshot",    icon: "⬛" },
+  { id: "health",         label: "Health Center",    icon: "◆" },
+  { id: "command",        label: "Command Center",   icon: "◉" },
+  { id: "right-now",      label: "Right Now",        icon: "⚡" },
+  { id: "content",        label: "Content",          icon: "✎" },
+  { id: "ingest",         label: "Data Ingest",      icon: "⬆" },
+  { id: "personas",       label: "Personas",         icon: "◎" },
+  { id: "champions",      label: "Champions",        icon: "★" },
+  { id: "champion-intel", label: "Champion Intel",   icon: "◇" },
+  { id: "snapshots",      label: "Snapshots",        icon: "◷" },
+  { id: "capacity",       label: "Capacity",         icon: "▦" },
+  { id: "consent",        label: "Consent",          icon: "◻" },
+  { id: "consent-intel",  label: "Consent Intel",    icon: "◈" },
+  { id: "heatmap",        label: "TXC Heat Map",     icon: "▤" },
+  { id: "participants",   label: "Participants",     icon: "▤" },
+  { id: "sessions-table", label: "Sessions",         icon: "▣" },
+  { id: "quality",        label: "Data Quality",     icon: "⚑" },
+  { id: "data-quality",   label: "Quality Center",   icon: "⚐" },
+  { id: "activity",       label: "Activity",         icon: "◉" },
+  { id: "exports",        label: "Exports",          icon: "⬇" },
+  { id: "audit",          label: "Audit Log",        icon: "≡" },
 ];
 
 // ─── IBM colours ──────────────────────────────────────────────────────────────
@@ -238,6 +248,21 @@ interface AdminData {
   championRows: ChampionRow[];
   sessionRows: SessionRow[];
   dq: DataQuality;
+  // Extended analytics
+  participantGoals: Record<string, number>;
+  participantNeeds: Record<string, number>;
+  participantCareerInterests: Record<string, number>;
+  participantWithGoals: number;
+  participantWithTracks: number;
+  participantWithNetworking: number;
+  healthScore: number;
+  healthReasons: string[];
+  championsByTrack: Record<string, number>;
+  lowEngagementRows: ParticipantRow[];
+  highEngagementRows: ParticipantRow[];
+  topGoals: [string, number][];
+  topNeeds: [string, number][];
+  topCareerInterests: [string, number][];
 }
 
 function emptyData(): AdminData {
@@ -256,6 +281,12 @@ function emptyData(): AdminData {
     expertiseCounts: {}, topChampions: [],
     participantRows: [], championRows: [], sessionRows: [],
     dq: { sessionsMissingDateTime: 0, sessionsMissingRoom: 0, championsMissingDomains: 0, participantsMissingPersona: 0, participantsMissingConsent: 0, duplicateSessionTitles: 0 },
+    participantGoals: {}, participantNeeds: {}, participantCareerInterests: {},
+    participantWithGoals: 0, participantWithTracks: 0, participantWithNetworking: 0,
+    healthScore: 0, healthReasons: [],
+    championsByTrack: {},
+    lowEngagementRows: [], highEngagementRows: [],
+    topGoals: [], topNeeds: [], topCareerInterests: [],
   };
 }
 
@@ -300,6 +331,12 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   let hasUsageData = false;
   const sessionSaveMap: Record<string, number> = {};
   const participantRows: ParticipantRow[] = [];
+  const participantGoals: Record<string, number> = {};
+  const participantNeeds: Record<string, number> = {};
+  const participantCareerInterests: Record<string, number> = {};
+  let participantWithGoals = 0;
+  let participantWithTracks = 0;
+  let participantWithNetworking = 0;
 
   for (const doc of parts) {
     const d = (doc.data() ?? {}) as Record<string, unknown>;
@@ -350,6 +387,27 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
       sessionSaveMap[sid] = (sessionSaveMap[sid] ?? 0) + 1;
     }
 
+    // Goals, needs, career interests (new analytics)
+    const rawGoals = Array.isArray(d.goals) ? (d.goals as string[])
+      : Array.isArray(d.learning_goals) ? (d.learning_goals as string[]) : [];
+    const rawNeeds = Array.isArray(d.needs) ? (d.needs as string[])
+      : Array.isArray(d.primary_needs) ? (d.primary_needs as string[]) : [];
+    const rawCareer = Array.isArray(d.career_interests) ? (d.career_interests as string[])
+      : Array.isArray(d.career_tracks) ? (d.career_tracks as string[])
+      : typeof d.career_interest === "string" ? [d.career_interest] : [];
+    const rawTracks = Array.isArray(d.preferred_tracks) ? (d.preferred_tracks as string[])
+      : Array.isArray(d.tracks) ? (d.tracks as string[]) : [];
+
+    if (rawGoals.length > 0) {
+      participantWithGoals++;
+      for (const g of rawGoals) { if (g) participantGoals[g] = (participantGoals[g] ?? 0) + 1; }
+    }
+    if (rawNeeds.length > 0) {
+      for (const n of rawNeeds) { if (n) participantNeeds[n] = (participantNeeds[n] ?? 0) + 1; }
+    }
+    if (rawTracks.length > 0) participantWithTracks++;
+    for (const ci of rawCareer) { if (ci) participantCareerInterests[ci] = (participantCareerInterests[ci] ?? 0) + 1; }
+
     // Participant row for drilldown table
     const pName = typeof d.display_name === "string" ? d.display_name
                 : typeof d.name === "string" ? d.name
@@ -363,6 +421,10 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     const pLinkedIn = readBool(d, "consent_linkedin", "consent.linkedin");
     const pHasActivity = saved_sessions.length + saved_people.length + meet_people.length > 0;
     const pSignal = pHasActivity ? "Active" : (persona ? "Enrolled" : "Pending");
+    // Networking signal
+    const hasNetworking = saved_people.length > 0 || meet_people.length > 0 ||
+      readBool(d, "consent_intro", "consent.intro");
+    if (hasNetworking) participantWithNetworking++;
     participantRows.push({
       id: doc.id, name: pName, persona, organization: pOrg, industry: pIndustry,
       signalStatus: pSignal, publicProfile: pPublic, linkedinOptIn: pLinkedIn,
@@ -442,6 +504,7 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   const expertiseCounts: Record<string, number> = {};
   const topChampions: { name: string; domains: string }[] = [];
   const championRows: ChampionRow[] = [];
+  const championsByTrack: Record<string, number> = {};
 
   for (const doc of champions) {
     const d = (doc.data() ?? {}) as Record<string, unknown>;
@@ -463,6 +526,14 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     const cleanDomains = rawDomains.map(r => normalizeDomain(r)).filter(Boolean);
     for (const dm of cleanDomains) {
       expertiseCounts[dm] = (expertiseCounts[dm] ?? 0) + 1;
+      championsByTrack[dm] = (championsByTrack[dm] ?? 0) + 1;
+    }
+    // Champion tracks field
+    const champTracks = Array.isArray(d.tracks) ? (d.tracks as string[])
+      : typeof d.track === "string" ? [d.track] : [];
+    for (const ct of champTracks) {
+      const ctk = ct.trim();
+      if (ctk) championsByTrack[ctk] = (championsByTrack[ctk] ?? 0) + 1;
     }
 
     const name = typeof d.display_name === "string" ? d.display_name
@@ -505,6 +576,41 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     duplicateSessionTitles:    Object.values(titleCounts).filter(c => c > 1).length,
   };
 
+  // ── Health score (0-100) ────────────────────────────────────────────────────
+  const base = Math.max(totalParticipants, 1);
+  const profilePct  = compassBuilt / base;
+  const consentN    = participantRows.filter(p => p.publicProfile || p.linkedinOptIn).length;
+  const consentPct  = consentN / base;
+  const networkPct  = participantWithNetworking / base;
+  const goalsPct    = participantWithGoals / base;
+  const healthScore = Math.round(
+    profilePct  * 40 +
+    consentPct  * 20 +
+    networkPct  * 20 +
+    goalsPct    * 20
+  );
+  const healthReasons: string[] = [];
+  if (profilePct < 0.5)  healthReasons.push(`Only ${Math.round(profilePct*100)}% of attendees have a Compass profile`);
+  if (consentPct < 0.4)  healthReasons.push(`Low consent participation (${Math.round(consentPct*100)}%)`);
+  if (networkPct < 0.3)  healthReasons.push(`Networking signals weak (${Math.round(networkPct*100)}% engaged)`);
+  if (goalsPct < 0.3)    healthReasons.push(`Only ${Math.round(goalsPct*100)}% have set learning goals`);
+  if (healthReasons.length === 0 && healthScore < 80)
+    healthReasons.push("Overall engagement is below target — promote Compass onboarding");
+
+  // ── Engagement tiers ─────────────────────────────────────────────────────────
+  const engagementScore = (r: ParticipantRow) =>
+    r.savedSessions * 1 + r.savedPeople * 2 + r.meetRequests * 3;
+  const sortedByEngagement = [...participantRows].sort((a, b) => engagementScore(b) - engagementScore(a));
+  const highEngagementRows = sortedByEngagement.slice(0, 10);
+  const lowEngagementRows  = [...participantRows]
+    .filter(r => engagementScore(r) === 0 && r.signalStatus !== "Pending")
+    .slice(0, 10);
+
+  // ── Top lists ─────────────────────────────────────────────────────────────────
+  const topGoals = Object.entries(participantGoals).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
+  const topNeeds = Object.entries(participantNeeds).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
+  const topCareerInterests = Object.entries(participantCareerInterests).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
+
   return {
     loading: false, error: null, lastRefresh: new Date(),
     totalParticipants, compassBuilt, consentCounts: cc,
@@ -518,6 +624,11 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     totalChampions, championsAttending, championsAvailableMeet,
     expertiseCounts, topChampions: topChampions.slice(0, 5),
     participantRows, championRows, sessionRows, dq,
+    participantGoals, participantNeeds, participantCareerInterests,
+    participantWithGoals, participantWithTracks, participantWithNetworking,
+    healthScore, healthReasons, championsByTrack,
+    lowEngagementRows, highEngagementRows,
+    topGoals, topNeeds, topCareerInterests,
   };
 }
 
@@ -2356,6 +2467,917 @@ function AuditView() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 1. Compass Health Center
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CompassHealthView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const hs = data.healthScore;
+  const color = hs >= 70 ? IBM.green : hs >= 40 ? IBM.yellow : IBM.red;
+  const grade = hs >= 70 ? "Healthy" : hs >= 40 ? "At Risk" : "Critical";
+
+  const base = Math.max(data.totalParticipants, 1);
+  const profilePct  = Math.round((data.compassBuilt / base) * 100);
+  const consentN    = data.participantRows.filter(p => p.publicProfile || p.linkedinOptIn).length;
+  const consentPct  = Math.round((consentN / base) * 100);
+  const networkPct  = Math.round((data.participantWithNetworking / base) * 100);
+  const goalsPct    = Math.round((data.participantWithGoals / base) * 100);
+
+  const dimensions = [
+    { label: "Profile Completion",   weight: "40%", pct: profilePct,  score: Math.round(profilePct * 0.4),  color: IBM.blue   },
+    { label: "Consent Participation", weight: "20%", pct: consentPct,  score: Math.round(consentPct * 0.2),  color: IBM.purple },
+    { label: "Networking Signals",    weight: "20%", pct: networkPct,  score: Math.round(networkPct * 0.2),  color: IBM.cyan   },
+    { label: "Goals & Tracks Set",    weight: "20%", pct: goalsPct,    score: Math.round(goalsPct   * 0.2),  color: IBM.teal   },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Compass Health Center"
+        title="Platform health score."
+        sub="Weighted composite (profile 40%, consent 20%, networking 20%, goals 20%). Computed from live Firestore." />
+
+      {/* Score hero */}
+      <Panel style={{ borderTop: `3px solid ${color}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <svg width={120} height={120} viewBox="0 0 120 120">
+              <circle cx={60} cy={60} r={50} fill="none" stroke={S.line} strokeWidth={12} />
+              <circle cx={60} cy={60} r={50} fill="none" stroke={color} strokeWidth={12}
+                strokeDasharray={`${(hs / 100) * (2 * Math.PI * 50)} ${2 * Math.PI * 50}`}
+                strokeLinecap="butt"
+                style={{ transform: "rotate(-90deg)", transformOrigin: "60px 60px" }} />
+            </svg>
+            <div style={{ position: "absolute", top: "50%", left: "50%",
+              transform: "translate(-50%, -50%)", textAlign: "center" as const }}>
+              <p style={{ fontSize: "1.8rem", fontWeight: 600, color, margin: 0, lineHeight: 1 }}>{hs}</p>
+              <p style={{ fontSize: "0.6rem", color: S.dim, margin: 0, textTransform: "uppercase", letterSpacing: "0.06em" }}>/ 100</p>
+            </div>
+          </div>
+          <div>
+            <p style={{ fontSize: "1.4rem", fontWeight: 600, color, margin: "0 0 4px" }}>{grade}</p>
+            <p style={{ color: S.muted, fontSize: "0.88rem", margin: "0 0 16px" }}>
+              {data.totalParticipants.toLocaleString()} participants · last computed {data.lastRefresh?.toLocaleTimeString() ?? "—"}
+            </p>
+            {data.healthReasons.length > 0 && (
+              <div>
+                <p style={{ color: S.dim, fontSize: "0.72rem", textTransform: "uppercase",
+                  letterSpacing: "0.08em", margin: "0 0 8px", fontWeight: 700 }}>Top reasons</p>
+                {data.healthReasons.map(r => (
+                  <div key={r} style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "5px" }}>
+                    <span style={{ color: IBM.yellow, flexShrink: 0, marginTop: "1px" }}>▲</span>
+                    <span style={{ color: S.soft, fontSize: "0.84rem" }}>{r}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {data.healthReasons.length === 0 && data.totalParticipants > 0 && (
+              <p style={{ color: IBM.green, fontSize: "0.86rem", fontWeight: 600 }}>
+                ✓ All health dimensions are strong
+              </p>
+            )}
+          </div>
+        </div>
+      </Panel>
+
+      {/* Dimension breakdown */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+        {dimensions.map(d => (
+          <Panel key={d.label} style={{ borderLeft: `3px solid ${d.color}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <div>
+                <p style={{ color: S.soft, fontSize: "0.88rem", fontWeight: 600, margin: "0 0 2px" }}>{d.label}</p>
+                <p style={{ color: S.dim, fontSize: "0.72rem", margin: 0 }}>Weight: {d.weight}</p>
+              </div>
+              <span style={{ fontSize: "1.5rem", fontWeight: 600, color: d.color, lineHeight: 1 }}>{d.pct}%</span>
+            </div>
+            <div style={{ height: "6px", background: S.line, marginBottom: "8px" }}>
+              <div style={{ width: d.pct + "%", height: "100%", background: d.color }} />
+            </div>
+            <p style={{ color: S.dim, fontSize: "0.74rem", margin: 0 }}>
+              Contributes <strong style={{ color: d.color }}>{d.score}</strong> pts to health score
+            </p>
+          </Panel>
+        ))}
+      </div>
+
+      {data.totalParticipants === 0 && (
+        <Panel><EmptyNote>No participant data loaded yet.</EmptyNote></Panel>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Event Command Center
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CommandCenterView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const topNetworkingDomains = Object.entries(data.expertiseCounts)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topLearningTracks = Object.entries(data.sessionsByTrack)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxDomain = topNetworkingDomains[0]?.[1] ?? 1;
+  const maxTrack  = topLearningTracks[0]?.[1] ?? 1;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Event Command Center"
+        title="Engagement at a glance."
+        sub="High/low engagement attendees, networking hotspots, learning hotspots — from live Firestore." />
+
+      {/* Engagement tiles */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* High engagement */}
+        <Panel style={{ borderTop: `3px solid ${IBM.green}` }}>
+          <PanelLabel>⬆ High Engagement — Top 10</PanelLabel>
+          {data.highEngagementRows.length === 0 ? (
+            <EmptyNote>No usage data yet.</EmptyNote>
+          ) : (
+            data.highEngagementRows.map((r, i) => (
+              <div key={r.id} style={{ display: "flex", alignItems: "center",
+                gap: "10px", marginBottom: "10px",
+                paddingBottom: "10px", borderBottom: i < data.highEngagementRows.length - 1 ? `1px solid ${S.line}` : "none" }}>
+                <span style={{ color: IBM.green, fontSize: "0.72rem", fontWeight: 700,
+                  minWidth: "18px", textAlign: "right" as const }}>#{i+1}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ color: S.text, fontSize: "0.86rem", fontWeight: 550, margin: "0 0 2px",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                    {r.name || r.id}
+                  </p>
+                  <p style={{ color: S.dim, fontSize: "0.72rem", margin: 0 }}>
+                    {r.persona || "—"} · {r.organization || "—"}
+                  </p>
+                </div>
+                <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                  <p style={{ color: IBM.green, fontSize: "0.78rem", fontWeight: 600, margin: "0 0 1px" }}>
+                    {r.savedSessions}s · {r.savedPeople}p · {r.meetRequests}m
+                  </p>
+                  <p style={{ color: S.dim, fontSize: "0.66rem", margin: 0 }}>sessions · people · meets</p>
+                </div>
+              </div>
+            ))
+          )}
+        </Panel>
+
+        {/* Low engagement */}
+        <Panel style={{ borderTop: `3px solid ${IBM.yellow}` }}>
+          <PanelLabel>⬇ Low Engagement — Enrolled but Inactive</PanelLabel>
+          {data.lowEngagementRows.length === 0 ? (
+            <EmptyNote>No enrolled-but-inactive participants, or no usage data yet.</EmptyNote>
+          ) : (
+            data.lowEngagementRows.map((r, i) => (
+              <div key={r.id} style={{ display: "flex", alignItems: "center",
+                gap: "10px", marginBottom: "10px",
+                paddingBottom: "10px", borderBottom: i < data.lowEngagementRows.length - 1 ? `1px solid ${S.line}` : "none" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ color: S.soft, fontSize: "0.86rem", fontWeight: 550, margin: "0 0 2px",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                    {r.name || r.id}
+                  </p>
+                  <p style={{ color: S.dim, fontSize: "0.72rem", margin: 0 }}>
+                    {r.persona || "—"} · {r.organization || "—"}
+                  </p>
+                </div>
+                <span style={{ color: IBM.yellow, fontSize: "0.74rem", fontWeight: 600,
+                  padding: "2px 8px", border: `1px solid ${IBM.yellow}44`, flexShrink: 0 }}>
+                  Inactive
+                </span>
+              </div>
+            ))
+          )}
+        </Panel>
+      </div>
+
+      {/* Hotspots */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <Panel>
+          <PanelLabel>🔥 Networking Hotspots — Top Champion Domains</PanelLabel>
+          {topNetworkingDomains.length === 0 ? (
+            <EmptyNote>No champion domain data yet.</EmptyNote>
+          ) : (
+            topNetworkingDomains.map(([domain, count]) => (
+              <HBar key={domain} label={domain} value={count} maxVal={maxDomain} color={IBM.purple} />
+            ))
+          )}
+        </Panel>
+        <Panel>
+          <PanelLabel>📚 Learning Hotspots — Most Active Session Tracks</PanelLabel>
+          {topLearningTracks.length === 0 ? (
+            <EmptyNote>No session track data yet.</EmptyNote>
+          ) : (
+            topLearningTracks.map(([track, count]) => (
+              <HBar key={track} label={track} value={count} maxVal={maxTrack} color={IBM.cyan} />
+            ))
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Champion Intel
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ChampionIntelView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const topDomains = Object.entries(data.expertiseCounts)
+    .sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const maxDomain = topDomains[0]?.[1] ?? 1;
+
+  const trackCoverage = Object.entries(data.championsByTrack)
+    .sort((a, b) => b[1] - a[1]);
+  const coverageRisks = trackCoverage.filter(([, n]) => n < 3);
+  const coverageGood  = trackCoverage.filter(([, n]) => n >= 3);
+
+  const noProfile   = data.championRows.filter(c => c.domains === "—").length;
+  const noLinkedIn  = data.championRows.filter(c => !c.hasLinkedIn).length;
+  const unavailable = data.championRows.filter(c => !c.availableMeet).length;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Champion Intel"
+        title="Coverage, gaps, and expertise."
+        sub="Champion domain coverage with risk detection. <3 champions = coverage risk." />
+
+      {/* Summary cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px",
+        background: S.line, border: `1px solid ${S.line}` }}>
+        {[
+          { label: "Total Champions",    value: data.totalChampions,         color: IBM.blueLight },
+          { label: "Attending",          value: data.championsAttending,      color: IBM.green     },
+          { label: "Available for Meet", value: data.championsAvailableMeet,  color: IBM.cyan      },
+          { label: "Coverage Risks",     value: coverageRisks.length,         color: coverageRisks.length > 0 ? IBM.red : IBM.green },
+        ].map(c => (
+          <div key={c.label} style={{ background: S.bg, padding: "16px 20px" }}>
+            <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
+              letterSpacing: "0.08em", margin: "0 0 6px" }}>{c.label}</p>
+            <p style={{ fontSize: "1.9rem", fontWeight: 520, color: c.color,
+              letterSpacing: "-0.04em", margin: 0, lineHeight: 1 }}>
+              {c.value.toLocaleString()}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Coverage risk */}
+      {coverageRisks.length > 0 && (
+        <Panel style={{ borderLeft: `3px solid ${IBM.red}` }}>
+          <PanelLabel>⚠ Coverage Risk — tracks with fewer than 3 champions</PanelLabel>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {coverageRisks.map(([track, n]) => (
+              <span key={track} style={{ padding: "4px 12px",
+                background: "rgba(218,30,40,0.08)", border: `1px solid ${IBM.red}44`,
+                color: "#ff8389", fontSize: "0.8rem" }}>
+                {track} ({n})
+              </span>
+            ))}
+          </div>
+        </Panel>
+      )}
+      {coverageRisks.length === 0 && trackCoverage.length > 0 && (
+        <Panel style={{ borderLeft: `3px solid ${IBM.green}` }}>
+          <p style={{ color: IBM.green, fontWeight: 650, fontSize: "0.9rem", margin: 0 }}>
+            ✓ All covered tracks have 3+ champions
+          </p>
+        </Panel>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        {/* Top domains */}
+        <Panel>
+          <PanelLabel>Top Champion Domains / Expertise</PanelLabel>
+          {topDomains.length === 0
+            ? <EmptyNote>No domain data — add domains[] or expertise[] to champion documents.</EmptyNote>
+            : topDomains.map(([d, n]) => (
+                <HBar key={d} label={d} value={n} maxVal={maxDomain} color={IBM.purple} />
+              ))
+          }
+        </Panel>
+
+        {/* Data completeness */}
+        <Panel>
+          <PanelLabel>Champion Profile Completeness</PanelLabel>
+          {data.totalChampions > 0 ? (
+            <>
+              <div style={{ marginBottom: "20px" }}>
+                {[
+                  { label: "Missing domain/expertise",  count: noProfile,   color: IBM.yellow },
+                  { label: "Missing LinkedIn URL",      count: noLinkedIn,  color: IBM.orange },
+                  { label: "Not available for meeting", count: unavailable, color: IBM.red    },
+                ].map(item => {
+                  const pct = Math.round((item.count / data.totalChampions) * 100);
+                  return (
+                    <div key={item.label} style={{ marginBottom: "14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between",
+                        alignItems: "baseline", marginBottom: "5px" }}>
+                        <span style={{ color: S.soft, fontSize: "0.84rem" }}>{item.label}</span>
+                        <span style={{ color: item.count > 0 ? item.color : IBM.green,
+                          fontWeight: 600, fontSize: "0.88rem" }}>
+                          {item.count > 0 ? item.count : "✓"}
+                        </span>
+                      </div>
+                      {item.count > 0 && (
+                        <div style={{ height: "5px", background: S.line }}>
+                          <div style={{ width: pct + "%", height: "100%", background: item.color }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <PanelLabel>Good Coverage (3+ champions)</PanelLabel>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                {coverageGood.slice(0, 12).map(([track, n]) => (
+                  <span key={track} style={{ padding: "3px 10px",
+                    background: "rgba(36,161,72,0.08)", border: `1px solid ${IBM.green}33`,
+                    color: IBM.green, fontSize: "0.76rem" }}>
+                    {track} ({n})
+                  </span>
+                ))}
+                {coverageGood.length === 0 && <EmptyNote>No coverage data yet.</EmptyNote>}
+              </div>
+            </>
+          ) : (
+            <EmptyNote>No champion data loaded yet.</EmptyNote>
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Consent Intelligence
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ConsentIntelView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const base = Math.max(data.totalParticipants, 1);
+  const cc = data.consentCounts;
+
+  const dimensions = [
+    { id: "public_profile", label: "Public Profile",  n: cc.public_profile, color: IBM.blue,     rec: "Promote profile visibility during onboarding" },
+    { id: "linkedin",       label: "LinkedIn",         n: cc.linkedin,       color: IBM.purple,   rec: "Add LinkedIn opt-in prompt at event check-in" },
+    { id: "intro",          label: "Intro Request",    n: cc.intro,          color: IBM.green,    rec: "Highlight peer-to-peer value of intro requests" },
+    { id: "alumni",         label: "Alumni Matching",  n: cc.alumni,         color: IBM.cyan,     rec: "Surface alumni connections during session browse" },
+    { id: "employer",       label: "Employer Matching",n: cc.employer,       color: IBM.teal,     rec: "Explain employer matching benefits in Compass" },
+    { id: "sms",            label: "SMS Opt-in",       n: cc.sms,            color: IBM.yellow,   rec: "SMS opt-in is low — consider post-event nudge" },
+  ];
+
+  const allOptin = data.participantRows.filter(p => p.publicProfile || p.linkedinOptIn).length;
+  const zeroOptin = data.totalParticipants - allOptin;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Consent Intelligence"
+        title="Privacy adoption + actionable recommendations."
+        sub="6 consent dimensions with trend bars and prescriptive next steps." />
+
+      {/* Headline numbers */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1px",
+        background: S.line, border: `1px solid ${S.line}` }}>
+        {[
+          { label: "Participants",       value: data.totalParticipants.toLocaleString(), color: S.text    },
+          { label: "Any Consent",        value: allOptin.toLocaleString(),               color: IBM.green  },
+          { label: "No Consent at All",  value: zeroOptin.toLocaleString(),              color: zeroOptin > 0 ? IBM.red : IBM.green },
+        ].map(c => (
+          <div key={c.label} style={{ background: S.bg, padding: "16px 20px" }}>
+            <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
+              letterSpacing: "0.08em", margin: "0 0 6px" }}>{c.label}</p>
+            <p style={{ fontSize: "1.9rem", fontWeight: 520, color: c.color,
+              letterSpacing: "-0.04em", margin: 0, lineHeight: 1 }}>{c.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Dimension bars + recommendations */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        {dimensions.map(d => {
+          const pct = Math.round((d.n / base) * 100);
+          const isLow = pct < 30;
+          return (
+            <Panel key={d.id} style={{ borderLeft: `3px solid ${isLow ? IBM.yellow : d.color}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between",
+                alignItems: "flex-start", marginBottom: "12px" }}>
+                <div>
+                  <p style={{ color: S.text, fontSize: "0.9rem", fontWeight: 600, margin: "0 0 2px" }}>
+                    {d.label}
+                  </p>
+                  <p style={{ color: S.dim, fontSize: "0.74rem", margin: 0 }}>
+                    {d.n.toLocaleString()} opted in
+                  </p>
+                </div>
+                <span style={{ fontSize: "1.6rem", fontWeight: 600, color: d.color, lineHeight: 1 }}>
+                  {pct}%
+                </span>
+              </div>
+              <div style={{ height: "6px", background: S.line, marginBottom: "10px" }}>
+                <div style={{ width: pct + "%", height: "100%", background: d.color }} />
+              </div>
+              {isLow && (
+                <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
+                  <span style={{ color: IBM.yellow, fontSize: "0.72rem", flexShrink: 0 }}>→</span>
+                  <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0, lineHeight: 1.4 }}>
+                    {d.rec}
+                  </p>
+                </div>
+              )}
+              {!isLow && (
+                <p style={{ color: IBM.green, fontSize: "0.76rem", margin: 0 }}>✓ Healthy opt-in rate</p>
+              )}
+            </Panel>
+          );
+        })}
+      </div>
+
+      {data.totalParticipants === 0 && (
+        <Panel><EmptyNote>No participant data loaded yet.</EmptyNote></Panel>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. TXC Heat Map
+// ─────────────────────────────────────────────────────────────────────────────
+
+function HeatMapView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const topTracks   = Object.entries(data.sessionsByTrack).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxTrack    = topTracks[0]?.[1] ?? 1;
+  const maxGoal     = data.topGoals[0]?.[1] ?? 1;
+  const maxNeed     = data.topNeeds[0]?.[1] ?? 1;
+  const maxCareer   = data.topCareerInterests[0]?.[1] ?? 1;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="TXC Heat Map"
+        title="What attendees care about."
+        sub="Tracks, goals, needs, and career interests — computed from participant Compass profiles." />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+        <Panel>
+          <PanelLabel>Session Tracks by Interest</PanelLabel>
+          {topTracks.length === 0
+            ? <EmptyNote>No track data — add tracks[] to session documents.</EmptyNote>
+            : topTracks.map(([t, n]) => (
+                <HBar key={t} label={t} value={n} maxVal={maxTrack} color={IBM.blue} />
+              ))
+          }
+        </Panel>
+        <Panel>
+          <PanelLabel>Most Selected Learning Goals</PanelLabel>
+          {data.topGoals.length === 0
+            ? <EmptyNote>No goals data — add goals[] to participant documents.</EmptyNote>
+            : data.topGoals.map(([g, n]) => (
+                <HBar key={g} label={g} value={n} maxVal={maxGoal} color={IBM.green} />
+              ))
+          }
+        </Panel>
+        <Panel>
+          <PanelLabel>Top Attendee Needs</PanelLabel>
+          {data.topNeeds.length === 0
+            ? <EmptyNote>No needs data — add needs[] to participant documents.</EmptyNote>
+            : data.topNeeds.map(([n, v]) => (
+                <HBar key={n} label={n} value={v} maxVal={maxNeed} color={IBM.cyan} />
+              ))
+          }
+        </Panel>
+        <Panel>
+          <PanelLabel>Career Interests</PanelLabel>
+          {data.topCareerInterests.length === 0
+            ? <EmptyNote>No career_interests data — add career_interests[] to participant documents.</EmptyNote>
+            : data.topCareerInterests.map(([c, n]) => (
+                <HBar key={c} label={c} value={n} maxVal={maxCareer} color={IBM.purple} />
+              ))
+          }
+        </Panel>
+      </div>
+
+      {data.totalParticipants > 0 && (
+        <Panel>
+          <PanelLabel>Engagement Coverage</PanelLabel>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+            {[
+              { label: "Have Goals Set",        n: data.participantWithGoals,      color: IBM.green  },
+              { label: "Have Preferred Tracks", n: data.participantWithTracks,     color: IBM.blue   },
+              { label: "Networking Signals",    n: data.participantWithNetworking, color: IBM.purple },
+            ].map(item => {
+              const pct = Math.round((item.n / Math.max(data.totalParticipants, 1)) * 100);
+              return (
+                <div key={item.label}>
+                  <div style={{ display: "flex", justifyContent: "space-between",
+                    alignItems: "baseline", marginBottom: "6px" }}>
+                    <span style={{ color: S.soft, fontSize: "0.84rem" }}>{item.label}</span>
+                    <span style={{ color: item.color, fontWeight: 600 }}>{pct}%</span>
+                  </div>
+                  <div style={{ height: "6px", background: S.line }}>
+                    <div style={{ width: pct + "%", height: "100%", background: item.color }} />
+                  </div>
+                  <p style={{ color: S.dim, fontSize: "0.72rem", margin: "4px 0 0" }}>
+                    {item.n.toLocaleString()} of {data.totalParticipants.toLocaleString()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Enhanced Data Quality Center
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DataQualityCenterView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const dq = data.dq;
+  const totalScore = [
+    dq.sessionsMissingDateTime, dq.sessionsMissingRoom,
+    dq.championsMissingDomains, dq.participantsMissingPersona,
+    dq.participantsMissingConsent, dq.duplicateSessionTitles,
+  ].reduce((a, v) => a + v, 0);
+
+  const warnings = [
+    {
+      label: "Sessions missing date/time",
+      count: dq.sessionsMissingDateTime,
+      total: data.totalSessions,
+      color: IBM.yellow,
+      fix: 'Add day and start_time fields to session documents.',
+      affectedView: "sessions-table" as AdminView,
+      field: "day / start_time",
+    },
+    {
+      label: "Sessions missing room",
+      count: dq.sessionsMissingRoom,
+      total: data.totalSessions,
+      color: IBM.orange,
+      fix: "Add a room or location field to session documents.",
+      affectedView: "sessions-table" as AdminView,
+      field: "room",
+    },
+    {
+      label: "Champions missing domains",
+      count: dq.championsMissingDomains,
+      total: data.totalChampions,
+      color: IBM.yellow,
+      fix: "Add domains[] or expertise[] to champion documents.",
+      affectedView: "champions" as AdminView,
+      field: "domains / expertise",
+    },
+    {
+      label: "Participants missing persona",
+      count: dq.participantsMissingPersona,
+      total: data.totalParticipants,
+      color: IBM.red,
+      fix: "These attendees have not completed Compass enrollment.",
+      affectedView: "participants" as AdminView,
+      field: "persona",
+    },
+    {
+      label: "Participants with no consent",
+      count: dq.participantsMissingConsent,
+      total: data.totalParticipants,
+      color: IBM.yellow,
+      fix: "No public_profile or LinkedIn consent recorded.",
+      affectedView: "consent" as AdminView,
+      field: "consent_public_profile / consent_linkedin",
+    },
+    {
+      label: "Duplicate session titles",
+      count: dq.duplicateSessionTitles,
+      total: data.totalSessions,
+      color: IBM.red,
+      fix: "Multiple sessions share the same title — check for import duplicates.",
+      affectedView: "sessions-table" as AdminView,
+      field: "title",
+    },
+  ];
+
+  const hasIssues = warnings.some(w => w.count > 0);
+  const qualityScore = data.totalSessions + data.totalChampions + data.totalParticipants > 0
+    ? Math.max(0, 100 - Math.round((totalScore / Math.max(data.totalSessions + data.totalChampions + data.totalParticipants, 1)) * 100))
+    : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Data Quality Center"
+        title="Completeness, integrity, and field health."
+        sub="Enhanced quality checks with affected record counts and direct links to fix views." />
+
+      {/* Score header */}
+      <Panel style={{ borderLeft: `3px solid ${qualityScore >= 80 ? IBM.green : qualityScore >= 50 ? IBM.yellow : IBM.red}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+          <div>
+            <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
+              letterSpacing: "0.08em", margin: "0 0 4px" }}>Data Quality Score</p>
+            <p style={{ fontSize: "2.4rem", fontWeight: 600, margin: 0, lineHeight: 1,
+              color: qualityScore >= 80 ? IBM.green : qualityScore >= 50 ? IBM.yellow : IBM.red }}>
+              {qualityScore}<span style={{ fontSize: "1rem", color: S.dim }}>/100</span>
+            </p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+              {[
+                { label: "Participants", n: data.totalParticipants },
+                { label: "Sessions",    n: data.totalSessions     },
+                { label: "Champions",   n: data.totalChampions    },
+              ].map(c => (
+                <div key={c.label}>
+                  <p style={{ color: S.dim, fontSize: "0.66rem", textTransform: "uppercase",
+                    letterSpacing: "0.08em", margin: "0 0 3px" }}>{c.label}</p>
+                  <p style={{ fontSize: "1.3rem", fontWeight: 520, color: S.text, margin: 0 }}>
+                    {c.n.toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Panel>
+
+      {!hasIssues && data.totalSessions + data.totalChampions + data.totalParticipants > 0 && (
+        <Panel style={{ borderLeft: `3px solid ${IBM.green}` }}>
+          <p style={{ color: IBM.green, fontWeight: 650, fontSize: "0.9rem", margin: "0 0 4px" }}>
+            ✓ No issues detected
+          </p>
+          <p style={{ color: S.dim, fontSize: "0.8rem", margin: 0 }}>
+            All fields look complete across participants, sessions, and champions.
+          </p>
+        </Panel>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "12px" }}>
+        {warnings.map(w => {
+          const pct = w.total > 0 ? Math.round((w.count / w.total) * 100) : 0;
+          const ok = w.count === 0;
+          return (
+            <Panel key={w.label} style={{ borderLeft: `3px solid ${ok ? IBM.green : w.color}` }}>
+              <div style={{ display: "flex", alignItems: "flex-start",
+                justifyContent: "space-between", marginBottom: "10px" }}>
+                <div>
+                  <p style={{ color: ok ? S.muted : S.soft, fontSize: "0.88rem",
+                    fontWeight: 600, margin: "0 0 4px" }}>{w.label}</p>
+                  <p style={{ color: S.dim, fontSize: "0.72rem", margin: 0 }}>
+                    Field: <code style={{ color: S.accent }}>{w.field}</code>
+                  </p>
+                </div>
+                <span style={{ fontSize: "1.8rem", fontWeight: 600,
+                  color: ok ? IBM.green : w.color, lineHeight: 1, flexShrink: 0 }}>
+                  {ok ? "✓" : w.count.toLocaleString()}
+                </span>
+              </div>
+              {!ok && (
+                <>
+                  <div style={{ height: "4px", background: S.line, marginBottom: "8px" }}>
+                    <div style={{ width: Math.min(100, pct) + "%", height: "100%", background: w.color }} />
+                  </div>
+                  <p style={{ color: S.dim, fontSize: "0.76rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+                    {pct}% of {w.total.toLocaleString()} — {w.fix}
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ color: S.dim, fontSize: "0.72rem" }}>
+                      {w.count.toLocaleString()} affected record{w.count !== 1 ? "s" : ""}
+                    </span>
+                    <span style={{ padding: "3px 10px", border: `1px solid ${S.line}`,
+                      color: IBM.blueLight, fontSize: "0.72rem", cursor: "default" }}>
+                      → View in {w.affectedView}
+                    </span>
+                  </div>
+                </>
+              )}
+              {ok && (
+                <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0 }}>No issues detected.</p>
+              )}
+            </Panel>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Executive Snapshot
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ExecSnapshotView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const base = Math.max(data.totalParticipants, 1);
+  const profileRate = Math.round((data.compassBuilt / base) * 100);
+  const consentN    = data.participantRows.filter(p => p.publicProfile || p.linkedinOptIn).length;
+  const consentRate = Math.round((consentN / base) * 100);
+  const networkRate = Math.round((data.participantWithNetworking / base) * 100);
+  const activeN     = data.participantRows.filter(p => p.signalStatus === "Active").length;
+  const activeRate  = Math.round((activeN / base) * 100);
+
+  const kpis = [
+    { label: "Total Participants",    value: data.totalParticipants.toLocaleString(), sub: "registered in Firestore",            color: IBM.blueLight },
+    { label: "Compass Profiles",      value: data.compassBuilt.toLocaleString(),       sub: `${profileRate}% enrollment rate`,    color: IBM.green     },
+    { label: "Active Attendees",      value: activeN.toLocaleString(),                 sub: `${activeRate}% of registered`,       color: IBM.cyan      },
+    { label: "Sessions in Catalog",   value: data.totalSessions.toLocaleString(),      sub: "from Firestore sessions collection", color: IBM.blue      },
+    { label: "Champions Available",   value: data.championsAvailableMeet.toLocaleString(), sub: `of ${data.totalChampions.toLocaleString()} total`,  color: IBM.purple  },
+    { label: "Networking Engaged",    value: data.participantWithNetworking.toLocaleString(), sub: `${networkRate}% have networking signals`, color: IBM.teal },
+    { label: "Meet Requests",         value: data.hasUsageData ? data.totalMeetRequests.toLocaleString() : "—", sub: "total across all attendees", color: IBM.green },
+    { label: "Consent Opt-in",        value: `${consentRate}%`,                        sub: `${consentN.toLocaleString()} participants`, color: IBM.yellow },
+    { label: "Platform Health",       value: `${data.healthScore}/100`,                sub: data.healthScore >= 70 ? "Healthy" : data.healthScore >= 40 ? "At Risk" : "Critical",
+      color: data.healthScore >= 70 ? IBM.green : data.healthScore >= 40 ? IBM.yellow : IBM.red },
+  ];
+
+  const topPersonas = Object.entries(data.personaCounts)
+    .sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const topDomains = Object.entries(data.expertiseCounts)
+    .sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="Executive Snapshot"
+        title="VP-level summary — TechXchange 2026."
+        sub={`One-page view for leadership. Refreshed ${data.lastRefresh?.toLocaleTimeString() ?? "—"}.`} />
+
+      {/* KPI grid */}
+      <div style={{ display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+        gap: "1px", background: S.line, border: `1px solid ${S.line}` }}>
+        {kpis.map(k => (
+          <div key={k.label} style={{ background: S.bg, padding: "18px 20px" }}>
+            <p style={{ color: S.dim, fontSize: "0.66rem", textTransform: "uppercase",
+              letterSpacing: "0.08em", margin: "0 0 6px", lineHeight: 1.4 }}>{k.label}</p>
+            <p style={{ fontSize: "1.8rem", fontWeight: 520, letterSpacing: "-0.04em",
+              color: k.color, margin: "0 0 3px", lineHeight: 1 }}>{k.value}</p>
+            <p style={{ color: S.dim, fontSize: "0.72rem", margin: 0 }}>{k.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary narrative */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+        <Panel>
+          <PanelLabel>Event Intelligence Summary</PanelLabel>
+          <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 16px" }}>
+            TechXchange 2026 has{" "}
+            <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered participants</strong>
+            , of whom{" "}
+            <strong style={{ color: IBM.green }}>{data.compassBuilt.toLocaleString()} ({profileRate}%)</strong>
+            {" "}have completed a Compass profile. The platform health score is{" "}
+            <strong style={{ color: data.healthScore >= 70 ? IBM.green : IBM.yellow }}>{data.healthScore}/100</strong>.
+            {" "}{activeN.toLocaleString()} attendees ({activeRate}%) are actively engaging with Compass.
+          </p>
+          <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>
+            The champion network has{" "}
+            <strong style={{ color: IBM.purple }}>{data.totalChampions.toLocaleString()} champions</strong>
+            , with{" "}
+            <strong style={{ color: IBM.cyan }}>{data.championsAvailableMeet.toLocaleString()} available for 1:1 meetings</strong>.
+            {" "}Consent opt-in across participants stands at{" "}
+            <strong style={{ color: IBM.yellow }}>{consentRate}%</strong>.
+            {data.hasUsageData && ` Attendees have made ${data.totalMeetRequests.toLocaleString()} meet requests.`}
+          </p>
+        </Panel>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <Panel>
+            <PanelLabel>Top Personas</PanelLabel>
+            {topPersonas.map(([p, n]) => (
+              <div key={p} style={{ display: "flex", justifyContent: "space-between",
+                alignItems: "baseline", marginBottom: "6px" }}>
+                <span style={{ color: PERSONA_COLORS[p] ?? S.soft, fontSize: "0.84rem",
+                  fontWeight: 550 }}>{p}</span>
+                <span style={{ color: S.text, fontSize: "0.84rem",
+                  fontVariantNumeric: "tabular-nums" }}>{n.toLocaleString()}</span>
+              </div>
+            ))}
+            {topPersonas.length === 0 && <EmptyNote>No persona data.</EmptyNote>}
+          </Panel>
+          <Panel>
+            <PanelLabel>Top Champion Domains</PanelLabel>
+            {topDomains.map(([d, n]) => (
+              <div key={d} style={{ display: "flex", justifyContent: "space-between",
+                alignItems: "baseline", marginBottom: "6px" }}>
+                <span style={{ color: S.soft, fontSize: "0.84rem",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
+                  maxWidth: "130px" }}>{d}</span>
+                <span style={{ color: IBM.purple, fontSize: "0.84rem",
+                  fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{n}</span>
+              </div>
+            ))}
+            {topDomains.length === 0 && <EmptyNote>No domain data.</EmptyNote>}
+          </Panel>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. "If TechXchange Started Right Now"
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RightNowView({ data }: { data: AdminData }) {
+  if (data.loading) return <LoadingShimmer />;
+
+  const topPersonas    = Object.entries(data.personaCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topTracks      = Object.entries(data.sessionsByTrack).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topDomains     = Object.entries(data.expertiseCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const topSessions    = data.sessionRows
+    .map(s => ({ title: s.title, track: s.track, saved: 0 }))
+    .slice(0, 10);
+
+  const base = Math.max(data.totalParticipants, 1);
+  const profileRate = Math.round((data.compassBuilt / base) * 100);
+  const networkRate = Math.round((data.participantWithNetworking / base) * 100);
+  const hs = data.healthScore;
+
+  // Brief narrative
+  const topPersonaName = topPersonas[0]?.[0] ?? "—";
+  const topTrackName   = topTracks[0]?.[0] ?? "—";
+  const topDomainName  = topDomains[0]?.[0] ?? "—";
+  const brief = data.totalParticipants > 0 ? [
+    `TechXchange 2026 Compass has ${data.totalParticipants.toLocaleString()} registered participants with a ${profileRate}% profile completion rate.`,
+    `The event is ${hs >= 70 ? "healthy" : hs >= 40 ? "at risk" : "in critical health"} with a platform health score of ${hs}/100.`,
+    `The dominant attendee persona is ${topPersonaName}. The most-requested topic area is ${topTrackName}.`,
+    `${data.totalChampions} IBM Champions are in the network — ${data.championsAvailableMeet} available for 1:1 meetings. Top domain: ${topDomainName}.`,
+    `${networkRate}% of attendees have activated networking signals. ${data.totalMeetRequests > 0 ? `${data.totalMeetRequests} meet requests have been made.` : "No meet request data yet."}`,
+    data.topGoals.length > 0 ? `Top learning goal: "${data.topGoals[0][0]}" (${data.topGoals[0][1]} attendees).` : "",
+  ].filter(Boolean).join(" ") : "No participant data loaded yet — load Firestore data first.";
+
+  function Top10Panel({ title, items, color }: { title: string; items: [string, number][]; color: string }) {
+    return (
+      <Panel>
+        <PanelLabel>{title}</PanelLabel>
+        {items.length === 0 ? (
+          <EmptyNote>No data available yet.</EmptyNote>
+        ) : (
+          items.map(([label, value], i) => (
+            <div key={label} style={{ display: "flex", alignItems: "center",
+              gap: "8px", marginBottom: "8px" }}>
+              <span style={{ color: S.dim, fontSize: "0.7rem", minWidth: "16px",
+                fontWeight: 700, textAlign: "right" as const }}>{i+1}</span>
+              <span style={{ flex: 1, color: S.soft, fontSize: "0.84rem",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                {label}
+              </span>
+              {value > 0 && (
+                <span style={{ color, fontSize: "0.82rem", fontWeight: 600,
+                  flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {value.toLocaleString()}
+                </span>
+              )}
+            </div>
+          ))
+        )}
+      </Panel>
+    );
+  }
+
+  const topSessionPairs: [string, number][] = topSessions.map(s => [s.title, 0]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      <SectionHead kicker="If TechXchange Started Right Now"
+        title="Top 10 lists + Compass Executive Brief."
+        sub="Snapshot of the current state of TechXchange 2026 — based on live Firestore data." />
+
+      {/* Executive Brief */}
+      <Panel style={{ borderLeft: `3px solid ${IBM.blue}` }}>
+        <p style={{ color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700,
+          textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
+          Compass Executive Brief
+        </p>
+        <p style={{ color: S.soft, fontSize: "0.97rem", lineHeight: 1.8, margin: 0 }}>
+          {brief}
+        </p>
+      </Panel>
+
+      {/* Top 10 grids */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
+        <Top10Panel title="Top 10 Attendee Personas"  items={topPersonas}        color={IBM.blue}   />
+        <Top10Panel title="Top 10 Session Tracks"     items={topTracks}          color={IBM.cyan}   />
+        <Top10Panel title="Top 10 Champion Domains"   items={topDomains}         color={IBM.purple} />
+        <Top10Panel title="Top 10 Learning Goals"     items={data.topGoals}      color={IBM.green}  />
+        <Top10Panel title="Top 10 Attendee Needs"     items={data.topNeeds}      color={IBM.teal}   />
+        <Top10Panel title="Top 10 Sessions in Catalog" items={topSessionPairs}   color={IBM.orange} />
+      </div>
+
+      {data.totalParticipants === 0 && (
+        <Panel><EmptyNote>Load Firestore data to generate this view.</EmptyNote></Panel>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main — auth gate + view router
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2389,6 +3411,15 @@ export default function AdminPage() {
     ingest:           <IngestView            data={data} />,
     exports:          <ExportsView />,
     audit:            <AuditView />,
+    // 8 new views
+    health:           <CompassHealthView     data={data} />,
+    command:          <CommandCenterView     data={data} />,
+    "champion-intel": <ChampionIntelView     data={data} />,
+    "consent-intel":  <ConsentIntelView      data={data} />,
+    heatmap:          <HeatMapView           data={data} />,
+    "data-quality":   <DataQualityCenterView data={data} />,
+    "exec-snapshot":  <ExecSnapshotView      data={data} />,
+    "right-now":      <RightNowView          data={data} />,
   };
 
   return (

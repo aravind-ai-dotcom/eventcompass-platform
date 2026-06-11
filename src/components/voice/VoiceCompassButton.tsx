@@ -7,23 +7,19 @@
 // Push-to-talk concierge panel — compact inline assistant style.
 //
 // Behaviour:
-//   Idle      → kicker + "Ask Compass" button + brief hint chips
-//   Listening → waveform bars in button
-//   Thinking  → spinning beacon in button
-//   Result    → transcript quote + compact action cards
-//   Error     → error text beneath button
+//   Idle       → kicker + "Ask Compass" button + brief hint chips
+//   Listening  → waveform bars in button
+//   Thinking   → spinning beacon in button (classifying intent)
+//   Generating → spinning beacon in button (fetching cloud TTS)
+//   Result     → transcript quote + compact action cards
+//   Error      → error text beneath button
 //
 // Architecture:
 //   - Browser SpeechRecognition (webkit fallback) for speech-to-text
-//   - ElevenLabs TTS via /api/voice (server-side — key never exposed to client)
-//   - Falls back to browser SpeechSynthesis if ElevenLabs unavailable
+//   - /api/voice (Google TTS) for spoken response; browser SpeechSynthesis fallback
 //   - voiceIntentClassifier.ts for deterministic intent matching
 //   - No Firestore writes — action callbacks fired to parent if provided
 //   - No audio stored, uploaded, or transmitted
-//
-// Voice state machine:
-//   idle → listening → thinking → generating → result
-//                                           ↘ (fallback) browser synth → result
 //
 // Props (all existing props unchanged; new optional action callbacks added):
 //   nextBestMove / topSession / topChampion / participantGoals / participantTracks
@@ -87,6 +83,7 @@ interface VoiceCompassButtonProps {
   onDoNotSuggestPerson?:   (championId: string) => void;
 }
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Browser SpeechRecognition type shim
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,7 +135,7 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
 
 function CompassBeacon({ state }: { state: "idle" | "thinking" | "result" }) {
   const isThinking = state === "thinking";
-  const size = 28;   // Reduced from 38 for compact button
+  const size = 28;
   const cx   = size / 2;
   const cy   = size / 2;
 
@@ -185,7 +182,7 @@ function CompassBeacon({ state }: { state: "idle" | "thinking" | "result" }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CompactCard — recommendation card with inline action chips
+// CompactCard — recommendation card with inline action chips (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const chipBase: React.CSSProperties = {
@@ -234,52 +231,35 @@ function CompactCard({
 
   return (
     <div style={{ border: "1px solid var(--line)", padding: "9px 12px", display: "flex", flexDirection: "column", gap: "5px" }}>
-      {/* Title row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
         <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--text)", lineHeight: 1.3 }}>{title}</span>
         <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap", flexShrink: 0, paddingTop: "2px" }}>{type}</span>
       </div>
-      {/* Meta */}
       {meta && (
         <p style={{ color: "var(--muted)", fontSize: "0.75rem", margin: 0, lineHeight: 1.4 }}>{meta}</p>
       )}
-      {/* Action chips */}
       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", paddingTop: "2px" }}>
-        {/* Info — always shown */}
         <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "rgba(15,98,254,0.35)" }}>
           Info ↗
         </a>
-        {/* Add to schedule — sessions only */}
         {sessionId && !scheduled && (
-          <button
-            onClick={() => { setScheduled(true); onAddToSchedule?.(sessionId); }}
-            style={chipBase}
-          >
+          <button onClick={() => { setScheduled(true); onAddToSchedule?.(sessionId); }} style={chipBase}>
             Add to schedule
           </button>
         )}
-        {sessionId && scheduled && (
-          <span style={accentChip}>✓ Scheduled</span>
-        )}
-        {/* Save person — champions only */}
+        {sessionId && scheduled && <span style={accentChip}>✓ Scheduled</span>}
         {championId && !savedPerson && (
-          <button
-            onClick={() => { setSavedPerson(true); onSavePerson?.(championId); }}
-            style={chipBase}
-          >
+          <button onClick={() => { setSavedPerson(true); onSavePerson?.(championId); }} style={chipBase}>
             Save person
           </button>
         )}
-        {championId && savedPerson && (
-          <span style={accentChip}>✓ Saved</span>
-        )}
-        {/* Do not suggest */}
+        {championId && savedPerson && <span style={accentChip}>✓ Saved</span>}
         {(sessionId || championId) && (
           <button
             onClick={() => {
               setDismissed(true);
-              if (sessionId)   onDoNotSuggestSession?.(sessionId);
-              if (championId)  onDoNotSuggestPerson?.(championId);
+              if (sessionId)  onDoNotSuggestSession?.(sessionId);
+              if (championId) onDoNotSuggestPerson?.(championId);
             }}
             style={{ ...chipBase, opacity: 0.55 }}
           >
@@ -315,6 +295,8 @@ export default function VoiceCompassButton({
   const [response,   setResponse]   = useState<VoiceResponse | null>(null);
   const [errorMsg,   setErrorMsg]   = useState("");
 
+  const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
+
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const synthRef       = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef       = useRef<HTMLAudioElement | null>(null);
@@ -324,7 +306,7 @@ export default function VoiceCompassButton({
     if (!getSpeechRecognition()) setVoiceState("unsupported");
   }, []);
 
-  // Cancel all audio on unmount
+  // Cancel speech on unmount
   useEffect(() => {
     return () => {
       if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -333,62 +315,66 @@ export default function VoiceCompassButton({
       recognitionRef.current?.abort();
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.src = "";
+        audioRef.current = null;
       }
     };
   }, []);
 
-  // ── Fallback: browser SpeechSynthesis ───────────────────────────────────────
-  const speakFallback = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+  // ── Cloud TTS → browser synthesis fallback ───────────────────────────────
+  const speakCloudVoice = useCallback(async (text: string): Promise<void> => {
+  if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();
-    const utterance  = new SpeechSynthesisUtterance(text);
-    utterance.lang   = "en-US";
-    utterance.rate   = 0.95;
-    utterance.pitch  = 1.0;
-    utterance.volume = 1.0;
-    synthRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, []);
+  }
 
-  // ── Primary: ElevenLabs TTS via /api/voice ──────────────────────────────────
-  // Returns true if audio was fetched and playback started, false on any failure.
-  const speakEleven = useCallback(async (text: string): Promise<boolean> => {
-    try {
-      const res = await fetch("/api/voice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) return false;
+  if (audioRef.current) {
+    audioRef.current.pause();
+    audioRef.current = null;
+  }
 
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
+  setPendingAudioUrl(null);
 
-      // Stop any already-playing audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-      }
+  try {
+    const res = await fetch("/api/voice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
 
-      const audio        = new Audio(url);
-      audioRef.current   = audio;
-      audio.onended      = () => URL.revokeObjectURL(url);
-      audio.onerror      = () => URL.revokeObjectURL(url);
-      await audio.play();
-      return true;
-    } catch {
-      return false;
+    if (!res.ok) {
+      throw new Error(`/api/voice returned ${res.status}: ${await res.text()}`);
     }
-  }, []);
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const audio = new Audio(url);
+    audioRef.current = audio;
+
+    setPendingAudioUrl(url);
+return;
+    
+
+  } catch (err) {
+    console.error("[VoiceCompass] Cloud voice failed:", err);
+  }
+
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+  synthRef.current = utterance;
+  window.speechSynthesis.speak(utterance);
+}, []);
 
   // ── Handle resolved transcript ──────────────────────────────────────────────
   const handleTranscript = useCallback(async (text: string) => {
     setVoiceState("thinking");
     setTranscript(text);
 
-    // Brief "thinking" moment
-    await new Promise<void>(r => setTimeout(r, 300));
+    await new Promise<void>(resolve => setTimeout(resolve, 300));
 
     const classified = classifyVoiceIntent(text);
     const voiceResp  = buildVoiceResponse(classified, {
@@ -400,24 +386,20 @@ export default function VoiceCompassButton({
     });
 
     setResponse(voiceResp);
+    setVoiceState("generating");
 
-    // Fire side-effect actions immediately (don't wait for audio)
+    await speakCloudVoice(voiceResp.spoken);
+
+    setVoiceState("result");
+
     if (voiceResp.action === "navigate_experience" && onNavigateExperience) onNavigateExperience();
     if (voiceResp.action === "dismiss"             && onDismiss)             onDismiss();
     if (voiceResp.action === "mark_attended"       && onMarkAttended)        onMarkAttended();
     if (voiceResp.action === "show_day"            && onNavigateExperience)  onNavigateExperience();
-
-    // Fetch ElevenLabs audio — fall back to browser synth on failure
-    setVoiceState("generating");
-    const played = await speakEleven(voiceResp.spoken);
-    if (!played) speakFallback(voiceResp.spoken);
-
-    setVoiceState("result");
   }, [
     nextBestMove, topSession, topChampion,
     participantGoals, participantTracks,
-    speakEleven, speakFallback,
-    onDismiss, onMarkAttended, onNavigateExperience,
+    speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience,
   ]);
 
   // ── Start listening ─────────────────────────────────────────────────────────
@@ -427,6 +409,10 @@ export default function VoiceCompassButton({
 
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
 
     setVoiceState("listening");
@@ -444,8 +430,8 @@ export default function VoiceCompassButton({
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const result = event.results[0];
       if (result?.[0]) {
-        const text = result[0].transcript.trim();
-        if (text) handleTranscript(text);
+        const t = result[0].transcript.trim();
+        if (t) handleTranscript(t);
       }
     };
 
@@ -472,41 +458,47 @@ export default function VoiceCompassButton({
   }, [handleTranscript]);
 
   // ── Reset to idle ───────────────────────────────────────────────────────────
+  
   const reset = useCallback(() => {
-    recognitionRef.current?.abort();
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
-    }
-    setVoiceState("idle");
-    setTranscript("");
-    setResponse(null);
-    setErrorMsg("");
-  }, []);
+
+  recognitionRef.current?.abort();
+
+  if (typeof window !== "undefined" && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+
+  if (audioRef.current) {
+    audioRef.current.pause();
+    audioRef.current = null;
+  }
+  setVoiceState("idle");
+  setTranscript("");
+  setResponse(null);
+  setErrorMsg("");
+  setPendingAudioUrl(null);
+}, []);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Derived state
   // ─────────────────────────────────────────────────────────────────────────
 
-  const isListening  = voiceState === "listening";
-  const isThinking   = voiceState === "thinking";
-  const isGenerating = voiceState === "generating";
-  const showResult   = voiceState === "result";
-  const showError    = voiceState === "error";
-  const unsupported  = voiceState === "unsupported";
+  const isListening   = voiceState === "listening";
+  const isThinking    = voiceState === "thinking";
+  const isGenerating  = voiceState === "generating";
+  const showResult    = voiceState === "result";
+  const showError     = voiceState === "error";
+  const unsupported   = voiceState === "unsupported";
+  const isProcessing  = isThinking || isGenerating;
 
   const btnLabel = isListening   ? "Listening…"
     : isThinking    ? "Thinking…"
-    : isGenerating  ? "Generating audio…"
+    : isGenerating  ? "Generating…"
     : showResult    ? "↻  Ask Again"
     : showError     ? "↻  Try Again"
     : "Ask Compass";
 
   function handleButtonClick() {
-    if (isThinking || isGenerating) return;
+    if (isProcessing) return;
     if (isListening) { recognitionRef.current?.stop(); setVoiceState("idle"); return; }
     if (showResult || showError) { reset(); setTimeout(startListening, 80); return; }
     startListening();
@@ -528,21 +520,18 @@ export default function VoiceCompassButton({
 
   const fallbackActivities = showResult ? getFallbackActivities() : [];
 
-  // Session and champion card visibility
   const showSessionCard  = !!topSession && showResult &&
     !["show_champions", "dismiss"].includes(response?.action ?? "");
   const showChampionCard = !!topChampion && showResult &&
     response?.action === "show_champions";
   const hasCard = showSessionCard || showChampionCard || fallbackActivities.length > 0;
 
-  // Build session meta line
   const sessionMeta = topSession ? [
-    (topSession as unknown as Record<string, unknown>).day   as string | undefined,
+    (topSession as unknown as Record<string, unknown>).day        as string | undefined,
     (topSession as unknown as Record<string, unknown>).time_start as string | undefined,
-    (topSession as unknown as Record<string, unknown>).room  as string | undefined,
+    (topSession as unknown as Record<string, unknown>).room       as string | undefined,
   ].filter(Boolean).join(" · ") : "";
 
-  // Build champion meta line
   const champMeta = topChampion ? [
     (topChampion as unknown as Record<string, unknown>).title        as string | undefined,
     (topChampion as unknown as Record<string, unknown>).organization as string | undefined,
@@ -593,17 +582,16 @@ export default function VoiceCompassButton({
           {!unsupported && (
             <button
               onClick={handleButtonClick}
-              disabled={isThinking || isGenerating}
+              disabled={isProcessing}
               aria-live="polite"
               aria-label={btnLabel}
               className={[
                 "vcb-btn compass-beacon-btn",
-                isListening   ? "vcb-btn-listen"
-                : isThinking    ? "vcb-btn-process"
-                : isGenerating  ? "vcb-btn-process"
-                : showResult    ? "vcb-btn-results"
-                : showError     ? "vcb-btn-error"
-                :                  "vcb-btn-idle",
+                isListening  ? "vcb-btn-listen"
+                : isProcessing ? "vcb-btn-process"
+                : showResult   ? "vcb-btn-results"
+                : showError    ? "vcb-btn-error"
+                :                "vcb-btn-idle",
               ].join(" ")}
             >
               {/* Waveform bars during listening */}
@@ -622,7 +610,7 @@ export default function VoiceCompassButton({
               )}
               {/* Beacon when not listening */}
               {!isListening && (
-                <CompassBeacon state={(isThinking || isGenerating) ? "thinking" : showResult ? "result" : "idle"} />
+                <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} />
               )}
               {btnLabel}
             </button>
@@ -660,6 +648,37 @@ export default function VoiceCompassButton({
                 &ldquo;{transcript}&rdquo;
               </p>
             )}
+
+
+{pendingAudioUrl && (
+  <button
+    type="button"
+    onClick={async () => {
+
+  if (!pendingAudioUrl) return;
+
+  const audio = new Audio(pendingAudioUrl);
+  audioRef.current = audio;
+  audio.onended = () => {
+    URL.revokeObjectURL(pendingAudioUrl);
+    audioRef.current = null;
+    setPendingAudioUrl(null);
+  };
+  await audio.play();
+}}
+    style={{
+      marginTop: "10px",
+      border: "1px solid var(--accent)",
+      background: "rgba(15,98,254,0.06)",
+      color: "var(--accent)",
+      padding: "8px 12px",
+      fontSize: "0.84rem",
+      cursor: "pointer",
+    }}
+  >
+    ▶ Play Compass voice
+  </button>
+)}
 
             {/* Session card */}
             {showSessionCard && topSession && (
