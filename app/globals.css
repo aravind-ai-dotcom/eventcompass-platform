@@ -627,42 +627,46 @@ img { max-width: 100%; display: block; }
 .next-best-move p { color: var(--muted); line-height: 1.45; margin: 0; }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
-@media (max-width: 980px) {
-  .hero-shell,
-  .section-head,
-  .pulse-columns { grid-template-columns: 1fr; }
-  .opportunity-grid.three,
-  .compact-list,
-  .experience-strip { grid-template-columns: 1fr; }
-  .persona-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .signals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .community-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .three-champions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pulse-scoreboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .main-nav { display: none; }
-  .section { padding: 48px 0; }
-}
 
-@media (max-width: 640px) {
-  .compass-main { width: min(100% - 28px, 1180px); }
-  .persona-grid { grid-template-columns: 1fr; }
-  .signals-grid { grid-template-columns: 1fr; }
-  .type-grid { grid-template-columns: 1fr; }
-  .community-dashboard { grid-template-columns: 1fr; }
-  .pulse-scoreboard { grid-template-columns: 1fr; }
-  .three-champions { grid-template-columns: 1fr; }
-  .champion-story { grid-template-columns: 1fr; }
-  .final-band { display: block; }
-  .final-band .btn-primary { margin-top: 20px; }
-  .site-footer { display: block; }
-  .catalog-list article { grid-template-columns: 1fr; }
-  .catalog-list b { text-align: left; }
-  .compact-hero h1 { font-size: clamp(2.6rem, 13vw, 4rem); }
-}
 
 @media print {
-  .site-header, .site-footer, .final-band { display: none !important; }
-  body { background: #fff !important; color: #111 !important; }
-  .section { padding: 24px 0; }
+  * {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #161616 !important;
+  }
+
+  section,
+  article,
+  div,
+  aside,
+  main {
+    background: #ffffff !important;
+    color: #161616 !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  span,
+  li,
+  b,
+  strong {
+    color: #161616 !important;
+  }
+
+  .chip,
+  .score-label,
+  .section-kicker {
+    color: #393939 !important;
+    border-color: #d0d0d0 !important;
+  }
 }
