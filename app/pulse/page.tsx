@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 const BASE = "organizations/ibm/events/txc2026";
 type RawDoc = Record<string, unknown>;
@@ -95,7 +96,57 @@ interface PulseData {
   openToCareer:      number;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Compact relationship-intelligence card
+// ─────────────────────────────────────────────────────────────────────────────
+function RelCard({
+  kicker,
+  count,
+  unit,
+  color,
+  rows,
+  renderLabel,
+}: {
+  kicker: string;
+  count: number;
+  unit: string;
+  color: string;
+  rows: [string, number][];
+  renderLabel?: (name: string) => React.ReactNode;
+}) {
+  return (
+    <article style={{
+      background: "var(--panel)", border: "1px solid var(--line)",
+      borderTop: `3px solid ${color}`, padding: "16px 18px",
+      display: "flex", flexDirection: "column", gap: "10px",
+    }}>
+      <div>
+        <p style={{ color: "var(--muted)", fontSize: "0.70rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.10em", margin: "0 0 4px" }}>
+          {kicker}
+        </p>
+        <p style={{ fontSize: "1.8rem", fontWeight: 520, color, margin: 0, letterSpacing: "-0.04em", lineHeight: 1 }}>
+          {count}
+        </p>
+        <p style={{ color: "var(--muted)", fontSize: "0.78rem", margin: "2px 0 0" }}>{unit}</p>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+        {rows.map(([name, cnt]) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", minWidth: 0 }}>
+            <span style={{ fontSize: "0.83rem", color: "var(--soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, display: "flex", alignItems: "center", gap: "5px" }}>
+              {renderLabel ? renderLabel(name) : name}
+            </span>
+            <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: "0.78rem", color: "var(--muted)", flexShrink: 0 }}>
+              {cnt}
+            </span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export default function PulsePage() {
+  const { user, enrolled } = useAuth();
   const [data,    setData]    = useState<PulseData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -292,260 +343,134 @@ export default function PulsePage() {
         </section>
       )}
 
-
-      {/* ── Where relationships are forming — three dedicated sections ──── */}
+      {/* ── Relationship intelligence — 4 compact cards ─────────────────────── */}
       {data && (
-
-        <>
-          {/* ── 1. Countries ─────────────────────────────────────────────── */}
-          {Object.keys(data.topCountries).length > 0 && (() => {
-            const rows = top(data.topCountries, 15);
-            const max  = rows[0]?.[1] ?? 1;
-            return (
-              <section className="section">
-                <div style={{ marginBottom: "20px" }}>
-                  <div className="section-kicker">Where in the world</div>
-                  <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-                    Countries represented.
-                  </h2>
-                </div>
-                <div style={{ display: "grid", gap: "6px" }}>
-                  {rows.map(([country, count]) => {
-                    const flag = countryFlag(country);
-                    const pct  = Math.max(4, Math.round((count / max) * 100));
-                    return (
-                      <div key={country} style={{ display: "grid", gridTemplateColumns: "1.8rem 1fr 3.2rem", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "1.3rem", lineHeight: 1, textAlign: "center" }} aria-hidden="true">{flag}</span>
-                        <div>
-                          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "4px" }}>
-                            <span style={{ fontSize: "0.9rem", color: "var(--soft)", fontWeight: 500 }}>{country}</span>
-                          </div>
-                          <div style={{ height: "7px", background: "var(--line)", overflow: "hidden", borderRadius: "2px" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: "#2563EB", borderRadius: "2px", transition: "width 0.6s ease-out" }} />
-                          </div>
-                        </div>
-                        <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: "0.84rem", color: "var(--muted)", textAlign: "right" }}>{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
-                  Aggregate counts only. No individual information is shown.
-                </p>
-              </section>
-            );
-          })()}
-
-          {/* ── 2. Universities ───────────────────────────────────────────── */}
-          {Object.keys(data.topUniversities).length > 0 && (() => {
-            const rows = top(data.topUniversities, 10);
-            const max  = rows[0]?.[1] ?? 1;
-            return (
-              <section className="section">
-                <div style={{ marginBottom: "20px" }}>
-                  <div className="section-kicker">Academic network</div>
-                  <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-                    Universities represented.
-                  </h2>
-                </div>
-                <div style={{ display: "grid", gap: "10px" }}>
-                  {rows.map(([name, count]) => {
-                    const pct = Math.max(4, Math.round((count / max) * 100));
-                    return (
-                      <div key={name} style={{ display: "grid", gridTemplateColumns: "1fr 3.2rem", alignItems: "center", gap: "12px" }}>
-                        <div>
-                          <p style={{ margin: "0 0 5px", fontSize: "0.92rem", color: "var(--soft)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {name}
-                          </p>
-                          <div style={{ height: "8px", background: "var(--line)", overflow: "hidden", borderRadius: "2px" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: "#6D28D9", borderRadius: "2px", transition: "width 0.6s ease-out" }} />
-                          </div>
-                        </div>
-                        <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: "0.9rem", color: "var(--muted)", textAlign: "right", fontWeight: 600 }}>{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
-                  Aggregated from attendee education fields. No names or personal data.{" "}
-                  <a href="/enroll" style={{ color: "var(--accent)" }}>Add your school →</a>
-                </p>
-              </section>
-            );
-          })()}
-
-          {/* ── 3. Former employers ───────────────────────────────────────── */}
-          {Object.keys(data.topPastEmployers).length > 0 && (() => {
-            const rows = top(data.topPastEmployers, 10);
-            const max  = rows[0]?.[1] ?? 1;
-            return (
-              <section className="section">
-                <div style={{ marginBottom: "20px" }}>
-                  <div className="section-kicker">Career network</div>
-                  <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-                    Former employers represented.
-                  </h2>
-                </div>
-                <div style={{ display: "grid", gap: "10px" }}>
-                  {rows.map(([name, count]) => {
-                    const pct = Math.max(4, Math.round((count / max) * 100));
-                    return (
-                      <div key={name} style={{ display: "grid", gridTemplateColumns: "1fr 3.2rem", alignItems: "center", gap: "12px" }}>
-                        <div>
-                          <p style={{ margin: "0 0 5px", fontSize: "0.92rem", color: "var(--soft)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {name}
-                          </p>
-                          <div style={{ height: "8px", background: "var(--line)", overflow: "hidden", borderRadius: "2px" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: "#0D9488", borderRadius: "2px", transition: "width 0.6s ease-out" }} />
-                          </div>
-                        </div>
-                        <span style={{ fontFamily: "var(--font-mono, ui-monospace)", fontSize: "0.9rem", color: "var(--muted)", textAlign: "right", fontWeight: 600 }}>{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
-                  Aggregated from past employer fields. No names or personal data.{" "}
-                  <a href="/enroll" style={{ color: "var(--accent)" }}>Add your past employer →</a>
-                </p>
-              </section>
-            );
-          })()}
-
-          {/* ── 4. Career Interests ───────────────────────────────────────── */}
-{Object.keys(data.topCareerInterests).length > 0 && (() => {
-  const rows = top(data.topCareerInterests, 15);
-  const max  = rows[0]?.[1] ?? 1;
-
-  return (
-    <section className="section">
-      <div style={{ marginBottom: "20px" }}>
-        <div className="section-kicker">Career signal</div>
-        <h2
-          style={{
-            fontSize: "clamp(1.6rem,2.8vw,2.2rem)",
-            fontWeight: 520,
-            letterSpacing: "-0.04em",
-            margin: "4px 0 0",
-            color: "var(--text)",
-          }}
-        >
-          Career interests emerging.
-        </h2>
-      </div>
-
-      <div style={{ display: "grid", gap: "6px" }}>
-        {rows.map(([interest, count]) => {
-          const pct = Math.max(4, Math.round((count / max) * 100));
-
-          return (
-            <div
-              key={interest}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 3.2rem",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    justifyContent: "space-between",
-                    marginBottom: "4px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "0.9rem",
-                      color: "var(--soft)",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {interest}
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    height: "7px",
-                    background: "var(--line)",
-                    overflow: "hidden",
-                    borderRadius: "2px",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${pct}%`,
-                      background: "#7C3AED",
-                      borderRadius: "2px",
-                      transition: "width 0.6s ease-out",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <span
-                style={{
-                  fontFamily: "var(--font-mono, ui-monospace)",
-                  fontSize: "0.84rem",
-                  color: "var(--muted)",
-                  textAlign: "right",
-                }}
-              >
-                {count}
-              </span>
+        Object.keys(data.topCountries).length > 0 ||
+        Object.keys(data.topUniversities).length > 0 ||
+        Object.keys(data.topPastEmployers).length > 0 ||
+        Object.keys(data.topCareerInterests).length > 0
+      ) && data && (
+        <section className="section">
+          <div className="section-head">
+            <div>
+              <div className="section-kicker">Relationship intelligence</div>
+              <h2>Where connections are forming.</h2>
             </div>
-          );
-        })}
-      </div>
+            <p>
+              Aggregate signals from attendee profiles. Compass uses these to surface
+              alumni, career, and community matches.
+            </p>
+          </div>
 
-      <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
-        Aggregate career interests only. No individual information is shown.
-      </p>
-    </section>
-  );
-})()}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "14px" }}>
 
-{/* ── 5. Open-to-connection counts ──────────────────────────────── */}          {(data.openToAlumni + data.openToColleague + data.openToUniversity + data.openToCareer > 0) && (
-            <section className="section">
-              <div style={{ marginBottom: "20px" }}>
-                <div className="section-kicker">Connection intent</div>
-                <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-                  Open to connections.
-                </h2>
+            {/* Countries */}
+            {Object.keys(data.topCountries).length > 0 && (
+              <RelCard
+                kicker="Where in the world"
+                count={Object.keys(data.topCountries).length}
+                unit="countries"
+                color="#2563EB"
+                rows={top(data.topCountries, 4)}
+                renderLabel={name => (
+                  <>
+                    <span aria-hidden="true">{countryFlag(name)}</span>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+                  </>
+                )}
+              />
+            )}
+
+            {/* Universities */}
+            {Object.keys(data.topUniversities).length > 0 && (
+              <RelCard
+                kicker="Academic network"
+                count={Object.keys(data.topUniversities).length}
+                unit="universities"
+                color="#6D28D9"
+                rows={top(data.topUniversities, 4)}
+              />
+            )}
+
+            {/* Former employers */}
+            {Object.keys(data.topPastEmployers).length > 0 && (
+              <RelCard
+                kicker="Career network"
+                count={Object.keys(data.topPastEmployers).length}
+                unit="past employers"
+                color="#0D9488"
+                rows={top(data.topPastEmployers, 4)}
+              />
+            )}
+
+            {/* Career interests */}
+            {Object.keys(data.topCareerInterests).length > 0 && (
+              <RelCard
+                kicker="Career signal"
+                count={Object.keys(data.topCareerInterests).length}
+                unit="interests"
+                color="#7C3AED"
+                rows={top(data.topCareerInterests, 4)}
+              />
+            )}
+
+          </div>
+
+          <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
+            Aggregate counts only. No individual information is shown.{" "}
+            <a href="/enroll" style={{ color: "var(--accent)" }}>Add your background →</a>
+          </p>
+        </section>
+      )}
+
+      {/* ── Open-to-connection counts ────────────────────────────────────────── */}
+      {data && (data.openToAlumni + data.openToColleague + data.openToUniversity + data.openToCareer > 0) && (
+        <section className="section">
+          <div style={{ marginBottom: "20px" }}>
+            <div className="section-kicker">Connection intent</div>
+            <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
+              Open to connections.
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+            {[
+              { label: "Alumni connections",  val: data.openToAlumni,     color: "#6D28D9" },
+              { label: "Past colleagues",      val: data.openToColleague,  color: "#2563EB" },
+              { label: "University community", val: data.openToUniversity, color: "#0D9488" },
+              { label: "Career conversations", val: data.openToCareer,     color: "#D97706" },
+            ].map(s => (
+              <div key={s.label} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderTop: `3px solid ${s.color}`, padding: "16px 18px" }}>
+                <p style={{ fontSize: "2rem", fontWeight: 520, color: s.color, margin: "0 0 5px", lineHeight: 1, letterSpacing: "-0.04em" }}>{s.val}</p>
+                <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0, lineHeight: 1.35 }}>{s.label}</p>
               </div>
-<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>                {[
-                  { label: "Alumni connections",  val: data.openToAlumni,     color: "#6D28D9" },
-                  { label: "Past colleagues",      val: data.openToColleague,  color: "#2563EB" },
-                  { label: "University community", val: data.openToUniversity, color: "#0D9488" },
-                  { label: "Career conversations", val: data.openToCareer,     color: "#D97706" },
-                ].map(s => (
-                  <div key={s.label} style={{ background: "var(--panel)", border: "1px solid var(--line)", borderTop: `3px solid ${s.color}`, padding: "16px 18px" }}>
-                    <p style={{ fontSize: "2rem", fontWeight: 520, color: s.color, margin: "0 0 5px", lineHeight: 1, letterSpacing: "-0.04em" }}>{s.val}</p>
-                    <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0, lineHeight: 1.35 }}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-              <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
-                Attendees who have signalled openness to specific connection types.
-                Add your network signal in{" "}
-                <a href="/enroll" style={{ color: "var(--accent)" }}>Build My Compass</a>.
-              </p>
-            </section>
-          )}
-        </>
+            ))}
+          </div>
+          <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px" }}>
+            Attendees who have signalled openness to specific connection types.
+            Add your network signal in{" "}
+            <a href="/enroll" style={{ color: "var(--accent)" }}>Build My Compass</a>.
+          </p>
+        </section>
       )}
 
       <section className="final-band">
         <div>
-          <h2>Pulse becomes personal when Compass knows your intent.</h2>
-          <p>Build your Compass to turn these event signals into a focused plan.</p>
+          {user && enrolled ? (
+            <>
+              <h2>Your plan is already taking shape.</h2>
+              <p>These event signals are personalised for your goals and tracks on My Experience.</p>
+            </>
+          ) : (
+            <>
+              <h2>Pulse becomes personal when Compass knows your intent.</h2>
+              <p>Build your Compass to turn these event signals into a focused plan.</p>
+            </>
+          )}
         </div>
-        <Link href="/enroll" className="btn-primary">Build my Compass</Link>
+        {user && enrolled
+          ? <Link href="/experience" className="btn-primary">Open My Compass →</Link>
+          : <Link href="/enroll"     className="btn-primary">Build My Compass →</Link>
+        }
       </section>
     </>
   );

@@ -15,7 +15,7 @@
 // =============================================================================
 
 import { useEffect, useState } from "react";
-import { db } from "../../src/lib/firebase";
+import { db } from "@/lib/firebase";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
@@ -28,7 +28,6 @@ import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
 
-import NetworkPanel from "@/components/experience/NetworkPanel";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -359,69 +358,200 @@ function PillarSection({ pillar, sessions, limit = 3 }: { pillar: string; sessio
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW: "What You Told Compass" section  (Wave 4 addition)
+// Compass Signal Strength card
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CompassSignalStrength({ participant }: { participant: RawDoc }) {
+  const sig  = (participant.event_signal_profile as RawDoc) ?? {};
+  const ni   = (participant.networking_identity  as Record<string, boolean>) ?? {};
+  const edu  = (participant.education            as { institution?: string }[] | undefined) ?? [];
+  const emp  = (participant.past_employers       as { company?: string }[]    | undefined) ?? [];
+  const ci   = (participant.career_interests     as string[] | undefined) ?? [];
+  const cons = (participant.consent              as Record<string, boolean>   | undefined) ?? {};
+
+  const dimensions = [
+    {
+      label: "Identity",
+      done:  !!(participant.first_name && participant.last_name),
+    },
+    {
+      label: "Professional",
+      done:  !!(participant.job_title && (participant.organization ?? participant.company)),
+    },
+    {
+      label: "Background",
+      done:  !!(edu[0]?.institution || emp[0]?.company || ci.length > 0),
+    },
+    {
+      label: "Intent",
+      done:  !!(((sig.goals as string[] | undefined) ?? []).length > 0 &&
+               ((sig.tech_tracks as string[] | undefined) ?? []).length > 0),
+    },
+    {
+      label: "Consent",
+      done:  Object.keys(cons).length > 0 || Object.values(ni).some(Boolean),
+    },
+  ];
+
+  const score  = dimensions.filter(d => d.done).length;
+  const pct    = Math.round((score / dimensions.length) * 100);
+  const color  = pct === 100 ? "#15803D" : "var(--accent)";
+
+  return (
+    <section className="section">
+      <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "24px 28px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px", flexWrap: "wrap", marginBottom: "16px" }}>
+          <div>
+            <p style={{ color: "var(--accent)", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 4px" }}>
+              Compass Signal
+            </p>
+            <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: 0, maxWidth: "480px", lineHeight: 1.5 }}>
+              Compass uses your profile signals to personalise session scores, Champion matches, and your four-day plan.
+              A stronger signal means more precise recommendations.
+            </p>
+          </div>
+          <span style={{ fontSize: "2.2rem", fontWeight: 520, color, letterSpacing: "-0.04em", lineHeight: 1, flexShrink: 0 }}>
+            {pct}%
+          </span>
+        </div>
+
+        {/* Bar */}
+        <div style={{ height: "6px", background: "var(--line)", borderRadius: "3px", marginBottom: "16px" }}>
+          <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: "3px", transition: "width 0.4s" }} />
+        </div>
+
+        {/* Dimension chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {dimensions.map(d => (
+            <span key={d.label} style={{
+              fontSize: "0.8rem", padding: "4px 11px",
+              border: `1px solid ${d.done ? color : "var(--line)"}`,
+              color: d.done ? color : "var(--muted)",
+            }}>
+              {d.done ? "✓" : "○"} {d.label}
+            </span>
+          ))}
+        </div>
+
+        {pct < 100 && (
+          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "14px 0 0" }}>
+            <a href="/enroll?mode=edit" style={{ color: "var(--accent)" }}>Refine My Compass →</a>
+            {" "}to improve signal quality.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "What You Told Compass" — full profile summary card
 // ─────────────────────────────────────────────────────────────────────────────
 
 function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
   const sig    = (participant.event_signal_profile as RawDoc) ?? {};
   const intent = (sig.intent as RawDoc) ?? {};
+  const ni     = (participant.networking_identity as Record<string, boolean>) ?? {};
 
-  const goals   = ((sig.goals          as string[]) ?? []).slice(0, 5);
-  const tracks  = ((sig.tech_tracks    as string[]) ?? []).slice(0, 6);
-  const needs   = ((intent.needs       as string[]) ?? []).slice(0, 4);
-  const openTo  = ((sig.open_to        as string[]) ?? []).slice(0, 4);
+  const name    = [String(participant.first_name ?? ""), String(participant.last_name ?? "")].filter(Boolean).join(" ")
+                || String(participant.display_name ?? "");
+  const persona = String(participant.persona ?? "");
+  const org     = String(participant.organization ?? participant.company ?? "");
+
+  const goals   = ((sig.goals         as string[]) ?? []).slice(0, 5);
+  const tracks  = ((sig.tech_tracks   as string[]) ?? []).slice(0, 6);
+  const needs   = ((intent.needs      as string[]) ?? []).slice(0, 4);
+  const openTo  = ((sig.open_to       as string[]) ?? []).slice(0, 4);
+  const ci      = ((participant.career_interests as string[]) ?? []).slice(0, 5);
+
+  // Networking identity labels
+  const niLabels: string[] = [
+    ni.open_to_alumni_connections         ? "Alumni connections"  : "",
+    ni.open_to_past_colleague_connections ? "Past colleagues"     : "",
+    ni.open_to_university_connections     ? "University community": "",
+    ni.open_to_career_conversations       ? "Career conversations": "",
+  ].filter(Boolean);
+
+  // Identity row
+  const identityItems = [
+    name     ? { key: "Name",    value: name }    : null,
+    persona  ? { key: "Persona", value: persona } : null,
+    org      ? { key: "Company", value: org }     : null,
+  ].filter((x): x is { key: string; value: string } => x !== null);
 
   const groups = [
-    { label: "Goals",      items: goals,  accent: true  },
-    { label: "Tech tracks", items: tracks, accent: false },
-    { label: "Needs",       items: needs,  accent: false },
-    { label: "Open to",     items: openTo, accent: false },
+    { label: "Goals",                items: goals,     accent: true  },
+    { label: "Tech tracks",          items: tracks,    accent: false },
+    { label: "Career interests",     items: ci,        accent: false },
+    { label: "Needs",                items: needs,     accent: false },
+    { label: "Open to",              items: openTo,    accent: false },
+    { label: "Networking",           items: niLabels,  accent: false },
   ].filter(g => g.items.length > 0);
 
-  if (groups.length === 0) return null;
+  const hasContent = identityItems.length > 0 || groups.length > 0;
+  if (!hasContent) return null;
 
   return (
     <section className="section">
-      <div className="section-kicker">What you told Compass</div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "4px" }}>
+        <div className="section-kicker" style={{ margin: 0 }}>What you told Compass</div>
+        <a href="/enroll?mode=edit" style={{ color: "var(--accent)", fontSize: "0.88rem" }}>Refine My Compass →</a>
+      </div>
       <p style={{ color: "var(--muted)", margin: "4px 0 20px", fontSize: "0.92rem" }}>
-        These signals drive every recommendation on this page.{" "}
-        <a href="/enroll" style={{ color: "var(--accent)" }}>Update your intent →</a>
+        Compass uses these signals to personalise your event experience — session scores,
+        Champion matches, and your four-day plan.
       </p>
 
-      <div
-        style={{
-          display:         "grid",
-          gridTemplateColumns: `repeat(${groups.length}, minmax(0, 1fr))`,
-          gap:             "1px",
-          background:      "var(--line)",
-          border:          "1px solid var(--line)",
-        }}
-      >
-        {groups.map(group => (
-          <div key={group.label} style={{ background: "var(--panel)", padding: "18px 20px" }}>
-            <p style={{
-              color:         group.accent ? "var(--accent)" : "var(--muted)",
-              fontSize:      "0.72rem",
-              fontWeight:    680,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              margin:        "0 0 10px",
-            }}>
-              {group.label}
-            </p>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-              {group.items.map(item => (
-                <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: "7px", color: "var(--soft)", fontSize: "0.9rem", lineHeight: 1.35 }}>
-                  <span style={{ color: "var(--accent)", fontSize: "0.5rem", marginTop: "0.5em", flexShrink: 0 }}>◆</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </section>
+      {/* Identity row */}
+      {identityItems.length > 0 && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: "1px",
+          background: "var(--line)", border: "1px solid var(--line)",
+          marginBottom: "1px",
+        }}>
+          {identityItems.map(({ key, value }) => (
+            <div key={key} style={{ background: "var(--panel)", padding: "14px 18px", minWidth: "160px", flex: "1 1 160px" }}>
+              <p style={{ color: "var(--muted)", fontSize: "0.7rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 5px" }}>{key}</p>
+              <p style={{ color: "var(--soft)", fontSize: "0.92rem", margin: 0, fontWeight: 500 }}>{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
+      {/* Signal groups */}
+      {groups.length > 0 && (
+        <div style={{
+          display:             "grid",
+          gridTemplateColumns: `repeat(auto-fill, minmax(180px, 1fr))`,
+          gap:                 "1px",
+          background:          "var(--line)",
+          border:              "1px solid var(--line)",
+        }}>
+          {groups.map(group => (
+            <div key={group.label} style={{ background: "var(--panel)", padding: "16px 18px" }}>
+              <p style={{
+                color:         group.accent ? "var(--accent)" : "var(--muted)",
+                fontSize:      "0.7rem",
+                fontWeight:    680,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                margin:        "0 0 9px",
+              }}>
+                {group.label}
+              </p>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px" }}>
+                {group.items.map(item => (
+                  <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: "6px", color: "var(--soft)", fontSize: "0.88rem", lineHeight: 1.35 }}>
+                    <span style={{ color: "var(--accent)", fontSize: "0.45rem", marginTop: "0.55em", flexShrink: 0 }}>◆</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -478,7 +608,9 @@ function DayTabExperience({
           <h2>TechXchange 2026.</h2>
         </div>
         <p>
-          Community, Learning, and Fun — organised day-by-day and scored for your profile.
+          Compass balances three dimensions of a great event: learning that advances your goals,
+          meaningful connections with people who share your background, and moments that make the
+          week memorable. Each day is scored and organised for your profile.
         </p>
       </div>
 
@@ -691,11 +823,16 @@ if (!authLoading && participantId) {
 
   // ── Participant field helpers ─────────────────────────────────────────────
 
+const firstName = String(participant.first_name ?? "").trim();
+const lastName = String(participant.last_name ?? "").trim();
+const fullName = [firstName, lastName].filter(Boolean).join(" ");
 const displayName = String(
-  participant.display_name ??
-  participant.displayName ??
-  participant.email ??
+
+  participant.display_name ||
+  participant.displayName ||
+  fullName ||
   "Attendee"
+
 );
 
   const jobTitle    = String(participant.job_title    ?? "");
@@ -766,8 +903,13 @@ const displayName = String(
         </div>
       </section>
 
-      {/* ── NEW: What You Told Compass ─────────────────────────────────── */}
+      {/* ── Compass Signal Strength ────────────────────────────────────── */}
+      <CompassSignalStrength participant={participant} />
+
+      {/* ── What You Told Compass ──────────────────────────────────────── */}
       <WhatYouToldCompass participant={participant} />
+
+
 
       {/* ── NextBestMove  (wiring preserved exactly) ───────────────────── */}
       {nextBestMove && (
@@ -850,11 +992,11 @@ const displayName = String(
         <div>
           <h2>Your Compass is live.</h2>
           <p>
-            Sessions, Champions, and moments are scored in real time from Firestore.
-            No cached lists. Update your intent to refine the experience.
+            Sessions, Champions, and moments are scored in real time.
+            Refine your profile to improve signal quality and sharpen every recommendation.
           </p>
         </div>
-        <a href="/enroll" className="btn-primary">Update My Compass</a>
+        <a href="/enroll?mode=edit" className="btn-primary">Refine My Compass →</a>
       </section>
     </>
   );
