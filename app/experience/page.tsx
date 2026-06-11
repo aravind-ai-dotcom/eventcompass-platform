@@ -633,11 +633,89 @@ function ExpPeopleActionBar({ id, linkedinUrl, pState }: {
 // Compatible with Apple Calendar, Google Calendar import, and Outlook.
 // ─────────────────────────────────────────────────────────────────────────────
 
+
 function downloadICS(sessions: ScoredSession[], _participantId: string) {
   if (typeof window === "undefined") return;
-  // /api/download-ical not yet implemented — always use client-side Blob generation
+
+  const usable = sessions.slice(0, 40);
+  if (usable.length === 0) {
+    window.alert("No sessions available to export yet.");
+    return;
+  }
+
   const esc = (s: string) =>
-    s.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
+    String(s ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/,/g, "\\,")
+      .replace(/;/g, "\\;")
+      .replace(/\n/g, "\\n");
+
+  function pad(n: number) {
+    return String(n).padStart(2, "0");
+  }
+
+  function toICSDate(d: Date) {
+    return (
+      d.getUTCFullYear().toString() +
+      pad(d.getUTCMonth() + 1) +
+      pad(d.getUTCDate()) +
+      "T" +
+      pad(d.getUTCHours()) +
+      pad(d.getUTCMinutes()) +
+      "00Z"
+    );
+  }
+
+ function fallbackSessionTime(index: number) {
+  const days = [26, 27, 28, 29]; // Oct 26–29, 2026
+  const slots = [
+    { h: 9, m: 0 },
+    { h: 10, m: 30 },
+    { h: 12, m: 0 },
+    { h: 13, m: 30 },
+    { h: 15, m: 0 },
+    { h: 16, m: 30 },
+  ];
+  const day = days[Math.floor(index / slots.length) % days.length];
+  const slot = slots[index % slots.length];
+  const start = new Date(Date.UTC(2026, 9, day, slot.h, slot.m, 0));
+  const end = new Date(start.getTime() + 45 * 60 * 1000);
+  return { start, end };
+}
+
+  function parseSessionDateTime(s: ScoredSession, index: number) {
+    const raw = s as unknown as RawDoc;
+
+    const date =
+      resolve(raw, "date", "schedule.date") ||
+      resolve(raw, "date", "schedule.day") ||
+      "";
+
+    const startTime =
+      resolve(raw, "start_time", "schedule.start_time") ||
+      "";
+
+    const endTime =
+      resolve(raw, "end_time", "schedule.end_time") ||
+      "";
+
+    // Works when date is YYYY-MM-DD or any browser-parseable date.
+    const startCandidate = date && startTime ? new Date(`${date} ${startTime}`) : null;
+    const endCandidate = date && endTime ? new Date(`${date} ${endTime}`) : null;
+
+    if (startCandidate && !Number.isNaN(startCandidate.getTime())) {
+      const start = startCandidate;
+      const end =
+        endCandidate && !Number.isNaN(endCandidate.getTime())
+          ? endCandidate
+          : new Date(start.getTime() + 45 * 60 * 1000);
+
+      return { start, end };
+    }
+
+    return fallbackSessionTime(index);
+  }
+
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -645,28 +723,38 @@ function downloadICS(sessions: ScoredSession[], _participantId: string) {
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ];
-  sessions.slice(0, 40).forEach((s) => {
+
+  usable.forEach((s, index) => {
+    const { start, end } = parseSessionDateTime(s, index);
     const loc = esc(s.room ?? resolve(s as unknown as RawDoc, "room", "schedule.room") ?? "TBA");
+    const reasons = (s.compass_reasons ?? []).slice(0, 3).join("; ");
+
     lines.push(
       "BEGIN:VEVENT",
-      `UID:txc2026-${s.id}@eventcompass`,
+      `UID:txc2026-${esc(s.id)}@eventcompass`,
+      `DTSTAMP:${toICSDate(new Date())}`,
+      `DTSTART:${toICSDate(start)}`,
+      `DTEND:${toICSDate(end)}`,
       `SUMMARY:${esc(s.title)}`,
-      `DESCRIPTION:Compass Match: ${s.compass_score}`,
+`DESCRIPTION:${esc(reasons ? `Match ${s.compass_score}. ${reasons}` : `Match ${s.compass_score}`)}`,
       `LOCATION:${loc}`,
       "END:VEVENT",
     );
   });
+
   lines.push("END:VCALENDAR");
+
   const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = "techxchange-2026.ics";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "my-techxchange-plan.ics";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Export panel — replaces PrintExport import. Prioritises calendar over PDF.
