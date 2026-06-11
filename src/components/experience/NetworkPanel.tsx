@@ -16,11 +16,12 @@ import {
 type RawDoc = Record<string, unknown>;
 
 interface MatchWithPhoto extends NetworkMatchResult {
-  photo_url?:          string;
-  consent_public:      boolean;  // identity visible gate
-  linkedin_url_visible:boolean;  // stricter gate — all four conditions met
-  job_title?:          string;
-  industry?:           string;
+  photo_url?: string;
+  consent_public: boolean;
+  linkedin_url?: string;
+  linkedin_url_visible: boolean;
+  job_title?: string;
+  industry?: string;
 }
 
 interface Props {
@@ -91,18 +92,116 @@ function MatchCard({ match }: { match: MatchWithPhoto }) {
       </div>
 
       {/* Why matched */}
-      {match.reasons.length > 0 && (
+      
+      
+
+       {match.reasons.length > 0 && (
+
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "3px" }}>
+
           {match.reasons.slice(0, 3).map(r => (
+
             <li key={r} style={{ display: "flex", gap: "6px", color: "var(--accent)", fontSize: "0.78rem", alignItems: "flex-start" }}>
+
               <span style={{ fontSize: "0.5rem", marginTop: "0.4em", flexShrink: 0 }}>◆</span>{r}
+
             </li>
+
           ))}
+
         </ul>
+
       )}
 
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+
+        {match.linkedin_url_visible && match.linkedin_url && (
+
+          <a
+
+            href={match.linkedin_url}
+
+            target="_blank"
+
+            rel="noreferrer"
+
+            style={{
+
+              display: "inline-flex",
+
+              alignItems: "center",
+
+              gap: "5px",
+
+              height: "28px",
+
+              padding: "0 10px",
+
+              border: "1px solid #0A66C2",
+
+              color: "#0A66C2",
+
+              fontSize: "0.76rem",
+
+              fontWeight: 650,
+
+              textDecoration: "none",
+
+              whiteSpace: "nowrap",
+
+            }}
+
+          >
+
+            <LIIcon />
+
+            Connect on LinkedIn →
+
+          </a>
+
+        )}
+
+        {isPublic && (
+
+          <button
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              height: "28px",
+              padding: "0 10px",
+              border: "1px solid var(--line)",
+              background: "transparent",
+              color: "var(--muted)",
+              fontSize: "0.76rem",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Save contact
+          </button>
+        )}
+        {!isPublic && (
+
+          <span
+
+            style={{
+
+              color: "var(--muted)",
+
+              fontSize: "0.76rem",
+
+              fontStyle: "italic",
+
+            }}
+
+          >
+            Connect via Compass after the event
+          </span>
+        )}
+      </div>
     </div>
   );
+
 }
 
 export default function NetworkPanel({ participant, allParticipants }: Props) {
@@ -177,6 +276,19 @@ const matches: MatchWithPhoto[] = allParticipants
           ? String(registration.industry)
           : undefined;
 
+console.log("LinkedIn Gate", {
+  name: p.display_name,
+  linkedin_url: p.linkedin_url,
+  show_linkedin: consent.show_linkedin,
+  public_profile: consent.public_profile,
+  open_to_alumni: ni.open_to_alumni_connections,
+  open_to_colleague: ni.open_to_past_colleague_connections,
+  open_to_university: ni.open_to_university_connections,
+  open_to_career: ni.open_to_career_conversations,
+  linkedin_url_visible
+});
+
+
     return {
       ...result,
       photo_url: typeof p.photo_url === "string" ? p.photo_url : undefined,
@@ -211,7 +323,7 @@ const matches: MatchWithPhoto[] = allParticipants
         </p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: "12px" }}>
-          {matches.map(m => <MatchCard key={m.uid} match={m} />)}
+      
         </div>
       )}
     </section>

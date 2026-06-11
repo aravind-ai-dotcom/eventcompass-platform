@@ -46,3 +46,4 @@ data/**/*.jsonreview/
 review/
 data/
 data/
+serviceAccountKey.json

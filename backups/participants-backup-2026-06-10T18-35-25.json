@@ -1,0 +1,4042 @@
+[
+  {
+    "_docId": "ATT-0001",
+    "role": "Event Producer",
+    "participant_type": "attendee",
+    "active": true,
+    "country": "United States",
+    "participant_id": "ATT-0001",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Executive",
+        "CIO",
+        "Banking Leader"
+      ],
+      "interest_tags": [
+        "AI Governance",
+        "Hybrid Cloud",
+        "Risk Management"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Industry Perspective",
+        "Transformation Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai governance",
+        "architecture review",
+        "banking",
+        "cloud",
+        "data security and iam",
+        "executive briefing",
+        "hybrid cloud",
+        "risk management",
+        "roadmap clarity"
+      ],
+      "industry_tags": [
+        "Banking"
+      ],
+      "need_tags": [
+        "Roadmap Clarity",
+        "Executive Briefing",
+        "Architecture Review"
+      ],
+      "aspiration_tags": [
+        "Make Better Platform Decisions",
+        "Align AI Investment To Business Outcomes"
+      ]
+    },
+    "mobile": "",
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0003",
+        "ATT-0006",
+        "ATT-0010"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1001",
+        "TX26-SEC-1015",
+        "TX26-CLOUD-1021"
+      ],
+      "recommended_champions": [
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "Cloud",
+        "Data Security & IAM"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Executive",
+        "Decision Maker"
+      ],
+      "intent": {
+        "needs": [
+          "Roadmap Clarity",
+          "Executive Briefing",
+          "Architecture Review"
+        ],
+        "contribution": [
+          "Industry Perspective",
+          "Transformation Lessons"
+        ],
+        "aspiration": [
+          "Make Better Platform Decisions",
+          "Align AI Investment To Business Outcomes"
+        ]
+      },
+      "goals": [
+        "Solve Business Challenges",
+        "Meet IBM Experts",
+        "Evaluate Platform Strategy"
+      ]
+    },
+    "company": "Horizon Bank Group",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/horizon-bank-group",
+      "registered": true,
+      "industry": "Banking",
+      "housing_booked": true
+    },
+    "state": "NY",
+    "job_title": "Chief Information Officer",
+    "first_name": "Aravind",
+    "last_name": "Ragupathi",
+    "display_name": "Aravind Ragupathi",
+    "email": "aravind.ragupathi@gmail.com",
+    "linkedin_url": "https://www.linkedin.com/in/aravind-storytelling",
+    "consent": {
+      "allow_recommendation": true,
+      "public_profile": true,
+      "show_contact": true,
+      "share_with_matched_attendees": true,
+      "show_linkedin": true,
+      "allow_intro_requests": true
+    }
+  },
+  {
+    "_docId": "ATT-0002",
+    "country": "Italy",
+    "participant_id": "ATT-0002",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Architect",
+        "Banking",
+        "Modernization Leader"
+      ],
+      "interest_tags": [
+        "IBM Z",
+        "Hybrid Cloud",
+        "Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Banking Modernization Perspective",
+        "Enterprise Architecture Patterns"
+      ],
+      "matching_keywords": [
+        "architecture review",
+        "automation",
+        "banking",
+        "cloud",
+        "hybrid cloud",
+        "ibm z",
+        "ibm z and linuxone",
+        "integration strategy",
+        "mainframe modernization guidance"
+      ],
+      "industry_tags": [
+        "Banking"
+      ],
+      "need_tags": [
+        "Mainframe Modernization Guidance",
+        "Architecture Review",
+        "Integration Strategy"
+      ],
+      "aspiration_tags": [
+        "Leave With A Clear Action Plan",
+        "Reduce Platform Complexity"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Ferraro",
+    "display_name": "Luca Ferraro",
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-Z-1008",
+        "TX26-CLOUD-1012",
+        "TX26-AUTO-1034"
+      ],
+      "recommended_champions": [
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "IBM Z & LinuxONE",
+        "Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Architect",
+        "Executive"
+      ],
+      "intent": {
+        "needs": [
+          "Mainframe Modernization Guidance",
+          "Architecture Review",
+          "Integration Strategy"
+        ],
+        "contribution": [
+          "Banking Modernization Perspective",
+          "Enterprise Architecture Patterns"
+        ],
+        "aspiration": [
+          "Leave With A Clear Action Plan",
+          "Reduce Platform Complexity"
+        ]
+      },
+      "goals": [
+        "Modernize Core Systems",
+        "Meet IBM Experts",
+        "Compare Architecture Patterns"
+      ]
+    },
+    "company": "UniCredit Digital Services",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/unicredit-digital-services",
+      "registered": true,
+      "industry": "Banking",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-luca-ferraro-0002",
+    "state": "",
+    "first_name": "Luca",
+    "job_title": "VP, Enterprise Architecture",
+    "email": "luca.ferraro@example.com",
+    "consent": {
+      "public_profile": true,
+      "show_contact": true,
+      "share_with_matched_attendees": true,
+      "allow_recommendation": true,
+      "show_linkedin": true,
+      "allow_intro_requests": true
+    }
+  },
+  {
+    "_docId": "ATT-0003",
+    "country": "India",
+    "participant_id": "ATT-0003",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Partner",
+        "Consultant",
+        "AI Leader"
+      ],
+      "interest_tags": [
+        "watsonx",
+        "AI Governance",
+        "Data Fabric"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Implementation Stories",
+        "Client Transformation Examples"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai governance",
+        "business management and finops",
+        "consulting",
+        "data",
+        "data fabric",
+        "partner enablement",
+        "roadmap clarity",
+        "use case patterns",
+        "watsonx"
+      ],
+      "industry_tags": [
+        "Consulting"
+      ],
+      "need_tags": [
+        "Partner Enablement",
+        "Use Case Patterns",
+        "Roadmap Clarity"
+      ],
+      "aspiration_tags": [
+        "Build Repeatable AI Offers",
+        "Strengthen IBM Partner Motion"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Mehta",
+    "display_name": "Anika Mehta",
+    "geo": "Asia Pacific",
+    "market": "APAC",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0006",
+        "ATT-0010"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1004",
+        "TX26-DATA-1018",
+        "TX26-FINOPS-1031"
+      ],
+      "recommended_champions": [
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "Data",
+        "Business Management & FinOps"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Partner",
+        "AI Strategist"
+      ],
+      "intent": {
+        "needs": [
+          "Partner Enablement",
+          "Use Case Patterns",
+          "Roadmap Clarity"
+        ],
+        "contribution": [
+          "Implementation Stories",
+          "Client Transformation Examples"
+        ],
+        "aspiration": [
+          "Build Repeatable AI Offers",
+          "Strengthen IBM Partner Motion"
+        ]
+      },
+      "goals": [
+        "Build Partner Solutions",
+        "Meet IBM Experts",
+        "Learn New Skills"
+      ]
+    },
+    "company": "Deloitte",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://www.deloitte.com",
+      "registered": true,
+      "industry": "Consulting",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-anika-mehta-0003",
+    "state": "KA",
+    "first_name": "Anika",
+    "job_title": "Senior Manager, AI & Data Consulting",
+    "email": "anika.mehta@example.com",
+    "consent": {
+      "show_linkedin": true,
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "show_contact": true,
+      "share_with_matched_attendees": true,
+      "allow_recommendation": true
+    }
+  },
+  {
+    "_docId": "ATT-0004",
+    "country": "United Kingdom",
+    "participant_id": "ATT-0004",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Partner",
+        "Cloud Architect",
+        "Transformation Lead"
+      ],
+      "interest_tags": [
+        "OpenShift",
+        "Integration",
+        "Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Field Lessons",
+        "Delivery Playbooks"
+      ],
+      "matching_keywords": [
+        "app integration",
+        "architecture blueprints",
+        "automation",
+        "cloud",
+        "consulting",
+        "integration",
+        "integration patterns",
+        "openshift",
+        "partner technical guidance"
+      ],
+      "industry_tags": [
+        "Consulting"
+      ],
+      "need_tags": [
+        "Architecture Blueprints",
+        "Partner Technical Guidance",
+        "Integration Patterns"
+      ],
+      "aspiration_tags": [
+        "Create Better Client Migration Plans",
+        "Grow IBM Cloud Services Practice"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Reed",
+    "display_name": "Marcus Reed",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 70
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-CLOUD-1007",
+        "TX26-APPINT-1029",
+        "TX26-AUTO-1042"
+      ],
+      "recommended_champions": [
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "App Integration",
+        "Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "Partner",
+        "Architect"
+      ],
+      "intent": {
+        "needs": [
+          "Architecture Blueprints",
+          "Partner Technical Guidance",
+          "Integration Patterns"
+        ],
+        "contribution": [
+          "Field Lessons",
+          "Delivery Playbooks"
+        ],
+        "aspiration": [
+          "Create Better Client Migration Plans",
+          "Grow IBM Cloud Services Practice"
+        ]
+      },
+      "goals": [
+        "Expand Partner Practice",
+        "Find Technical Patterns",
+        "Meet Product Teams"
+      ]
+    },
+    "company": "Accenture",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://www.accenture.com",
+      "registered": true,
+      "industry": "Consulting",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-marcus-reed-0004",
+    "state": "",
+    "first_name": "Marcus",
+    "job_title": "Cloud Transformation Director",
+    "email": "marcus.reed@example.com"
+  },
+  {
+    "_docId": "ATT-0005",
+    "country": "Germany",
+    "participant_id": "ATT-0005",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Partner",
+        "Ecosystem Leader",
+        "Channel Strategist"
+      ],
+      "interest_tags": [
+        "Partner Strategy",
+        "AI Offers",
+        "Storage"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Channel Perspective",
+        "Partner Ecosystem Insights"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai offers",
+        "cloud",
+        "distribution",
+        "partner roadmap",
+        "partner strategy",
+        "sales enablement",
+        "solution packaging",
+        "storage",
+        "technology"
+      ],
+      "industry_tags": [
+        "Technology Distribution"
+      ],
+      "need_tags": [
+        "Partner Roadmap",
+        "Sales Enablement",
+        "Solution Packaging"
+      ],
+      "aspiration_tags": [
+        "Identify Joint Growth Plays",
+        "Improve Partner Activation"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Kovacs",
+    "display_name": "Elena Kovacs",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-PARTNER-1002",
+        "TX26-STOR-1033",
+        "TX26-AI-1050"
+      ],
+      "recommended_champions": [
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "Cloud",
+        "Storage"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Partner",
+        "Business Leader"
+      ],
+      "intent": {
+        "needs": [
+          "Partner Roadmap",
+          "Sales Enablement",
+          "Solution Packaging"
+        ],
+        "contribution": [
+          "Channel Perspective",
+          "Partner Ecosystem Insights"
+        ],
+        "aspiration": [
+          "Identify Joint Growth Plays",
+          "Improve Partner Activation"
+        ]
+      },
+      "goals": [
+        "Discover New Offers",
+        "Meet IBM Channel Leaders",
+        "Build Partner Connections"
+      ]
+    },
+    "company": "Arrow Electronics",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://www.arrow.com",
+      "registered": true,
+      "industry": "Technology Distribution",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-elena-kovacs-0005",
+    "state": "",
+    "first_name": "Elena",
+    "job_title": "Partner Ecosystem Leader",
+    "email": "elena.kovacs@example.com"
+  },
+  {
+    "_docId": "ATT-0006",
+    "country": "Brazil",
+    "participant_id": "ATT-0006",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Data Leader",
+        "Architect",
+        "Banking"
+      ],
+      "interest_tags": [
+        "Data Fabric",
+        "Governance",
+        "AI Readiness"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Data Platform Lessons",
+        "Regional Banking Perspective"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai readiness",
+        "architecture review",
+        "banking",
+        "data",
+        "data fabric",
+        "data governance",
+        "data security and iam",
+        "governance",
+        "security guidance"
+      ],
+      "industry_tags": [
+        "Banking"
+      ],
+      "need_tags": [
+        "Data Governance",
+        "Architecture Review",
+        "Security Guidance"
+      ],
+      "aspiration_tags": [
+        "Scale Trusted Data For AI",
+        "Improve Data Quality"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Santos",
+    "display_name": "Diego Santos",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Latin America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0010"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-DATA-1006",
+        "TX26-AI-1011",
+        "TX26-SEC-1022"
+      ],
+      "recommended_champions": [
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Data",
+        "AI",
+        "Data Security & IAM"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Data Leader",
+        "Architect"
+      ],
+      "intent": {
+        "needs": [
+          "Data Governance",
+          "Architecture Review",
+          "Security Guidance"
+        ],
+        "contribution": [
+          "Data Platform Lessons",
+          "Regional Banking Perspective"
+        ],
+        "aspiration": [
+          "Scale Trusted Data For AI",
+          "Improve Data Quality"
+        ]
+      },
+      "goals": [
+        "Learn New Skills",
+        "Solve Business Challenges",
+        "Meet Peers"
+      ]
+    },
+    "company": "Banco Aurora",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/banco-aurora",
+      "registered": true,
+      "industry": "Banking",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-diego-santos-0006",
+    "state": "SP",
+    "first_name": "Diego",
+    "job_title": "Head of Data Platforms",
+    "email": "diego.santos@example.com"
+  },
+  {
+    "_docId": "ATT-0007",
+    "country": "United States",
+    "participant_id": "ATT-0007",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Partner",
+        "Cloud Architect",
+        "Ecosystem Builder"
+      ],
+      "interest_tags": [
+        "Hybrid Cloud",
+        "OpenShift",
+        "Integration"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Cloud Architecture Perspective",
+        "Ecosystem Patterns"
+      ],
+      "matching_keywords": [
+        "ai",
+        "app integration",
+        "cloud",
+        "hybrid cloud",
+        "hybrid cloud patterns",
+        "integration",
+        "integration architecture",
+        "openshift",
+        "partner technical guidance",
+        "services"
+      ],
+      "industry_tags": [
+        "Cloud Services"
+      ],
+      "need_tags": [
+        "Integration Architecture",
+        "Hybrid Cloud Patterns",
+        "Partner Technical Guidance"
+      ],
+      "aspiration_tags": [
+        "Design Better Hybrid Solutions",
+        "Find Joint Customer Use Cases"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Nair",
+    "display_name": "Priya Nair",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-CLOUD-1010",
+        "TX26-APPINT-1024",
+        "TX26-AI-1037"
+      ],
+      "recommended_champions": [
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "AI",
+        "App Integration"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Architect",
+        "Partner"
+      ],
+      "intent": {
+        "needs": [
+          "Integration Architecture",
+          "Hybrid Cloud Patterns",
+          "Partner Technical Guidance"
+        ],
+        "contribution": [
+          "Cloud Architecture Perspective",
+          "Ecosystem Patterns"
+        ],
+        "aspiration": [
+          "Design Better Hybrid Solutions",
+          "Find Joint Customer Use Cases"
+        ]
+      },
+      "goals": [
+        "Understand IBM Integration Points",
+        "Meet Technical Experts",
+        "Explore Joint Patterns"
+      ]
+    },
+    "company": "Amazon Web Services",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://aws.amazon.com",
+      "registered": true,
+      "industry": "Cloud Services",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-priya-nair-0007",
+    "state": "WA",
+    "first_name": "Priya",
+    "job_title": "Partner Solutions Architect",
+    "email": "priya.nair@example.com"
+  },
+  {
+    "_docId": "ATT-0008",
+    "country": "Canada",
+    "participant_id": "ATT-0008",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Security Architect",
+        "Partner",
+        "Technical Specialist"
+      ],
+      "interest_tags": [
+        "Zero Trust",
+        "IAM",
+        "Network Security"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Security Architecture Perspective",
+        "Network Security Lessons"
+      ],
+      "matching_keywords": [
+        "&",
+        "automation",
+        "cloud",
+        "data security and iam",
+        "iam",
+        "identity architecture",
+        "integration patterns",
+        "network security",
+        "networking",
+        "security",
+        "zero trust",
+        "zero trust guidance"
+      ],
+      "industry_tags": [
+        "Networking & Security"
+      ],
+      "need_tags": [
+        "Zero Trust Guidance",
+        "Identity Architecture",
+        "Integration Patterns"
+      ],
+      "aspiration_tags": [
+        "Improve Cross-Platform Security",
+        "Build Better Client Architectures"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Williams",
+    "display_name": "Noah Williams",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 70
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-SEC-1009",
+        "TX26-CLOUD-1038",
+        "TX26-AUTO-1048"
+      ],
+      "recommended_champions": [
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Data Security & IAM",
+        "Cloud",
+        "Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "Architect",
+        "Security Specialist"
+      ],
+      "intent": {
+        "needs": [
+          "Zero Trust Guidance",
+          "Identity Architecture",
+          "Integration Patterns"
+        ],
+        "contribution": [
+          "Security Architecture Perspective",
+          "Network Security Lessons"
+        ],
+        "aspiration": [
+          "Improve Cross-Platform Security",
+          "Build Better Client Architectures"
+        ]
+      },
+      "goals": [
+        "Find Security Integration Patterns",
+        "Meet IBM Experts",
+        "Learn New Skills"
+      ]
+    },
+    "company": "Cisco",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://www.cisco.com",
+      "registered": true,
+      "industry": "Networking & Security",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-noah-williams-0008",
+    "state": "ON",
+    "first_name": "Noah",
+    "job_title": "Security Solutions Architect",
+    "email": "noah.williams@example.com"
+  },
+  {
+    "_docId": "ATT-0009",
+    "country": "United Arab Emirates",
+    "participant_id": "ATT-0009",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Business Leader",
+        "Product Owner",
+        "Banking"
+      ],
+      "interest_tags": [
+        "Digital Channels",
+        "AI Assistants",
+        "Customer Experience"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Digital Banking Perspective",
+        "Customer Journey Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai assistants",
+        "app development",
+        "banking",
+        "customer experience",
+        "customer experience patterns",
+        "data",
+        "digital channels",
+        "product roadmap",
+        "use case inspiration"
+      ],
+      "industry_tags": [
+        "Banking"
+      ],
+      "need_tags": [
+        "Use Case Inspiration",
+        "Product Roadmap",
+        "Customer Experience Patterns"
+      ],
+      "aspiration_tags": [
+        "Create Smarter Banking Experiences",
+        "Prioritize AI Initiatives"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Al-Mansoori",
+    "display_name": "Fatima Al-Mansoori",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Middle East",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1017",
+        "TX26-APPDEV-1027",
+        "TX26-DATA-1041"
+      ],
+      "recommended_champions": [
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "Data"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Business Leader",
+        "Product Owner"
+      ],
+      "intent": {
+        "needs": [
+          "Use Case Inspiration",
+          "Product Roadmap",
+          "Customer Experience Patterns"
+        ],
+        "contribution": [
+          "Digital Banking Perspective",
+          "Customer Journey Lessons"
+        ],
+        "aspiration": [
+          "Create Smarter Banking Experiences",
+          "Prioritize AI Initiatives"
+        ]
+      },
+      "goals": [
+        "Improve Customer Experience",
+        "Explore AI Use Cases",
+        "Meet Peers"
+      ]
+    },
+    "company": "Emirates National Bank",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/emirates-national-bank",
+      "registered": true,
+      "industry": "Banking",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-fatima-al-mansoori-0009",
+    "state": "Dubai",
+    "first_name": "Fatima",
+    "job_title": "Director, Digital Channels",
+    "email": "fatima.almansoori@example.com"
+  },
+  {
+    "_docId": "ATT-0010",
+    "country": "Japan",
+    "participant_id": "ATT-0010",
+    "compass_intelligence": {
+      "persona_tags": [
+        "SRE",
+        "Developer",
+        "Automation Practitioner"
+      ],
+      "interest_tags": [
+        "AIOps",
+        "Observability",
+        "Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Reliability Lessons",
+        "Automation Scripts"
+      ],
+      "matching_keywords": [
+        "aiops",
+        "automation",
+        "cloud",
+        "hands-on learning",
+        "it optimization and automation",
+        "observability",
+        "operational patterns",
+        "saas",
+        "technical guidance"
+      ],
+      "industry_tags": [
+        "SaaS"
+      ],
+      "need_tags": [
+        "Hands-On Learning",
+        "Technical Guidance",
+        "Operational Patterns"
+      ],
+      "aspiration_tags": [
+        "Reduce Operational Toil",
+        "Improve Platform Resilience"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Tanaka",
+    "display_name": "Kenji Tanaka",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Asia Pacific",
+    "market": "APAC",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AUTO-1016",
+        "TX26-CLOUD-1023",
+        "TX26-ITOPS-1039"
+      ],
+      "recommended_champions": [
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Automation",
+        "Cloud",
+        "IT Optimization & Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "SRE",
+        "Developer"
+      ],
+      "intent": {
+        "needs": [
+          "Hands-On Learning",
+          "Technical Guidance",
+          "Operational Patterns"
+        ],
+        "contribution": [
+          "Reliability Lessons",
+          "Automation Scripts"
+        ],
+        "aspiration": [
+          "Reduce Operational Toil",
+          "Improve Platform Resilience"
+        ]
+      },
+      "goals": [
+        "Learn New Skills",
+        "Improve Reliability",
+        "Explore Automation"
+      ]
+    },
+    "company": "Nippon Systems Trust",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/nippon-systems-trust",
+      "registered": true,
+      "industry": "SaaS",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-kenji-tanaka-0010",
+    "state": "Tokyo",
+    "first_name": "Kenji",
+    "job_title": "Principal Site Reliability Engineer",
+    "email": "kenji.tanaka@example.com"
+  },
+  {
+    "_docId": "ATT-0011",
+    "country": "Spain",
+    "participant_id": "ATT-0011",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Product Manager",
+        "SaaS Leader",
+        "AI Explorer"
+      ],
+      "interest_tags": [
+        "AI Product Design",
+        "FinOps",
+        "User Adoption"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "SaaS Product Perspective",
+        "Go-To-Market Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai product design",
+        "app development",
+        "business management and finops",
+        "customer adoption patterns",
+        "finops",
+        "roadmap clarity",
+        "saas",
+        "use case inspiration",
+        "user adoption"
+      ],
+      "industry_tags": [
+        "SaaS"
+      ],
+      "need_tags": [
+        "Use Case Inspiration",
+        "Roadmap Clarity",
+        "Customer Adoption Patterns"
+      ],
+      "aspiration_tags": [
+        "Build AI Into Product Workflows",
+        "Prioritize Better Features"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Martinez",
+    "display_name": "Sofia Martinez",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1001",
+        "TX26-SEC-1015",
+        "TX26-CLOUD-1021"
+      ],
+      "recommended_champions": [
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "Business Management & FinOps"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Product Owner",
+        "Business Leader"
+      ],
+      "intent": {
+        "needs": [
+          "Use Case Inspiration",
+          "Roadmap Clarity",
+          "Customer Adoption Patterns"
+        ],
+        "contribution": [
+          "SaaS Product Perspective",
+          "Go-To-Market Lessons"
+        ],
+        "aspiration": [
+          "Build AI Into Product Workflows",
+          "Prioritize Better Features"
+        ]
+      },
+      "goals": [
+        "Find Product Ideas",
+        "Evaluate AI Features",
+        "Meet Developers"
+      ]
+    },
+    "company": "CloudNest SaaS",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/cloudnest-saas",
+      "registered": true,
+      "industry": "SaaS",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-sofia-martinez-0011",
+    "state": "Madrid",
+    "first_name": "Sofia",
+    "job_title": "Senior Product Manager",
+    "email": "sofia.martinez@example.com"
+  },
+  {
+    "_docId": "ATT-0012",
+    "country": "United States",
+    "participant_id": "ATT-0012",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Junior Developer",
+        "Learner",
+        "Builder"
+      ],
+      "interest_tags": [
+        "APIs",
+        "AI Assistants",
+        "Cloud Native"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Fresh Developer Perspective",
+        "Questions From New Practitioners"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai assistants",
+        "apis",
+        "app development",
+        "beginner guidance",
+        "cloud",
+        "cloud native",
+        "hands-on learning",
+        "insurance",
+        "mentorship"
+      ],
+      "industry_tags": [
+        "Insurance"
+      ],
+      "need_tags": [
+        "Hands-On Learning",
+        "Beginner Guidance",
+        "Mentorship"
+      ],
+      "aspiration_tags": [
+        "Gain Technical Confidence",
+        "Build First Production Pattern"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Brooks",
+    "display_name": "Aiden Brooks",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": false,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": false,
+      "signal_strength": 70
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-Z-1008",
+        "TX26-CLOUD-1012",
+        "TX26-AUTO-1034"
+      ],
+      "recommended_champions": [
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "App Development",
+        "AI",
+        "Cloud"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "Developer"
+      ],
+      "intent": {
+        "needs": [
+          "Hands-On Learning",
+          "Beginner Guidance",
+          "Mentorship"
+        ],
+        "contribution": [
+          "Fresh Developer Perspective",
+          "Questions From New Practitioners"
+        ],
+        "aspiration": [
+          "Gain Technical Confidence",
+          "Build First Production Pattern"
+        ]
+      },
+      "goals": [
+        "Learn New Skills",
+        "Attend Hands-On Labs",
+        "Meet IBM Champions"
+      ]
+    },
+    "company": "NorthStar Insurance",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/northstar-insurance",
+      "registered": true,
+      "industry": "Insurance",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-aiden-brooks-0012",
+    "state": "NC",
+    "first_name": "Aiden",
+    "job_title": "Junior Developer",
+    "email": "aiden.brooks@example.com"
+  },
+  {
+    "_docId": "ATT-0013",
+    "country": "Nigeria",
+    "participant_id": "ATT-0013",
+    "compass_intelligence": {
+      "persona_tags": [
+        "AI Engineer",
+        "Data Scientist",
+        "Fintech"
+      ],
+      "interest_tags": [
+        "watsonx.governance",
+        "Model Risk",
+        "Data Science"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Applied AI Perspective",
+        "Fintech Use Cases"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai governance",
+        "data",
+        "data quality guidance",
+        "data science",
+        "data security and iam",
+        "financial",
+        "model monitoring",
+        "model risk",
+        "technology",
+        "watsonx.governance"
+      ],
+      "industry_tags": [
+        "Financial Technology"
+      ],
+      "need_tags": [
+        "AI Governance",
+        "Model Monitoring",
+        "Data Quality Guidance"
+      ],
+      "aspiration_tags": [
+        "Deploy Trusted AI Systems",
+        "Improve Model Governance"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Okafor",
+    "display_name": "Grace Okafor",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Africa",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1004",
+        "TX26-DATA-1018",
+        "TX26-FINOPS-1031"
+      ],
+      "recommended_champions": [
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "Data",
+        "Data Security & IAM"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Data Scientist",
+        "AI Engineer"
+      ],
+      "intent": {
+        "needs": [
+          "AI Governance",
+          "Model Monitoring",
+          "Data Quality Guidance"
+        ],
+        "contribution": [
+          "Applied AI Perspective",
+          "Fintech Use Cases"
+        ],
+        "aspiration": [
+          "Deploy Trusted AI Systems",
+          "Improve Model Governance"
+        ]
+      },
+      "goals": [
+        "Explore Responsible AI",
+        "Learn New Skills",
+        "Meet AI Practitioners"
+      ]
+    },
+    "company": "Lagos Fintech Exchange",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/lagos-fintech-exchange",
+      "registered": true,
+      "industry": "Financial Technology",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-grace-okafor-0013",
+    "state": "Lagos",
+    "first_name": "Grace",
+    "job_title": "Lead Data Scientist",
+    "email": "grace.okafor@example.com"
+  },
+  {
+    "_docId": "ATT-0014",
+    "country": "Australia",
+    "participant_id": "ATT-0014",
+    "compass_intelligence": {
+      "persona_tags": [
+        "IT Leader",
+        "Operations",
+        "Infrastructure Buyer"
+      ],
+      "interest_tags": [
+        "AIOps",
+        "Storage",
+        "Power Systems"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Manufacturing IT Perspective",
+        "Operational Metrics"
+      ],
+      "matching_keywords": [
+        "aiops",
+        "automation guidance",
+        "infrastructure roadmap",
+        "it optimization and automation",
+        "manufacturing",
+        "operational efficiency",
+        "power",
+        "power systems",
+        "storage"
+      ],
+      "industry_tags": [
+        "Manufacturing"
+      ],
+      "need_tags": [
+        "Operational Efficiency",
+        "Infrastructure Roadmap",
+        "Automation Guidance"
+      ],
+      "aspiration_tags": [
+        "Improve Uptime",
+        "Simplify Infrastructure Planning"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Hughes",
+    "display_name": "Oliver Hughes",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Asia Pacific",
+    "market": "APAC",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-CLOUD-1007",
+        "TX26-APPINT-1029",
+        "TX26-AUTO-1042"
+      ],
+      "recommended_champions": [
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "IT Optimization & Automation",
+        "Power",
+        "Storage"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "IT Leader",
+        "Operations Leader"
+      ],
+      "intent": {
+        "needs": [
+          "Operational Efficiency",
+          "Infrastructure Roadmap",
+          "Automation Guidance"
+        ],
+        "contribution": [
+          "Manufacturing IT Perspective",
+          "Operational Metrics"
+        ],
+        "aspiration": [
+          "Improve Uptime",
+          "Simplify Infrastructure Planning"
+        ]
+      },
+      "goals": [
+        "Optimize Operations",
+        "Evaluate Infrastructure",
+        "Meet Product Teams"
+      ]
+    },
+    "company": "RedPeak Manufacturing",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/redpeak-manufacturing",
+      "registered": true,
+      "industry": "Manufacturing",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-oliver-hughes-0014",
+    "state": "NSW",
+    "first_name": "Oliver",
+    "job_title": "VP, IT Operations",
+    "email": "oliver.hughes@example.com"
+  },
+  {
+    "_docId": "ATT-0015",
+    "country": "Italy",
+    "participant_id": "ATT-0015",
+    "compass_intelligence": {
+      "persona_tags": [
+        "CDO",
+        "Healthcare",
+        "Data Leader"
+      ],
+      "interest_tags": [
+        "Data Governance",
+        "Privacy",
+        "AI Readiness"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Healthcare Data Perspective",
+        "Privacy Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai readiness",
+        "architecture review",
+        "data",
+        "data governance",
+        "data security and iam",
+        "governance framework",
+        "healthcare",
+        "privacy",
+        "security guidance"
+      ],
+      "industry_tags": [
+        "Healthcare"
+      ],
+      "need_tags": [
+        "Governance Framework",
+        "Security Guidance",
+        "Architecture Review"
+      ],
+      "aspiration_tags": [
+        "Make Healthcare Data AI-Ready",
+        "Build Trusted Data Practices"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Rossi",
+    "display_name": "Isabella Rossi",
+    "consent": {
+      "allow_intro_requests": false,
+      "public_profile": false,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-PARTNER-1002",
+        "TX26-STOR-1033",
+        "TX26-AI-1050"
+      ],
+      "recommended_champions": [
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Data",
+        "AI",
+        "Data Security & IAM"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Executive",
+        "Data Leader"
+      ],
+      "intent": {
+        "needs": [
+          "Governance Framework",
+          "Security Guidance",
+          "Architecture Review"
+        ],
+        "contribution": [
+          "Healthcare Data Perspective",
+          "Privacy Lessons"
+        ],
+        "aspiration": [
+          "Make Healthcare Data AI-Ready",
+          "Build Trusted Data Practices"
+        ]
+      },
+      "goals": [
+        "Improve Data Governance",
+        "Explore AI",
+        "Meet Peers"
+      ]
+    },
+    "company": "Mediterraneo Health Systems",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/mediterraneo-health",
+      "registered": true,
+      "industry": "Healthcare",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-isabella-rossi-0015",
+    "state": "",
+    "first_name": "Isabella",
+    "job_title": "Chief Data Officer",
+    "email": "isabella.rossi@example.com"
+  },
+  {
+    "_docId": "ATT-0016",
+    "country": "Ireland",
+    "participant_id": "ATT-0016",
+    "compass_intelligence": {
+      "persona_tags": [
+        "DevOps Manager",
+        "SaaS",
+        "Cloud Builder"
+      ],
+      "interest_tags": [
+        "DevSecOps",
+        "OpenShift",
+        "Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "DevOps Lessons",
+        "SaaS Delivery Perspective"
+      ],
+      "matching_keywords": [
+        "app development",
+        "automation",
+        "ci/cd guidance",
+        "cloud",
+        "devsecops",
+        "openshift",
+        "operational patterns",
+        "platform automation",
+        "saas"
+      ],
+      "industry_tags": [
+        "SaaS"
+      ],
+      "need_tags": [
+        "CI/CD Guidance",
+        "Platform Automation",
+        "Operational Patterns"
+      ],
+      "aspiration_tags": [
+        "Speed Up Releases Safely",
+        "Standardize Platform Practices"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Greene",
+    "display_name": "Thomas Greene",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 70
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-DATA-1006",
+        "TX26-AI-1011",
+        "TX26-SEC-1022"
+      ],
+      "recommended_champions": [
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "Automation",
+        "App Development"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "DevOps",
+        "Manager"
+      ],
+      "intent": {
+        "needs": [
+          "CI/CD Guidance",
+          "Platform Automation",
+          "Operational Patterns"
+        ],
+        "contribution": [
+          "DevOps Lessons",
+          "SaaS Delivery Perspective"
+        ],
+        "aspiration": [
+          "Speed Up Releases Safely",
+          "Standardize Platform Practices"
+        ]
+      },
+      "goals": [
+        "Improve Delivery Pipelines",
+        "Learn New Skills",
+        "Meet Peers"
+      ]
+    },
+    "company": "BlueRiver SaaS",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/blueriver-saas",
+      "registered": true,
+      "industry": "SaaS",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-thomas-greene-0016",
+    "state": "Dublin",
+    "first_name": "Thomas",
+    "job_title": "DevOps Manager",
+    "email": "thomas.greene@example.com"
+  },
+  {
+    "_docId": "ATT-0017",
+    "country": "Singapore",
+    "participant_id": "ATT-0017",
+    "compass_intelligence": {
+      "persona_tags": [
+        "AI Engineer",
+        "Developer",
+        "Retail"
+      ],
+      "interest_tags": [
+        "RAG",
+        "watsonx.ai",
+        "AI Assistants"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Retail AI Use Cases",
+        "Prototype Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai assistants",
+        "app development",
+        "data",
+        "hands-on learning",
+        "rag",
+        "rag patterns",
+        "retail",
+        "technical guidance",
+        "watsonx.ai"
+      ],
+      "industry_tags": [
+        "Retail"
+      ],
+      "need_tags": [
+        "Hands-On Learning",
+        "RAG Patterns",
+        "Technical Guidance"
+      ],
+      "aspiration_tags": [
+        "Build Better AI Assistants",
+        "Move From Prototype To Production"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Lin",
+    "display_name": "Mei Lin",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Asia Pacific",
+    "market": "APAC",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-CLOUD-1010",
+        "TX26-APPINT-1024",
+        "TX26-AI-1037"
+      ],
+      "recommended_champions": [
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "Data"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "AI Engineer",
+        "Developer"
+      ],
+      "intent": {
+        "needs": [
+          "Hands-On Learning",
+          "RAG Patterns",
+          "Technical Guidance"
+        ],
+        "contribution": [
+          "Retail AI Use Cases",
+          "Prototype Lessons"
+        ],
+        "aspiration": [
+          "Build Better AI Assistants",
+          "Move From Prototype To Production"
+        ]
+      },
+      "goals": [
+        "Build AI Applications",
+        "Attend Hands-On Labs",
+        "Meet IBM Experts"
+      ]
+    },
+    "company": "Pacific Retail Group",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/pacific-retail-group",
+      "registered": true,
+      "industry": "Retail",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-mei-lin-0017",
+    "state": "",
+    "first_name": "Mei",
+    "job_title": "AI Solutions Engineer",
+    "email": "mei.lin@example.com"
+  },
+  {
+    "_docId": "ATT-0018",
+    "country": "Chile",
+    "participant_id": "ATT-0018",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Automation Lead",
+        "Telecom",
+        "Architect"
+      ],
+      "interest_tags": [
+        "Ansible",
+        "AIOps",
+        "Network Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Telecom Automation Perspective",
+        "Network Operations Lessons"
+      ],
+      "matching_keywords": [
+        "aiops",
+        "ansible",
+        "app integration",
+        "automation",
+        "automation patterns",
+        "cloud",
+        "hands-on learning",
+        "integration guidance",
+        "network automation",
+        "telecommunications"
+      ],
+      "industry_tags": [
+        "Telecommunications"
+      ],
+      "need_tags": [
+        "Automation Patterns",
+        "Integration Guidance",
+        "Hands-On Learning"
+      ],
+      "aspiration_tags": [
+        "Reduce Manual Operations",
+        "Improve Service Reliability"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Vega",
+    "display_name": "Carlos Vega",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Latin America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-SEC-1009",
+        "TX26-CLOUD-1038",
+        "TX26-AUTO-1048"
+      ],
+      "recommended_champions": [
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Automation",
+        "Cloud",
+        "App Integration"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Automation Specialist",
+        "Architect"
+      ],
+      "intent": {
+        "needs": [
+          "Automation Patterns",
+          "Integration Guidance",
+          "Hands-On Learning"
+        ],
+        "contribution": [
+          "Telecom Automation Perspective",
+          "Network Operations Lessons"
+        ],
+        "aspiration": [
+          "Reduce Manual Operations",
+          "Improve Service Reliability"
+        ]
+      },
+      "goals": [
+        "Improve Automation",
+        "Meet Technical Experts",
+        "Learn New Skills"
+      ]
+    },
+    "company": "Andes Telecom",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/andes-telecom",
+      "registered": true,
+      "industry": "Telecommunications",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-carlos-vega-0018",
+    "state": "Santiago",
+    "first_name": "Carlos",
+    "job_title": "Network Automation Lead",
+    "email": "carlos.vega@example.com"
+  },
+  {
+    "_docId": "ATT-0019",
+    "country": "Netherlands",
+    "participant_id": "ATT-0019",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Security Manager",
+        "IAM",
+        "Cybersecurity"
+      ],
+      "interest_tags": [
+        "IAM",
+        "Zero Trust",
+        "Threat Detection"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Security Operations Perspective",
+        "IAM Lessons"
+      ],
+      "matching_keywords": [
+        "ai",
+        "cloud",
+        "cybersecurity",
+        "data security and iam",
+        "iam",
+        "identity architecture",
+        "threat detection",
+        "threat detection patterns",
+        "zero trust",
+        "zero trust guidance"
+      ],
+      "industry_tags": [
+        "Cybersecurity"
+      ],
+      "need_tags": [
+        "Identity Architecture",
+        "Zero Trust Guidance",
+        "Threat Detection Patterns"
+      ],
+      "aspiration_tags": [
+        "Strengthen Identity Controls",
+        "Connect Security And AI"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Petrova",
+    "display_name": "Nadia Petrova",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1017",
+        "TX26-APPDEV-1027",
+        "TX26-DATA-1041"
+      ],
+      "recommended_champions": [
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Data Security & IAM",
+        "Cloud",
+        "AI"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Security Specialist",
+        "Manager"
+      ],
+      "intent": {
+        "needs": [
+          "Identity Architecture",
+          "Zero Trust Guidance",
+          "Threat Detection Patterns"
+        ],
+        "contribution": [
+          "Security Operations Perspective",
+          "IAM Lessons"
+        ],
+        "aspiration": [
+          "Strengthen Identity Controls",
+          "Connect Security And AI"
+        ]
+      },
+      "goals": [
+        "Evaluate IAM Patterns",
+        "Meet Security Experts",
+        "Learn New Skills"
+      ]
+    },
+    "company": "SecurePath Cyber",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/securepath-cyber",
+      "registered": true,
+      "industry": "Cybersecurity",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-nadia-petrova-0019",
+    "state": "",
+    "first_name": "Nadia",
+    "job_title": "Identity Engineering Manager",
+    "email": "nadia.petrova@example.com"
+  },
+  {
+    "_docId": "ATT-0020",
+    "country": "United States",
+    "participant_id": "ATT-0020",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Platform Engineer",
+        "Partner",
+        "Builder"
+      ],
+      "interest_tags": [
+        "OpenShift",
+        "Terraform",
+        "Automation"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "Platform Engineering Perspective",
+        "Developer Tooling Lessons"
+      ],
+      "matching_keywords": [
+        "app development",
+        "automation",
+        "cloud",
+        "hands-on learning",
+        "mentorship",
+        "openshift",
+        "platform patterns",
+        "services",
+        "technology",
+        "terraform"
+      ],
+      "industry_tags": [
+        "Technology Services"
+      ],
+      "need_tags": [
+        "Hands-On Learning",
+        "Platform Patterns",
+        "Mentorship"
+      ],
+      "aspiration_tags": [
+        "Build Reusable Platform Blueprints",
+        "Improve Developer Experience"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Carter",
+    "display_name": "Ben Carter",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 70
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AUTO-1016",
+        "TX26-CLOUD-1023",
+        "TX26-ITOPS-1039"
+      ],
+      "recommended_champions": [
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "App Development",
+        "Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "Developer",
+        "Platform Engineer"
+      ],
+      "intent": {
+        "needs": [
+          "Hands-On Learning",
+          "Platform Patterns",
+          "Mentorship"
+        ],
+        "contribution": [
+          "Platform Engineering Perspective",
+          "Developer Tooling Lessons"
+        ],
+        "aspiration": [
+          "Build Reusable Platform Blueprints",
+          "Improve Developer Experience"
+        ]
+      },
+      "goals": [
+        "Attend Labs",
+        "Build Technical Skills",
+        "Meet Champions"
+      ]
+    },
+    "company": "HashiBridge Solutions",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://example.com/hashibridge-solutions",
+      "registered": true,
+      "industry": "Technology Services",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-ben-carter-0020",
+    "state": "TX",
+    "first_name": "Ben",
+    "job_title": "Platform Engineer",
+    "email": "ben.carter@example.com"
+  },
+  {
+    "_docId": "ATT-0021",
+    "country": "Germany",
+    "participant_id": "ATT-0021",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Integration Consultant",
+        "Partner",
+        "Architect"
+      ],
+      "interest_tags": [
+        "API Management",
+        "Event Streams",
+        "Data Integration"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Partner Networking"
+      ],
+      "contribution_tags": [
+        "ERP Integration Lessons",
+        "Partner Delivery Perspective"
+      ],
+      "matching_keywords": [
+        "api management",
+        "app integration",
+        "cloud",
+        "data",
+        "data integration",
+        "enterprise",
+        "event streams",
+        "integration guidance",
+        "partner enablement",
+        "reference architecture",
+        "software"
+      ],
+      "industry_tags": [
+        "Enterprise Software"
+      ],
+      "need_tags": [
+        "Integration Guidance",
+        "Reference Architecture",
+        "Partner Enablement"
+      ],
+      "aspiration_tags": [
+        "Connect Enterprise Systems Better",
+        "Improve Client Delivery"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Schmidt",
+    "display_name": "Hannah Schmidt",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1001",
+        "TX26-SEC-1015",
+        "TX26-CLOUD-1021"
+      ],
+      "recommended_champions": [
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "App Integration",
+        "Cloud",
+        "Data"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Consultant",
+        "Architect"
+      ],
+      "intent": {
+        "needs": [
+          "Integration Guidance",
+          "Reference Architecture",
+          "Partner Enablement"
+        ],
+        "contribution": [
+          "ERP Integration Lessons",
+          "Partner Delivery Perspective"
+        ],
+        "aspiration": [
+          "Connect Enterprise Systems Better",
+          "Improve Client Delivery"
+        ]
+      },
+      "goals": [
+        "Learn Integration Patterns",
+        "Meet Product Teams",
+        "Build Partner Connections"
+      ]
+    },
+    "company": "SAP Partner Advisory Group",
+    "registration": {
+      "attendee_type": "Partner",
+      "company_website": "https://example.com/sap-partner-advisory-group",
+      "registered": true,
+      "industry": "Enterprise Software",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-hannah-schmidt-0021",
+    "state": "Bavaria",
+    "first_name": "Hannah",
+    "job_title": "Enterprise Integration Consultant",
+    "email": "hannah.schmidt@example.com"
+  },
+  {
+    "_docId": "ATT-0022",
+    "country": "India",
+    "participant_id": "ATT-0022",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Mainframe Developer",
+        "Banking",
+        "Technical Specialist"
+      ],
+      "interest_tags": [
+        "IBM Z",
+        "Application Modernization",
+        "DevOps"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "COBOL Modernization Lessons",
+        "Core Banking Perspective"
+      ],
+      "matching_keywords": [
+        "app development",
+        "application modernization",
+        "automation",
+        "banking",
+        "code modernization guidance",
+        "devops",
+        "hands-on learning",
+        "ibm z",
+        "ibm z and linuxone",
+        "mainframe modernization"
+      ],
+      "industry_tags": [
+        "Banking"
+      ],
+      "need_tags": [
+        "Mainframe Modernization",
+        "Code Modernization Guidance",
+        "Hands-On Learning"
+      ],
+      "aspiration_tags": [
+        "Modernize Without Disrupting Core Systems",
+        "Mentor Younger Developers"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Iyer",
+    "display_name": "Ravi Iyer",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Asia Pacific",
+    "market": "APAC",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": false,
+      "signal_strength": 84
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-Z-1008",
+        "TX26-CLOUD-1012",
+        "TX26-AUTO-1034"
+      ],
+      "recommended_champions": [
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "IBM Z & LinuxONE",
+        "App Development",
+        "Automation"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Developer",
+        "Mainframe Specialist"
+      ],
+      "intent": {
+        "needs": [
+          "Mainframe Modernization",
+          "Code Modernization Guidance",
+          "Hands-On Learning"
+        ],
+        "contribution": [
+          "COBOL Modernization Lessons",
+          "Core Banking Perspective"
+        ],
+        "aspiration": [
+          "Modernize Without Disrupting Core Systems",
+          "Mentor Younger Developers"
+        ]
+      },
+      "goals": [
+        "Modernize Skills",
+        "Meet IBM Z Experts",
+        "Attend Technical Breakouts"
+      ]
+    },
+    "company": "GlobalTrust Bank",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/globaltrust-bank",
+      "registered": true,
+      "industry": "Banking",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-ravi-iyer-0022",
+    "state": "TN",
+    "first_name": "Ravi",
+    "job_title": "Senior Mainframe Developer",
+    "email": "ravi.iyer@example.com"
+  },
+  {
+    "_docId": "ATT-0023",
+    "country": "Canada",
+    "participant_id": "ATT-0023",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Student",
+        "Developer",
+        "AI Learner"
+      ],
+      "interest_tags": [
+        "AI Agents",
+        "Data Science",
+        "Open Source"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Research Perspective",
+        "Student Community Energy"
+      ],
+      "matching_keywords": [
+        "ai",
+        "ai agents",
+        "app development",
+        "beginner friendly sessions",
+        "career guidance",
+        "data",
+        "data science",
+        "education",
+        "mentorship",
+        "open source"
+      ],
+      "industry_tags": [
+        "Education"
+      ],
+      "need_tags": [
+        "Mentorship",
+        "Beginner Friendly Sessions",
+        "Career Guidance"
+      ],
+      "aspiration_tags": [
+        "Find A Career Direction",
+        "Build Practical AI Skills"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Morgan",
+    "display_name": "Leah Morgan",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": false,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 91
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-AI-1004",
+        "TX26-DATA-1018",
+        "TX26-FINOPS-1031"
+      ],
+      "recommended_champions": [
+        "CHMP-0151",
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "Data"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Student",
+        "Developer"
+      ],
+      "intent": {
+        "needs": [
+          "Mentorship",
+          "Beginner Friendly Sessions",
+          "Career Guidance"
+        ],
+        "contribution": [
+          "Research Perspective",
+          "Student Community Energy"
+        ],
+        "aspiration": [
+          "Find A Career Direction",
+          "Build Practical AI Skills"
+        ]
+      },
+      "goals": [
+        "Learn New Skills",
+        "Meet Mentors",
+        "Explore Career Paths"
+      ]
+    },
+    "company": "University of Toronto",
+    "registration": {
+      "attendee_type": "Student",
+      "company_website": "https://www.utoronto.ca",
+      "registered": true,
+      "industry": "Education",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-leah-morgan-0023",
+    "state": "ON",
+    "first_name": "Leah",
+    "job_title": "Graduate Student, Computer Science",
+    "email": "leah.morgan@example.com"
+  },
+  {
+    "_docId": "ATT-0024",
+    "country": "United States",
+    "participant_id": "ATT-0024",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Student",
+        "Early Career",
+        "Cloud Learner"
+      ],
+      "interest_tags": [
+        "Cloud",
+        "AI",
+        "FinOps"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Expert Office Hours",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Student Perspective",
+        "Campus Innovation View"
+      ],
+      "matching_keywords": [
+        "ai",
+        "business management and finops",
+        "career guidance",
+        "cloud",
+        "education",
+        "finops",
+        "introductory technical guidance",
+        "mentorship"
+      ],
+      "industry_tags": [
+        "Education"
+      ],
+      "need_tags": [
+        "Career Guidance",
+        "Mentorship",
+        "Introductory Technical Guidance"
+      ],
+      "aspiration_tags": [
+        "Understand Enterprise Technology",
+        "Build A Professional Network"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Kapoor",
+    "display_name": "Arjun Kapoor",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": false,
+      "allow_recommendation": true
+    },
+    "geo": "North America",
+    "market": "Americas",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": false,
+      "profile_completed": false,
+      "signal_strength": 18
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-CLOUD-1007",
+        "TX26-APPINT-1029",
+        "TX26-AUTO-1042"
+      ],
+      "recommended_champions": [
+        "CHMP-0163",
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Cloud",
+        "AI",
+        "Business Management & FinOps"
+      ],
+      "open_to": [
+        "Expert Office Hours",
+        "Meeting Peers",
+        "Partner Networking"
+      ],
+      "roles_at_txc": [
+        "Student",
+        "Early Career"
+      ],
+      "intent": {
+        "needs": [
+          "Career Guidance",
+          "Mentorship",
+          "Introductory Technical Guidance"
+        ],
+        "contribution": [
+          "Student Perspective",
+          "Campus Innovation View"
+        ],
+        "aspiration": [
+          "Understand Enterprise Technology",
+          "Build A Professional Network"
+        ]
+      },
+      "goals": [
+        "Explore Career Paths",
+        "Meet Practitioners",
+        "Learn New Skills"
+      ]
+    },
+    "company": "Georgia Institute of Technology",
+    "registration": {
+      "attendee_type": "Student",
+      "company_website": "https://www.gatech.edu",
+      "registered": true,
+      "industry": "Education",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-arjun-kapoor-0024",
+    "state": "GA",
+    "first_name": "Arjun",
+    "job_title": "Undergraduate Student, Information Systems",
+    "email": "arjun.kapoor@example.com"
+  },
+  {
+    "_docId": "ATT-0025",
+    "country": "France",
+    "participant_id": "ATT-0025",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Modernization Leader",
+        "Architect",
+        "Travel"
+      ],
+      "interest_tags": [
+        "App Modernization",
+        "APIs",
+        "Hybrid Cloud"
+      ],
+      "networking_tags": [
+        "Peer Networking",
+        "Champion Introductions",
+        "Community Meetups"
+      ],
+      "contribution_tags": [
+        "Travel Industry Perspective",
+        "Modernization Lessons"
+      ],
+      "matching_keywords": [
+        "&",
+        "apis",
+        "app development",
+        "app integration",
+        "app modernization",
+        "application modernization guidance",
+        "cloud",
+        "cloud migration patterns",
+        "hybrid cloud",
+        "integration strategy",
+        "transportation",
+        "travel"
+      ],
+      "industry_tags": [
+        "Travel & Transportation"
+      ],
+      "need_tags": [
+        "Application Modernization Guidance",
+        "Integration Strategy",
+        "Cloud Migration Patterns"
+      ],
+      "aspiration_tags": [
+        "Modernize Critical Apps",
+        "Improve Customer Travel Experiences"
+      ]
+    },
+    "mobile": "",
+    "last_name": "Dubois",
+    "display_name": "Claire Dubois",
+    "consent": {
+      "allow_intro_requests": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "Europe",
+    "market": "EMEA",
+    "profile_status": {
+      "last_updated": "2026-06-06T21:00:00-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 77
+    },
+    "schedule": {
+      "recommended_people": [
+        "ATT-0001",
+        "ATT-0003",
+        "ATT-0006"
+      ],
+      "pinned_sessions": [],
+      "recommended_sessions": [
+        "TX26-PARTNER-1002",
+        "TX26-STOR-1033",
+        "TX26-AI-1050"
+      ],
+      "recommended_champions": [
+        "CHMP-0104",
+        "CHMP-0112",
+        "CHMP-0127",
+        "CHMP-0138",
+        "CHMP-0151",
+        "CHMP-0163"
+      ]
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "App Development",
+        "App Integration",
+        "Cloud"
+      ],
+      "open_to": [
+        "Champion Introductions",
+        "Meeting Peers",
+        "Community Meetups"
+      ],
+      "roles_at_txc": [
+        "Business Leader",
+        "Architect"
+      ],
+      "intent": {
+        "needs": [
+          "Application Modernization Guidance",
+          "Integration Strategy",
+          "Cloud Migration Patterns"
+        ],
+        "contribution": [
+          "Travel Industry Perspective",
+          "Modernization Lessons"
+        ],
+        "aspiration": [
+          "Modernize Critical Apps",
+          "Improve Customer Travel Experiences"
+        ]
+      },
+      "goals": [
+        "Modernize Applications",
+        "Meet Technical Experts",
+        "Compare Patterns"
+      ]
+    },
+    "company": "Airline Systems International",
+    "registration": {
+      "attendee_type": "Client",
+      "company_website": "https://example.com/airline-systems-international",
+      "registered": true,
+      "industry": "Travel & Transportation",
+      "housing_booked": true
+    },
+    "linkedin_url": "https://www.linkedin.com/in/synthetic-claire-dubois-0025",
+    "state": "",
+    "first_name": "Claire",
+    "job_title": "Director, Application Modernization",
+    "email": "claire.dubois@example.com"
+  },
+  {
+    "_docId": "ATT-0026",
+    "country": "",
+    "participant_id": "ATT-0026",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Client / Customer",
+        "Partner",
+        "Event Staff",
+        "Senior Practitioner"
+      ],
+      "interest_tags": [
+        "AI",
+        "App Development",
+        "App Integration",
+        "Cloud",
+        "Data"
+      ],
+      "networking_tags": [
+        "Meeting peers",
+        "Meeting partners",
+        "1:1 introductions"
+      ],
+      "contribution_tags": [
+        "Pricing cloud models and usage."
+      ],
+      "matching_keywords": [
+        "client / customer",
+        "partner",
+        "event staff",
+        "ai",
+        "app development",
+        "app integration",
+        "cloud",
+        "data",
+        "meeting peers",
+        "meeting partners",
+        "1:1 introductions",
+        "zoning media",
+        "product designer",
+        "understand ai agents in the cio office infra.",
+        "pricing cloud models and usage.",
+        "quantum, qiskit and mentoring on cio office stuff. \r\nmeet peer to peer people to help me understand data and future\r\nresume touch up with hiring managers."
+      ],
+      "industry_tags": [],
+      "need_tags": [
+        "Understand AI Agents in the CIO office infra."
+      ],
+      "aspiration_tags": [
+        "Quantum, qiskit and mentoring on CIO office stuff. \r\nMeet peer to peer people to help me understand data and future\r\nResume touch up with hiring managers."
+      ]
+    },
+    "mobile": "9192259093",
+    "last_name": "Ragupathi",
+    "display_name": "Aravind Ragupathi",
+    "consent": {
+      "allow_intro_requests": true,
+      "anonymous_pulse": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "daily_email": true,
+      "daily_sms": true,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "",
+    "market": "",
+    "profile_status": {
+      "last_updated": "2026-06-06T09:00:55-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 100
+    },
+    "schedule": {
+      "recommended_people": [],
+      "pinned_sessions": [],
+      "recommended_sessions": [],
+      "recommended_champions": []
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "App Integration",
+        "Cloud",
+        "Data"
+      ],
+      "open_to": [
+        "Meeting peers",
+        "Meeting partners",
+        "1:1 introductions"
+      ],
+      "roles_at_txc": [
+        "Client / Customer",
+        "Partner",
+        "Event Staff"
+      ],
+      "experience_level": "Senior Practitioner",
+      "intent": {
+        "needs": [
+          "Understand AI Agents in the CIO office infra."
+        ],
+        "contribution": [
+          "Pricing cloud models and usage."
+        ],
+        "aspiration": [
+          "Quantum, qiskit and mentoring on CIO office stuff. \r\nMeet peer to peer people to help me understand data and future\r\nResume touch up with hiring managers."
+        ]
+      },
+      "goals": [
+        "Understand AI Agents in the CIO office infra."
+      ]
+    },
+    "company": "Zoning Media",
+    "registration": {
+      "attendee_type": "Client / Customer",
+      "company_website": "",
+      "registered": false,
+      "industry": "",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/aravind-storytelling",
+    "state": "",
+    "first_name": "Aravind",
+    "job_title": "Product Designer",
+    "email": "aravind.ragupathi@gmail.com"
+  },
+  {
+    "_docId": "ATT-0027",
+    "country": "",
+    "participant_id": "ATT-0027",
+    "compass_intelligence": {
+      "persona_tags": [
+        "Client / Customer",
+        "Partner",
+        "Senior Practitioner"
+      ],
+      "interest_tags": [
+        "AI",
+        "App Development",
+        "Cloud",
+        "Data",
+        "Storage"
+      ],
+      "networking_tags": [
+        "Mentoring others",
+        "Meeting customers",
+        "1:1 introductions",
+        "Career conversations"
+      ],
+      "contribution_tags": [
+        "Cloud pricing, agents dev and Bob"
+      ],
+      "matching_keywords": [
+        "client / customer",
+        "partner",
+        "ai",
+        "app development",
+        "cloud",
+        "data",
+        "storage",
+        "mentoring others",
+        "meeting customers",
+        "1:1 introductions",
+        "career conversations",
+        "zoning media",
+        "product designer",
+        "learn about agents, ai, cloud cio deployments",
+        "cloud pricing, agents dev and bob",
+        "hashi and infra deployments. career coaching. peer to peer"
+      ],
+      "industry_tags": [],
+      "need_tags": [
+        "Learn about Agents, AI, Cloud CIO Deployments"
+      ],
+      "aspiration_tags": [
+        "Hashi and infra deployments. Career coaching. Peer to peer"
+      ]
+    },
+    "mobile": "9192259093",
+    "last_name": "Ragupathi",
+    "display_name": "Aravind Ragupathi",
+    "consent": {
+      "allow_intro_requests": true,
+      "anonymous_pulse": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "daily_email": true,
+      "daily_sms": true,
+      "show_linkedin": true,
+      "allow_recommendation": true
+    },
+    "geo": "",
+    "market": "",
+    "profile_status": {
+      "last_updated": "2026-06-06T09:07:31-04:00",
+      "profile_created": true,
+      "profile_completed": true,
+      "signal_strength": 100
+    },
+    "schedule": {
+      "recommended_people": [],
+      "pinned_sessions": [],
+      "recommended_sessions": [],
+      "recommended_champions": []
+    },
+    "event_signal_profile": {
+      "tech_tracks": [
+        "AI",
+        "App Development",
+        "Cloud",
+        "Data",
+        "Storage"
+      ],
+      "open_to": [
+        "Mentoring others",
+        "Meeting customers",
+        "1:1 introductions",
+        "Career conversations"
+      ],
+      "roles_at_txc": [
+        "Client / Customer",
+        "Partner"
+      ],
+      "experience_level": "Senior Practitioner",
+      "intent": {
+        "needs": [
+          "Learn about Agents, AI, Cloud CIO Deployments"
+        ],
+        "contribution": [
+          "Cloud pricing, agents dev and Bob"
+        ],
+        "aspiration": [
+          "Hashi and infra deployments. Career coaching. Peer to peer"
+        ]
+      },
+      "goals": [
+        "Learn about Agents, AI, Cloud CIO Deployments"
+      ]
+    },
+    "company": "Zoning Media",
+    "registration": {
+      "attendee_type": "Client / Customer",
+      "company_website": "",
+      "registered": false,
+      "industry": "",
+      "housing_booked": false
+    },
+    "linkedin_url": "https://www.linkedin.com/in/Aravind-creative",
+    "state": "",
+    "first_name": "Aravind",
+    "job_title": "Product Designer",
+    "email": "aravind.ragupathi@gmail.com"
+  },
+  {
+    "_docId": "ATT-0028",
+    "country": "",
+    "participant_id": "ATT-0028",
+    "compass_intelligence": {
+      "persona_tags": [],
+      "interest_tags": [],
+      "networking_tags": [],
+      "contribution_tags": [],
+      "matching_keywords": [],
+      "industry_tags": [],
+      "need_tags": [],
+      "aspiration_tags": []
+    },
+    "mobile": "",
+    "last_name": "",
+    "display_name": "",
+    "consent": {
+      "allow_intro_requests": true,
+      "anonymous_pulse": true,
+      "public_profile": true,
+      "share_with_matched_attendees": true,
+      "show_contact": false,
+      "daily_email": true,
+      "daily_sms": false,
+      "show_linkedin": false,
+      "allow_recommendation": true
+    },
+    "geo": "",
+    "market": "",
+    "profile_status": {
+      "last_updated": "2026-06-06T13:18:39-04:00",
+      "profile_created": true,
+      "profile_completed": false,
+      "signal_strength": 10
+    },
+    "schedule": {
+      "recommended_people": [],
+      "pinned_sessions": [],
+      "recommended_sessions": [],
+      "recommended_champions": []
+    },
+    "event_signal_profile": {
+      "tech_tracks": [],
+      "open_to": [],
+      "roles_at_txc": [],
+      "experience_level": "",
+      "intent": {
+        "needs": [],
+        "contribution": [],
+        "aspiration": []
+      },
+      "goals": []
+    },
+    "company": "",
+    "registration": {
+      "attendee_type": "Attendee",
+      "company_website": "",
+      "registered": true,
+      "industry": "",
+      "housing_booked": false
+    },
+    "linkedin_url": "",
+    "state": "",
+    "first_name": "",
+    "job_title": "",
+    "email": ""
+  },
+  {
+    "_docId": "HW88BnDnEiRXJDSbAzCfpDNVzxG3",
+    "participant_id": "HW88BnDnEiRXJDSbAzCfpDNVzxG3",
+    "createdAt": {
+      "_seconds": 1781069225,
+      "_nanoseconds": 839000000
+    },
+    "id": "HW88BnDnEiRXJDSbAzCfpDNVzxG3",
+    "email": "aravind.ragupathi@gmail.com",
+    "education": [],
+    "compass_intelligence": {
+      "intent_narrative": {
+        "aspiration": "Meet Champions, CIO CTO, "
+      },
+      "matching_keywords": [
+        "learn new technologies",
+        "discover customer stories",
+        "understand ibm roadmap",
+        "ibm",
+        "architect"
+      ]
+    },
+    "display_name": "Aravind R",
+    "career_interests": [],
+    "event_signal_profile": {
+      "goals": [
+        "Learn new technologies",
+        "Discover customer stories",
+        "Understand IBM roadmap"
+      ],
+      "tech_tracks": [],
+      "open_to": [],
+      "roles_at_txc": [],
+      "intent": {
+        "needs": [],
+        "aspiration": ""
+      }
+    },
+    "organization": "IBM",
+    "company": "IBM",
+    "registration": {
+      "attending": true,
+      "registered": true,
+      "industry": ""
+    },
+    "job_title": "",
+    "past_employers": [],
+    "updatedAt": {
+      "_seconds": 1781102616,
+      "_nanoseconds": 691000000
+    },
+    "networking_identity": {
+      "open_to_university_connections": true,
+      "open_to_alumni_connections": true,
+      "open_to_career_conversations": true,
+      "open_to_past_colleague_connections": true
+    },
+    "first_name": "Kevin",
+    "last_name": "Peters",
+    "persona": "Developer",
+    "linkedin_url": "https://www.linkedin.com/in/"
+  },
+  {
+    "_docId": "kv1lsOlSDWXdXMynbrDFi88iUk42",
+    "participant_id": "kv1lsOlSDWXdXMynbrDFi88iUk42",
+    "createdAt": {
+      "_seconds": 1781069966,
+      "_nanoseconds": 528000000
+    },
+    "registration": {
+      "attending": true,
+      "registered": true,
+      "industry": ""
+    },
+    "id": "kv1lsOlSDWXdXMynbrDFi88iUk42",
+    "email": "aravind.ragupathi@new.com",
+    "education": [
+      {
+        "institution": "MIT"
+      }
+    ],
+    "persona": "",
+    "compass_intelligence": {
+      "intent_narrative": {
+        "aspiration": ""
+      },
+      "matching_keywords": [
+        "meet ibm experts",
+        "understand ibm roadmap",
+        "grow my career",
+        "app development",
+        "ai",
+        "cloud",
+        "data",
+        "customer examples",
+        "networking",
+        "meet ibm champions",
+        "find a mentor",
+        "mentor others",
+        "open source community",
+        "mit",
+        "cisco, microsoft",
+        "platform engineering",
+        "security",
+        "early career"
+      ]
+    },
+    "display_name": "aravind.ragupathi",
+    "career_interests": [
+      "Platform engineering",
+      "Security",
+      "Early career"
+    ],
+    "event_signal_profile": {
+      "tech_tracks": [
+        "App Development",
+        "AI",
+        "Cloud",
+        "Data"
+      ],
+      "open_to": [
+        "Meet IBM Champions",
+        "Find a Mentor",
+        "Mentor Others",
+        "Open Source Community"
+      ],
+      "roles_at_txc": [],
+      "intent": {
+        "aspiration": "",
+        "needs": [
+          "Customer examples",
+          "Networking"
+        ]
+      },
+      "goals": [
+        "Meet IBM experts",
+        "Understand IBM roadmap",
+        "Grow my career"
+      ]
+    },
+    "job_title": "",
+    "updatedAt": {
+      "_seconds": 1781070040,
+      "_nanoseconds": 373000000
+    },
+    "first_name": "Graeme",
+    "last_name": "Noseworthy",
+    "linkedin_url": "https://www.linkedin.com/in/",
+    "past_employers": [
+      {
+        "company": "IBM"
+      }
+    ],
+    "organization": "IBM",
+    "company": "IBM",
+    "networking_identity": {
+      "open_to_university_connections": true,
+      "open_to_alumni_connections": true,
+      "open_to_career_conversations": true,
+      "open_to_past_colleague_connections": true
+    }
+  },
+  {
+    "_docId": "wv2UofnnsPap7NJFEO36qLrLB3O2",
+    "email": "aragupathi@somnio.com",
+    "job_title": "Architect",
+    "Company": "Compass",
+    "persona": "Developer",
+    "registration": {
+      "attending": true,
+      "registered": true,
+      "industry": ""
+    },
+    "id": "wv2UofnnsPap7NJFEO36qLrLB3O2",
+    "display_name": "Aravind Ragupathi",
+    "organization": "",
+    "participant_id": "wv2UofnnsPap7NJFEO36qLrLB3O2",
+    "last_name": "Ragupathi",
+    "company": "",
+    "first_name": "Aravind",
+    "event_signal_profile": {
+      "tech_tracks": [
+        "Automation",
+        "AI",
+        "Red Hat",
+        "Cloud"
+      ],
+      "open_to": [
+        "Find a Mentor",
+        "Mentor Others",
+        "Meet Customers",
+        "Open Source Community"
+      ],
+      "intent": {
+        "needs": [
+          "Hands-on learning",
+          "Customer examples",
+          "Career growth",
+          "Mentoring",
+          "Networking"
+        ],
+        "aspiration": "AI agents build Cloud ops"
+      },
+      "goals": [
+        "Learn new technologies",
+        "Grow my career",
+        "Meet IBM experts",
+        "Explore AI",
+        "Network with peers"
+      ]
+    },
+    "compass_intelligence": {
+      "matching_keywords": [
+        "learn new technologies",
+        "grow my career",
+        "meet ibm experts",
+        "explore ai",
+        "network with peers",
+        "automation",
+        "ai",
+        "red hat",
+        "cloud",
+        "hands-on learning",
+        "customer examples",
+        "career growth",
+        "mentoring",
+        "networking",
+        "find a mentor",
+        "mentor others",
+        "meet customers",
+        "open source community",
+        "ai agents build cloud ops",
+        "architect"
+      ]
+    },
+    "updatedAt": {
+      "_seconds": 1781068378,
+      "_nanoseconds": 31000000
+    }
+  }
+]
