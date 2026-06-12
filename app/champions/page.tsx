@@ -143,13 +143,18 @@ function PeopleActionBar({ id, linkedinUrl, pState }: {
 // ChampionCard  (Carbon style)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
+function displayFirstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name;
+}
+
+function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: PeopleState; anonymous?: boolean }) {
   const initial   = c.display_name[0]?.toUpperCase() ?? "C";
   const org       = c.organization ?? c.company ?? "";
   const loc       = c.geo ?? c.country ?? "";
   const domains   = [...(c.profile?.domains ?? []), ...(c.domains ?? [])].slice(0, 3);
   const avail     = c.attendance?.available_for_1x1;
   const isRemoved = pState.removedPeople.includes(c.id);
+  const shownName = anonymous ? displayFirstName(c.display_name) : c.display_name;
 
   return (
     <article
@@ -164,11 +169,10 @@ function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
         transition:    "opacity 0.2s",
       }}
     >
-      {/* Header row */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
         <PersonAvatar initial={initial} />
         <div style={{ minWidth: 0, flex: 1 }}>
-          {loc && (
+          {!anonymous && loc && (
             <p style={{ margin: "0 0 2px", fontSize: "0.73rem", fontWeight: 650, color: IBM_BLUE, letterSpacing: "0.02em" }}>
               {loc}
             </p>
@@ -177,9 +181,9 @@ function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
             margin: 0, fontSize: "0.97rem", fontWeight: 600,
             color: "var(--text)", lineHeight: 1.3, letterSpacing: "-0.01em",
           }}>
-            {c.display_name}
+            {shownName}
           </h3>
-          {(c.title || org) && (
+          {!anonymous && (c.title || org) && (
             <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.35 }}>
               {[c.title, org].filter(Boolean).join(" · ")}
             </p>
@@ -187,7 +191,6 @@ function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
         </div>
       </div>
 
-      {/* Domains */}
       {domains.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
           {domains.map((d) => (
@@ -199,17 +202,17 @@ function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
         </div>
       )}
 
-      {/* 1:1 availability */}
-      {avail && (
+      {!anonymous && avail && (
         <p style={{ margin: 0, fontSize: "0.78rem", color: IBM_BLUE, fontWeight: 550 }}>
           Available for 1:1
         </p>
       )}
 
-      {/* People actions */}
-      <div style={{ marginTop: "auto" }}>
-        <PeopleActionBar id={c.id} linkedinUrl={c.linkedin_url} pState={pState} />
-      </div>
+      {!anonymous && (
+        <div style={{ marginTop: "auto" }}>
+          <PeopleActionBar id={c.id} linkedinUrl={c.linkedin_url} pState={pState} />
+        </div>
+      )}
     </article>
   );
 }
@@ -247,12 +250,13 @@ function incDomain(map: Record<string, number>, key: string) {
 // IntelligenceBand — people intelligence presentation slice
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeopleIntelligenceBand({ kicker, title, desc, champions, pState }: {
+function PeopleIntelligenceBand({ kicker, title, desc, champions, pState, anonymous = false }: {
   kicker: string;
   title: string;
   desc: string;
   champions: Champion[];
   pState: PeopleState;
+  anonymous?: boolean;
 }) {
   if (champions.length === 0) return null;
   return (
@@ -265,7 +269,7 @@ function PeopleIntelligenceBand({ kicker, title, desc, champions, pState }: {
         <p>{desc}</p>
       </div>
       <div className="intelligence-row intelligence-row--people">
-        {champions.map(c => <ChampionCard key={c.id} c={c} pState={pState} />)}
+        {champions.map(c => <ChampionCard key={c.id} c={c} pState={pState} anonymous={anonymous} />)}
       </div>
     </section>
   );
@@ -491,7 +495,7 @@ export default function ChampionsPage() {
             </div>
           ) : (
             <div className="champion-grid three-champions">
-              {filtered.map((c) => <ChampionCard key={c.id} c={c} pState={pState} />)}
+              {filtered.map((c) => <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} />)}
             </div>
           )}
         </section>
@@ -525,6 +529,7 @@ export default function ChampionsPage() {
               : "Experts available for 1:1 — build your Compass for personalised matches on My Experience."}
             champions={recommendedExperts}
             pState={pState}
+            anonymous={!user}
           />
 
           {user && profileSignals.length > 0 && (
@@ -534,6 +539,7 @@ export default function ChampionsPage() {
               desc="Experts whose domains overlap with your tracks, goals, and career interests."
               champions={sharedInterestChampions}
               pState={pState}
+              anonymous={false}
             />
           )}
 
@@ -543,6 +549,7 @@ export default function ChampionsPage() {
             desc="Champions explicitly available to meet during TechXchange."
             champions={mentors}
             pState={pState}
+            anonymous={!user}
           />
 
           <PeopleIntelligenceBand
@@ -551,6 +558,7 @@ export default function ChampionsPage() {
             desc="Champions focused on community, advocacy, and peer leadership."
             champions={communityLeaders}
             pState={pState}
+            anonymous={!user}
           />
 
           <section className="section">
@@ -562,7 +570,7 @@ export default function ChampionsPage() {
               <p>Alphabetical directory — search above to narrow down.</p>
             </div>
             <div className="champion-grid three-champions">
-              {visibleChampions.map((c) => <ChampionCard key={c.id} c={c} pState={pState} />)}
+              {visibleChampions.map((c) => <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} />)}
             </div>
           </section>
         </>

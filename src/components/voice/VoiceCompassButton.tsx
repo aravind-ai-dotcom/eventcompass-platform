@@ -68,6 +68,7 @@ const DEMO_ACTIVITIES: ActivityItem[] = [
 ];
 
 interface VoiceCompassButtonProps {
+  variant?: "inline" | "companion";
   nextBestMove?:           NextBestMove | null;
   topSession?:             ScoredSession | null;
   topChampion?:            ScoredChampion | null;
@@ -276,6 +277,7 @@ function CompactCard({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VoiceCompassButton({
+  variant = "inline",
   nextBestMove,
   topSession,
   topChampion,
@@ -568,16 +570,30 @@ return;
         .vcb-btn-error   { background: var(--panel);   border-color: #DC2626;        color: #DC2626; }
         .compass-beacon-btn:hover .beacon-glow-radial { opacity:.7!important; }
         .compass-beacon-btn:hover .beacon-star-group  { filter:drop-shadow(0 0 2px rgba(69,137,255,.9)); }
-        @media(max-width:480px){ .vcb-btn{width:100%;justify-content:center;} }
+        .vcb-btn-companion {
+          width: 72px; height: 72px; border-radius: 50%; padding: 0;
+          justify-content: center; flex-shrink: 0;
+          box-shadow: 0 0 0 6px rgba(120, 169, 255, 0.08);
+        }
+        .vcb-btn-companion .vcb-btn-label { display: none; }
+        @media(max-width:480px){ .vcb-btn:not(.vcb-btn-companion){width:100%;justify-content:center;} }
       `}</style>
 
-      <div className="vcb-container">
+      <div className={variant === "companion" ? "voice-companion-card" : "vcb-container"}>
 
-        {/* ── Header row: kicker + button ──────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-          <p style={{ color: "var(--accent)", fontSize: "0.69rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.13em", margin: 0, flexShrink: 0 }}>
-            Compass Assistant
-          </p>
+        {variant === "companion" && (
+          <div className="voice-companion-head">
+            <h2>Voice Compass</h2>
+            <p>Your AI companion for the week — ask what to do next, who to meet, or where to go.</p>
+          </div>
+        )}
+
+        <div className={variant === "companion" ? "voice-companion-mic-wrap" : undefined} style={variant === "inline" ? { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" } : undefined}>
+          {variant === "inline" && (
+            <p style={{ color: "var(--accent)", fontSize: "0.69rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.13em", margin: 0, flexShrink: 0 }}>
+              Compass Assistant
+            </p>
+          )}
 
           {!unsupported && (
             <button
@@ -587,6 +603,7 @@ return;
               aria-label={btnLabel}
               className={[
                 "vcb-btn compass-beacon-btn",
+                variant === "companion" ? "vcb-btn-companion" : "",
                 isListening  ? "vcb-btn-listen"
                 : isProcessing ? "vcb-btn-process"
                 : showResult   ? "vcb-btn-results"
@@ -612,7 +629,7 @@ return;
               {!isListening && (
                 <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} />
               )}
-              {btnLabel}
+              <span className="vcb-btn-label">{btnLabel}</span>
             </button>
           )}
         </div>
@@ -625,7 +642,13 @@ return;
         )}
 
         {/* ── Idle hint — minimal one-liner ─────────────────────────────────── */}
-        {voiceState === "idle" && !unsupported && (
+        {voiceState === "idle" && !unsupported && variant === "companion" && (
+          <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: "12px 0 0", lineHeight: 1.5, maxWidth: "480px" }}>
+            Tap the microphone and try &ldquo;What&rsquo;s next?&rdquo; or &ldquo;Who should I meet?&rdquo;
+          </p>
+        )}
+
+        {voiceState === "idle" && !unsupported && variant === "inline" && (
           <p style={{ color: "var(--muted)", fontSize: "0.73rem", margin: "7px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
             Try: &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Who to meet?&rdquo; &middot; &ldquo;Find AI sessions&rdquo;
           </p>

@@ -1,41 +1,61 @@
 "use client";
 // =============================================================================
 // EventCompass — Explore  /explore
-// "Why Compass Exists" — narrative intelligence surface, not a data dashboard.
+// How Compass helps you succeed — journey maps with imagery-first pathways.
 // =============================================================================
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
-const INTELLIGENCE_SECTIONS = [
+interface Journey {
+  id: string;
+  title: string;
+  goal: string;
+  image: string;
+  flow: string[];
+  accent: string;
+}
+
+const JOURNEYS: Journey[] = [
   {
-    kicker: "Learning intelligence",
-    title: "Find the right sessions for your goals.",
-    body: "Compass maps breakouts, labs, workshops, and hands-on sessions to what you want to learn — so you spend less time browsing and more time building skills.",
+    id: "learning",
+    title: "Learning",
+    goal: "Learn new technology",
+    image: "/event/learning-lab.jpg",
+    flow: ["Goals", "Sessions", "Labs", "Experts"],
+    accent: "#0f62fe",
   },
   {
-    kicker: "Certification intelligence",
-    title: "Turn a certification goal into a preparation plan.",
-    body: "Whether you are targeting IBM watsonx, Cloud Pak, or Security certifications, Compass connects exam objectives to sessions, labs, and experts already in the room.",
-    examples: [
-      "IBM watsonx Data Engineer",
-      "IBM Cloud Pak for Integration",
-      "IBM Security QRadar SIEM",
-    ],
+    id: "certification",
+    title: "Certification",
+    goal: "Pass a certification",
+    image: "/event/certification.jpg",
+    flow: ["Choose goal", "Build plan", "Attend sessions", "Gain readiness", "Take exam"],
+    accent: "#a56eff",
   },
   {
-    kicker: "Contact intelligence",
-    title: "Find experts, peers, mentors, and champions.",
-    body: "Compass surfaces the people who can answer your questions — IBM Champions, domain experts, and practitioners who have solved problems like yours.",
+    id: "networking",
+    title: "Networking",
+    goal: "Meet the right people",
+    image: "/event/networking.jpg",
+    flow: ["Interests", "Experts", "Connections"],
+    accent: "#005d5d",
   },
   {
-    kicker: "Networking intelligence",
-    title: "Surface meaningful opportunities.",
-    body: "Shared interests, alumni networks, university communities, and career goals become connection opportunities — not random hallway encounters.",
+    id: "community",
+    title: "Community",
+    goal: "Find your people",
+    image: "/event/community.jpg",
+    flow: ["Communities", "User groups", "Meetups"],
+    accent: "#b45309",
   },
   {
-    kicker: "Experience intelligence",
-    title: "Optimize your week across Community, Learning, and Fun.",
-    body: "Compass balances deep technical learning with community moments and the shared experiences that make TechXchange memorable — shaped to your priorities.",
+    id: "problem-solving",
+    title: "Problem solving",
+    goal: "Solve a business challenge",
+    image: "/event/expo.jpg",
+    flow: ["Challenge", "Content", "Experts", "Solution"],
+    accent: "#da1e28",
   },
 ];
 
@@ -45,47 +65,70 @@ export default function ExplorePage() {
   return (
     <>
       <section className="story-hero story-hero--strong story-hero--spacious">
-        <div className="section-kicker">Why Compass exists</div>
+        <div className="section-kicker">How Compass works</div>
         <h1>How Compass helps you succeed.</h1>
         <p>
-          TechXchange is vast. Compass turns a crowded event into a personal path —
-          learning, certification, connections, and experiences aligned to what you
-          came to achieve.
+          Every attendee arrives with a different goal. Compass maps your intent to
+          sessions, people, and experiences — whether you are here to learn, certify,
+          connect, or solve.
         </p>
       </section>
 
-      {INTELLIGENCE_SECTIONS.map((section, i) => (
-        <section
-          key={section.kicker}
-          className={`narrative-section${i === 0 ? " no-top-border" : ""}`}
-        >
-          <span className="narrative-kicker">{section.kicker}</span>
-          <h2 className="narrative-title">{section.title}</h2>
-          <p className="narrative-body">{section.body}</p>
-          {section.examples && (
-            <ul className="narrative-examples" aria-label="Certification examples">
-              {section.examples.map(ex => (
-                <li key={ex}>{ex}</li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+      <div className="explore-journeys">
+        {JOURNEYS.map((journey, i) => (
+          <section
+            key={journey.id}
+            className={`explore-journey${i === 0 ? " no-top-border" : ""}`}
+            aria-labelledby={`journey-${journey.id}`}
+          >
+            <div className="explore-journey-image">
+              <Image
+                src={journey.image}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 100vw, 480px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+            <div className="explore-journey-body">
+              <span className="narrative-kicker" style={{ color: journey.accent }}>
+                {journey.title}
+              </span>
+              <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
+                {journey.goal}
+              </h2>
+              <ol className="explore-pathway" aria-label={`${journey.title} pathway`}>
+                {journey.flow.map((step, stepIndex) => (
+                  <li key={step} className="explore-pathway-step">
+                    <span
+                      className="explore-pathway-marker"
+                      style={{ borderColor: journey.accent, color: journey.accent }}
+                    >
+                      {stepIndex + 1}
+                    </span>
+                    <span className="explore-pathway-label">{step}</span>
+                    {stepIndex < journey.flow.length - 1 && (
+                      <span className="explore-pathway-connector" aria-hidden="true">↓</span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        ))}
+      </div>
 
       <section className="final-band">
         <div>
           {user && enrolled ? (
             <>
-              <h2>Your Compass is live.</h2>
-              <p>Sessions, Champions, and your personalised plan are ready.</p>
+              <h2>Your journey is underway.</h2>
+              <p>Open My Experience to see your personalized path taking shape.</p>
             </>
           ) : (
             <>
-              <h2>Ready to build your path?</h2>
-              <p>
-                Tell Compass what matters to you and get a personalized TechXchange
-                experience in minutes.
-              </p>
+              <h2>Start your journey.</h2>
+              <p>Tell Compass what you came to achieve and build your TechXchange experience.</p>
             </>
           )}
         </div>

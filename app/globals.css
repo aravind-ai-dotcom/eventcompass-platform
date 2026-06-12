@@ -933,7 +933,310 @@ img { max-width: 100%; display: block; }
 
 .hero-shell--home {
   grid-template-columns: minmax(0, 1fr);
-  padding-bottom: 28px;
+  padding-bottom: 20px;
+}
+.hero-shell--compact {
+  padding: 24px 0 28px;
+}
+.home-hero-title {
+  font-size: clamp(2rem, 3.8vw, 3.4rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.04em !important;
+  margin: 0 0 14px !important;
+  max-width: 720px !important;
+}
+.hero-shell--compact .hero-copy p {
+  font-size: clamp(0.98rem, 1.1vw, 1.08rem);
+  max-width: 580px;
+}
+.hero-shell--compact .hero-actions {
+  margin-top: 20px;
+}
+.home-section-title {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  font-weight: 520;
+  margin: 0;
+}
+
+/* Nostalgia / belonging row */
+.nostalgia-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+@media (min-width: 600px) {
+  .nostalgia-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .nostalgia-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+}
+.nostalgia-column-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-weight: 680;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.nostalgia-column-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.nostalgia-column-list li {
+  font-size: 0.94rem;
+  color: var(--text);
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Home image band */
+.home-image-band {
+  display: grid;
+  grid-template-columns: 1fr;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .home-image-band { grid-template-columns: 1.2fr 1fr; min-height: 320px; }
+}
+.home-image-band-media {
+  position: relative;
+  min-height: 220px;
+  background: var(--surface);
+}
+@media (min-width: 768px) {
+  .home-image-band-media { min-height: 100%; }
+}
+.home-image-band-copy {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+.home-image-band-metric {
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 420;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0;
+  color: var(--text);
+}
+.home-image-band-metric span {
+  display: block;
+  font-size: 0.88rem;
+  letter-spacing: 0;
+  color: var(--muted);
+  font-weight: 480;
+  margin-top: 6px;
+}
+.home-image-band-sentence {
+  color: var(--soft);
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 8px;
+  max-width: 420px;
+}
+
+/* Explore journeys */
+.explore-journeys { display: grid; gap: 0; }
+.explore-journey {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  padding: 48px 0;
+}
+.explore-journey.no-top-border { border-top: 0; }
+@media (min-width: 768px) {
+  .explore-journey {
+    grid-template-columns: minmax(280px, 42%) minmax(0, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+}
+.explore-journey-image {
+  position: relative;
+  min-height: 220px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+@media (min-width: 768px) {
+  .explore-journey-image { min-height: 280px; }
+}
+.explore-journey-body { padding-top: 8px; }
+.explore-journey-goal {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-weight: 520;
+  margin: 0 0 24px;
+}
+.explore-pathway {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+@media (min-width: 768px) {
+  .explore-pathway {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
+  .explore-pathway-step { flex-direction: column; align-items: flex-start; }
+  .explore-pathway-connector { display: none; }
+}
+.explore-pathway-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.explore-pathway-marker {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--accent);
+  font-size: 0.88rem;
+  font-weight: 680;
+  font-family: var(--font-mono, ui-monospace);
+}
+.explore-pathway-label {
+  font-size: 0.96rem;
+  font-weight: 540;
+  color: var(--text);
+  line-height: 1.3;
+}
+.explore-pathway-connector {
+  margin-left: 48px;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Pulse intent — narrative list */
+.pulse-intent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 560px;
+  display: grid;
+  gap: 0;
+}
+.pulse-intent-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.96rem;
+  color: var(--text);
+}
+.pulse-intent-list li:first-child { border-top: 1px solid var(--line); }
+.pulse-intent-list em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+/* Voice Compass companion card */
+.voice-companion-card {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(15, 98, 254, 0.04) 0%, var(--surface) 100%);
+  padding: 28px 28px 24px;
+}
+.voice-companion-head {
+  margin-bottom: 20px;
+  max-width: 520px;
+}
+.voice-companion-head h2 {
+  font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+  font-weight: 520;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
+  line-height: 1.15;
+}
+.voice-companion-head p {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+  margin: 0;
+}
+.voice-companion-mic-wrap {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.vcb-btn-companion {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  padding: 0;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 6px rgba(120, 169, 255, 0.08);
+}
+.profile-identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px 28px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.profile-identity-item label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.profile-identity-item p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+.plan-mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.plan-mode-chip {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 560;
+  font-family: inherit;
+  cursor: pointer;
+}
+.plan-mode-chip.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(120, 169, 255, 0.08);
 }
 
 .event-story-rotator {
@@ -1304,11 +1607,14 @@ img { max-width: 100%; display: block; }
   background: var(--surface);
   padding: 14px 16px;
 }
-.compass-signal-card {
-  border-left: 3px solid var(--accent);
-}
 .compass-signal-card--complete {
-  border-left-color: var(--purple);
+  border-color: var(--purple-border);
+}
+.compass-energy-sub {
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin: 0 0 9px;
+  line-height: 1.4;
 }
 .compass-signal-kicker {
   color: var(--accent);

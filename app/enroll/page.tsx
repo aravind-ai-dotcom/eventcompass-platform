@@ -544,7 +544,7 @@ export default function EnrollPage() {
       <>
         <section className="compact-hero enroll-hero">
           <div className="section-kicker">Build My Compass</div>
-          <h1>Tell Compass once. Refine later.</h1>
+          <h1>Tell Compass what matters to you.</h1>
           <p>
             Sign in or create an account to start. A few strong signals are enough —
             you can always update your profile from My Compass.
@@ -722,11 +722,7 @@ export default function EnrollPage() {
         <div className="section-kicker">
           {isEditMode ? "Refine My Compass" : "Build My Compass"}
         </div>
-        <h1>
-          {isEditMode
-            ? "Refine what Compass knows."
-            : "Tell Compass once. Refine later."}
-        </h1>
+        <h1>Tell Compass what matters to you.</h1>
         <p>
           {isEditMode
             ? "Update your goals, interests, or connection intent — your scores and matches refresh immediately."
@@ -755,12 +751,12 @@ export default function EnrollPage() {
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>First name</FieldLabel>
                 <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-                  placeholder="Maya" style={iS} />
+                  aria-label="First name" style={iS} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Last name</FieldLabel>
                 <input type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-                  placeholder="Patel" style={iS} />
+                  aria-label="Last name" style={iS} />
               </label>
             </div>
 
@@ -778,12 +774,12 @@ export default function EnrollPage() {
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Country</FieldLabel>
                 <input type="text" value={country} onChange={e => setCountry(e.target.value)}
-                  placeholder="United States" style={iS} />
+                  aria-label="Country" style={iS} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>City</FieldLabel>
                 <input type="text" value={city} onChange={e => setCity(e.target.value)}
-                  placeholder="Atlanta" style={iS} />
+                  aria-label="City" style={iS} />
               </label>
             </div>
 
@@ -871,13 +867,13 @@ export default function EnrollPage() {
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Organization / Company</FieldLabel>
                 <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
-                  placeholder="Acme Corp" style={iS} />
+                  aria-label="Organization" style={iS} />
               </label>
               <div style={twoCol}>
                 <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <FieldLabel>Job title</FieldLabel>
                   <input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)}
-                    placeholder="Platform Engineer" style={iS} />
+                    aria-label="Job title" style={iS} />
                 </label>
                 <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                   <FieldLabel>Industry</FieldLabel>

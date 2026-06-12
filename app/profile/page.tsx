@@ -547,12 +547,12 @@ export default function EnrollPage() {
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>First name</FieldLabel>
                 <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-                  placeholder="Maya" style={iS} />
+                  aria-label="First name" style={iS} />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>Last name</FieldLabel>
                 <input type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-                  placeholder="Patel" style={iS} />
+                  aria-label="Last name" style={iS} />
               </label>
             </div>
 
@@ -590,7 +590,7 @@ export default function EnrollPage() {
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
               <FieldLabel>Organization / Company</FieldLabel>
               <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
-                placeholder="Acme Corp" style={iS} />
+                aria-label="Organization" style={iS} />
             </label>
 
             <div style={twoCol}>

@@ -1,13 +1,14 @@
 "use client";
 // =============================================================================
 // EventCompass — Home
-// Hero narrative + event story cards + action-inspiring live signals.
+// Why attend: imagery-first narrative + belonging signals.
 // =============================================================================
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
-import { useAuth } from "@/context/AuthContext";
+import { countryFlag, inc, top } from "@/lib/roomSignals";
 
 const BASE = "organizations/ibm/events/txc2026";
 type RawDoc = Record<string, unknown>;
@@ -19,81 +20,88 @@ interface HomeSignals {
   connectionIntent: number;
 }
 
-const STORY_CARDS = [
+interface RoomSnapshot {
+  countries: Record<string, number>;
+  universities: Record<string, number>;
+  employers: Record<string, number>;
+  communities: Record<string, number>;
+}
+
+const STORY_SLIDES = [
   {
     id: "community",
+    image: "/event/community.jpg",
     kicker: "Community",
-    title: "Shared interests forming before the week begins.",
-    insight: "Community meetups and conversations across the event.",
-    cta: "See the pulse",
+    statKey: "attendees" as const,
+    statLabel: "attendees shaping the room",
+    sentence: "Shared interests forming before the week begins.",
     href: "/pulse",
-    imageClass: "event-story-image event-story-image--community",
-    stat: (s: HomeSignals) => s.attendees,
-    statLabel: "attendee signals in the room",
+    cta: "See the pulse",
   },
   {
     id: "champions",
+    image: "/event/champions.jpg",
     kicker: "Champions",
-    title: "Experts sharing real-world experience.",
-    insight: "IBM Champions bring domain depth across every track.",
-    cta: "Meet champions",
+    statKey: "champions" as const,
+    statLabel: "experts ready to connect",
+    sentence: "IBM Champions bring real-world depth across every track.",
     href: "/champions",
-    imageClass: "event-story-image event-story-image--champions",
-    stat: (s: HomeSignals) => s.champions,
-    statLabel: "champions available",
+    cta: "Meet champions",
   },
   {
     id: "main-stage",
+    image: "/event/main-stage.jpg",
     kicker: "Main stage",
-    title: "Keynotes, launches, and industry insights.",
-    insight: "The shared moments that anchor the week together.",
-    cta: "Browse sessions",
+    statKey: "sessions" as const,
+    statLabel: "sessions across the week",
+    sentence: "Keynotes, launches, and the moments that anchor TechXchange.",
     href: "/sessions",
-    imageClass: "event-story-image event-story-image--main-stage",
-    stat: (s: HomeSignals) => s.sessions,
-    statLabel: "sessions indexed",
+    cta: "Browse sessions",
   },
   {
-    id: "meetings",
-    kicker: "1:1 connections",
-    title: "Opportunities to meet peers and mentors.",
-    insight: "Meet the Expert sessions and champion conversations.",
-    cta: "Build My Compass",
+    id: "networking",
+    image: "/event/networking.jpg",
+    kicker: "Networking",
+    statKey: "connectionIntent" as const,
+    statLabel: "open to meaningful connections",
+    sentence: "Peers, mentors, and experts — matched to your goals.",
     href: "/enroll",
-    imageClass: "event-story-image event-story-image--meetings",
-    stat: (s: HomeSignals) => s.connectionIntent,
-    statLabel: "open to connecting",
+    cta: "Build My Compass",
   },
 ] as const;
 
-function inc(map: Record<string, number>, key: unknown) {
-  const k = String(key ?? "").trim();
-  if (!k) return;
-  map[k] = (map[k] ?? 0) + 1;
-}
-
-function StatLine({ loading, value, label, insight }: { loading: boolean; value: number; label: string; insight: string }) {
-  if (loading) return <p className="event-story-stat">…</p>;
-  if (value > 0) {
-    return (
-      <p className="event-story-stat">
-        {value} <span>{label}</span>
-      </p>
-    );
-  }
-  return <p className="event-story-insight">{insight}</p>;
+function NostalgiaColumn({
+  title,
+  rows,
+  renderLabel,
+}: {
+  title: string;
+  rows: [string, number][];
+  renderLabel?: (name: string) => React.ReactNode;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="nostalgia-column">
+      <h3 className="nostalgia-column-title">{title}</h3>
+      <ul className="nostalgia-column-list">
+        {rows.map(([name]) => (
+          <li key={name}>{renderLabel ? renderLabel(name) : name}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default function HomePage() {
-  const { enrolled } = useAuth();
   const [activeSlide, setActiveSlide] = useState(0);
   const [signals, setSignals] = useState<HomeSignals | null>(null);
+  const [room, setRoom] = useState<RoomSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveSlide(i => (i + 1) % STORY_CARDS.length);
-    }, 6000);
+      setActiveSlide(i => (i + 1) % STORY_SLIDES.length);
+    }, 7000);
     return () => clearInterval(timer);
   }, []);
 
@@ -106,9 +114,22 @@ export default function HomePage() {
           getDocs(collection(db, `${BASE}/participants`)),
         ]);
 
+        const countries: Record<string, number> = {};
+        const universities: Record<string, number> = {};
+        const employers: Record<string, number> = {};
+        const communities: Record<string, number> = {};
         let connectionIntent = 0;
+
         for (const d of partSnap.docs) {
           const p = d.data() as RawDoc;
+          inc(countries, p.country ?? p.geo ?? "");
+          const edu = (p.education as Array<Record<string, unknown>>) ?? [];
+          for (const e of edu) if (e.institution) inc(universities, e.institution);
+          const emp = (p.past_employers as Array<Record<string, unknown>>) ?? [];
+          for (const e of emp) if (e.company) inc(employers, e.company);
+          const esp = (p.event_signal_profile as Record<string, unknown>) ?? {};
+          ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(communities, t));
+          ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(communities, r));
           const ni = (p.networking_identity as Record<string, boolean>) ?? {};
           if (ni.open_to_alumni_connections) connectionIntent++;
           if (ni.open_to_past_colleague_connections) connectionIntent++;
@@ -122,8 +143,10 @@ export default function HomePage() {
           sessions: sessSnap.size,
           connectionIntent,
         });
+        setRoom({ countries, universities, employers, communities });
       } catch {
         setSignals(null);
+        setRoom(null);
       } finally {
         setLoading(false);
       }
@@ -132,136 +155,113 @@ export default function HomePage() {
   }, []);
 
   const s = signals ?? { attendees: 0, champions: 0, sessions: 0, connectionIntent: 0 };
+  const slide = STORY_SLIDES[activeSlide];
+  const statVal = s[slide.statKey];
 
-  const actionMetrics = [
-    { label: "Attendees in the room", val: loading ? "…" : s.attendees, show: s.attendees > 0 },
-    { label: "Champions available", val: loading ? "…" : s.champions, show: s.champions > 0 },
-    { label: "Sessions to explore", val: loading ? "…" : s.sessions, show: s.sessions > 0 },
-    { label: "Connection intent signals", val: loading ? "…" : s.connectionIntent, show: s.connectionIntent > 0 },
-  ].filter(m => m.show);
+  const hasNostalgia = room && (
+    Object.keys(room.countries).length > 0 ||
+    Object.keys(room.universities).length > 0 ||
+    Object.keys(room.employers).length > 0 ||
+    Object.keys(room.communities).length > 0
+  );
 
   return (
     <>
-      <section className="hero-shell hero-shell--home">
+      <section className="hero-shell hero-shell--home hero-shell--compact">
         <div className="hero-copy">
           <span className="eyebrow">IBM TechXchange 2026</span>
-          <h1>See who is here, what is moving, and where opportunities are forming.</h1>
+          <h1 className="home-hero-title">Four days to learn, connect, and advance.</h1>
           <p>
-            Compass connects learning, community, and connections into a meaningful
-            event experience — shaped by the people and sessions already in the room.
+            Compass turns a vast event into a personal path — shaped by the people,
+            sessions, and communities already in the room.
           </p>
           <div className="hero-actions">
             <Link href="/enroll" className="btn-primary">Build My Compass</Link>
-            <Link href="/pulse" className="btn-secondary">See the pulse</Link>
+            <Link href="/explore" className="btn-secondary">Why Compass</Link>
           </div>
         </div>
       </section>
 
-      <section className="story-section story-section--compact no-top-border">
-        <div className="story-head">
+      {hasNostalgia && room && (
+        <section className="story-section story-section--compact no-top-border">
+          <div className="story-head story-head--tight">
+            <div className="section-kicker">Already in the room</div>
+            <h2 className="home-section-title">Find your people before you arrive.</h2>
+            <p className="story-lead">
+              Countries, universities, employers, and communities represented across TechXchange.
+            </p>
+          </div>
+          <div className="nostalgia-grid">
+            <NostalgiaColumn
+              title="Countries"
+              rows={top(room.countries, 5)}
+              renderLabel={name => (
+                <>
+                  <span aria-hidden="true">{countryFlag(name)}</span> {name}
+                </>
+              )}
+            />
+            <NostalgiaColumn title="Universities" rows={top(room.universities, 5)} />
+            <NostalgiaColumn title="Former employers" rows={top(room.employers, 5)} />
+            <NostalgiaColumn title="Communities" rows={top(room.communities, 5)} />
+          </div>
+          <p className="story-note">
+            Aggregate signals only.{" "}
+            <Link href="/pulse" style={{ color: "var(--accent)" }}>See the full pulse →</Link>
+          </p>
+        </section>
+      )}
+
+      <section className="story-section story-section--compact">
+        <div className="story-head story-head--tight">
           <div className="section-kicker">The week ahead</div>
-          <h2>Four ways the event comes alive.</h2>
+          <h2 className="home-section-title">Four ways the event comes alive.</h2>
         </div>
 
-        <div className="event-story-rotator" aria-live="polite">
-          {STORY_CARDS.map((card, idx) => (
-            <article
-              key={card.id}
-              className={`event-story-card${idx === activeSlide ? " is-active" : ""}`}
-              aria-hidden={idx !== activeSlide}
-            >
-              {/* IMAGE: /public/event/{card.id}.jpg */}
-              <div className={card.imageClass} role="img" aria-label={`${card.kicker} at TechXchange`} />
-              <div className="event-story-card-body">
-                <span className="section-kicker">{card.kicker}</span>
-                <StatLine loading={loading} value={card.stat(s)} label={card.statLabel} insight={card.insight} />
-                <h3>{card.title}</h3>
-                <Link href={card.href} className="action-chip">{card.cta} →</Link>
-              </div>
-            </article>
-          ))}
-        </div>
+        <article className="home-image-band" aria-live="polite">
+          <div className="home-image-band-media">
+            <Image
+              src={slide.image}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, 60vw"
+              priority={activeSlide === 0}
+              style={{ objectFit: "cover" }}
+            />
+          </div>
+          <div className="home-image-band-copy">
+            <span className="section-kicker">{slide.kicker}</span>
+            {!loading && statVal > 0 && (
+              <p className="home-image-band-metric">
+                {statVal} <span>{slide.statLabel}</span>
+              </p>
+            )}
+            <p className="home-image-band-sentence">{slide.sentence}</p>
+            <Link href={slide.href} className="btn-secondary">{slide.cta} →</Link>
+          </div>
+        </article>
 
         <div className="event-story-dots" role="tablist" aria-label="Event story slides">
-          {STORY_CARDS.map((card, idx) => (
+          {STORY_SLIDES.map((item, idx) => (
             <button
-              key={card.id}
+              key={item.id}
               type="button"
               role="tab"
               aria-selected={idx === activeSlide}
-              aria-label={`Show ${card.kicker}`}
+              aria-label={`Show ${item.kicker}`}
               className={idx === activeSlide ? "is-active" : ""}
               onClick={() => setActiveSlide(idx)}
             />
           ))}
         </div>
-
-        <div className="event-story-grid">
-          {STORY_CARDS.map(card => (
-            <article key={card.id} className="event-story-card event-story-card--grid">
-              <div className={`${card.imageClass} event-story-image--compact`} role="img" aria-hidden="true" />
-              <div className="event-story-card-body">
-                <span className="section-kicker">{card.kicker}</span>
-                <StatLine loading={loading} value={card.stat(s)} label={card.statLabel} insight={card.insight} />
-                <h3>{card.title}</h3>
-                <Link href={card.href} className="action-chip">{card.cta} →</Link>
-              </div>
-            </article>
-          ))}
-        </div>
       </section>
 
-      {actionMetrics.length > 0 && (
-        <section className="story-section story-section--compact">
-          <div className="story-head">
-            <div className="section-kicker">Live signals</div>
-            <h2>What is already taking shape.</h2>
-            <p className="story-lead">Aggregate community insights — never individual attendee details.</p>
-          </div>
-          <div className="action-signal-row">
-            {actionMetrics.map(m => (
-              <article key={m.label} className="action-signal-card">
-                <p className="quiet-count">{m.val}</p>
-                <p>{m.label}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="section section--compact">
-        <div className="section-head">
-          <div>
-            <div className="section-kicker">Compass experience</div>
-            <h2>Connect goals to what TechXchange offers.</h2>
-          </div>
-          <p>
-            Compass helps attendees turn learning, community, and connections into
-            a meaningful event experience.
-          </p>
+      <section className="final-band">
+        <div>
+          <h2>Your TechXchange path starts here.</h2>
+          <p>Tell Compass what matters — learning, certification, community, or connections.</p>
         </div>
-        <div className="opportunity-grid three">
-          <article className="opportunity-card opportunity-card--compact">
-            <div className="card-meta"><span>01</span><b>Learning</b></div>
-            <h3>Explore sessions by topic and track.</h3>
-            <p>Technical breakouts, certifications, labs, and expert sessions across the catalog.</p>
-            <Link href="/sessions" className="action-chip">Browse sessions →</Link>
-          </article>
-          <article className="opportunity-card opportunity-card--compact">
-            <div className="card-meta"><span>02</span><b>Community</b></div>
-            <h3>See who is shaping the room.</h3>
-            <p>Countries, universities, employers, and interest groups already represented.</p>
-            <Link href="/explore" className="action-chip">Explore the room →</Link>
-          </article>
-          <article className="opportunity-card opportunity-card--compact">
-            <div className="card-meta"><span>03</span><b>Fun</b></div>
-            <h3>Moments that anchor the week.</h3>
-            <p>Keynotes, receptions, and shared experiences across TechXchange.</p>
-            <Link href={enrolled ? "/experience" : "/enroll"} className="action-chip">
-              {enrolled ? "Open My Compass →" : "Build My Compass →"}
-            </Link>
-          </article>
-        </div>
+        <Link href="/enroll" className="btn-primary">Build My Compass →</Link>
       </section>
     </>
   );

@@ -252,6 +252,7 @@ export default function NextBestMove({
 
       <div style={{ background: "transparent" }}>
         <VoiceCompassButton
+          variant="companion"
           nextBestMove={nextBestMove}
           topSession={topSession ?? null}
           topChampion={topChampion ?? null}

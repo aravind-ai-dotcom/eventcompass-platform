@@ -340,9 +340,10 @@ function EnergyIndicator({ learning, community, fun }: {
 
   return (
     <div className="compass-energy-card">
-      <p style={{ color: "var(--accent)", fontSize: "0.64rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 0 9px" }}>
+      <p style={{ color: "var(--accent)", fontSize: "0.64rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 0 4px" }}>
         Energy
       </p>
+      <p className="compass-energy-sub">Your four-day experience balance</p>
       {/* Segmented fuel-cell bar */}
       <div style={{ display: "flex", height: "6px", gap: "1px", marginBottom: "9px", overflow: "hidden" }}>
         {total === 0 ? (
@@ -1017,26 +1018,27 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
 
   return (
     <section className="section">
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "4px" }}>
-        <div className="section-kicker" style={{ margin: 0 }}>What you told Compass</div>
-        <a href="/enroll?mode=edit" style={{ color: "var(--accent)", fontSize: "0.88rem" }}>Refine My Compass &rarr;</a>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+        <div>
+          <div className="section-kicker">What you told Compass</div>
+          <h2 style={{ fontSize: "clamp(1.5rem, 2.4vw, 2rem)", fontWeight: 520, letterSpacing: "-0.035em", margin: "4px 0 8px", lineHeight: 1.12 }}>
+            Your profile signals
+          </h2>
+          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.92rem", maxWidth: "560px", lineHeight: 1.55 }}>
+            Compass uses these signals to personalise session scores, Champion matches, and your week plan.
+          </p>
+        </div>
+        <a href="/enroll?mode=edit" style={{ color: "var(--accent)", fontSize: "0.88rem", flexShrink: 0 }}>Refine My Compass &rarr;</a>
       </div>
-      <p style={{ color: "var(--muted)", margin: "4px 0 20px", fontSize: "0.92rem" }}>
-        Compass uses these signals to personalise your event experience &mdash; session scores,
-        Champion matches, and your four-day plan.
-      </p>
 
-      {/* Identity card — clean horizontal bar, no mosaic */}
       {identityItems.length > 0 && (
-        <div style={{ background: "var(--panel)", border: "1px solid var(--line)", padding: "16px 20px", marginBottom: "12px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "24px" }}>
-            {identityItems.map(function(item) { return (
-              <div key={item.key}>
-                <p style={{ color: "var(--muted)", fontSize: "0.7rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 3px" }}>{item.key}</p>
-                <p style={{ color: "var(--soft)", fontSize: "0.95rem", margin: 0, fontWeight: 500 }}>{item.value}</p>
-              </div>
-            ); })}
-          </div>
+        <div className="profile-identity-grid">
+          {identityItems.map(function(item) { return (
+            <div key={item.key} className="profile-identity-item">
+              <label>{item.key}</label>
+              <p>{item.value}</p>
+            </div>
+          ); })}
         </div>
       )}
 
@@ -1080,6 +1082,8 @@ function getSessionsForDay(sessions: ScoredSession[], day: EventDay, fallbackInd
 return [];
 }
 
+type PlanConflictMode = "best-fit" | "show-both" | "capacity";
+
 function DayTabExperience({
   learningList,
   communityList,
@@ -1092,6 +1096,7 @@ function DayTabExperience({
   sched?: ExpScheduleState;
 }) {
   const [activeDay, setActiveDay] = useState<EventDay>("Monday");
+  const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
   const dayIdx = EVENT_DAYS.indexOf(activeDay);
 
   const dayLearning  = getSessionsForDay(learningList,  activeDay, dayIdx).slice(0, 3);
@@ -1104,14 +1109,31 @@ function DayTabExperience({
     <section className="section">
       <div className="section-head">
         <div>
-          <div className="section-kicker">Your four-day plan</div>
-          <h2>TechXchange 2026.</h2>
+          <div className="section-kicker">Your AI-powered week</div>
+          <h2>Compass selects and prioritises your sessions.</h2>
         </div>
         <p>
-          Compass balances three dimensions of a great event: learning that advances your goals,
-          meaningful connections with people who share your background, and moments that make the
-          week memorable. Each day is scored and organised for your profile.
+          A four-day plan shaped to your goals — Community, Learning, and Fun balanced across the week.
+          Conflict handling follows your preference below.
         </p>
+      </div>
+
+      <div className="plan-mode-row" role="group" aria-label="Conflict handling">
+        {([
+          { id: "best-fit" as const, label: "Best fit" },
+          { id: "show-both" as const, label: "Show both" },
+          { id: "capacity" as const, label: "Capacity optimization" },
+        ]).map(mode => (
+          <button
+            key={mode.id}
+            type="button"
+            className={`plan-mode-chip${planMode === mode.id ? " is-active" : ""}`}
+            aria-pressed={planMode === mode.id}
+            onClick={() => setPlanMode(mode.id)}
+          >
+            {mode.label}
+          </button>
+        ))}
       </div>
 
       <div
@@ -1474,6 +1496,18 @@ export default function ExperiencePage() {
         </div>
       </section>
 
+      {/* ── Week in balance — top-level summary ─────────────────────────── */}
+      <section className="section">
+        <div className="section-head narrow">
+          <div>
+            <div className="section-kicker">Your week in balance</div>
+            <h2>Community · Learning · Fun.</h2>
+          </div>
+          <p>How your recommended sessions distribute across your four-day experience.</p>
+        </div>
+        <ExperienceBalance sessionCounts={pillarCounts} />
+      </section>
+
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
       {nextBestMove && (
         <section className="section intelligence-surface intelligence-surface--prominent">
@@ -1504,38 +1538,9 @@ export default function ExperiencePage() {
         </section>
       )}
 
-      {/* ── Experience balance — Community / Learning / Fun ─────────── */}
-      <section className="section">
-        <div className="section-head narrow">
-          <div>
-            <div className="section-kicker">Your week in balance</div>
-            <h2>Community · Learning · Fun.</h2>
-          </div>
-          <p>
-            How your recommended sessions distribute across the three pillars —
-            adjust anytime as you save or dismiss sessions.
-          </p>
-        </div>
-        <ExperienceBalance sessionCounts={pillarCounts} />
-      </section>
-
-      {/* ── Event context (compact) ──────────────────────────────────── */}
-      <section className="section">
-        <div className="section-head">
-          <div>
-            <div className="section-kicker">Event context</div>
-            <h2>What Compass is working with.</h2>
-          </div>
-          <p>
-            {counts.sessions} sessions · {counts.champions} Champions · {counts.participants} attendee signals indexed.
-            {topScore > 0 && <> Top match score: {topScore}.</>}
-          </p>
-        </div>
-      </section>
-
       <WhatYouToldCompass participant={participant} />
 
-      {/* ── Day-tab experience (sessions only) ─────────────────────────── */}
+      {/* ── AI-powered week plan ───────────────────────────────────────── */}
       <DayTabExperience
         learningList={learningList}
         communityList={communityList}
