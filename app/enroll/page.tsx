@@ -334,7 +334,7 @@ function ConfirmScreen({
             : `Your Compass is ready${firstName ? `, ${firstName}` : ""}.`}
         </h1>
         <p>
-          Sessions, champions, and your Next Best Move are now personalised for you.
+          Sessions, champions, and your Next Best Move are now personalized for you.
           Open My Experience to see your TechXchange plan.
         </p>
       </section>
@@ -386,6 +386,9 @@ export default function EnrollPage() {
   const [industry,       setIndustry]       = useState("");
   const [persona,        setPersona]        = useState("");
   const [linkedinHandle, setLinkedinHandle] = useState("");
+  const [githubProfile,  setGithubProfile]  = useState("");
+  const [personalWebsite, setPersonalWebsite] = useState("");
+  const [attendancePlan, setAttendancePlan] = useState("");
 
   // ── 03 · Your Background ────────────────────────────────────────────────────
   const [university,     setUniversity]     = useState("");
@@ -468,6 +471,12 @@ export default function EnrollPage() {
         if (per) setPersona(per);
         const liUrl = p?.linkedin_url || u?.linkedin_url || "";
         if (liUrl) setLinkedinHandle(cleanLinkedInHandle(liUrl));
+        const gh = (p?.github_profile || u?.github_profile || "") as string;
+        if (gh) setGithubProfile(gh);
+        const web = (p?.personal_website || u?.personal_website || "") as string;
+        if (web) setPersonalWebsite(web);
+        const attend = (p?.attendance_plan || (p?.registration as Record<string, string> | undefined)?.attendance_plan || "") as string;
+        if (attend) setAttendancePlan(attend);
 
         // Background
         const uni = (p?.education as Array<{institution?: string}> | undefined)?.[0]?.institution || "";
@@ -600,6 +609,7 @@ export default function EnrollPage() {
         ...goalLabels, ...tracks, ...commLabels,
         university, pastEmployer, ...careerInterest,
         organization, jobTitle, industry, persona, hopeText.trim(), country, city,
+        githubProfile.trim(), personalWebsite.trim(),
       ].filter(Boolean).map(v => v.toLowerCase());
 
       const consentV1 = {
@@ -639,6 +649,9 @@ export default function EnrollPage() {
           industry:         industry.trim(),
           persona,
           linkedin_url:     linkedinUrl,
+          github_profile:   githubProfile.trim(),
+          personal_website: personalWebsite.trim(),
+          attendance_plan:  attendancePlan,
           country:          country.trim(),
           city:             city.trim(),
           education:        university.trim() ? [{ institution: university.trim() }] : [],
@@ -661,7 +674,8 @@ export default function EnrollPage() {
             intent_narrative:  { aspiration: hopeText.trim() },
           },
           registration: {
-            attending:     true,
+            attending:     attendancePlan === "yes",
+            attendance_plan: attendancePlan,
             registered:    true,
             attendee_type: "general",
             industry:      industry.trim(),
@@ -689,6 +703,8 @@ export default function EnrollPage() {
           goals:            goalLabels,
           interests:        tracks,
           linkedin_url:     linkedinUrl,
+          github_profile:   githubProfile.trim(),
+          personal_website: personalWebsite.trim(),
           education:        university.trim() ? [{ institution: university.trim() }] : [],
           past_employers:   pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
           career_interests: careerInterest,
@@ -743,7 +759,7 @@ export default function EnrollPage() {
           <StepLabel
             step="01 · About You"
             title="The basics."
-            subtitle="Name and location — enough for Compass to personalise your badge and regional sessions."
+            subtitle="Name and location — enough for Compass to personalize your badge and regional sessions."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
@@ -793,6 +809,24 @@ export default function EnrollPage() {
             title="Goals — why are you attending?"
             subtitle="Pick one or more intent buckets. Add free-text, tracks, and connection preferences when you are ready."
           />
+
+          <div style={{ marginBottom: "24px" }}>
+            <SubLabel title="Are you planning to attend TechXchange?" />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
+              {([
+                { id: "yes", label: "Yes" },
+                { id: "no", label: "No" },
+                { id: "deciding", label: "Still deciding" },
+              ] as const).map(opt => (
+                <Chip
+                  key={opt.id}
+                  label={opt.label}
+                  selected={attendancePlan === opt.id}
+                  onClick={() => setAttendancePlan(attendancePlan === opt.id ? "" : opt.id)}
+                />
+              ))}
+            </div>
+          </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
             {GOALS.map(o => (
@@ -911,6 +945,16 @@ export default function EnrollPage() {
                 </div>
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>GitHub profile (optional)</FieldLabel>
+                <input type="url" value={githubProfile} onChange={e => setGithubProfile(e.target.value)}
+                  placeholder="https://github.com/yourhandle" aria-label="GitHub profile" style={iS} />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Personal website (optional)</FieldLabel>
+                <input type="url" value={personalWebsite} onChange={e => setPersonalWebsite(e.target.value)}
+                  placeholder="https://yoursite.com" aria-label="Personal website" style={iS} />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <FieldLabel>University / School</FieldLabel>
                 <input type="text" value={university} onChange={e => setUniversity(e.target.value)}
                   placeholder="e.g. Georgia Tech, University of Toronto" style={iS} />
@@ -1015,7 +1059,7 @@ export default function EnrollPage() {
             <StepLabel
               step="Review"
               title="Your Compass at a glance."
-              subtitle="Here's what Compass will use to personalise your TechXchange experience. You can edit any section above before saving."
+              subtitle="Here's what Compass will use to personalize your TechXchange experience. You can edit any section above before saving."
             />
             <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
 

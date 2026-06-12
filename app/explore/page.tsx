@@ -1,7 +1,7 @@
 "use client";
 // =============================================================================
 // EventCompass — Explore  /explore
-// How Compass helps you succeed — journey maps with imagery-first pathways.
+// How Compass helps you succeed — milestone pathways with photography.
 // =============================================================================
 import Image from "next/image";
 import Link from "next/link";
@@ -36,16 +36,16 @@ const JOURNEYS: Journey[] = [
   {
     id: "networking",
     title: "Networking",
-    goal: "Meet the right people",
-    image: "/event/networking.jpg",
+    goal: "Find your people",
+    image: "/event/people-v2.jpg",
     flow: ["Interests", "Experts", "Connections"],
     accent: "#005d5d",
   },
   {
     id: "community",
     title: "Community",
-    goal: "Find your people",
-    image: "/event/community.jpg",
+    goal: "Find your community",
+    image: "/event/community-v2.jpg",
     flow: ["Communities", "User groups", "Meetups"],
     accent: "#b45309",
   },
@@ -68,9 +68,8 @@ export default function ExplorePage() {
         <div className="section-kicker">How Compass works</div>
         <h1>How Compass helps you succeed.</h1>
         <p>
-          Every attendee arrives with a different goal. Compass maps your intent to
-          sessions, people, and experiences — whether you are here to learn, certify,
-          connect, or solve.
+          Five paths through TechXchange — each mapped to sessions, people, and
+          outcomes aligned to what you came to achieve.
         </p>
       </section>
 
@@ -97,19 +96,20 @@ export default function ExplorePage() {
               <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
                 {journey.goal}
               </h2>
-              <ol className="explore-pathway" aria-label={`${journey.title} pathway`}>
+              <ol className="explore-milestone-path" aria-label={`${journey.title} pathway`}>
                 {journey.flow.map((step, stepIndex) => (
-                  <li key={step} className="explore-pathway-step">
-                    <span
-                      className="explore-pathway-marker"
-                      style={{ borderColor: journey.accent, color: journey.accent }}
-                    >
-                      {stepIndex + 1}
-                    </span>
-                    <span className="explore-pathway-label">{step}</span>
-                    {stepIndex < journey.flow.length - 1 && (
-                      <span className="explore-pathway-connector" aria-hidden="true">↓</span>
-                    )}
+                  <li key={step} className="explore-milestone-step">
+                    <div className="explore-milestone-node">
+                      <span
+                        className="explore-milestone-dot"
+                        style={{ borderColor: journey.accent, background: stepIndex === 0 ? journey.accent : "var(--surface)" }}
+                        aria-hidden="true"
+                      />
+                      {stepIndex < journey.flow.length - 1 && (
+                        <span className="explore-milestone-line" style={{ background: journey.accent }} aria-hidden="true" />
+                      )}
+                    </div>
+                    <span className="explore-milestone-label">{step}</span>
                   </li>
                 ))}
               </ol>

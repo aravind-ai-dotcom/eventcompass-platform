@@ -125,7 +125,7 @@ export default function EventHighlights({ highlights = DEFAULT_HIGHLIGHTS }: { h
           </h2>
         </div>
         <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "360px", margin: 0, lineHeight: 1.5 }}>
-          These are the anchor experiences of TechXchange 2026 — always visible, separate from your personalised plan.
+          These are the anchor experiences of TechXchange 2026 — always visible, separate from your personalized plan.
         </p>
       </div>
 

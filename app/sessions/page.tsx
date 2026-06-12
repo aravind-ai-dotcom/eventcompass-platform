@@ -45,10 +45,13 @@ interface ScoredSession {
 interface ScheduleState {
   savedSchedule:  string[];
   doNotSuggest:   string[];
+  reservedSeats:  string[];
   allSessions:    ScoredSession[];
   onSave:         (id: string) => void;
   onRemove:       (id: string) => void;
   onDoNotSuggest: (id: string) => void;
+  onReserveSeat:  (id: string) => void;
+  onShowInfo:     (session: ScoredSession) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,6 +153,100 @@ function hasConflict(s: ScoredSession, savedIds: string[], allSessions: ScoredSe
   return false;
 }
 
+const DAY_RANK: Record<string, number> = {
+  monday: 0, mon: 0, tuesday: 1, tue: 1, wednesday: 2, wed: 2,
+  thursday: 3, thu: 3, friday: 4, fri: 4,
+};
+
+function daySortKey(day: string): number {
+  const lower = day.toLowerCase();
+  for (const [key, rank] of Object.entries(DAY_RANK)) {
+    if (lower.includes(key)) return rank;
+  }
+  return 50;
+}
+
+/** Sort: day → time → fit score */
+function sortSessionsChronological(a: ScoredSession, b: ScoredSession): number {
+  const dayA = sessionDay(a);
+  const dayB = sessionDay(b);
+  const dayDiff = daySortKey(dayA) - daySortKey(dayB);
+  if (dayDiff !== 0) return dayDiff;
+  if (dayA !== dayB) return dayA.localeCompare(dayB);
+
+  const timeA = parseTime(sessionStart(a));
+  const timeB = parseTime(sessionStart(b));
+  if (timeA !== null && timeB !== null && timeA !== timeB) return timeA - timeB;
+  if (timeA !== null && timeB === null) return -1;
+  if (timeA === null && timeB !== null) return 1;
+
+  return b.compass_score - a.compass_score;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Session detail modal — avoids dead /sessions/{id} routes
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SessionDetailModal({ session, onClose }: { session: ScoredSession; onClose: () => void }) {
+  const type = sessionType(session);
+  const track = primaryTrack(session);
+  const meta = sessionMeta(session);
+  const tags = [
+    ...(session.tracks?.topics ?? []),
+    ...(session.tracks?.products ?? []),
+    ...(session.tracks?.secondary_tracks ?? []),
+  ].filter(Boolean);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="session-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="session-modal-title"
+      onClick={onClose}
+    >
+      <div className="session-modal" onClick={e => e.stopPropagation()}>
+        <button type="button" className="session-modal-close" onClick={onClose} aria-label="Close">
+          ×
+        </button>
+        <p style={{ color: "var(--accent)", fontSize: "0.68rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>
+          {type}{track ? ` · ${track}` : ""}
+        </p>
+        <h2 id="session-modal-title">{session.title}</h2>
+        {meta && <p className="session-modal-meta">{meta}</p>}
+        {session.compass_score > 0 && (
+          <p style={{ fontSize: "0.88rem", color: "var(--text)", margin: "0 0 16px" }}>
+            Compass match: <strong>{session.compass_score}</strong>
+          </p>
+        )}
+        {tags.length > 0 && (
+          <div className="chip-row" style={{ marginBottom: "16px" }}>
+            {tags.slice(0, 8).map(tag => <span key={tag} className="chip">{tag}</span>)}
+          </div>
+        )}
+        {session.compass_reasons.length > 0 && (
+          <>
+            <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "0 0 8px" }}>
+              Why Compass matched this
+            </p>
+            <ul className="session-modal-reasons">
+              {session.compass_reasons.map(r => <li key={r}>{r}</li>)}
+            </ul>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Scoring  (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -220,6 +317,7 @@ function SessionActionBar({ session, sched, compact = false }: {
 }) {
   const isSaved   = sched.savedSchedule.includes(session.id);
   const isDns     = sched.doNotSuggest.includes(session.id);
+  const isReserved = sched.reservedSeats.includes(session.id);
   const conflict  = !isSaved && hasConflict(session, sched.savedSchedule, sched.allSessions);
 
   const baseBtn: React.CSSProperties = {
@@ -264,12 +362,30 @@ function SessionActionBar({ session, sched, compact = false }: {
       gap: "5px",
       alignItems: "center",
     }}>
-      {/* Info — links to session detail route */}
-      <a href={"/sessions/" + session.id} style={baseBtn}>
-        Info &#8599;
-      </a>
+      {/* Info — opens in-page modal (no external route) */}
+      <button
+        type="button"
+        onClick={() => sched.onShowInfo(session)}
+        style={baseBtn}
+      >
+        Info
+      </button>
 
-      {/* Schedule toggle */}
+      {/* Reserve seat — simulates RainFocus registration */}
+      {isReserved ? (
+        <span style={savedBtn}>✓ Reserved</span>
+      ) : (
+        <button
+          onClick={() => sched.onReserveSeat(session.id)}
+          style={baseBtn}
+          title="Simulated seat reservation"
+          type="button"
+        >
+          Reserve seat
+        </button>
+      )}
+
+      {/* Add to calendar — simulates personal schedule */}
       {isSaved ? (
         <button
           onClick={() => sched.onRemove(session.id)}
@@ -277,16 +393,16 @@ function SessionActionBar({ session, sched, compact = false }: {
           title="Remove from your schedule"
           type="button"
         >
-          &#10003; Saved
+          ✓ On calendar
         </button>
       ) : (
         <button
           onClick={() => sched.onSave(session.id)}
           style={baseBtn}
-          title="Add to your schedule"
+          title="Add to your personal schedule"
           type="button"
         >
-          + Schedule
+          Add to calendar
         </button>
       )}
 
@@ -487,6 +603,8 @@ export default function SessionsPage() {
   const [savedSchedule, setSavedSchedule] = useState<string[]>([]);
   const [removedSessions, setRemovedSessions] = useState<string[]>([]);
   const [doNotSuggest,  setDoNotSuggest]  = useState<string[]>([]);
+  const [reservedSeats, setReservedSeats] = useState<string[]>([]);
+  const [detailSession, setDetailSession] = useState<ScoredSession | null>(null);
 
   // Filter state
   const [search,      setSearch]      = useState("");
@@ -514,7 +632,7 @@ export default function SessionsPage() {
         const rawSessions = sessSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
         const scored = rawSessions
           .map((s) => scoreSession(pData, s))
-          .sort((a, b) => b.compass_score - a.compass_score);
+          .sort(sortSessionsChronological);
 
         setAllScored(scored);
         setTotalCount(scored.length);
@@ -563,14 +681,25 @@ export default function SessionsPage() {
     persist({ do_not_suggest_sessions: next });
   }, [doNotSuggest, persist]);
 
+  const handleReserveSeat = useCallback((id: string) => {
+    setReservedSeats(prev => prev.includes(id) ? prev : [...prev, id]);
+  }, []);
+
+  const handleShowInfo = useCallback((session: ScoredSession) => {
+    setDetailSession(session);
+  }, []);
+
   const schedState: ScheduleState = useMemo(() => ({
     savedSchedule,
     doNotSuggest,
+    reservedSeats,
     allSessions: allScored,
     onSave: handleSave,
     onRemove: handleRemove,
     onDoNotSuggest: handleDoNotSuggest,
-  }), [savedSchedule, doNotSuggest, allScored, handleSave, handleRemove, handleDoNotSuggest]);
+    onReserveSeat: handleReserveSeat,
+    onShowInfo: handleShowInfo,
+  }), [savedSchedule, doNotSuggest, reservedSeats, allScored, handleSave, handleRemove, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
 
   // Filter + derive sections
   const { tracks, types, days } = useMemo(() => {
@@ -609,7 +738,10 @@ export default function SessionsPage() {
     return (isFiltered ? filtered : allScored).filter(s => !doNotSuggest.includes(s.id));
   }, [isFiltered, filtered, allScored, doNotSuggest]);
 
-  const recommended = useMemo(() => baseList.slice(0, 6), [baseList]);
+  const recommended = useMemo(
+    () => [...baseList].sort((a, b) => b.compass_score - a.compass_score).slice(0, 6),
+    [baseList],
+  );
 
   const recommendedIds = useMemo(() => new Set(recommended.map(s => s.id)), [recommended]);
 
@@ -662,7 +794,7 @@ export default function SessionsPage() {
         <h1>Sessions that fit your week.</h1>
         <p>
           Compass reads {totalCount} sessions against your profile and surfaces
-          what to prioritise — recommended matches, room momentum, and seats filling fast.
+          what to prioritize — recommended matches, room momentum, and seats filling fast.
         </p>
       </section>
 
@@ -781,7 +913,7 @@ export default function SessionsPage() {
             <div className="section-kicker">{isFiltered ? "Filtered results" : "Browse all"}</div>
             <h2>{isFiltered ? `${catalogSessions.length} session${catalogSessions.length !== 1 ? "s" : ""}` : `All ${totalCount} sessions`}</h2>
           </div>
-          <p>Sorted by match score — highest first.</p>
+          <p>Sorted by day and time — match score breaks ties.</p>
         </div>
 
         {catalogSessions.length === 0 ? (
@@ -813,7 +945,7 @@ export default function SessionsPage() {
           ) : (
             <>
               <h2>Tell Compass your intent.</h2>
-              <p>Build your Compass profile to unlock personalised session scores and your four-day plan.</p>
+              <p>Build your Compass profile to unlock personalized session scores and your four-day plan.</p>
             </>
           )}
         </div>
@@ -822,6 +954,10 @@ export default function SessionsPage() {
           : <Link href="/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
         }
       </section>
+
+      {detailSession && (
+        <SessionDetailModal session={detailSession} onClose={() => setDetailSession(null)} />
+      )}
     </>
   );
 }

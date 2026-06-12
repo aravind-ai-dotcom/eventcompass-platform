@@ -1,7 +1,7 @@
 "use client";
 // =============================================================================
 // EventCompass — Pulse  /pulse
-// What is happening in the room — belonging signals first, not statistics.
+// What is happening in the room — boxed belonging signals, narrative intent.
 // =============================================================================
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
@@ -24,7 +24,7 @@ interface PulseData {
   openToCareer: number;
 }
 
-function NostalgiaColumn({
+function NostalgiaBox({
   title,
   rows,
   renderLabel,
@@ -35,14 +35,14 @@ function NostalgiaColumn({
 }) {
   if (rows.length === 0) return null;
   return (
-    <div className="nostalgia-column">
-      <h3 className="nostalgia-column-title">{title}</h3>
-      <ul className="nostalgia-column-list">
+    <article className="nostalgia-box">
+      <h3 className="nostalgia-box-title">{title}</h3>
+      <ul className="nostalgia-box-list">
         {rows.map(([name]) => (
           <li key={name}>{renderLabel ? renderLabel(name) : name}</li>
         ))}
       </ul>
-    </div>
+    </article>
   );
 }
 
@@ -103,32 +103,24 @@ export default function PulsePage() {
   );
 
   const connectionItems = data ? [
-    { label: "Alumni connections", val: data.openToAlumni },
-    { label: "Past colleagues", val: data.openToColleague },
-    { label: "University community", val: data.openToUniversity },
-    { label: "Career conversations", val: data.openToCareer },
+    { label: "Alumni connections", val: data.openToAlumni, tone: "#a56eff" },
+    { label: "Past colleagues", val: data.openToColleague, tone: "#0f62fe" },
+    { label: "University community", val: data.openToUniversity, tone: "#005d5d" },
+    { label: "Career conversations", val: data.openToCareer, tone: "#b45309" },
   ].filter(i => i.val > 0) : [];
 
   return (
     <>
-      <section className="story-hero story-hero--strong story-hero--spacious">
+      <section className="story-hero story-hero--strong pulse-hero">
         <div className="section-kicker">Event pulse</div>
         <h1>The room is taking shape.</h1>
         <p>
-          See where communities are forming, conversations are beginning, and
-          opportunities are emerging across the event.
+          Communities forming, conversations beginning, opportunities emerging —
+          before the week even starts.
         </p>
       </section>
 
       <section className="story-section story-section--spacious no-top-border">
-        <div className="story-head story-head--spacious">
-          <span className="narrative-kicker">Who is here</span>
-          <h2>Communities forming across the event.</h2>
-          <p className="story-lead story-lead--wide">
-            Geography, education, employers, and shared interests creating natural connection points.
-          </p>
-        </div>
-
         {loading && <p className="pulse-empty">Reading the room…</p>}
 
         {!loading && !hasRoom && (
@@ -137,8 +129,8 @@ export default function PulsePage() {
 
         {!loading && data && hasRoom && (
           <>
-            <div className="nostalgia-grid">
-              <NostalgiaColumn
+            <div className="nostalgia-grid nostalgia-grid--boxed">
+              <NostalgiaBox
                 title="Countries"
                 rows={top(data.topCountries, 5)}
                 renderLabel={name => (
@@ -147,9 +139,9 @@ export default function PulsePage() {
                   </>
                 )}
               />
-              <NostalgiaColumn title="Universities" rows={top(data.topUniversities, 5)} />
-              <NostalgiaColumn title="Former employers" rows={top(data.topPastEmployers, 5)} />
-              <NostalgiaColumn title="Communities" rows={top(data.communities, 5)} />
+              <NostalgiaBox title="Universities" rows={top(data.topUniversities, 5)} />
+              <NostalgiaBox title="Former employers" rows={top(data.topPastEmployers, 5)} />
+              <NostalgiaBox title="Communities" rows={top(data.communities, 5)} />
             </div>
             <p className="story-note">
               Aggregate signals only.{" "}
@@ -161,18 +153,15 @@ export default function PulsePage() {
 
       {!loading && connectionItems.length > 0 && (
         <section className="story-section story-section--spacious">
-          <div className="story-head story-head--spacious">
-            <span className="narrative-kicker">Connection intent</span>
-            <h2>Conversations people are open to having.</h2>
-          </div>
-          <ul className="pulse-intent-list">
+          <span className="narrative-kicker">Connection intent</span>
+          <div className="pulse-intent-cards">
             {connectionItems.map(item => (
-              <li key={item.label}>
-                <span>{item.label}</span>
-                <em>{item.val} attendees</em>
-              </li>
+              <article key={item.label} className="pulse-intent-card" style={{ borderTopColor: item.tone }}>
+                <p className="pulse-intent-card-count">{item.val}</p>
+                <p className="pulse-intent-card-label">{item.label}</p>
+              </article>
             ))}
-          </ul>
+          </div>
         </section>
       )}
 
@@ -181,7 +170,7 @@ export default function PulsePage() {
           {user && enrolled ? (
             <>
               <h2>Your plan is already taking shape.</h2>
-              <p>These room signals are personalised for your goals on My Experience.</p>
+              <p>These room signals are personalized for your goals on My Experience.</p>
             </>
           ) : (
             <>

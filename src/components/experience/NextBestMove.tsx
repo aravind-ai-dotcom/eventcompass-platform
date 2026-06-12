@@ -15,6 +15,7 @@ interface NextBestMoveProps {
   nextBestMove:        NextBestMoveData;
   topSession?:         ScoredSession | null;
   topChampion?:        ScoredChampion | null;
+  rankedSessions?:     ScoredSession[];
   participantGoals?:   string[];
   participantTracks?:  string[];
   onSkip?: () => void;
@@ -115,6 +116,7 @@ export default function NextBestMove({
   nextBestMove,
   topSession,
   topChampion,
+  rankedSessions,
   participantGoals,
   participantTracks,
   onSkip,
@@ -256,6 +258,7 @@ export default function NextBestMove({
           nextBestMove={nextBestMove}
           topSession={topSession ?? null}
           topChampion={topChampion ?? null}
+          rankedSessions={rankedSessions}
           participantGoals={participantGoals ?? []}
           participantTracks={participantTracks ?? []}
           onDismiss={onSkip}

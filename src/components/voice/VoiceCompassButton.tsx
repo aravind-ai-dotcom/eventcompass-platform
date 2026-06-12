@@ -35,6 +35,7 @@ import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
 import {
   classifyVoiceIntent,
   buildVoiceResponse,
+  pickSessionRecommendation,
   type VoiceResponse,
 } from "@/services/voiceIntentClassifier";
 
@@ -72,6 +73,7 @@ interface VoiceCompassButtonProps {
   nextBestMove?:           NextBestMove | null;
   topSession?:             ScoredSession | null;
   topChampion?:            ScoredChampion | null;
+  rankedSessions?:         ScoredSession[];
   participantGoals?:       string[];
   participantTracks?:      string[];
   onDismiss?:              () => void;
@@ -134,9 +136,8 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
 // Compass Beacon — inline SVG icon (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function CompassBeacon({ state }: { state: "idle" | "thinking" | "result" }) {
+function CompassBeacon({ state, size = 28 }: { state: "idle" | "thinking" | "result"; size?: number }) {
   const isThinking = state === "thinking";
-  const size = 28;
   const cx   = size / 2;
   const cy   = size / 2;
 
@@ -281,6 +282,7 @@ export default function VoiceCompassButton({
   nextBestMove,
   topSession,
   topChampion,
+  rankedSessions,
   participantGoals,
   participantTracks,
   onDismiss,
@@ -298,10 +300,12 @@ export default function VoiceCompassButton({
   const [errorMsg,   setErrorMsg]   = useState("");
 
   const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
+  const [activeSession, setActiveSession] = useState<ScoredSession | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const synthRef       = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef       = useRef<HTMLAudioElement | null>(null);
+  const recentRecsRef  = useRef<string[]>([]);
 
   // Check support on mount
   useEffect(() => {
@@ -379,9 +383,19 @@ return;
     await new Promise<void>(resolve => setTimeout(resolve, 300));
 
     const classified = classifyVoiceIntent(text);
+    const pool = rankedSessions?.length
+      ? rankedSessions
+      : topSession ? [topSession] : [];
+    const picked = pickSessionRecommendation(pool, recentRecsRef.current);
+    if (picked) {
+      recentRecsRef.current = [...recentRecsRef.current, picked.id].slice(-5);
+      setActiveSession(picked);
+    }
     const voiceResp  = buildVoiceResponse(classified, {
       nextBestMove:      nextBestMove      ?? null,
       topSession:        topSession        ?? null,
+      activeSession:     picked            ?? topSession ?? null,
+      rankedSessions:    rankedSessions    ?? [],
       topChampion:       topChampion       ?? null,
       participantGoals:  participantGoals  ?? [],
       participantTracks: participantTracks ?? [],
@@ -399,7 +413,7 @@ return;
     if (voiceResp.action === "mark_attended"       && onMarkAttended)        onMarkAttended();
     if (voiceResp.action === "show_day"            && onNavigateExperience)  onNavigateExperience();
   }, [
-    nextBestMove, topSession, topChampion,
+    nextBestMove, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
     speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience,
   ]);
@@ -522,16 +536,18 @@ return;
 
   const fallbackActivities = showResult ? getFallbackActivities() : [];
 
-  const showSessionCard  = !!topSession && showResult &&
+  const displaySession = activeSession ?? topSession ?? null;
+
+  const showSessionCard  = !!displaySession && showResult &&
     !["show_champions", "dismiss"].includes(response?.action ?? "");
   const showChampionCard = !!topChampion && showResult &&
     response?.action === "show_champions";
   const hasCard = showSessionCard || showChampionCard || fallbackActivities.length > 0;
 
-  const sessionMeta = topSession ? [
-    (topSession as unknown as Record<string, unknown>).day        as string | undefined,
-    (topSession as unknown as Record<string, unknown>).time_start as string | undefined,
-    (topSession as unknown as Record<string, unknown>).room       as string | undefined,
+  const sessionMeta = displaySession ? [
+    (displaySession as unknown as Record<string, unknown>).day        as string | undefined,
+    (displaySession as unknown as Record<string, unknown>).time_start as string | undefined,
+    (displaySession as unknown as Record<string, unknown>).room       as string | undefined,
   ].filter(Boolean).join(" · ") : "";
 
   const champMeta = topChampion ? [
@@ -581,19 +597,184 @@ return;
 
       <div className={variant === "companion" ? "voice-companion-card" : "vcb-container"}>
 
-        {variant === "companion" && (
-          <div className="voice-companion-head">
-            <h2>Voice Compass</h2>
-            <p>Your AI companion for the week — ask what to do next, who to meet, or where to go.</p>
-          </div>
-        )}
+        {variant === "companion" ? (
+          <>
+            <div className="voice-companion-head">
+              <h2>Ask Compass</h2>
+              <p>Prioritize your next move — sessions, people, and moments across your week.</p>
+            </div>
 
-        <div className={variant === "companion" ? "voice-companion-mic-wrap" : undefined} style={variant === "inline" ? { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" } : undefined}>
-          {variant === "inline" && (
-            <p style={{ color: "var(--accent)", fontSize: "0.69rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.13em", margin: 0, flexShrink: 0 }}>
-              Compass Assistant
-            </p>
-          )}
+            <div className="voice-assistant-grid">
+              {/* Left — Ask Compass trigger */}
+              <div className="voice-assistant-mic">
+                {!unsupported && (
+                  <button
+                    onClick={handleButtonClick}
+                    disabled={isProcessing}
+                    aria-live="polite"
+                    aria-label={btnLabel}
+                    className={[
+                      "ask-compass-trigger",
+                      isListening  ? "ask-compass-trigger--listening"
+                      : isProcessing ? "ask-compass-trigger--processing"
+                      : showResult   ? "ask-compass-trigger--result"
+                      : showError    ? "ask-compass-trigger--error"
+                      :                "",
+                    ].join(" ")}
+                  >
+                    <span className="ask-compass-trigger-glow" aria-hidden="true" />
+                    {isListening ? (
+                      <span aria-hidden="true" className="ask-compass-trigger-wave">
+                        {[0,1,2,3,4].map(i => (
+                          <span key={i} style={{
+                            animation: `compass-wave ${0.45 + i * 0.1}s ease-in-out infinite`,
+                            animationDelay: `${i * 0.07}s`,
+                          }} />
+                        ))}
+                      </span>
+                    ) : (
+                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={52} />
+                    )}
+                    <span className="ask-compass-trigger-title">Ask Compass</span>
+                    <span className="ask-compass-trigger-sub">
+                      {isListening ? "Listening…"
+                        : isProcessing ? "Thinking…"
+                        : showResult ? "Tap to ask again"
+                        : showError ? "Tap to try again"
+                        : "Prioritize your next move."}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* Center — prompt area */}
+              <div className="voice-assistant-prompt">
+                {transcript ? (
+                  <p className="voice-assistant-prompt-text">&ldquo;{transcript}&rdquo;</p>
+                ) : (
+                  <p className="voice-assistant-prompt-text">
+                    {isListening ? "Listening…" : "What should I do next?"}
+                  </p>
+                )}
+                <p className="voice-assistant-prompt-hint">
+                  Try &ldquo;Who should I meet?&rdquo; · &ldquo;Show my afternoon&rdquo; · &ldquo;Why this session?&rdquo;
+                </p>
+              </div>
+
+              {/* Right — response panel */}
+              <div className="voice-assistant-response" aria-live="polite">
+                <p className="voice-assistant-response-kicker">Compass says</p>
+                {showError && (
+                  <p className="voice-assistant-response-body" style={{ color: "#DC2626" }}>{errorMsg}</p>
+                )}
+                {(isThinking || isGenerating) && (
+                  <p className="voice-assistant-response-idle">Thinking through your options…</p>
+                )}
+                {showResult && response && !showError && (
+                  <p className="voice-assistant-response-body">{response.display}</p>
+                )}
+                {!showResult && !showError && !isProcessing && (
+                  <p className="voice-assistant-response-idle">Tap the microphone to start.</p>
+                )}
+              </div>
+            </div>
+
+            {unsupported && (
+              <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: "12px 0 0", lineHeight: 1.5 }}>
+                Voice not supported in this browser. Try Chrome or Edge.
+              </p>
+            )}
+
+            {pendingAudioUrl && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!pendingAudioUrl) return;
+                  const audio = new Audio(pendingAudioUrl);
+                  audioRef.current = audio;
+                  audio.onended = () => {
+                    URL.revokeObjectURL(pendingAudioUrl);
+                    audioRef.current = null;
+                    setPendingAudioUrl(null);
+                  };
+                  await audio.play();
+                }}
+                style={{
+                  marginTop: "14px",
+                  border: "1px solid var(--accent)",
+                  background: "rgba(15,98,254,0.06)",
+                  color: "var(--accent)",
+                  padding: "8px 12px",
+                  fontSize: "0.84rem",
+                  cursor: "pointer",
+                }}
+              >
+                ▶ Play Compass voice
+              </button>
+            )}
+
+            {showResult && response && (
+              <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "9px" }}>
+                {showSessionCard && displaySession && (
+                  <CompactCard
+                    title={(displaySession as unknown as Record<string, unknown>).title as string ?? "Session"}
+                    type="Session"
+                    meta={sessionMeta || undefined}
+                    infoHref="/sessions"
+                    sessionId={displaySession.id}
+                    onAddToSchedule={onAddToSchedule}
+                    onDoNotSuggestSession={onDoNotSuggestSession}
+                  />
+                )}
+                {showChampionCard && topChampion && (
+                  <CompactCard
+                    title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
+                    type="Champion"
+                    meta={champMeta || undefined}
+                    infoHref="/champions"
+                    championId={topChampion.id}
+                    onSavePerson={onSavePerson}
+                    onDoNotSuggestPerson={onDoNotSuggestPerson}
+                  />
+                )}
+                {fallbackActivities.map(act => (
+                  <CompactCard
+                    key={act.id}
+                    title={act.title}
+                    type={act.type.replace(/_/g, " ")}
+                    meta={[act.time, act.location].filter(Boolean).join(" · ") || undefined}
+                    infoHref={act.primaryAction.href}
+                  />
+                ))}
+                {!hasCard && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {response.action === "navigate_experience" && (
+                      <a href="/experience" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                        Open My Experience →
+                      </a>
+                    )}
+                    {response.action === "show_champions" && (
+                      <a href="/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                        View Champions →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!unsupported && (
+              <p style={{ color: "var(--muted)", fontSize: "0.66rem", marginTop: "12px", lineHeight: 1.5, opacity: 0.5 }}>
+                Voice processed in browser. Not stored.
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <p style={{ color: "var(--accent)", fontSize: "0.69rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.13em", margin: 0, flexShrink: 0 }}>
+            Compass Assistant
+          </p>
 
           {!unsupported && (
             <button
@@ -603,7 +784,6 @@ return;
               aria-label={btnLabel}
               className={[
                 "vcb-btn compass-beacon-btn",
-                variant === "companion" ? "vcb-btn-companion" : "",
                 isListening  ? "vcb-btn-listen"
                 : isProcessing ? "vcb-btn-process"
                 : showResult   ? "vcb-btn-results"
@@ -642,13 +822,7 @@ return;
         )}
 
         {/* ── Idle hint — minimal one-liner ─────────────────────────────────── */}
-        {voiceState === "idle" && !unsupported && variant === "companion" && (
-          <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: "12px 0 0", lineHeight: 1.5, maxWidth: "480px" }}>
-            Tap the microphone and try &ldquo;What&rsquo;s next?&rdquo; or &ldquo;Who should I meet?&rdquo;
-          </p>
-        )}
-
-        {voiceState === "idle" && !unsupported && variant === "inline" && (
+        {voiceState === "idle" && !unsupported && (
           <p style={{ color: "var(--muted)", fontSize: "0.73rem", margin: "7px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
             Try: &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Who to meet?&rdquo; &middot; &ldquo;Find AI sessions&rdquo;
           </p>
@@ -664,72 +838,64 @@ return;
         {/* ── Result ────────────────────────────────────────────────────────── */}
         {showResult && response && (
           <div style={{ marginTop: "10px", borderTop: "1px solid var(--line)", paddingTop: "10px", display: "flex", flexDirection: "column", gap: "9px" }}>
-
-            {/* Transcript quote */}
             {transcript && (
               <p style={{ color: "var(--soft)", fontSize: "0.84rem", margin: 0, fontStyle: "italic", lineHeight: 1.4, opacity: 0.85 }}>
                 &ldquo;{transcript}&rdquo;
               </p>
             )}
 
+            {pendingAudioUrl && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!pendingAudioUrl) return;
+                  const audio = new Audio(pendingAudioUrl);
+                  audioRef.current = audio;
+                  audio.onended = () => {
+                    URL.revokeObjectURL(pendingAudioUrl);
+                    audioRef.current = null;
+                    setPendingAudioUrl(null);
+                  };
+                  await audio.play();
+                }}
+                style={{
+                  marginTop: "10px",
+                  border: "1px solid var(--accent)",
+                  background: "rgba(15,98,254,0.06)",
+                  color: "var(--accent)",
+                  padding: "8px 12px",
+                  fontSize: "0.84rem",
+                  cursor: "pointer",
+                }}
+              >
+                ▶ Play Compass voice
+              </button>
+            )}
 
-{pendingAudioUrl && (
-  <button
-    type="button"
-    onClick={async () => {
-
-  if (!pendingAudioUrl) return;
-
-  const audio = new Audio(pendingAudioUrl);
-  audioRef.current = audio;
-  audio.onended = () => {
-    URL.revokeObjectURL(pendingAudioUrl);
-    audioRef.current = null;
-    setPendingAudioUrl(null);
-  };
-  await audio.play();
-}}
-    style={{
-      marginTop: "10px",
-      border: "1px solid var(--accent)",
-      background: "rgba(15,98,254,0.06)",
-      color: "var(--accent)",
-      padding: "8px 12px",
-      fontSize: "0.84rem",
-      cursor: "pointer",
-    }}
-  >
-    ▶ Play Compass voice
-  </button>
-)}
-
-            {/* Session card */}
-            {showSessionCard && topSession && (
+            {showSessionCard && displaySession && (
               <CompactCard
-                title={(topSession as unknown as Record<string, unknown>).title as string ?? "Session"}
+                title={(displaySession as unknown as Record<string, unknown>).title as string ?? "Session"}
                 type="Session"
                 meta={sessionMeta || undefined}
-                infoHref={`/sessions/${topSession.id}`}
-                sessionId={topSession.id}
+                infoHref="/sessions"
+                sessionId={displaySession.id}
                 onAddToSchedule={onAddToSchedule}
                 onDoNotSuggestSession={onDoNotSuggestSession}
               />
             )}
 
-            {/* Champion card */}
             {showChampionCard && topChampion && (
               <CompactCard
                 title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
                 type="Champion"
                 meta={champMeta || undefined}
-                infoHref={`/champions/${topChampion.id}`}
+                infoHref="/champions"
                 championId={topChampion.id}
                 onSavePerson={onSavePerson}
                 onDoNotSuggestPerson={onDoNotSuggestPerson}
               />
             )}
 
-            {/* Fallback activity cards */}
             {fallbackActivities.map(act => (
               <CompactCard
                 key={act.id}
@@ -740,7 +906,6 @@ return;
               />
             ))}
 
-            {/* Display text + nav links when no card rendered */}
             {!hasCard && (
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <p style={{ color: "var(--text)", fontSize: "0.9rem", lineHeight: 1.55, margin: 0 }}>
@@ -766,11 +931,12 @@ return;
           </div>
         )}
 
-        {/* ── Privacy notice ────────────────────────────────────────────────── */}
         {!unsupported && (
           <p style={{ color: "var(--muted)", fontSize: "0.66rem", marginTop: "9px", lineHeight: 1.5, opacity: 0.5 }}>
             Voice processed in browser. Not stored.
           </p>
+        )}
+          </>
         )}
       </div>
     </>

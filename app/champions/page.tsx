@@ -151,24 +151,16 @@ function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: P
   const initial   = c.display_name[0]?.toUpperCase() ?? "C";
   const org       = c.organization ?? c.company ?? "";
   const loc       = c.geo ?? c.country ?? "";
-  const domains   = [...(c.profile?.domains ?? []), ...(c.domains ?? [])].slice(0, 3);
+  const profileExtra = c.profile as { domains?: string[]; community_interests?: string[] } | undefined;
+  const domains   = [...(profileExtra?.domains ?? []), ...(c.domains ?? [])].slice(0, 4);
+  const communities = profileExtra?.community_interests ?? [];
+  const tags      = [...domains, ...communities].slice(0, 4);
   const avail     = c.attendance?.available_for_1x1;
   const isRemoved = pState.removedPeople.includes(c.id);
   const shownName = anonymous ? displayFirstName(c.display_name) : c.display_name;
 
   return (
-    <article
-      style={{
-        background:    "var(--panel)",
-        border:        "1px solid var(--line)",
-        padding:       "20px",
-        display:       "flex",
-        flexDirection: "column",
-        gap:           "10px",
-        opacity:       isRemoved ? 0.45 : 1,
-        transition:    "opacity 0.2s",
-      }}
-    >
+    <article className={`champion-person-card${isRemoved ? " champion-person-card--dim" : ""}`}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
         <PersonAvatar initial={initial} />
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -191,13 +183,10 @@ function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: P
         </div>
       </div>
 
-      {domains.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
-          {domains.map((d) => (
-            <span key={d} style={{
-              fontSize: "0.73rem", padding: "2px 8px",
-              border: "1px solid var(--line)", color: "var(--muted)",
-            }}>{d}</span>
+      {tags.length > 0 && (
+        <div className="champion-person-tags">
+          {tags.map((d) => (
+            <span key={d} className="champion-person-tag">{d}</span>
           ))}
         </div>
       )}
@@ -250,9 +239,8 @@ function incDomain(map: Record<string, number>, key: string) {
 // IntelligenceBand — people intelligence presentation slice
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeopleIntelligenceBand({ kicker, title, desc, champions, pState, anonymous = false }: {
+function PeopleIntelligenceBand({ kicker, desc, champions, pState, anonymous = false }: {
   kicker: string;
-  title: string;
   desc: string;
   champions: Champion[];
   pState: PeopleState;
@@ -261,12 +249,9 @@ function PeopleIntelligenceBand({ kicker, title, desc, champions, pState, anonym
   if (champions.length === 0) return null;
   return (
     <section className="section intelligence-band">
-      <div className="section-head">
-        <div>
-          <div className="section-kicker">{kicker}</div>
-          <h2>{title}</h2>
-        </div>
-        <p>{desc}</p>
+      <div className="champion-band-head">
+        <span className="narrative-kicker">{kicker}</span>
+        <p className="champion-band-desc">{desc}</p>
       </div>
       <div className="intelligence-row intelligence-row--people">
         {champions.map(c => <ChampionCard key={c.id} c={c} pState={pState} anonymous={anonymous} />)}
@@ -382,11 +367,22 @@ export default function ChampionsPage() {
     [champions, removedPeople, doNotSuggestPeople]
   );
 
-  const filtered = visibleChampions.filter((c) =>
-    !search ||
-    c.display_name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.organization ?? c.company ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = visibleChampions.filter((c) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    if (user && enrolled) {
+      return (
+        c.display_name.toLowerCase().includes(q) ||
+        (c.organization ?? c.company ?? "").toLowerCase().includes(q) ||
+        championDomains(c).some(d => d.toLowerCase().includes(q))
+      );
+    }
+    const first = displayFirstName(c.display_name).toLowerCase();
+    return (
+      first.startsWith(q) ||
+      championDomains(c).some(d => d.toLowerCase().includes(q))
+    );
+  });
 
   const recommendedExperts = useMemo(() => {
     const saved = savedPeople
@@ -440,46 +436,54 @@ export default function ChampionsPage() {
 
   return (
     <>
-      <section className="compact-hero story-hero--strong">
+      <section className="compact-hero champions-hero">
         <div className="section-kicker">People intelligence</div>
-        <h1>Experts, mentors, and community leaders.</h1>
+        <h1>Find your people before you arrive.</h1>
         <p>
-          IBM Champions bring practical knowledge and peer guidance into TechXchange.
-          Compass surfaces who to meet — by expertise, shared interests, and availability.
+          Compass helps identify experts, mentors, peers, and community leaders
+          based on your interests, goals, and experience.
         </p>
       </section>
 
       <section className="section no-top-border">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
-          <div>
-            <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.95rem" }}>
-              {loading ? "Loading…" : `${champions.length} Champion${champions.length !== 1 ? "s" : ""} indexed`}
-            </p>
-          </div>
-          <Link href="/experience" className="btn-secondary" style={{ fontSize: "0.88rem" }}>
-            See my matched champions
+          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.95rem" }}>
+            {loading ? "Loading…" : `${champions.length} expert${champions.length !== 1 ? "s" : ""} indexed`}
+          </p>
+          <Link
+            href={user && enrolled ? "/experience" : "/enroll"}
+            className="btn-secondary"
+            style={{ fontSize: "0.88rem" }}
+          >
+            {user && enrolled ? "See my matched champions" : "Build My Compass to match"}
           </Link>
         </div>
 
-        <div style={{ marginBottom: "8px" }}>
-          <input
-            type="search"
-            placeholder="Search by name or organisation…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            aria-label="Search champions"
-            style={{
-              width: "100%", maxWidth: "400px", height: "40px", padding: "0 12px",
-              border: "1px solid var(--line-strong)", background: "var(--panel)",
-              color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit",
-            }}
-          />
-          {search && (
-            <span style={{ color: "var(--muted)", fontSize: "0.88rem", marginLeft: "12px" }}>
-              {filtered.length} of {champions.length}
-            </span>
-          )}
-        </div>
+        {user && enrolled ? (
+          <div style={{ marginBottom: "8px" }}>
+            <input
+              type="search"
+              placeholder="Search by name, organization, or expertise…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search champions"
+              style={{
+                width: "100%", maxWidth: "400px", height: "40px", padding: "0 12px",
+                border: "1px solid var(--line-strong)", background: "var(--panel)",
+                color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit",
+              }}
+            />
+            {search && (
+              <span style={{ color: "var(--muted)", fontSize: "0.88rem", marginLeft: "12px" }}>
+                {filtered.length} of {champions.length}
+              </span>
+            )}
+          </div>
+        ) : (
+          <p style={{ color: "var(--muted)", fontSize: "0.9rem", margin: 0, maxWidth: "520px" }}>
+            Build your Compass to search by name. Browse expertise tags below to explore who is in the room.
+          </p>
+        )}
       </section>
 
       {loading ? (
@@ -503,12 +507,9 @@ export default function ChampionsPage() {
         <>
           {!user && domainClusters.length > 0 && (
             <section className="section intelligence-band intelligence-band--clusters">
-              <div className="section-head">
-                <div>
-                  <div className="section-kicker">Expertise clusters</div>
-                  <h2>Where knowledge concentrates.</h2>
-                </div>
-                <p>Domain coverage across the Champion guide — build your Compass for personalised matches.</p>
+              <div className="champion-band-head">
+                <span className="narrative-kicker">In the room</span>
+                <p className="champion-band-desc">Expertise clusters forming across the Champion guide.</p>
               </div>
               <div className="domain-cluster-row">
                 {domainClusters.map(([domain, count]) => (
@@ -522,11 +523,8 @@ export default function ChampionsPage() {
           )}
 
           <PeopleIntelligenceBand
-            kicker="Recommended experts"
-            title="Connection-ready Champions."
-            desc={user && profileSignals.length > 0
-              ? "Saved Champions and experts open for 1:1 conversations."
-              : "Experts available for 1:1 — build your Compass for personalised matches on My Experience."}
+            kicker="Recommended"
+            desc="Experts and mentors aligned to common TechXchange interests."
             champions={recommendedExperts}
             pState={pState}
             anonymous={!user}
@@ -535,8 +533,7 @@ export default function ChampionsPage() {
           {user && profileSignals.length > 0 && (
             <PeopleIntelligenceBand
               kicker="Shared interests"
-              title="Champions in your domains."
-              desc="Experts whose domains overlap with your tracks, goals, and career interests."
+              desc="Champions in domains that overlap your tracks and goals."
               champions={sharedInterestChampions}
               pState={pState}
               anonymous={false}
@@ -545,8 +542,7 @@ export default function ChampionsPage() {
 
           <PeopleIntelligenceBand
             kicker="Mentors"
-            title="Open for 1:1 conversations."
-            desc="Champions explicitly available to meet during TechXchange."
+            desc="Experts open for conversations during the event."
             champions={mentors}
             pState={pState}
             anonymous={!user}
@@ -554,20 +550,16 @@ export default function ChampionsPage() {
 
           <PeopleIntelligenceBand
             kicker="Community leaders"
-            title="Guides shaping the event."
-            desc="Champions focused on community, advocacy, and peer leadership."
+            desc="Guides shaping community conversations across TechXchange."
             champions={communityLeaders}
             pState={pState}
             anonymous={!user}
           />
 
           <section className="section">
-            <div className="section-head">
-              <div>
-                <div className="section-kicker">Browse all</div>
-                <h2>Every Champion in the guide.</h2>
-              </div>
-              <p>Alphabetical directory — search above to narrow down.</p>
+            <div className="champion-band-head">
+              <span className="narrative-kicker">Directory</span>
+              <p className="champion-band-desc">Every expert in the guide.</p>
             </div>
             <div className="champion-grid three-champions">
               {visibleChampions.map((c) => <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} />)}

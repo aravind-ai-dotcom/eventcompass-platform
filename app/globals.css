@@ -1156,7 +1156,10 @@ img { max-width: 100%; display: block; }
 /* Voice Compass companion card */
 .voice-companion-card {
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(15, 98, 254, 0.04) 0%, var(--surface) 100%);
+  background:
+    radial-gradient(ellipse 80% 60% at 12% 0%, rgba(120, 169, 255, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 88% 100%, rgba(165, 110, 255, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(15, 98, 254, 0.03) 0%, var(--surface) 100%);
   padding: 28px 28px 24px;
 }
 .voice-companion-head {
@@ -1609,6 +1612,7 @@ img { max-width: 100%; display: block; }
 }
 .compass-signal-card--complete {
   border-color: var(--purple-border);
+  border-left: 2px solid var(--purple);
 }
 .compass-energy-sub {
   color: var(--muted);
@@ -2094,4 +2098,538 @@ img { max-width: 100%; display: block; }
     color: var(--muted);
     font-size: 1.1rem;
   }
+}
+
+/* ── Sprint 2: Home lifecycle ─────────────────────────────────────────────── */
+
+.home-lifecycle-grid {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+@media (min-width: 768px) {
+  .home-lifecycle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.home-lifecycle-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+@media (min-width: 768px) {
+  .home-lifecycle-card:nth-child(odd) {
+    border-right: 1px solid var(--line);
+  }
+}
+@media (min-width: 1024px) {
+  .home-lifecycle-card {
+    grid-template-columns: minmax(200px, 42%) minmax(0, 1fr);
+  }
+}
+.home-lifecycle-image {
+  position: relative;
+  min-height: 200px;
+  border-bottom: 1px solid var(--line);
+}
+@media (min-width: 1024px) {
+  .home-lifecycle-image {
+    min-height: 240px;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+}
+.home-lifecycle-body {
+  padding: 28px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-lifecycle-title {
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 520;
+  margin: 0;
+}
+
+/* ── Sprint 2: Explore milestone paths ────────────────────────────────────── */
+
+.explore-milestone-path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0;
+}
+.explore-milestone-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 88px;
+  max-width: 160px;
+  padding: 0 8px 0 0;
+}
+.explore-milestone-node {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.explore-milestone-dot {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  background: var(--surface);
+}
+.explore-milestone-line {
+  flex: 1;
+  height: 2px;
+  margin-left: 4px;
+  opacity: 0.45;
+}
+.explore-milestone-step:last-child .explore-milestone-line {
+  display: none;
+}
+.explore-milestone-label {
+  font-size: 0.88rem;
+  font-weight: 540;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* ── Sprint 2: Pulse nostalgia boxes + hero ───────────────────────────────── */
+
+.pulse-hero h1 {
+  font-size: clamp(2.4rem, 5vw, 3.75rem);
+}
+.nostalgia-grid--boxed {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .nostalgia-grid--boxed { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .nostalgia-grid--boxed { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+}
+.nostalgia-box {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px 18px;
+  min-height: 180px;
+}
+.nostalgia-box-title {
+  font-size: 0.72rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+.nostalgia-box-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nostalgia-box-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.nostalgia-box-list li span { min-width: 0; }
+.nostalgia-box-list li b {
+  font-size: 0.82rem;
+  font-weight: 560;
+  color: var(--muted);
+  font-family: var(--font-mono, ui-monospace);
+  flex-shrink: 0;
+}
+.pulse-intent-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.pulse-intent-card {
+  border: 1px solid var(--line);
+  border-top-width: 3px;
+  background: var(--panel);
+  padding: 20px 16px;
+  text-align: center;
+}
+.pulse-intent-card-count {
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 520;
+  letter-spacing: -0.03em;
+  margin: 0 0 6px;
+  color: var(--text);
+  line-height: 1;
+}
+.pulse-intent-card-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* ── Sprint 2: Champions hero + person cards ──────────────────────────────── */
+
+.champions-hero h1 {
+  font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+  max-width: 720px;
+}
+.champion-person-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease;
+}
+.champion-person-card:hover {
+  border-color: var(--line-strong);
+}
+.champion-person-card--dim {
+  opacity: 0.45;
+}
+.champion-person-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.champion-person-tag {
+  font-size: 0.72rem;
+  font-weight: 560;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.champion-band-head {
+  margin-bottom: 20px;
+  max-width: 560px;
+}
+
+/* ── Sprint 2: Week in balance ────────────────────────────────────────────── */
+
+.week-balance-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px 22px;
+  max-width: 100%;
+}
+.experience-top .week-balance-card {
+  max-width: none;
+}
+
+/* ── Ask Compass trigger (IBM Ask pattern) ─────────────────────────────────── */
+
+.ask-compass-trigger {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 168px;
+  max-width: 220px;
+  padding: 28px 20px 24px;
+  border: 1px solid rgba(120, 169, 255, 0.22);
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 18%, rgba(120, 169, 255, 0.18) 0%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(245, 248, 255, 0.98) 100%);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 8px 24px rgba(15, 98, 254, 0.06);
+  overflow: hidden;
+}
+.ask-compass-trigger:hover {
+  border-color: rgba(15, 98, 254, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 10px 28px rgba(15, 98, 254, 0.1);
+}
+.ask-compass-trigger:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 0 0 rgba(15, 98, 254, 0), 0 2px 8px rgba(15, 98, 254, 0.08);
+}
+.ask-compass-trigger:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.ask-compass-trigger-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 28%, rgba(69, 137, 255, 0.12) 0%, transparent 58%);
+  pointer-events: none;
+}
+.ask-compass-trigger-title {
+  position: relative;
+  z-index: 1;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.2;
+  text-transform: none;
+}
+.ask-compass-trigger-sub {
+  position: relative;
+  z-index: 1;
+  font-size: 0.82rem;
+  font-weight: 450;
+  color: var(--muted);
+  line-height: 1.35;
+  max-width: 160px;
+  text-transform: none;
+}
+.ask-compass-trigger-wave {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 52px;
+}
+.ask-compass-trigger-wave span {
+  display: block;
+  width: 3px;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transform-origin: center bottom;
+}
+.ask-compass-trigger--listening {
+  border-color: var(--accent);
+}
+.ask-compass-trigger--processing {
+  border-color: var(--line-strong);
+}
+.ask-compass-trigger--result {
+  border-color: rgba(15, 98, 254, 0.4);
+}
+.ask-compass-trigger--error {
+  border-color: #DC2626;
+}
+.week-balance-kicker {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  text-transform: none;
+}
+.week-balance-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 0 0 14px;
+}
+.week-balance-bar {
+  display: flex;
+  height: 8px;
+  gap: 2px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.week-balance-bar-empty {
+  flex: 1;
+  background: var(--line);
+}
+.week-balance-segment {
+  min-width: 4px;
+  border-radius: 1px;
+}
+.week-balance-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.week-balance-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.week-balance-legend-item em {
+  font-style: normal;
+  font-weight: 560;
+  color: var(--text);
+  margin-left: 2px;
+}
+.week-balance-swatch {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Sprint 2: Voice assistant 3-column layout ──────────────────────────────── */
+
+.voice-assistant-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+@media (min-width: 900px) {
+  .voice-assistant-grid {
+    grid-template-columns: auto minmax(0, 1fr) minmax(220px, 34%);
+    gap: 24px;
+    align-items: center;
+  }
+}
+.voice-assistant-mic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.voice-assistant-mic-label {
+  font-size: 0.72rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+}
+.voice-assistant-prompt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.voice-assistant-prompt-text {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-weight: 480;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+.voice-assistant-prompt-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+}
+.voice-assistant-response {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(165, 110, 255, 0.06) 0%, var(--panel) 100%);
+  padding: 18px 20px;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.voice-assistant-response-kicker {
+  font-size: 0.66rem;
+  font-weight: 680;
+  letter-spacing: 0.06em;
+  color: var(--purple-soft, var(--accent));
+  margin: 0;
+  text-transform: none;
+}
+.voice-assistant-response-body {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.55;
+}
+.voice-assistant-response-idle {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+.voice-companion-card .vcb-btn-companion {
+  width: 88px;
+  height: 88px;
+}
+
+/* ── Session detail modal ─────────────────────────────────────────────────── */
+
+.session-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(22, 22, 22, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.session-modal {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px 28px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+.session-modal-close {
+  float: right;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 8px 8px;
+  font-family: inherit;
+}
+.session-modal h2 {
+  font-size: 1.35rem;
+  font-weight: 520;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  line-height: 1.25;
+  padding-right: 32px;
+}
+.session-modal-meta {
+  color: var(--muted);
+  font-size: 0.88rem;
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+.session-modal-reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+.session-modal-reasons li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.88rem;
+  color: var(--soft);
+  line-height: 1.45;
 }

@@ -30,7 +30,6 @@ import NextBestMoveCard from "@/components/experience/NextBestMove";
 import EventHighlights    from "@/components/experience/EventHighlights";
 import TechXchangeBanner  from "@/components/experience/TechXchangeBanner";
 import CommunityVoices    from "@/components/experience/CommunityVoices";
-import ExperienceBalance  from "@/components/experience/ExperienceBalance";
 import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
@@ -187,6 +186,51 @@ function sessionMeta(s: ScoredSession): string {
   return [day, start, room].filter(Boolean).join(" · ");
 }
 
+/** Minutes since midnight for chronological day-plan sorting. */
+function parseSessionTimeMinutes(s: ScoredSession): number {
+  const raw = s as unknown as RawDoc;
+  const start = resolve(raw, "start_time", "schedule.start_time");
+  if (!start) return 9999;
+  const m12 = start.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  if (m12) {
+    let h = parseInt(m12[1], 10);
+    const min = parseInt(m12[2], 10);
+    const ap = m12[3].toLowerCase();
+    if (ap === "pm" && h !== 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    return h * 60 + min;
+  }
+  const m24 = start.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) return parseInt(m24[1], 10) * 60 + parseInt(m24[2], 10);
+  return 9999;
+}
+
+/** Time first; fit score breaks ties at the same start time (conflicts). */
+function sortByEventTimeThenFit(a: ScoredSession, b: ScoredSession): number {
+  const timeDiff = parseSessionTimeMinutes(a) - parseSessionTimeMinutes(b);
+  if (timeDiff !== 0) return timeDiff;
+  return (b.compass_score ?? 0) - (a.compass_score ?? 0);
+}
+
+function scheduleSessionsForDay(
+  sessions: ScoredSession[],
+  mode: PlanConflictMode,
+): ScoredSession[] {
+  const sorted = [...sessions].sort(sortByEventTimeThenFit);
+  if (mode === "show-both") return sorted;
+
+  // best-fit / capacity: one session per start-time slot — highest fit wins
+  const bySlot = new Map<number, ScoredSession>();
+  for (const s of sorted) {
+    const slot = parseSessionTimeMinutes(s);
+    const existing = bySlot.get(slot);
+    if (!existing || (s.compass_score ?? 0) > (existing.compass_score ?? 0)) {
+      bySlot.set(slot, s);
+    }
+  }
+  return [...bySlot.values()].sort(sortByEventTimeThenFit);
+}
+
 function sessionTypeLabel(s: ScoredSession): string {
   return (s.session_type ?? s.activity_type ?? "Session").trim();
 }
@@ -197,6 +241,8 @@ function getPillar(s: ScoredSession): "Learning" | "Community" | "Fun" {
   if (LEARNING_TYPES.has(t)) return "Learning";
   return "Community";
 }
+
+type PlanConflictMode = "best-fit" | "show-both" | "capacity";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scoring  (unchanged from original)
@@ -316,15 +362,11 @@ function ScoreBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" 
   );
 }
 
-// Energy indicator — hero metric. Answers: "How is my event experience shaping up?"
-// Fuel-cell segmented bar: Learning · Community · Fun · Open Time
-// Computed from pillar recommendation counts (proxy for what's shaping the week).
-function EnergyIndicator({ learning, community, fun }: {
+// Energy + balance — single compact "Your week in balance" card
+function WeekInBalance({ learning, community, fun }: {
   learning: number; community: number; fun: number;
 }) {
   const total = learning + community + fun;
-
-  // Proportions occupy 80% of the bar; Open Time fills the remaining 20%
   const BASE = 80;
   const learnW = total > 0 ? Math.round((learning  / total) * BASE) : 0;
   const commW  = total > 0 ? Math.round((community / total) * BASE) : 0;
@@ -332,34 +374,35 @@ function EnergyIndicator({ learning, community, fun }: {
   const openW  = 100 - learnW - commW - funW;
 
   const segments = [
-    { label: "Learning",  w: learnW, color: "#0f62fe" },
-    { label: "Community", w: commW,  color: "var(--purple)" },
-    { label: "Fun",       w: funW,   color: "#009d9a" },
-    { label: "Open",      w: openW,  color: "var(--line-strong)" },
+    { label: "Learning",  w: learnW, color: "#0f62fe", count: learning },
+    { label: "Community", w: commW,  color: "var(--purple)", count: community },
+    { label: "Fun",       w: funW,   color: "#009d9a", count: fun },
+    { label: "Open",      w: openW,  color: "var(--line-strong)", count: 0 },
   ].filter(s => s.w > 0);
 
   return (
-    <div className="compass-energy-card">
-      <p style={{ color: "var(--accent)", fontSize: "0.64rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 0 4px" }}>
-        Energy
-      </p>
-      <p className="compass-energy-sub">Your four-day experience balance</p>
-      {/* Segmented fuel-cell bar */}
-      <div style={{ display: "flex", height: "6px", gap: "1px", marginBottom: "9px", overflow: "hidden" }}>
+    <div className="week-balance-card">
+      <p className="week-balance-kicker">Your week in balance</p>
+      <p className="week-balance-sub">Community · Learning · Fun</p>
+      <div className="week-balance-bar">
         {total === 0 ? (
-          <div style={{ flex: 1, background: "var(--line)" }} />
+          <div className="week-balance-bar-empty" />
         ) : (
           segments.map(s => (
-            <div key={s.label} style={{ flex: s.w, background: s.color, minWidth: "2px" }} />
+            <div key={s.label} className="week-balance-segment" style={{ flex: s.w, background: s.color }} title={s.label} />
           ))
         )}
       </div>
-      {/* Segment legend */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 10px" }}>
-        {segments.map(s => (
-          <span key={s.label} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.69rem", color: "var(--muted)" }}>
-            <span style={{ display: "inline-block", width: "7px", height: "7px", background: s.color, flexShrink: 0 }} />
-            {s.label}
+      <div className="week-balance-legend">
+        {[
+          { label: "Learning", count: learning, color: "#0f62fe" },
+          { label: "Community", count: community, color: "var(--purple)" },
+          { label: "Fun", count: fun, color: "#009d9a" },
+        ].map(item => (
+          <span key={item.label} className="week-balance-legend-item">
+            <span className="week-balance-swatch" style={{ background: item.color }} />
+            {item.label}
+            {total > 0 && <em>{item.count}</em>}
           </span>
         ))}
       </div>
@@ -1073,16 +1116,18 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
 const EVENT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday"] as const;
 type EventDay = typeof EVENT_DAYS[number];
 
-function getSessionsForDay(sessions: ScoredSession[], day: EventDay, fallbackIndex: number): ScoredSession[] {
+function getSessionsForDay(
+  sessions: ScoredSession[],
+  day: EventDay,
+  mode: PlanConflictMode,
+): ScoredSession[] {
   const matched = sessions.filter(function(s) {
     const d = resolve(s as unknown as RawDoc, "date", "schedule.day");
     return d && d.toLowerCase().includes(day.toLowerCase());
   });
-  if (matched.length > 0) return matched;
-return [];
+  if (matched.length === 0) return [];
+  return scheduleSessionsForDay(matched, mode);
 }
-
-type PlanConflictMode = "best-fit" | "show-both" | "capacity";
 
 function DayTabExperience({
   learningList,
@@ -1097,11 +1142,10 @@ function DayTabExperience({
 }) {
   const [activeDay, setActiveDay] = useState<EventDay>("Monday");
   const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
-  const dayIdx = EVENT_DAYS.indexOf(activeDay);
 
-  const dayLearning  = getSessionsForDay(learningList,  activeDay, dayIdx).slice(0, 3);
-  const dayCommunity = getSessionsForDay(communityList, activeDay, dayIdx).slice(0, 3);
-  const dayFun       = getSessionsForDay(funList,       activeDay, dayIdx).slice(0, 3);
+  const dayLearning  = getSessionsForDay(learningList,  activeDay, planMode).slice(0, 3);
+  const dayCommunity = getSessionsForDay(communityList, activeDay, planMode).slice(0, 3);
+  const dayFun       = getSessionsForDay(funList,       activeDay, planMode).slice(0, 3);
 
   const hasContent = dayLearning.length > 0 || dayCommunity.length > 0 || dayFun.length > 0;
 
@@ -1110,7 +1154,7 @@ function DayTabExperience({
       <div className="section-head">
         <div>
           <div className="section-kicker">Your AI-powered week</div>
-          <h2>Compass selects and prioritises your sessions.</h2>
+          <h2>Compass selects and prioritizes your sessions.</h2>
         </div>
         <p>
           A four-day plan shaped to your goals — Community, Learning, and Fun balanced across the week.
@@ -1290,6 +1334,12 @@ export default function ExperiencePage() {
     onSave: handleSavePerson, onMeet: handleMeetPerson, onHide: handleHidePerson,
   }), [savedPeople, meetPeople, hiddenPeople, user, handleSavePerson, handleMeetPerson, handleHidePerson]);
 
+  const rankedSessionsForVoice = useMemo(
+    () => [...learningList, ...communityList, ...funList]
+      .sort((a, b) => b.compass_score - a.compass_score),
+    [learningList, communityList, funList],
+  );
+
   useEffect(() => {
     async function load() {
       try {
@@ -1324,6 +1374,10 @@ export default function ExperiencePage() {
           else if (p === "Fun")  fun.push(s);
           else                   community.push(s);
         }
+
+        learning.sort(sortByEventTimeThenFit);
+        community.sort(sortByEventTimeThenFit);
+        fun.sort(sortByEventTimeThenFit);
 
         const allScoredChampions = rawChampions
           .map((c) => scoreChampion(pData, c))
@@ -1438,9 +1492,14 @@ export default function ExperiencePage() {
 
   return (
     <>
-      {/* ── ParticipantHero ── */}
-      <section className="section no-top-border">
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "28px", alignItems: "start" }}>
+      {/* ── Top: week balance above profile + signal ───────────────────── */}
+      <section className="section no-top-border experience-top">
+        <WeekInBalance
+          learning={learningList.length}
+          community={communityList.length}
+          fun={funList.length}
+        />
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "28px", alignItems: "start", marginTop: "24px" }}>
           <div>
             <div className="section-kicker">My Compass</div>
             <h1 className="experience-hero-title">{displayName}</h1>
@@ -1484,28 +1543,11 @@ export default function ExperiencePage() {
             })()}
           </div>
 
-          {/* Right column: Energy indicator (top) + Signal card (below) */}
+          {/* Right column: Compass Signal */}
           <div style={{ display: "flex", flexDirection: "column", gap: "14px", alignItems: "stretch", minWidth: "190px" }}>
-            <EnergyIndicator
-              learning={learningList.length}
-              community={communityList.length}
-              fun={funList.length}
-            />
             <CompassSignalCompact participant={participant} />
           </div>
         </div>
-      </section>
-
-      {/* ── Week in balance — top-level summary ─────────────────────────── */}
-      <section className="section">
-        <div className="section-head narrow">
-          <div>
-            <div className="section-kicker">Your week in balance</div>
-            <h2>Community · Learning · Fun.</h2>
-          </div>
-          <p>How your recommended sessions distribute across your four-day experience.</p>
-        </div>
-        <ExperienceBalance sessionCounts={pillarCounts} />
       </section>
 
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
@@ -1532,6 +1574,7 @@ export default function ExperiencePage() {
             }}
             topSession={nextBestMove}
             topChampion={champions[0] ?? null}
+            rankedSessions={rankedSessionsForVoice}
             participantGoals={pGoals}
             participantTracks={pTracks}
           />
@@ -1713,7 +1756,7 @@ export default function ExperiencePage() {
             </h2>
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "360px", margin: 0, lineHeight: 1.5 }}>
-            Anchor experiences of TechXchange 2026 &mdash; separate from your personalised plan.
+            Anchor experiences of TechXchange 2026 &mdash; separate from your personalized plan.
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>

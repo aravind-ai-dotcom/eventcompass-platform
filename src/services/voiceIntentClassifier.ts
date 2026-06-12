@@ -73,6 +73,9 @@ export interface VoiceResponseContext {
   topChampion:         ScoredChampion | null;
   participantGoals?:   string[];
   participantTracks?:  string[];
+  /** Rotated session pick — avoids repeating the same recommendation */
+  activeSession?:      ScoredSession | null;
+  rankedSessions?:     ScoredSession[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -256,6 +259,56 @@ function goalContext(ctx: VoiceResponseContext): string {
   return `You told Compass that ${items.join(" and ")} ${items.length > 1 ? "are" : "is"} important to you. `;
 }
 
+function parseTimeMinutes(t: string): number | null {
+  if (!t) return null;
+  const m12 = t.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  if (m12) {
+    let h = parseInt(m12[1], 10);
+    const min = parseInt(m12[2], 10);
+    const ap = m12[3].toLowerCase();
+    if (ap === "pm" && h !== 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    return h * 60 + min;
+  }
+  const m24 = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) return parseInt(m24[1], 10) * 60 + parseInt(m24[2], 10);
+  return null;
+}
+
+/** Pick a session recommendation that rotates alternatives and respects time-of-day. */
+export function pickSessionRecommendation(
+  sessions: ScoredSession[],
+  recentIds: string[] = [],
+): ScoredSession | null {
+  if (sessions.length === 0) return null;
+
+  const ranked = [...sessions].sort((a, b) => (b.compass_score ?? 0) - (a.compass_score ?? 0));
+  const hour = new Date().getHours();
+
+  const fresh = ranked.filter(s => !recentIds.includes(s.id) && (s.compass_score ?? 0) > 0);
+  const pool = fresh.length > 0 ? fresh : ranked.filter(s => (s.compass_score ?? 0) > 0).slice(1).length
+    ? ranked.filter(s => (s.compass_score ?? 0) > 0).slice(1)
+    : ranked;
+
+  const timeAware = pool.filter(s => {
+    const mins = parseTimeMinutes(resolveStart(s));
+    if (mins === null) return true;
+    return hour >= 12 ? mins >= 12 * 60 : mins < 14 * 60;
+  });
+
+  return timeAware[0] ?? pool[0] ?? ranked[0];
+}
+
+function sessionForContext(ctx: VoiceResponseContext): ScoredSession | null {
+  return ctx.activeSession ?? ctx.topSession ?? null;
+}
+
+/** Spoken TTS — title + room only (avoids time/track pronunciation issues). */
+function sessionSpokenBrief(session: ScoredSession): string {
+  const room = resolveRoom(session);
+  return room ? `${session.title} in ${room}` : session.title;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // buildVoiceResponse
 // ─────────────────────────────────────────────────────────────────────────────
@@ -277,7 +330,10 @@ export function buildVoiceResponse(
           display: "No recommendation available. Open your Experience page.",
         };
       }
-      const spoken  = `${gc}That's why your next move is ${nbm.headline}. ${nbm.subline}. ${nbm.reason}.`;
+      const sess = sessionForContext(ctx);
+      const spoken  = sess
+        ? `${gc}Your next move is ${sessionSpokenBrief(sess)}.`
+        : `${gc}Your next move is ${nbm.headline}.`;
       const display = `${nbm.headline} · ${nbm.subline} · ${nbm.reason}`;
       return { spoken, display };
     }
@@ -301,19 +357,18 @@ export function buildVoiceResponse(
 
     case "CURRENT_SCHEDULE":
     case "NEXT_SCHEDULED": {
-      const session = ctx.topSession;
+      const session = sessionForContext(ctx);
       if (!session) {
         return {
           spoken:  "I couldn't find a session on your schedule. Open your Experience page to see your plan.",
           display: "No upcoming session found. Check your Experience page.",
         };
       }
+      const spoken  = `Your next session is ${sessionSpokenBrief(session)}.`;
       const day   = resolveDay(session);
       const start = resolveStart(session);
       const room  = resolveRoom(session);
       const when  = [day, start].filter(Boolean).join(" at ");
-      const where = room ? ` in ${room}` : "";
-      const spoken  = `Your next session is ${session.title}${when ? `, ${when}` : ""}${where}.`;
       const display = [session.title, session.tracks?.primary_track, when, room].filter(Boolean).join(" · ");
       return { spoken, display };
     }
@@ -337,14 +392,14 @@ export function buildVoiceResponse(
           action:  "navigate_experience",
         };
       }
-      const spoken  = `Your day is organised around ${topItem}. Open My Experience to see the full Community, Learning, and Fun schedule.`;
+      const spoken  = `Your day is organized around ${topItem}. Open My Experience to see the full Community, Learning, and Fun schedule.`;
       const display = `Top: ${topItem}. Open My Experience for your full day plan.`;
       return { spoken, display, action: "navigate_experience" };
     }
 
     case "WHY_RECOMMENDED": {
       const nbm     = ctx.nextBestMove;
-      const session = ctx.topSession;
+      const session = sessionForContext(ctx);
       if (nbm?.reason) {
         const spoken  = `${gc}That's why Compass recommended this: ${nbm.reason}.`;
         const display = `${gc}${nbm.reason}`;
@@ -404,10 +459,10 @@ export function buildVoiceResponse(
     }
 
     case "SHOW_AFTERNOON": {
-      const session = ctx.topSession;
-      const hasSession = session && ctx.topSession;
+      const session = sessionForContext(ctx);
+      const hasSession = !!session;
       const spoken = hasSession
-        ? `This afternoon, your top recommendation is ${session!.title}. Open My Experience to see your full afternoon plan.`
+        ? `This afternoon, consider ${sessionSpokenBrief(session!)}.`
         : "Open My Experience to see your full afternoon schedule and open opportunities.";
       return {
         spoken,
