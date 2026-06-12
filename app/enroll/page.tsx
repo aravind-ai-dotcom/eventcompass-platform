@@ -62,15 +62,37 @@ const CAREER_INTERESTS = [
 ];
 
 const GOALS = [
-  { id: "learn-tech",       label: "Learn new technologies",    icon: "◈" },
-  { id: "earn-cert",        label: "Earn a certification",      icon: "◎" },
-  { id: "meet-experts",     label: "Meet IBM experts",          icon: "◉" },
-  { id: "explore-ai",       label: "Explore AI",                icon: "◆" },
-  { id: "network",          label: "Network with peers",        icon: "◈" },
-  { id: "customer-stories", label: "Discover customer stories", icon: "◎" },
-  { id: "product-roadmap",  label: "Understand IBM roadmap",    icon: "◉" },
-  { id: "career-growth",    label: "Grow my career",            icon: "◆" },
+  { id: "tech-breakouts",     label: "Attend technical breakouts", icon: "◈" },
+  { id: "earn-cert",          label: "Earn a certification",       icon: "◎" },
+  { id: "meet-experts",       label: "Meet experts",                 icon: "◉" },
+  { id: "join-communities",   label: "Join communities",           icon: "◆" },
+  { id: "business-challenge", label: "Solve a business challenge",   icon: "◈" },
+  { id: "career-growth",      label: "Grow my career",             icon: "◎" },
+  { id: "explore-products",   label: "Explore products",           icon: "◉" },
+  { id: "experience-event",   label: "Experience the event",       icon: "◆" },
 ];
+
+/** Map legacy goal labels from earlier enroll versions → current buckets. */
+const LEGACY_GOAL_LABELS: Record<string, string> = {
+  "Learn new technologies":    "Attend technical breakouts",
+  "Earn a certification":      "Earn a certification",
+  "Meet IBM experts":          "Meet experts",
+  "Explore AI":                "Explore products",
+  "Network with peers":        "Join communities",
+  "Discover customer stories": "Experience the event",
+  "Understand IBM roadmap":    "Explore products",
+  "Grow my career":            "Grow my career",
+};
+
+function goalIdsFromStoredLabels(labels: string[]): string[] {
+  const ids: string[] = [];
+  for (const raw of labels) {
+    const label = LEGACY_GOAL_LABELS[raw] ?? raw;
+    const match = GOALS.find(g => g.label === label);
+    if (match && !ids.includes(match.id)) ids.push(match.id);
+  }
+  return ids;
+}
 
 const TRACKS = [
   "AI", "Cloud", "Data", "Security", "Automation",
@@ -380,7 +402,7 @@ export default function EnrollPage() {
   const [goals,      setGoals]      = useState<string[]>([]);
   const [tracks,     setTracks]     = useState<string[]>([]);
   const [community,  setCommunity]  = useState<string[]>([]);
-  const [aspiration, setAspiration] = useState("");
+  const [hopeText,   setHopeText]   = useState("");
 
   // ── 05 · Consent & Privacy ──────────────────────────────────────────────────
   const [consentPublicProfile,           setConsentPublicProfile]           = useState(true);
@@ -462,10 +484,10 @@ export default function EnrollPage() {
         if (ni.open_to_university_connections     !== undefined) setOpenUniversity(ni.open_to_university_connections);
         if (ni.open_to_career_conversations       !== undefined) setOpenCareer(ni.open_to_career_conversations);
 
-        // Event signal — map labels → IDs
+        // Event signal — map stored labels → goal IDs (incl. legacy labels)
         const esp = (p?.event_signal_profile || {}) as Record<string, unknown>;
         const goalLabels = (esp.goals || []) as string[];
-        const matchedGoals = GOALS.filter(g => goalLabels.includes(g.label)).map(g => g.id);
+        const matchedGoals = goalIdsFromStoredLabels(goalLabels);
         if (matchedGoals.length) setGoals(matchedGoals);
 
         const techTracks = (esp.tech_tracks || []) as string[];
@@ -475,8 +497,14 @@ export default function EnrollPage() {
         const matchedComm = COMMUNITY.filter(c => commLabels.includes(c.label)).map(c => c.id);
         if (matchedComm.length) setCommunity(matchedComm);
 
-        const asp = ((esp.intent as Record<string,unknown> | undefined)?.aspiration || "") as string;
-        if (asp) setAspiration(asp);
+        const compassIntel = (p?.compass_intelligence || {}) as Record<string, unknown>;
+        const narrative = (compassIntel.intent_narrative || {}) as Record<string, unknown>;
+        const asp = (
+          ((esp.intent as Record<string, unknown> | undefined)?.aspiration as string | undefined) ||
+          (narrative.aspiration as string | undefined) ||
+          ""
+        );
+        if (asp) setHopeText(asp);
 
         // Consent
         const cv1 = (p?.consent || u?.consent || {}) as Record<string, boolean>;
@@ -571,7 +599,7 @@ export default function EnrollPage() {
       const keywords = [
         ...goalLabels, ...tracks, ...commLabels,
         university, pastEmployer, ...careerInterest,
-        organization, jobTitle, industry, persona, aspiration, country, city,
+        organization, jobTitle, industry, persona, hopeText.trim(), country, city,
       ].filter(Boolean).map(v => v.toLowerCase());
 
       const consentV1 = {
@@ -625,12 +653,12 @@ export default function EnrollPage() {
             roles_at_txc: jobTitle ? [jobTitle] : [],
             intent: {
               needs:      [],
-              aspiration,
+              aspiration: hopeText.trim(),
             },
           },
           compass_intelligence: {
             matching_keywords: [...new Set(keywords)],
-            intent_narrative:  { aspiration },
+            intent_narrative:  { aspiration: hopeText.trim() },
           },
           registration: {
             attending:     true,
@@ -702,7 +730,7 @@ export default function EnrollPage() {
         <p>
           {isEditMode
             ? "Update your goals, interests, or connection intent — your scores and matches refresh immediately."
-            : "Goals and learning interests are enough to start. Add background and connection intent when you are ready."}
+            : "Start with your goals. Learning tracks and connection intent sharpen your matches when you add them."}
         </p>
       </section>
 
@@ -766,20 +794,38 @@ export default function EnrollPage() {
         <section className="section">
           <StepLabel
             step="02 · Your Intent"
-            title="What brought you to TechXchange?"
-            subtitle="Goals, learning interests, and connection intent — enough to build a strong Compass."
+            title="Goals — why are you attending?"
+            subtitle="Pick one or more intent buckets. Add free-text, tracks, and connection preferences when you are ready."
           />
 
-          <IntentSubsection title="Goals — why are you attending?">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {GOALS.map(o => (
-                <Chip key={o.id} label={o.label} icon={o.icon}
-                  selected={goals.includes(o.id)} onClick={() => tog(goals, setGoals, o.id)} />
-              ))}
-            </div>
-          </IntentSubsection>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
+            {GOALS.map(o => (
+              <Chip key={o.id} label={o.label} icon={o.icon}
+                selected={goals.includes(o.id)} onClick={() => tog(goals, setGoals, o.id)} />
+            ))}
+          </div>
 
-          <IntentSubsection title="Learning interests">
+          <label style={{ display: "block", marginBottom: "4px" }}>
+            <SubLabel title="What are you hoping to accomplish? (optional)" />
+            <textarea
+              value={hopeText}
+              onChange={e => setHopeText(e.target.value)}
+              placeholder="I want to pass a watsonx certification."
+              rows={3}
+              style={{
+                width: "100%", padding: "12px 14px", border: "1px solid var(--line)",
+                background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem",
+                fontFamily: "inherit", resize: "vertical", boxSizing: "border-box",
+                lineHeight: 1.5,
+              }}
+            />
+            <p style={{ color: "var(--muted)", fontSize: "0.78rem", margin: "8px 0 0", lineHeight: 1.45 }}>
+              Examples: &ldquo;I want to find AI sessions for customer service.&rdquo; ·
+              &ldquo;I want to meet architects working on hybrid cloud.&rdquo;
+            </p>
+          </label>
+
+          <IntentSubsection title="Learning interests / Tech tracks">
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
               Select the tracks you want to explore. These carry the highest scoring weight.
             </p>
@@ -887,15 +933,6 @@ export default function EnrollPage() {
                       onClick={() => tog(careerInterest, setCareerInterest, ci)} />
                   ))}
                 </div>
-              </div>
-              <div>
-                <SubLabel title="In your own words — optional" />
-                <textarea
-                  value={aspiration} onChange={e => setAspiration(e.target.value)}
-                  placeholder="What would make TechXchange 2026 worth your time?"
-                  rows={2}
-                  style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
-                />
               </div>
             </div>
           </div>
@@ -1018,11 +1055,11 @@ export default function EnrollPage() {
                 </div>
               )}
 
-              {aspiration.trim() && (
+              {hopeText.trim() && (
                 <div>
-                  <p style={kicker}>Aspiration</p>
+                  <p style={kicker}>Hoping to accomplish</p>
                   <p style={{ ...reviewVal, color: "var(--muted)", fontStyle: "italic" }}>
-                    &ldquo;{aspiration.trim()}&rdquo;
+                    &ldquo;{hopeText.trim()}&rdquo;
                   </p>
                 </div>
               )}
