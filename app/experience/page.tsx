@@ -1573,6 +1573,7 @@ export default function ExperiencePage() {
           rankedSessions={rankedSessionsForVoice}
           participantGoals={pGoals}
           participantTracks={pTracks}
+          isEnrolled
         />
       </section>
 

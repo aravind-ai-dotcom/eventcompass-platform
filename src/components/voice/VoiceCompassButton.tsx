@@ -38,6 +38,11 @@ import {
   pickSessionRecommendation,
   type VoiceResponse,
 } from "@/services/voiceIntentClassifier";
+import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
+
+/** Tiny silent WAV — unlocks audio playback during the user gesture. */
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -76,6 +81,7 @@ interface VoiceCompassButtonProps {
   rankedSessions?:         ScoredSession[];
   participantGoals?:       string[];
   participantTracks?:      string[];
+  isEnrolled?:             boolean;
   onDismiss?:              () => void;
   onMarkAttended?:         () => void;
   onNavigateExperience?:   () => void;
@@ -285,6 +291,7 @@ export default function VoiceCompassButton({
   rankedSessions,
   participantGoals,
   participantTracks,
+  isEnrolled,
   onDismiss,
   onMarkAttended,
   onNavigateExperience,
@@ -336,7 +343,34 @@ export default function VoiceCompassButton({
     const unlockedAudio = new Audio();
     unlockedAudio.preload = "auto";
     audioRef.current = unlockedAudio;
+
+    unlockedAudio.muted = true;
+    unlockedAudio.src = SILENT_WAV;
+    void unlockedAudio.play().then(() => {
+      unlockedAudio.pause();
+      unlockedAudio.currentTime = 0;
+      unlockedAudio.muted = false;
+      unlockedAudio.removeAttribute("src");
+      unlockedAudio.load();
+    }).catch(() => {
+      unlockedAudio.muted = false;
+      unlockedAudio.removeAttribute("src");
+      unlockedAudio.load();
+    });
+
     return unlockedAudio;
+  }, []);
+
+  const fallbackToSpeechSynthesis = useCallback((text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    console.log("[VoiceCompass] Falling back to speechSynthesis");
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    synthRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
   }, []);
 
   // ── Cloud TTS → browser synthesis fallback only when fetch fails ─────────
@@ -355,6 +389,11 @@ export default function VoiceCompassButton({
       console.warn("[VoiceCompass] No unlocked audio element; playback may be blocked.");
     }
 
+    console.log("[VoiceCompass] Google TTS request started");
+
+    let cloudAudioReady = false;
+    let blobUrl: string | null = null;
+
     try {
       const res = await fetch("/api/voice", {
         method: "POST",
@@ -366,8 +405,21 @@ export default function VoiceCompassButton({
         throw new Error(`/api/voice returned ${res.status}: ${await res.text()}`);
       }
 
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("audio")) {
+        throw new Error(`Unexpected TTS content type: ${contentType || "unknown"}`);
+      }
+
+      console.log("[VoiceCompass] Google TTS response received");
+
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      if (!blob.size) {
+        throw new Error("Google TTS returned an empty audio blob");
+      }
+
+      blobUrl = URL.createObjectURL(blob);
+      console.log("[VoiceCompass] Audio URL created", { bytes: blob.size, type: blob.type });
+
       const targetAudio = audio ?? (() => {
         const fallback = new Audio();
         fallback.preload = "auto";
@@ -375,42 +427,44 @@ export default function VoiceCompassButton({
         return fallback;
       })();
 
-      targetAudio.src = url;
+      targetAudio.src = blobUrl;
       targetAudio.load();
       audioRef.current = targetAudio;
+      cloudAudioReady = true;
 
       targetAudio.onended = () => {
-        URL.revokeObjectURL(url);
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
         if (audioRef.current === targetAudio) {
           audioRef.current = null;
         }
         setPendingAudioUrl(null);
       };
 
+      console.log("[VoiceCompass] Attempting playback");
       try {
         await targetAudio.play();
+        console.log("[VoiceCompass] Cloud playback started");
       } catch (playErr) {
         if (playErr instanceof DOMException && playErr.name === "NotAllowedError") {
-          setPendingAudioUrl(url);
+          console.warn("[VoiceCompass] Playback blocked — showing Play Compass voice");
+          setPendingAudioUrl(blobUrl);
           return;
         }
-        URL.revokeObjectURL(url);
-        throw playErr;
+        console.warn("[VoiceCompass] Playback failed but cloud audio is ready", playErr);
+        setPendingAudioUrl(blobUrl);
       }
+      return;
     } catch (err) {
+      if (cloudAudioReady && blobUrl) {
+        console.warn("[VoiceCompass] Cloud audio generated but setup failed — manual play available", err);
+        setPendingAudioUrl(blobUrl);
+        return;
+      }
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
       console.error("[VoiceCompass] Cloud voice failed:", err);
-
-      if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-      synthRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      fallbackToSpeechSynthesis(text);
     }
-  }, []);
+  }, [fallbackToSpeechSynthesis]);
 
   // ── Handle resolved transcript ──────────────────────────────────────────────
   const handleTranscript = useCallback(async (text: string) => {
@@ -428,6 +482,11 @@ export default function VoiceCompassButton({
       recentRecsRef.current = [...recentRecsRef.current, picked.id].slice(-5);
       setActiveSession(picked);
     }
+    const rankedHuddles = rankLiveHuddles(
+      SAMPLE_LIVE_HUDDLES,
+      participantTracks ?? [],
+      participantGoals ?? [],
+    );
     const voiceResp  = buildVoiceResponse(classified, {
       nextBestMove:      nextBestMove      ?? null,
       topSession:        topSession        ?? null,
@@ -436,6 +495,8 @@ export default function VoiceCompassButton({
       topChampion:       topChampion       ?? null,
       participantGoals:  participantGoals  ?? [],
       participantTracks: participantTracks ?? [],
+      liveHuddles:       rankedHuddles,
+      isEnrolled:        isEnrolled ?? true,
     });
 
     setResponse(voiceResp);
@@ -452,7 +513,7 @@ export default function VoiceCompassButton({
   }, [
     nextBestMove, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
-    speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience,
+    speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience, isEnrolled,
   ]);
 
   // ── Start listening ─────────────────────────────────────────────────────────
@@ -568,22 +629,25 @@ export default function VoiceCompassButton({
   }
 
   const playPendingVoice = useCallback(async () => {
-    if (!pendingAudioUrl) return;
+    const url = pendingAudioUrl;
+    if (!url) return;
     const audio = audioRef.current ?? new Audio();
     audio.preload = "auto";
-    audio.src = pendingAudioUrl;
+    audio.src = url;
     audio.load();
     audioRef.current = audio;
     audio.onended = () => {
-      URL.revokeObjectURL(pendingAudioUrl);
+      URL.revokeObjectURL(url);
       if (audioRef.current === audio) audioRef.current = null;
       setPendingAudioUrl(null);
     };
+    console.log("[VoiceCompass] Attempting playback");
     try {
       await audio.play();
+      console.log("[VoiceCompass] Cloud playback started");
       setPendingAudioUrl(null);
-    } catch {
-      setPendingAudioUrl(pendingAudioUrl);
+    } catch (err) {
+      console.warn("[VoiceCompass] Manual playback failed", err);
     }
   }, [pendingAudioUrl]);
 

@@ -3,51 +3,34 @@
 // src/services/voiceIntentClassifier.ts
 //
 // Pure TypeScript. No Firebase. No React. No LLM calls. No side effects.
-//
-// Exports required by VoiceCompassButton.tsx:
-//   classifyVoiceIntent(transcript: string): ClassifiedIntent
-//   buildVoiceResponse(classified: ClassifiedIntent, ctx: VoiceResponseContext): VoiceResponse
-//   type VoiceResponse
-//
-// Wave 4 additions:
-//   SHOW_DAY intent      — "show my day", "what does today look like"
-//   WHY_RECOMMENDED      — "why was this recommended", "explain this"
-//   participantGoals + participantTracks in context → goal-aware responses
-//   UNKNOWN fallback updated to mention all supported questions
 // =============================================================================
 
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
+import type { LiveOpportunity } from "@/types/liveOpportunity";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Intent type
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type VoiceIntent =
-  | "NEXT_BEST_MOVE"
-  | "CHAMPION_MATCH"
-  | "CURRENT_SCHEDULE"
-  | "NEXT_SCHEDULED"
-  | "FULL_SCHEDULE"
-  | "SHOW_DAY"
-  | "WHY_RECOMMENDED"
-  | "ADD_TO_AGENDA"
-  | "SHOW_CONFLICTS"
-  | "SHOW_GAPS"
-  | "SHOW_AFTERNOON"
-  | "MEET_BEFORE_LUNCH"
-  | "DISMISS"
-  | "MARK_ATTENDED"
-  | "UNKNOWN";
+  | "next_best_move"
+  | "find_sessions"
+  | "find_people"
+  | "find_huddles"
+  | "certification_help"
+  | "explain_my_day"
+  | "explain_my_week"
+  | "fallback"
+  | "dismiss"
+  | "mark_attended"
+  | "why_recommended"
+  | "add_to_agenda";
 
 export interface ClassifiedIntent {
   intent:     VoiceIntent;
   transcript: string;
   confidence: "high" | "low";
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// VoiceResponse  (same shape — VoiceCompassButton.tsx unchanged)
-// ─────────────────────────────────────────────────────────────────────────────
 
 export type VoiceResponseAction =
   | "navigate_experience"
@@ -63,158 +46,73 @@ export interface VoiceResponse {
   action?: VoiceResponseAction;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Context  (participantGoals + participantTracks are new optional fields)
-// ─────────────────────────────────────────────────────────────────────────────
-
 export interface VoiceResponseContext {
   nextBestMove:        NextBestMove | null;
   topSession:          ScoredSession | null;
   topChampion:         ScoredChampion | null;
   participantGoals?:   string[];
   participantTracks?:  string[];
-  /** Rotated session pick — avoids repeating the same recommendation */
   activeSession?:      ScoredSession | null;
   rankedSessions?:     ScoredSession[];
+  liveHuddles?:        LiveOpportunity[];
+  isEnrolled?:         boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pattern table
+// Keyword buckets
 // ─────────────────────────────────────────────────────────────────────────────
 
-const INTENT_PATTERNS: Array<[VoiceIntent, string[]]> = [
+const KEYWORD_BUCKETS: Record<
+  Exclude<VoiceIntent, "fallback" | "dismiss" | "mark_attended" | "why_recommended" | "add_to_agenda">,
+  string[]
+> = {
+  find_sessions: [
+    "session", "breakout", "lab", "workshop", "what to attend", "attend",
+    "technical breakout", "hands on",
+  ],
+  find_people: [
+    "who should i meet", "who can i meet", "who to meet", "who should i talk",
+    "champion", "expert", "mentor", "people", "connect with", "introduce me",
+  ],
+  find_huddles: [
+    "conversation", "huddle", "meetup", "alumni", "coffee", "roundtable",
+    "live opportunit", "forming nearby", "any alumni", "peer discussion",
+  ],
+  certification_help: [
+    "certification", "certified", "cert exam", "exam prep", "exam", "test", "pass my cert",
+    "study group", "qiskit cert",
+  ],
+  explain_my_day: [
+    "today", "right now", "what now", "this afternoon", "tonight", "happening now",
+    "what is next", "what's next on", "where am i going",
+  ],
+  explain_my_week: [
+    "week", "four day", "four-day", "my plan", "full schedule", "full plan",
+    "my schedule", "day by day",
+  ],
+  next_best_move: [
+    "what should i do", "what do i do", "next best move", "help me decide",
+    "recommend something", "guide me", "what now", "prioritize",
+  ],
+};
 
-  ["MARK_ATTENDED", [
-    "i went to that", "i attended", "i was there", "i did that",
-    "already went", "already attended", "been to that",
-    "mark as attended", "mark attended", "attended that",
+const ACTION_PATTERNS: Array<[VoiceIntent, string[]]> = [
+  ["mark_attended", [
+    "i went to that", "i attended", "i was there", "mark as attended", "mark attended",
   ]],
-
-  ["DISMISS", [
-    "skip this", "skip that", "not interested", "not for me",
-    "dismiss this", "dismiss that", "remove this", "don't want that",
-    "ignore this", "pass on this", "pass on that", "next one",
-    "something else", "done",
+  ["dismiss", [
+    "skip this", "not interested", "not for me", "dismiss", "pass on this", "something else",
   ]],
-
-  ["WHY_RECOMMENDED", [
-    "why was this recommended",
-    "why did compass recommend",
-    "why is this recommended",
-    "why this session",
-    "why this champion",
-    "explain this recommendation",
-    "why did you pick this",
-    "why compass picked",
-    "how did you choose",
-    "what made you recommend",
+  ["why_recommended", [
+    "why was this recommended", "why did compass recommend", "why this session",
+    "explain this recommendation", "why did you pick",
   ]],
-
-  ["SHOW_DAY", [
-    "show me my day",
-    "show my day",
-    "what is my day",
-    "what's my day",
-    "my day plan",
-    "day plan",
-    "what does today look like",
-    "today's plan",
-    "show today",
-    "what is today",
-    "what's today",
-  ]],
-
-  ["FULL_SCHEDULE", [
-    "show me my plan", "show my plan", "my full plan", "my full schedule",
-    "see my schedule", "show my schedule", "open my experience",
-    "my experience", "full schedule", "everything today",
-    "what is my plan", "what's my plan",
-  ]],
-
-  ["NEXT_SCHEDULED", [
-    "what's next on my schedule", "what is next on my schedule",
-    "next on my schedule", "what's after this", "what is after this",
-    "what comes next", "next scheduled", "after this",
-    "what session is next", "what's my next session",
-  ]],
-
-  ["CURRENT_SCHEDULE", [
-    "where am i going", "where am i going now",
-    "where should i go now", "where do i go",
-    "what room", "where is my session", "where is it",
-    "what is my next session", "where am i heading",
-  ]],
-
-  ["CHAMPION_MATCH", [
-    "who should i meet", "who can i meet", "who should i talk to",
-    "who should i connect with", "introduce me", "find me someone",
-    "who is available", "meet a champion", "any champions",
-    "people i should meet", "who to meet", "networking",
-    "who do you recommend i meet",
-  ]],
-
-  ["ADD_TO_AGENDA", [
-    "add this session",
-    "add to my agenda",
-    "add to agenda",
-    "save this session",
-    "put this in my calendar",
-    "schedule this",
-    "add this to my plan",
-    "add this",
-  ]],
-
-  ["SHOW_CONFLICTS", [
-    "any conflicts",
-    "do i have conflicts",
-    "show conflicts",
-    "check my schedule",
-    "schedule conflicts",
-    "any clashes",
-    "overlapping sessions",
-  ]],
-
-  ["SHOW_GAPS", [
-    "what should i do between sessions",
-    "any free time",
-    "open slots",
-    "open time",
-    "what can i do in the gap",
-    "fill my gap",
-    "between sessions",
-    "free slot",
-    "open window",
-  ]],
-
-  ["SHOW_AFTERNOON", [
-    "show me my afternoon",
-    "what is this afternoon",
-    "afternoon plan",
-    "afternoon schedule",
-    "my afternoon",
-    "what's this afternoon",
-    "later today",
-  ]],
-
-  ["MEET_BEFORE_LUNCH", [
-    "who should i meet before lunch",
-    "meet someone before lunch",
-    "any meetings before lunch",
-    "who can i meet this morning",
-    "people to meet this morning",
-    "connect before lunch",
-  ]],
-
-  ["NEXT_BEST_MOVE", [
-    "what should i do next", "what should i do",
-    "what do i do next", "what do i do now",
-    "next best move", "what's next", "what is next",
-    "help me decide", "what now", "recommend something",
-    "give me a recommendation", "what session",
-    "which session", "what should i attend", "what to do",
-    "guide me", "help me",
+  ["add_to_agenda", [
+    "add to my agenda", "add to agenda", "save this session", "schedule this",
   ]],
 ];
+
+const CERT_CODE = /\bc\d{3,5}\b/i;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // classifyVoiceIntent
@@ -224,18 +122,51 @@ function normalise(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9'\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function scoreKeywords(norm: string, keywords: string[]): number {
+  let score = 0;
+  for (const kw of keywords) {
+    if (norm.includes(kw)) score += kw.includes(" ") ? 3 : 1;
+  }
+  return score;
+}
+
 export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
   const norm = normalise(transcript);
-  for (const [intent, patterns] of INTENT_PATTERNS) {
+
+  for (const [intent, patterns] of ACTION_PATTERNS) {
     for (const pattern of patterns) {
-      if (norm.includes(pattern)) return { intent, transcript, confidence: "high" };
+      if (norm.includes(pattern)) {
+        return { intent, transcript, confidence: "high" };
+      }
     }
   }
-  return { intent: "UNKNOWN", transcript, confidence: "low" };
+
+  if (CERT_CODE.test(transcript)) {
+    return { intent: "certification_help", transcript, confidence: "high" };
+  }
+
+  let best: VoiceIntent = "fallback";
+  let bestScore = 0;
+
+  for (const [intent, keywords] of Object.entries(KEYWORD_BUCKETS) as Array<
+    [keyof typeof KEYWORD_BUCKETS, string[]]
+  >) {
+    const score = scoreKeywords(norm, keywords);
+    if (score > bestScore) {
+      bestScore = score;
+      best = intent;
+    }
+  }
+
+  if (bestScore === 0) {
+    return { intent: "fallback", transcript, confidence: "low" };
+  }
+
+  return { intent: best, transcript, confidence: bestScore >= 2 ? "high" : "low" };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Field resolution helpers — dual-schema safe
+// Session helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveDay(session: ScoredSession): string {
@@ -249,14 +180,6 @@ function resolveStart(session: ScoredSession): string {
 function resolveRoom(session: ScoredSession): string {
   const raw = session as unknown as Record<string, unknown>;
   return session.schedule?.room ?? (typeof raw.room === "string" ? raw.room : "") ?? "";
-}
-
-function goalContext(ctx: VoiceResponseContext): string {
-  const goals  = (ctx.participantGoals  ?? []).slice(0, 2);
-  const tracks = (ctx.participantTracks ?? []).slice(0, 2);
-  const items  = [...goals, ...tracks];
-  if (items.length === 0) return "";
-  return `You told Compass that ${items.join(" and ")} ${items.length > 1 ? "are" : "is"} important to you. `;
 }
 
 function parseTimeMinutes(t: string): number | null {
@@ -275,7 +198,6 @@ function parseTimeMinutes(t: string): number | null {
   return null;
 }
 
-/** Pick a session recommendation that rotates alternatives and respects time-of-day. */
 export function pickSessionRecommendation(
   sessions: ScoredSession[],
   recentIds: string[] = [],
@@ -286,9 +208,7 @@ export function pickSessionRecommendation(
   const hour = new Date().getHours();
 
   const fresh = ranked.filter(s => !recentIds.includes(s.id) && (s.compass_score ?? 0) > 0);
-  const pool = fresh.length > 0 ? fresh : ranked.filter(s => (s.compass_score ?? 0) > 0).slice(1).length
-    ? ranked.filter(s => (s.compass_score ?? 0) > 0).slice(1)
-    : ranked;
+  const pool = fresh.length > 0 ? fresh : ranked;
 
   const timeAware = pool.filter(s => {
     const mins = parseTimeMinutes(resolveStart(s));
@@ -303,10 +223,75 @@ function sessionForContext(ctx: VoiceResponseContext): ScoredSession | null {
   return ctx.activeSession ?? ctx.topSession ?? null;
 }
 
-/** Spoken TTS — title + room only (avoids time/track pronunciation issues). */
+function topGoal(ctx: VoiceResponseContext): string {
+  return (ctx.participantGoals ?? [])[0] ?? (ctx.participantTracks ?? [])[0] ?? "your interests";
+}
+
+function topTrack(ctx: VoiceResponseContext): string {
+  return (ctx.participantTracks ?? [])[0] ?? (ctx.participantGoals ?? [])[0] ?? "your tracks";
+}
+
+function championFirstName(champion: ScoredChampion): string {
+  return champion.display_name?.split(/\s+/)[0] ?? champion.display_name ?? "a matched champion";
+}
+
+function sessionWhen(session: ScoredSession): string {
+  const start = resolveStart(session);
+  const day = resolveDay(session);
+  return [day, start].filter(Boolean).join(" at ") || "soon";
+}
+
 function sessionSpokenBrief(session: ScoredSession): string {
   const room = resolveRoom(session);
+  const when = sessionWhen(session);
+  if (when && room) return `${session.title} at ${when} in ${room}`;
+  if (when) return `${session.title} at ${when}`;
   return room ? `${session.title} in ${room}` : session.title;
+}
+
+function topHuddle(ctx: VoiceResponseContext, norm: string): LiveOpportunity | null {
+  const huddles = ctx.liveHuddles ?? [];
+  if (huddles.length === 0) return null;
+  if (norm.includes("alumni")) {
+    return huddles.find(h => h.source === "alumni" || h.category.toLowerCase() === "alumni") ?? huddles[0];
+  }
+  if (norm.includes("cert")) {
+    return huddles.find(h => h.source === "certification") ?? huddles[0];
+  }
+  return huddles[0];
+}
+
+function huddleHint(ctx: VoiceResponseContext, norm: string): string {
+  const h = topHuddle(ctx, norm);
+  if (!h) return "";
+  return ` I also see ${h.title} forming nearby in Live Opportunities.`;
+}
+
+function isEnrolled(ctx: VoiceResponseContext): boolean {
+  if (ctx.isEnrolled === false) return false;
+  if (ctx.isEnrolled === true) return true;
+  return !!(
+    ctx.nextBestMove ||
+    (ctx.participantGoals?.length ?? 0) > 0 ||
+    (ctx.participantTracks?.length ?? 0) > 0
+  );
+}
+
+function notEnrolledResponse(): VoiceResponse {
+  return {
+    spoken:  "Build your Compass first so I can personalize this.",
+    display: "Build My Compass first to unlock personalized voice answers.",
+  };
+}
+
+function pickTemplate(templates: string[], seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h + seed.charCodeAt(i)) % templates.length;
+  return templates[h] ?? templates[0];
+}
+
+function fill(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? "");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,187 +300,261 @@ function sessionSpokenBrief(session: ScoredSession): string {
 
 export function buildVoiceResponse(
   classified: ClassifiedIntent,
-  ctx: VoiceResponseContext
+  ctx: VoiceResponseContext,
 ): VoiceResponse {
-  const { intent } = classified;
-  const gc = goalContext(ctx);
+  const { intent, transcript } = classified;
+  const norm = normalise(transcript);
+  const seed = transcript + intent;
+
+  if (!isEnrolled(ctx) && intent !== "dismiss" && intent !== "mark_attended") {
+    return notEnrolledResponse();
+  }
 
   switch (intent) {
 
-    case "NEXT_BEST_MOVE": {
-      const nbm = ctx.nextBestMove;
-      if (!nbm) {
-        return {
-          spoken:  "I don't have a recommendation ready yet. Open your Experience page to load your Compass.",
-          display: "No recommendation available. Open your Experience page.",
-        };
-      }
-      const sess = sessionForContext(ctx);
-      const spoken  = sess
-        ? `${gc}Your next move is ${sessionSpokenBrief(sess)}.`
-        : `${gc}Your next move is ${nbm.headline}.`;
-      const display = `${nbm.headline} · ${nbm.subline} · ${nbm.reason}`;
-      return { spoken, display };
-    }
-
-    case "CHAMPION_MATCH": {
-      const champion = ctx.topChampion;
-      if (!champion) {
-        return {
-          spoken:  "No champions are matched to your profile yet. Make sure your Compass is built.",
-          display: "No champion match available. Check your Experience page.",
-        };
-      }
-      const org       = champion.organization ?? champion.company ?? "";
-      const keywords  = champion.shared_keywords?.slice(0, 2).join(" and ") ?? "";
-      const matchLine = keywords ? ` You match on ${keywords}.` : "";
-      const fromLine  = org ? ` from ${org}` : "";
-      const spoken    = `${gc}You should meet ${champion.display_name}${fromLine}.${matchLine}`;
-      const display   = `Meet ${champion.display_name}${fromLine}${matchLine}`;
-      return { spoken, display, action: "show_champions" };
-    }
-
-    case "CURRENT_SCHEDULE":
-    case "NEXT_SCHEDULED": {
+    case "next_best_move": {
       const session = sessionForContext(ctx);
-      if (!session) {
-        return {
-          spoken:  "I couldn't find a session on your schedule. Open your Experience page to see your plan.",
-          display: "No upcoming session found. Check your Experience page.",
-        };
-      }
-      const spoken  = `Your next session is ${sessionSpokenBrief(session)}.`;
-      const day   = resolveDay(session);
-      const start = resolveStart(session);
-      const room  = resolveRoom(session);
-      const when  = [day, start].filter(Boolean).join(" at ");
-      const display = [session.title, session.tracks?.primary_track, when, room].filter(Boolean).join(" · ");
-      return { spoken, display };
-    }
+      const nbm = ctx.nextBestMove;
+      const goal = topGoal(ctx);
+      const huddle = huddleHint(ctx, norm);
 
-    case "FULL_SCHEDULE": {
-      return {
-        spoken:  "I'll show your full experience plan.",
-        display: "Opening your full Experience plan.",
-        action:  "navigate_experience",
-      };
-    }
-
-    case "SHOW_DAY": {
-      const nbm     = ctx.nextBestMove;
-      const session = ctx.topSession;
-      const topItem = nbm?.headline ?? session?.title;
-      if (!topItem) {
+      if (!session && !nbm) {
         return {
-          spoken:  "Open your Experience page to see your full day plan across Community, Learning, and Fun.",
-          display: "Open My Experience to see your day plan.",
+          spoken:  "Open My Experience to load your Compass plan, then ask again for a next move.",
+          display: "No recommendation loaded yet. Open My Experience first.",
           action:  "navigate_experience",
         };
       }
-      const spoken  = `Your day is organized around ${topItem}. Open My Experience to see the full Community, Learning, and Fun schedule.`;
-      const display = `Top: ${topItem}. Open My Experience for your full day plan.`;
-      return { spoken, display, action: "navigate_experience" };
+
+      const title = session?.title ?? nbm!.headline;
+      const when = session ? sessionWhen(session) : nbm!.subline ?? "soon";
+      const templates = [
+        "Your next best move is {title} at {when}. It matches your goals around {goal}.{huddle}",
+        "I'd start with {title} at {when} — it aligns with {goal}.{huddle}",
+        "Compass points to {title} at {when} based on {goal}.{huddle}",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), {
+        title, when, goal, huddle,
+      });
+      const display = nbm
+        ? `${nbm.headline} · ${nbm.subline} · ${nbm.reason}`
+        : `${title} · ${when}`;
+      return { spoken, display };
     }
 
-    case "WHY_RECOMMENDED": {
-      const nbm     = ctx.nextBestMove;
-      const session = sessionForContext(ctx);
-      if (nbm?.reason) {
-        const spoken  = `${gc}That's why Compass recommended this: ${nbm.reason}.`;
-        const display = `${gc}${nbm.reason}`;
-        return { spoken, display };
-      }
-      if (session?.compass_reasons && session.compass_reasons.length > 0) {
-        const reasons = session.compass_reasons.slice(0, 2).join(". ");
-        const spoken  = `${gc}Here's why Compass picked this: ${reasons}.`;
-        const display = `${gc}${reasons}`;
-        return { spoken, display };
-      }
-      return {
-        spoken:  `${gc}Compass matched this based on your profile signals. Open My Experience to see the full reasons.`,
-        display: `${gc}Open My Experience to see scoring reasons.`,
-        action:  "navigate_experience",
-      };
-    }
-
-    case "DISMISS": {
-      return {
-        spoken:  "Got it. I'll use that to adjust your plan.",
-        display: "Got it. Compass will adjust your recommendations.",
-        action:  "dismiss",
-      };
-    }
-
-    case "MARK_ATTENDED": {
-      return {
-        spoken:  "Done. I'll mark that as attended in a future version.",
-        display: "Done. Compass will mark that as attended in a future update.",
-        action:  "mark_attended",
-      };
-    }
-
-    case "ADD_TO_AGENDA": {
-      return {
-        spoken:  "To add sessions to your agenda, open a session card and tap Add to Agenda. Your plan will update immediately.",
-        display: "Open a session card → Add to Agenda. Your Compass plan updates in real time.",
-        action:  "navigate_experience",
-      };
-    }
-
-    case "SHOW_CONFLICTS": {
-      return {
-        spoken:  "Open My Experience to see your agenda and any schedule conflicts Compass has detected.",
-        display: "Compass checks your agenda for conflicts. Open My Experience to review.",
-        action:  "navigate_experience",
-      };
-    }
-
-    case "SHOW_GAPS": {
-      return {
-        spoken:  "Compass looks for open windows in your schedule and suggests champions, community events, and activities to fill them.",
-        display: "Open My Experience → My Agenda to see open slots and what Compass recommends filling them with.",
-        action:  "navigate_experience",
-      };
-    }
-
-    case "SHOW_AFTERNOON": {
-      const session = sessionForContext(ctx);
-      const hasSession = !!session;
-      const spoken = hasSession
-        ? `This afternoon, consider ${sessionSpokenBrief(session!)}.`
-        : "Open My Experience to see your full afternoon schedule and open opportunities.";
-      return {
-        spoken,
-        display: hasSession
-          ? `Afternoon top pick: ${session!.title}. Open My Experience for your full plan.`
-          : "Open My Experience to see your afternoon plan.",
-        action: "navigate_experience",
-      };
-    }
-
-    case "MEET_BEFORE_LUNCH": {
-      const champion = ctx.topChampion;
-      if (champion) {
-        const org = champion.organization ?? champion.company ?? "";
-        const spoken = `Before lunch, consider meeting ${champion.display_name}${org ? ` from ${org}` : ""}. ${gc}They are available for a conversation.`;
+    case "find_sessions": {
+      const session = sessionForContext(ctx) ?? ctx.rankedSessions?.[0] ?? null;
+      if (!session) {
         return {
-          spoken,
-          display: `Meet ${champion.display_name}${org ? ` · ${org}` : ""} before lunch. Open Champions to connect.`,
-          action: "show_champions",
+          spoken:  "Browse Sessions to explore labs and breakouts, or open My Experience once your plan is loaded.",
+          display: "No matched sessions yet. Try Sessions or build your Compass.",
+          action:  "show_sessions",
         };
       }
+      const track = session.tracks?.primary_track ?? topTrack(ctx);
+      const templates = [
+        "Consider {title} at {when}. It fits {track}.",
+        "A strong session pick is {title} at {when}, matched to {track}.",
+        "Look at {title} at {when} — Compass scored it for {track}.",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), {
+        title: session.title,
+        when: sessionWhen(session),
+        track,
+      });
       return {
-        spoken:  "Check the Champions page to find someone worth meeting before lunch today.",
-        display: "Browse Champions to find morning connections.",
+        spoken,
+        display: `${session.title} · ${sessionWhen(session)} · score ${session.compass_score ?? "—"}`,
+        action:  "show_sessions",
+      };
+    }
+
+    case "find_people": {
+      const champion = ctx.topChampion;
+      const track = topTrack(ctx);
+      const huddle = huddleHint(ctx, norm);
+
+      if (!champion) {
+        return {
+          spoken:  "Open Champions to see experts matched to your profile, and check Live Opportunities for peer conversations." + huddle,
+          display: "Browse Champions and Live Opportunities for people to meet.",
+          action:  "show_champions",
+        };
+      }
+
+      const name = championFirstName(champion);
+      const keywords = champion.shared_keywords?.slice(0, 2).join(" and ") ?? track;
+      const templates = [
+        "I found {name} because their expertise overlaps with {match}.{huddle}",
+        "{name} is a strong match on {match}. Check Champions for details.{huddle}",
+        "Meet {name} — Compass matched you on {match}.{huddle}",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), {
+        name,
+        match: keywords,
+        huddle,
+      });
+      const org = champion.organization ?? champion.company ?? "";
+      return {
+        spoken,
+        display: `Meet ${champion.display_name}${org ? ` · ${org}` : ""} · ${keywords}`,
         action:  "show_champions",
       };
     }
 
-    case "UNKNOWN":
-    default: {
+    case "find_huddles": {
+      const huddle = topHuddle(ctx, norm);
+      if (!huddle) {
+        return {
+          spoken:  "Open Live Opportunities on My Experience to see conversations forming around you.",
+          display: "Check Live Opportunities for active huddles and meetups.",
+          action:  "navigate_experience",
+        };
+      }
+
+      if (norm.includes("alumni")) {
+        const templates = [
+          "Compass found alumni-oriented conversations in Live Opportunities. Start with {title} — {status}.",
+          "There's an alumni meetup forming: {title} at {location}. Review who's joined before you jump in.",
+          "For alumni connections, try {title} in Live Opportunities. It's {status}.",
+        ];
+        const spoken = fill(pickTemplate(templates, seed), {
+          title: huddle.title,
+          status: huddle.status,
+          location: huddle.location ?? "on site",
+        });
+        return { spoken, display: `${huddle.title} · ${huddle.status} · Live Opportunities`, action: "navigate_experience" };
+      }
+
+      const templates = [
+        "{title} is forming now — {status} at {location}. See Live Opportunities for who's joined.",
+        "Check {title} in Live Opportunities. It's {status} with {joined} people already in.",
+        "A live conversation worth joining: {title}, {status}, in {location}.",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), {
+        title: huddle.title,
+        status: huddle.status,
+        location: huddle.location ?? "TechXchange",
+        joined: String(huddle.joinedCount),
+      });
+      return { spoken, display: `${huddle.title} · ${huddle.status}`, action: "navigate_experience" };
+    }
+
+    case "certification_help": {
+      const certHuddle = ctx.liveHuddles?.find(h => h.source === "certification");
+      const goal = topGoal(ctx);
+      const certCode = transcript.match(CERT_CODE)?.[0]?.toUpperCase() ?? "";
+      const codeBit = certCode ? ` including ${certCode}` : "";
+      const huddleBit = certHuddle
+        ? ` There's also ${certHuddle.title} in Live Opportunities.`
+        : "";
+
+      const templates = [
+        "Compass can prioritize certification sessions, labs, and expert time{code} before your exam. Set a certification goal in Build My Compass.{huddle}",
+        "For certification prep{code}, focus on labs and study groups matched to {goal}.{huddle}",
+        "Start with a certification goal in Build My Compass — then Sessions and Live Opportunities will surface exam-ready picks.{huddle}",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), {
+        code: codeBit,
+        goal,
+        huddle: huddleBit,
+      });
       return {
-        spoken:  "I can help with what to do next, who to meet, where to go, why something was recommended, or your day plan.",
-        display: "Try: What should I do next? · Who should I meet? · Why was this recommended? · Show me my day.",
+        spoken,
+        display: `Certification path · goal: ${goal}${certCode ? ` · ${certCode}` : ""}`,
+        action:  "show_sessions",
+      };
+    }
+
+    case "explain_my_day": {
+      const session = sessionForContext(ctx);
+      const nbm = ctx.nextBestMove;
+      const top = session ?? (nbm ? null : null);
+      const title = top?.title ?? nbm?.headline;
+      const huddle = huddleHint(ctx, norm);
+
+      if (!title) {
+        return {
+          spoken:  "Open My Experience for today's Community, Learning, and Fun plan across the week.",
+          display: "See your day plan on My Experience.",
+          action:  "navigate_experience",
+        };
+      }
+
+      const templates = [
+        "Today centers on {title}. Open My Experience for the full afternoon and evening plan.{huddle}",
+        "Your day leads with {title}. My Experience breaks down what's next.{huddle}",
+        "For today, Compass highlights {title} first — see the rest of your plan in My Experience.{huddle}",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), { title, huddle });
+      return { spoken, display: `Today: ${title}`, action: "navigate_experience" };
+    }
+
+    case "explain_my_week": {
+      const session = sessionForContext(ctx);
+      const title = session?.title ?? ctx.nextBestMove?.headline ?? "your top matches";
+      const templates = [
+        "Your four-day plan is organized around {title} and your goals. Open My Experience for Community, Learning, and Fun by day.",
+        "Compass spread your week across sessions and moments like {title}. See the full plan on My Experience.",
+        "The week plan prioritizes {title} among your matches — My Experience shows each day.",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), { title });
+      return { spoken, display: `Week plan · anchor: ${title}`, action: "navigate_experience" };
+    }
+
+    case "why_recommended": {
+      const session = sessionForContext(ctx);
+      const nbm = ctx.nextBestMove;
+      if (nbm?.reason) {
+        return {
+          spoken:  `Compass recommended this because ${nbm.reason}.`,
+          display: nbm.reason,
+        };
+      }
+      if (session?.compass_reasons?.length) {
+        const reasons = session.compass_reasons.slice(0, 2).join(". ");
+        return { spoken: `Here's why: ${reasons}.`, display: reasons };
+      }
+      return {
+        spoken:  "Open My Experience to see match reasons on your session and people cards.",
+        display: "See scoring reasons on My Experience.",
+        action:  "navigate_experience",
+      };
+    }
+
+    case "dismiss":
+      return {
+        spoken:  "Got it. I'll factor that into what Compass suggests next.",
+        display: "Compass will adjust your recommendations.",
+        action:  "dismiss",
+      };
+
+    case "mark_attended":
+      return {
+        spoken:  "Noted. Attendance tracking is coming in a future Compass update.",
+        display: "Marked for a future attendance feature.",
+        action:  "mark_attended",
+      };
+
+    case "add_to_agenda":
+      return {
+        spoken:  "Open a session card and tap Add to schedule — your plan updates immediately.",
+        display: "Use Add to schedule on any session card.",
+        action:  "navigate_experience",
+      };
+
+    case "fallback":
+    default: {
+      const session = sessionForContext(ctx);
+      if (session) {
+        return {
+          spoken:  `Try asking about ${session.title}, who to meet, live huddles, or your week plan.`,
+          display: "Try: What should I do now? · Who should I meet? · Any alumni here? · Show my week.",
+        };
+      }
+      return {
+        spoken:  "Ask about your next move, sessions, people to meet, live huddles, certification, or your day plan.",
+        display: "Try: What should I do now? · Who should I meet? · Any alumni here? · Certification help",
       };
     }
   }
