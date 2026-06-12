@@ -78,16 +78,31 @@ const TRACKS = [
   "IT Optimization", "Power", "FinOps",
 ];
 
-const NEEDS = [
-  { id: "hands-on",     label: "Hands-on learning"    },
-  { id: "architecture", label: "Architecture guidance" },
-  { id: "roadmap",      label: "Product roadmap"       },
-  { id: "customers",    label: "Customer examples"     },
-  { id: "career",       label: "Career growth"         },
-  { id: "networking",   label: "Networking"            },
-  { id: "mentoring",    label: "Mentoring"             },
-  { id: "strategy",     label: "Strategic insights"    },
-];
+const DIAL_CODES = [
+  { code: "+1",  flag: "🇺🇸", label: "US +1" },
+  { code: "+91", flag: "🇮🇳", label: "IN +91" },
+  { code: "+44", flag: "🇬🇧", label: "UK +44" },
+  { code: "+49", flag: "🇩🇪", label: "DE +49" },
+  { code: "+33", flag: "🇫🇷", label: "FR +33" },
+  { code: "+81", flag: "🇯🇵", label: "JP +81" },
+  { code: "+61", flag: "🇦🇺", label: "AU +61" },
+  { code: "+55", flag: "🇧🇷", label: "BR +55" },
+  { code: "+65", flag: "🇸🇬", label: "SG +65" },
+  { code: "+971", flag: "🇦🇪", label: "AE +971" },
+] as const;
+
+function parseMobilePhone(raw: string): { dialCode: string; local: string } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { dialCode: "+1", local: "" };
+  const match = DIAL_CODES
+    .slice()
+    .sort((a, b) => b.code.length - a.code.length)
+    .find(d => trimmed.startsWith(d.code));
+  if (match) {
+    return { dialCode: match.code, local: trimmed.slice(match.code.length).trim() };
+  }
+  return { dialCode: "+1", local: trimmed.replace(/^\+/, "") };
+}
 
 const COMMUNITY = [
   { id: "champions",   label: "Meet IBM Champions"    },
@@ -231,6 +246,45 @@ function IntentSubsection({ title, children }: { title: string; children: React.
   );
 }
 
+function MobileNumberField({
+  dialCode,
+  local,
+  onDialCodeChange,
+  onLocalChange,
+}: {
+  dialCode: string;
+  local: string;
+  onDialCodeChange: (v: string) => void;
+  onLocalChange: (v: string) => void;
+}) {
+  return (
+    <div className="mobile-number-field">
+      <label className="mobile-number-dial">
+        <span className="sr-only">Country code</span>
+        <select
+          value={dialCode}
+          onChange={e => onDialCodeChange(e.target.value)}
+          aria-label="Country code"
+        >
+          {DIAL_CODES.map(d => (
+            <option key={d.code} value={d.code}>{d.flag} {d.code}</option>
+          ))}
+        </select>
+      </label>
+      <label className="mobile-number-local">
+        <span className="sr-only">Mobile number</span>
+        <input
+          type="tel"
+          value={local}
+          onChange={e => onLocalChange(e.target.value)}
+          placeholder="Mobile number"
+          autoComplete="tel-national"
+        />
+      </label>
+    </div>
+  );
+}
+
 function tog(arr: string[], set: (v: string[]) => void, val: string) {
   set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
 }
@@ -299,7 +353,8 @@ export default function EnrollPage() {
   // ── 01 · About You ──────────────────────────────────────────────────────────
   const [firstName,   setFirstName]   = useState("");
   const [lastName,    setLastName]    = useState("");
-  const [mobilePhone, setMobilePhone] = useState("");
+  const [dialCode,    setDialCode]    = useState("+1");
+  const [mobileLocal, setMobileLocal] = useState("");
   const [country,     setCountry]     = useState("");
   const [city,        setCity]        = useState("");
 
@@ -324,7 +379,6 @@ export default function EnrollPage() {
   // ── 04 · Your TechXchange Intent ────────────────────────────────────────────
   const [goals,      setGoals]      = useState<string[]>([]);
   const [tracks,     setTracks]     = useState<string[]>([]);
-  const [needs,      setNeeds]      = useState<string[]>([]);
   const [community,  setCommunity]  = useState<string[]>([]);
   const [aspiration, setAspiration] = useState("");
 
@@ -371,7 +425,11 @@ export default function EnrollPage() {
         if (ln) setLastName(ln);
 
         const phone = p?.mobile_phone || u?.mobile_phone || "";
-        if (phone) setMobilePhone(phone);
+        if (phone) {
+          const parsed = parseMobilePhone(String(phone));
+          setDialCode(parsed.dialCode);
+          setMobileLocal(parsed.local);
+        }
         const ctry = p?.country || u?.country || "";
         if (ctry) setCountry(ctry);
         const ct = p?.city || u?.city || "";
@@ -412,10 +470,6 @@ export default function EnrollPage() {
 
         const techTracks = (esp.tech_tracks || []) as string[];
         if (techTracks.length) setTracks(techTracks);
-
-        const needLabels = ((esp.intent as Record<string,unknown> | undefined)?.needs || []) as string[];
-        const matchedNeeds = NEEDS.filter(n => needLabels.includes(n.label)).map(n => n.id);
-        if (matchedNeeds.length) setNeeds(matchedNeeds);
 
         const commLabels = (esp.open_to || []) as string[];
         const matchedComm = COMMUNITY.filter(c => commLabels.includes(c.label)).map(c => c.id);
@@ -511,11 +565,11 @@ export default function EnrollPage() {
       const linkedinUrl = handle ? `https://www.linkedin.com/in/${handle}` : "";
 
       const goalLabels = GOALS.filter(o => goals.includes(o.id)).map(o => o.label);
-      const needLabels = NEEDS.filter(o => needs.includes(o.id)).map(o => o.label);
       const commLabels = COMMUNITY.filter(o => community.includes(o.id)).map(o => o.label);
+      const mobilePhone = [dialCode, mobileLocal.trim()].filter(Boolean).join(" ").trim();
 
       const keywords = [
-        ...goalLabels, ...tracks, ...needLabels, ...commLabels,
+        ...goalLabels, ...tracks, ...commLabels,
         university, pastEmployer, ...careerInterest,
         organization, jobTitle, industry, persona, aspiration, country, city,
       ].filter(Boolean).map(v => v.toLowerCase());
@@ -570,7 +624,7 @@ export default function EnrollPage() {
             open_to:      commLabels,
             roles_at_txc: jobTitle ? [jobTitle] : [],
             intent: {
-              needs:      needLabels,
+              needs:      [],
               aspiration,
             },
           },
@@ -629,7 +683,6 @@ export default function EnrollPage() {
   // Form
   // ─────────────────────────────────────────────────────────────────────────
   const goalLabelsPreview = GOALS.filter(o => goals.includes(o.id)).map(o => o.label);
-  const needLabelsPreview = NEEDS.filter(o => needs.includes(o.id)).map(o => o.label);
   const commLabelsPreview = COMMUNITY.filter(o => community.includes(o.id)).map(o => o.label);
 
   return (
@@ -684,9 +737,13 @@ export default function EnrollPage() {
             </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Mobile phone</FieldLabel>
-              <input type="tel" value={mobilePhone} onChange={e => setMobilePhone(e.target.value)}
-                placeholder="+1 555 000 0000 — international format" style={iS} />
+              <FieldLabel>Mobile number</FieldLabel>
+              <MobileNumberField
+                dialCode={dialCode}
+                local={mobileLocal}
+                onDialCodeChange={setDialCode}
+                onLocalChange={setMobileLocal}
+              />
             </label>
 
             <div style={twoCol}>
@@ -705,109 +762,12 @@ export default function EnrollPage() {
           </div>
         </section>
 
-        {/* ── 02 · Professional Context ─────────────────────────────────── */}
+        {/* ── 02 · Intent (core) ─────────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="02 · Professional Context"
-            title="Your role at a glance."
-            subtitle="Title and industry help Compass weight sessions and champion matches."
-          />
-          <div style={{ display: "grid", gap: "14px" }}>
-
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Organization / Company</FieldLabel>
-              <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
-                placeholder="Acme Corp" style={iS} />
-            </label>
-
-            <div style={twoCol}>
-              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <FieldLabel>Job title</FieldLabel>
-                <input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)}
-                  placeholder="Platform Engineer" style={iS} />
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <FieldLabel>Industry</FieldLabel>
-                <select value={industry} onChange={e => setIndustry(e.target.value)} style={iS}>
-                  <option value="">Select…</option>
-                  {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
-                </select>
-              </label>
-            </div>
-
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Persona</FieldLabel>
-              <select value={persona} onChange={e => setPersona(e.target.value)} style={iS}>
-                <option value="">Select…</option>
-                {PERSONAS.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </label>
-
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>LinkedIn</FieldLabel>
-              <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", background: "var(--panel)", overflow: "hidden" }}>
-                <span style={{
-                  padding: "0 12px", height: "42px", display: "flex", alignItems: "center",
-                  flexShrink: 0, borderRight: "1px solid var(--line)",
-                  color: "var(--muted)", fontSize: "0.88rem", whiteSpace: "nowrap", userSelect: "none",
-                }}>
-                  linkedin.com/in/
-                </span>
-                <input
-                  type="text" value={linkedinHandle}
-                  onChange={e => setLinkedinHandle(cleanLinkedInHandle(e.target.value))}
-                  placeholder="yourhandle" autoComplete="off"
-                  style={{ flex: 1, height: "42px", padding: "0 12px", border: "none",
-                    background: "transparent", color: "var(--text)", fontSize: "0.95rem",
-                    fontFamily: "inherit", outline: "none", minWidth: 0 }}
-                />
-              </div>
-            </label>
-
-          </div>
-        </section>
-
-        {/* ── 03 · Your Background ──────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="03 · Your Background"
-            title="Unlock hidden connections."
-            subtitle="School and past employers surface alumni and colleague matches — optional, but powerful."
-          />
-          <div style={{ display: "grid", gap: "14px" }}>
-
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>University / School</FieldLabel>
-              <input type="text" value={university} onChange={e => setUniversity(e.target.value)}
-                placeholder="e.g. Georgia Tech, University of Toronto, MIT" style={iS} />
-            </label>
-
-            <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Most recent past employer</FieldLabel>
-              <input type="text" value={pastEmployer} onChange={e => setPastEmployer(e.target.value)}
-                placeholder="e.g. Accenture, Red Hat, Deloitte" style={iS} />
-            </label>
-
-            <div>
-              <SubLabel title="Career interests" />
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {CAREER_INTERESTS.map(ci => (
-                  <Chip key={ci} label={ci}
-                    selected={careerInterest.includes(ci)}
-                    onClick={() => tog(careerInterest, setCareerInterest, ci)} />
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ── 04 · Intent ───────────────────────────────────────────────── */}
-        <section className="section">
-          <StepLabel
-            step="04 · Your Intent"
+            step="02 · Your Intent"
             title="What brought you to TechXchange?"
-            subtitle="Goals and learning interests drive your Compass scores. Connection intent helps you find the right people."
+            subtitle="Goals, learning interests, and connection intent — enough to build a strong Compass."
           />
 
           <IntentSubsection title="Goals — why are you attending?">
@@ -821,7 +781,7 @@ export default function EnrollPage() {
 
           <IntentSubsection title="Learning interests">
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-              Select the tracks you want to go deep on. These carry the highest scoring weight.
+              Select the tracks you want to explore. These carry the highest scoring weight.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {TRACKS.map(tr => (
@@ -842,46 +802,109 @@ export default function EnrollPage() {
               ))}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <CheckRow label="Connect with alumni from my university"  checked={openAlumni}     onChange={setOpenAlumni} />
-              <CheckRow label="Connect with past colleagues"             checked={openColleague}  onChange={setOpenColleague} />
-              <CheckRow label="Connect with my university community"     checked={openUniversity} onChange={setOpenUniversity} />
-              <CheckRow label="Open to career conversations"             checked={openCareer}    onChange={setOpenCareer} />
+              <CheckRow label="Open to alumni from my university"   checked={openAlumni}     onChange={setOpenAlumni} />
+              <CheckRow label="Open to past colleagues"            checked={openColleague}  onChange={setOpenColleague} />
+              <CheckRow label="Open to my university community"    checked={openUniversity} onChange={setOpenUniversity} />
+              <CheckRow label="Open to career conversations"       checked={openCareer}     onChange={setOpenCareer} />
             </div>
           </IntentSubsection>
-
-          <details className="enroll-optional-block">
-            <summary>Fine-tune session matches (optional)</summary>
-            <IntentSubsection title="Session needs">
-              <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-                Helps Compass prioritise labs, architecture sessions, and customer stories.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                {NEEDS.map(o => (
-                  <Chip key={o.id} label={o.label}
-                    selected={needs.includes(o.id)} onClick={() => tog(needs, setNeeds, o.id)} />
-                ))}
-              </div>
-            </IntentSubsection>
-          </details>
-
-          <IntentSubsection title="In your own words — optional">
-            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-              What would make TechXchange 2026 worth your time? Compass reads this as your aspiration signal.
-            </p>
-            <textarea
-              value={aspiration} onChange={e => setAspiration(e.target.value)}
-              placeholder="A few strong connections, one breakthrough insight, and leaving with a clearer direction."
-              rows={3}
-              style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
-            />
-          </IntentSubsection>
-
         </section>
 
-        {/* ── 05 · Consent & Privacy ────────────────────────────────────── */}
+        {/* ── Improve My Compass (optional — refine after enrollment) ───── */}
+        <details className="enroll-optional-block">
+          <summary>Improve My Compass — add background and professional details</summary>
+
+          <div style={{ paddingBottom: "8px" }}>
+            <StepLabel
+              step="Optional"
+              title="Deepen your matches."
+              subtitle="School, employers, and role details unlock alumni and colleague connections. Add these now or refine later from My Compass."
+            />
+
+            <div style={{ display: "grid", gap: "14px", marginBottom: "20px" }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Organization / Company</FieldLabel>
+                <input type="text" value={organization} onChange={e => setOrganization(e.target.value)}
+                  placeholder="Acme Corp" style={iS} />
+              </label>
+              <div style={twoCol}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <FieldLabel>Job title</FieldLabel>
+                  <input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)}
+                    placeholder="Platform Engineer" style={iS} />
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <FieldLabel>Industry</FieldLabel>
+                  <select value={industry} onChange={e => setIndustry(e.target.value)} style={iS}>
+                    <option value="">Select…</option>
+                    {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </label>
+              </div>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Persona</FieldLabel>
+                <select value={persona} onChange={e => setPersona(e.target.value)} style={iS}>
+                  <option value="">Select…</option>
+                  {PERSONAS.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>LinkedIn</FieldLabel>
+                <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--line)", background: "var(--panel)", overflow: "hidden" }}>
+                  <span style={{
+                    padding: "0 12px", height: "42px", display: "flex", alignItems: "center",
+                    flexShrink: 0, borderRight: "1px solid var(--line)",
+                    color: "var(--muted)", fontSize: "0.88rem", whiteSpace: "nowrap", userSelect: "none",
+                  }}>
+                    linkedin.com/in/
+                  </span>
+                  <input
+                    type="text" value={linkedinHandle}
+                    onChange={e => setLinkedinHandle(cleanLinkedInHandle(e.target.value))}
+                    placeholder="yourhandle" autoComplete="off"
+                    style={{ flex: 1, height: "42px", padding: "0 12px", border: "none",
+                      background: "transparent", color: "var(--text)", fontSize: "0.95rem",
+                      fontFamily: "inherit", outline: "none", minWidth: 0 }}
+                  />
+                </div>
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>University / School</FieldLabel>
+                <input type="text" value={university} onChange={e => setUniversity(e.target.value)}
+                  placeholder="e.g. Georgia Tech, University of Toronto" style={iS} />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Most recent past employer</FieldLabel>
+                <input type="text" value={pastEmployer} onChange={e => setPastEmployer(e.target.value)}
+                  placeholder="e.g. Accenture, Red Hat, Deloitte" style={iS} />
+              </label>
+              <div>
+                <SubLabel title="Career interests" />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {CAREER_INTERESTS.map(ci => (
+                    <Chip key={ci} label={ci}
+                      selected={careerInterest.includes(ci)}
+                      onClick={() => tog(careerInterest, setCareerInterest, ci)} />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <SubLabel title="In your own words — optional" />
+                <textarea
+                  value={aspiration} onChange={e => setAspiration(e.target.value)}
+                  placeholder="What would make TechXchange 2026 worth your time?"
+                  rows={2}
+                  style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: "0.95rem", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+                />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        {/* ── 03 · Consent ──────────────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="05 · Consent"
+            step="03 · Consent"
             title="Your data, your choice."
             subtitle="Compass uses your profile only for this event. Change these settings any time."
           />
@@ -985,13 +1008,6 @@ export default function EnrollPage() {
                 <div>
                   <p style={kicker}>Learning interests ({tracks.length})</p>
                   <p style={reviewVal}>{tracks.join(", ")}</p>
-                </div>
-              )}
-
-              {needLabelsPreview.length > 0 && (
-                <div>
-                  <p style={kicker}>Session needs ({needLabelsPreview.length})</p>
-                  <p style={reviewVal}>{needLabelsPreview.join(", ")}</p>
                 </div>
               )}
 

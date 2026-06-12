@@ -214,6 +214,63 @@ function ChampionCard({ c, pState }: { c: Champion; pState: PeopleState }) {
   );
 }
 
+function championDomains(c: Champion): string[] {
+  return [...(c.profile?.domains ?? []), ...(c.domains ?? [])];
+}
+
+function isCommunityLeader(c: Champion): boolean {
+  const domains = championDomains(c).map(d => d.toLowerCase());
+  const title = (c.title ?? "").toLowerCase();
+  const org = (c.organization ?? c.company ?? "").toLowerCase();
+  return (
+    domains.some(d => /community|leader|advocate|ambassador/.test(d)) ||
+    /community|leader|advocate|ambassador/.test(title) ||
+    /community/.test(org)
+  );
+}
+
+function domainsOverlap(championDomainsList: string[], signals: string[]): boolean {
+  if (signals.length === 0) return false;
+  const lowered = championDomainsList.map(d => d.toLowerCase());
+  return lowered.some(d =>
+    signals.some(s => d.includes(s) || s.includes(d))
+  );
+}
+
+function incDomain(map: Record<string, number>, key: string) {
+  const k = key.trim();
+  if (!k) return;
+  map[k] = (map[k] ?? 0) + 1;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IntelligenceBand — people intelligence presentation slice
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PeopleIntelligenceBand({ kicker, title, desc, champions, pState }: {
+  kicker: string;
+  title: string;
+  desc: string;
+  champions: Champion[];
+  pState: PeopleState;
+}) {
+  if (champions.length === 0) return null;
+  return (
+    <section className="section intelligence-band">
+      <div className="section-head">
+        <div>
+          <div className="section-kicker">{kicker}</div>
+          <h2>{title}</h2>
+        </div>
+        <p>{desc}</p>
+      </div>
+      <div className="intelligence-row intelligence-row--people">
+        {champions.map(c => <ChampionCard key={c.id} c={c} pState={pState} />)}
+      </div>
+    </section>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
@@ -230,6 +287,7 @@ export default function ChampionsPage() {
   const [removedPeople,      setRemovedPeople]      = useState<string[]>([]);
   const [doNotSuggestPeople, setDoNotSuggestPeople] = useState<string[]>([]);
   const [pLoading,           setPLoading]           = useState(false);
+  const [profileSignals,     setProfileSignals]     = useState<string[]>([]);
 
   // Load champions
   useEffect(() => {
@@ -253,6 +311,15 @@ export default function ChampionsPage() {
         setSavedPeople(        (d.saved_people         as string[]) ?? []);
         setRemovedPeople(      (d.removed_people        as string[]) ?? []);
         setDoNotSuggestPeople( (d.do_not_suggest_people as string[]) ?? []);
+        const sig = (d.event_signal_profile as RawDoc) ?? {};
+        const signals = [
+          ...((sig.tech_tracks as string[]) ?? []),
+          ...((d.career_interests as string[]) ?? []),
+          ...((sig.goals as string[]) ?? []),
+        ]
+          .filter((v): v is string => typeof v === "string" && v.trim() !== "")
+          .map(v => v.toLowerCase());
+        setProfileSignals(signals);
       })
       .catch(() => {})
       .finally(() => setPLoading(false));
@@ -304,33 +371,85 @@ export default function ChampionsPage() {
 
   // ── Filter ─────────────────────────────────────────────────────────────────
 
-  const filtered = champions.filter((c) =>
+  const visibleChampions = useMemo(
+    () => champions.filter(c =>
+      !removedPeople.includes(c.id) && !doNotSuggestPeople.includes(c.id)
+    ),
+    [champions, removedPeople, doNotSuggestPeople]
+  );
+
+  const filtered = visibleChampions.filter((c) =>
     !search ||
     c.display_name.toLowerCase().includes(search.toLowerCase()) ||
     (c.organization ?? c.company ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const recommendedExperts = useMemo(() => {
+    const saved = savedPeople
+      .map(id => visibleChampions.find(c => c.id === id))
+      .filter((c): c is Champion => !!c);
+    const savedIds = new Set(saved.map(c => c.id));
+    const open = visibleChampions
+      .filter(c => !savedIds.has(c.id) && c.attendance?.available_for_1x1)
+      .slice(0, 6 - saved.length);
+    return [...saved, ...open].slice(0, 6);
+  }, [visibleChampions, savedPeople]);
+
+  const sharedInterestChampions = useMemo(() => {
+    if (profileSignals.length === 0) return [];
+    const savedIds = new Set(recommendedExperts.map(c => c.id));
+    return visibleChampions
+      .filter(c => !savedIds.has(c.id) && domainsOverlap(championDomains(c), profileSignals))
+      .slice(0, 6);
+  }, [visibleChampions, profileSignals, recommendedExperts]);
+
+  const mentors = useMemo(() => {
+    const used = new Set([
+      ...recommendedExperts.map(c => c.id),
+      ...sharedInterestChampions.map(c => c.id),
+    ]);
+    return visibleChampions
+      .filter(c => !used.has(c.id) && c.attendance?.available_for_1x1)
+      .slice(0, 6);
+  }, [visibleChampions, recommendedExperts, sharedInterestChampions]);
+
+  const communityLeaders = useMemo(() => {
+    const used = new Set([
+      ...recommendedExperts.map(c => c.id),
+      ...sharedInterestChampions.map(c => c.id),
+      ...mentors.map(c => c.id),
+    ]);
+    return visibleChampions
+      .filter(c => !used.has(c.id) && isCommunityLeader(c))
+      .slice(0, 6);
+  }, [visibleChampions, recommendedExperts, sharedInterestChampions, mentors]);
+
+  const domainClusters = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of visibleChampions) {
+      for (const d of championDomains(c)) incDomain(map, d);
+    }
+    return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, 6);
+  }, [visibleChampions]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>
-      <section className="compact-hero">
-        <div className="section-kicker">Champions</div>
-        <h1>Meet the people who make TechXchange extraordinary.</h1>
+      <section className="compact-hero story-hero--strong">
+        <div className="section-kicker">People intelligence</div>
+        <h1>Experts, mentors, and community leaders.</h1>
         <p>
-          IBM Champions bring practical knowledge, generosity, and peer guidance into
-          the event experience. For personalised champion matches scored against your
-          profile, open My Experience.
+          IBM Champions bring practical knowledge and peer guidance into TechXchange.
+          Compass surfaces who to meet — by expertise, shared interests, and availability.
         </p>
       </section>
 
       <section className="section no-top-border">
-        {/* Header row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <div className="section-kicker" style={{ margin: 0 }}>All champions</div>
-            <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: "0.95rem" }}>
-              {loading ? "Loading…" : `${champions.length} Champion${champions.length !== 1 ? "s" : ""} in the guide`}
+            <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.95rem" }}>
+              {loading ? "Loading…" : `${champions.length} Champion${champions.length !== 1 ? "s" : ""} indexed`}
             </p>
           </div>
           <Link href="/experience" className="btn-secondary" style={{ fontSize: "0.88rem" }}>
@@ -338,8 +457,7 @@ export default function ChampionsPage() {
           </Link>
         </div>
 
-        {/* Search */}
-        <div style={{ marginBottom: "24px" }}>
+        <div style={{ marginBottom: "8px" }}>
           <input
             type="search"
             placeholder="Search by name or organisation…"
@@ -358,21 +476,97 @@ export default function ChampionsPage() {
             </span>
           )}
         </div>
-
-        {/* Grid */}
-        {loading ? (
-          <p style={{ color: "var(--muted)" }}>Loading champions from Firestore…</p>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: "48px 0", textAlign: "center" }}>
-            <p style={{ color: "var(--muted)", marginBottom: "16px" }}>No champions match your search.</p>
-            <button onClick={() => setSearch("")} className="btn-secondary">Clear search</button>
-          </div>
-        ) : (
-          <div className="champion-grid three-champions">
-            {filtered.map((c) => <ChampionCard key={c.id} c={c} pState={pState} />)}
-          </div>
-        )}
       </section>
+
+      {loading ? (
+        <section className="section">
+          <p style={{ color: "var(--muted)" }}>Loading champions from Firestore…</p>
+        </section>
+      ) : search ? (
+        <section className="section">
+          {filtered.length === 0 ? (
+            <div style={{ padding: "48px 0", textAlign: "center" }}>
+              <p style={{ color: "var(--muted)", marginBottom: "16px" }}>No champions match your search.</p>
+              <button onClick={() => setSearch("")} className="btn-secondary">Clear search</button>
+            </div>
+          ) : (
+            <div className="champion-grid three-champions">
+              {filtered.map((c) => <ChampionCard key={c.id} c={c} pState={pState} />)}
+            </div>
+          )}
+        </section>
+      ) : (
+        <>
+          {!user && domainClusters.length > 0 && (
+            <section className="section intelligence-band intelligence-band--clusters">
+              <div className="section-head">
+                <div>
+                  <div className="section-kicker">Expertise clusters</div>
+                  <h2>Where knowledge concentrates.</h2>
+                </div>
+                <p>Domain coverage across the Champion guide — build your Compass for personalised matches.</p>
+              </div>
+              <div className="domain-cluster-row">
+                {domainClusters.map(([domain, count]) => (
+                  <div key={domain} className="domain-cluster-chip">
+                    <span>{domain}</span>
+                    <b>{count}</b>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <PeopleIntelligenceBand
+            kicker="Recommended experts"
+            title="Connection-ready Champions."
+            desc={user && profileSignals.length > 0
+              ? "Saved Champions and experts open for 1:1 conversations."
+              : "Experts available for 1:1 — build your Compass for personalised matches on My Experience."}
+            champions={recommendedExperts}
+            pState={pState}
+          />
+
+          {user && profileSignals.length > 0 && (
+            <PeopleIntelligenceBand
+              kicker="Shared interests"
+              title="Champions in your domains."
+              desc="Experts whose domains overlap with your tracks, goals, and career interests."
+              champions={sharedInterestChampions}
+              pState={pState}
+            />
+          )}
+
+          <PeopleIntelligenceBand
+            kicker="Mentors"
+            title="Open for 1:1 conversations."
+            desc="Champions explicitly available to meet during TechXchange."
+            champions={mentors}
+            pState={pState}
+          />
+
+          <PeopleIntelligenceBand
+            kicker="Community leaders"
+            title="Guides shaping the event."
+            desc="Champions focused on community, advocacy, and peer leadership."
+            champions={communityLeaders}
+            pState={pState}
+          />
+
+          <section className="section">
+            <div className="section-head">
+              <div>
+                <div className="section-kicker">Browse all</div>
+                <h2>Every Champion in the guide.</h2>
+              </div>
+              <p>Alphabetical directory — search above to narrow down.</p>
+            </div>
+            <div className="champion-grid three-champions">
+              {visibleChampions.map((c) => <ChampionCard key={c.id} c={c} pState={pState} />)}
+            </div>
+          </section>
+        </>
+      )}
 
       <section className="final-band">
         <div>

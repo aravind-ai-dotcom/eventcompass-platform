@@ -419,6 +419,34 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// IntelligenceBand — presentation slice of scored sessions (no scoring change)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function IntelligenceBand({ kicker, title, desc, sessions, sched }: {
+  kicker: string;
+  title: string;
+  desc: string;
+  sessions: ScoredSession[];
+  sched: ScheduleState;
+}) {
+  if (sessions.length === 0) return null;
+  return (
+    <section className="section intelligence-band">
+      <div className="section-head">
+        <div>
+          <div className="section-kicker">{kicker}</div>
+          <h2>{title}</h2>
+        </div>
+        <p>{desc}</p>
+      </div>
+      <div className="intelligence-row">
+        {sessions.map(s => <RecommendedCard key={s.id} session={s} sched={sched} />)}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // FilterChip  (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -576,12 +604,33 @@ export default function SessionsPage() {
 
   const isFiltered = search !== "" || trackFilter !== "All" || typeFilter !== "All" || dayFilter !== "All";
 
-  // Recommended: exclude dismissed sessions
-  const recommended = useMemo(() => {
-    return (isFiltered ? filtered : allScored)
-      .filter((s) => !doNotSuggest.includes(s.id))
-      .slice(0, 6);
+  // Base list for intelligence bands — exclude dismissed, preserve score order
+  const baseList = useMemo(() => {
+    return (isFiltered ? filtered : allScored).filter(s => !doNotSuggest.includes(s.id));
   }, [isFiltered, filtered, allScored, doNotSuggest]);
+
+  const recommended = useMemo(() => baseList.slice(0, 6), [baseList]);
+
+  const recommendedIds = useMemo(() => new Set(recommended.map(s => s.id)), [recommended]);
+
+  const trending = useMemo(() => {
+    return baseList
+      .filter(s => !recommendedIds.has(s.id) && s.recommendation_rules?.everyone_encouraged)
+      .slice(0, 4);
+  }, [baseList, recommendedIds]);
+
+  const hiddenGems = useMemo(() => {
+    const exclude = new Set([...recommendedIds, ...trending.map(s => s.id)]);
+    return baseList
+      .filter(s => !exclude.has(s.id) && s.compass_score > 0)
+      .slice(6, 10);
+  }, [baseList, recommendedIds, trending]);
+
+  const highDemand = useMemo(() => {
+    return baseList
+      .filter(s => s.capacity?.status === "limited")
+      .slice(0, 4);
+  }, [baseList]);
 
   const catalogSessions = isFiltered ? filtered : allScored;
 
@@ -608,12 +657,12 @@ export default function SessionsPage() {
 
   return (
     <>
-      <section className="compact-hero">
-        <div className="section-kicker">Session Guide</div>
-        <h1>Sessions matched to you.</h1>
+      <section className="compact-hero story-hero--strong">
+        <div className="section-kicker">Session intelligence</div>
+        <h1>Sessions that fit your week.</h1>
         <p>
-          Compass ranks {totalCount} sessions by your goals, tracks, role, needs,
-          industry, and keywords. The highest match is shown first.
+          Compass reads {totalCount} sessions against your profile and surfaces
+          what to prioritise — recommended matches, room momentum, and seats filling fast.
         </p>
       </section>
 
@@ -681,34 +730,58 @@ export default function SessionsPage() {
         )}
       </section>
 
-      {/* ── Recommended grid ────────────────────────────────────────── */}
-      {recommended.length > 0 && (
-        <section className="section">
-          <div className="section-head">
-            <div>
-              <div className="section-kicker">{isFiltered ? "Top matches in results" : "Recommended for you"}</div>
-              <h2>{isFiltered ? `Top ${recommended.length} from your search` : "Your highest-scored sessions."}</h2>
-            </div>
-            <p>
-              {isFiltered
-                ? "Compass scores within your filtered results. Score reflects match to your profile."
-                : "Ranked by track alignment, goals, needs, role, industry, and keyword overlap."}
-            </p>
-          </div>
-          <div className="opportunity-grid three">
-            {recommended.map((s) => <RecommendedCard key={s.id} session={s} sched={schedState} />)}
-          </div>
-        </section>
+      {/* ── Session intelligence bands ──────────────────────────────── */}
+      {!isFiltered && (
+        <>
+          <IntelligenceBand
+            kicker="Recommended"
+            title="Your strongest matches."
+            desc="Highest-scored sessions against your goals, tracks, role, and needs."
+            sessions={recommended}
+            sched={schedState}
+          />
+          <IntelligenceBand
+            kicker="Trending"
+            title="Broad appeal across the event."
+            desc="Sessions with wide relevance — many attendees are likely to benefit."
+            sessions={trending}
+            sched={schedState}
+          />
+          <IntelligenceBand
+            kicker="Hidden gems"
+            title="Strong fits beyond the obvious."
+            desc="Well-matched sessions that may not be on everyone's radar yet."
+            sessions={hiddenGems}
+            sched={schedState}
+          />
+          <IntelligenceBand
+            kicker="High demand"
+            title="Seats filling fast."
+            desc="Limited-capacity sessions worth booking early."
+            sessions={highDemand}
+            sched={schedState}
+          />
+        </>
+      )}
+
+      {isFiltered && recommended.length > 0 && (
+        <IntelligenceBand
+          kicker="Top matches"
+          title={`Best ${recommended.length} from your search.`}
+          desc="Compass scores within your filtered results."
+          sessions={recommended}
+          sched={schedState}
+        />
       )}
 
       {/* ── Full catalog ─────────────────────────────────────────────── */}
       <section className="section">
         <div className="section-head">
           <div>
-            <div className="section-kicker">{isFiltered ? "Filtered catalog" : "All sessions"}</div>
+            <div className="section-kicker">{isFiltered ? "Filtered results" : "Browse all"}</div>
             <h2>{isFiltered ? `${catalogSessions.length} session${catalogSessions.length !== 1 ? "s" : ""}` : `All ${totalCount} sessions`}</h2>
           </div>
-          <p>Sorted by Match score &#8212; highest first.</p>
+          <p>Sorted by match score — highest first.</p>
         </div>
 
         {catalogSessions.length === 0 ? (

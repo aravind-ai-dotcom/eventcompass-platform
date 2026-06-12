@@ -123,13 +123,11 @@ function CarbonPicto({ type }: { type: "people" | "globe" | "community" | "learn
       </svg>
     ),
     learn: (
-      <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-        <path d="M3 4h2v26H3z" />
-        <path d="M4 6h22v2H4z" />
-        <path d="M4 11h18v2H4z" />
-        <path d="M4 16h22v2H4z" />
-        <path d="M4 21h16v2H4z" />
-        <path d="M4 26h20v2H4z" />
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <rect x="4" y="6" width="24" height="16" rx="1" />
+        <path d="M4 22h24" />
+        <circle cx="16" cy="14" r="4" />
+        <path d="M10 26h12" />
       </svg>
     ),
   };
@@ -270,25 +268,25 @@ export default function PulsePage() {
 
   return (
     <>
-      <section className="story-hero story-hero--strong">
+      <section className="story-hero story-hero--strong story-hero--compact">
         <div className="section-kicker">Event Pulse</div>
         <h1>See who is here, what is moving, and where opportunities are forming.</h1>
         <p>
-          Live intelligence from TechXchange — connection intent, relationship patterns,
-          and learning signals shaping the room around you.
+          Event intelligence from TechXchange — connection intent, relationship patterns,
+          and learning signals from the room.
         </p>
       </section>
 
       {/* 1. Connection Intent */}
-      <section className="story-section no-top-border">
+      <section className="story-section story-section--compact no-top-border">
         <div className="story-head-with-picto">
           <CarbonPicto type="people" />
           <div>
             <span style={KICKER}>Connection intent</span>
             <h2>Open to connections.</h2>
             <p className="story-lead">
-              Nostalgia and curiosity start here — alumni, former colleagues, university peers,
-              and career conversations attendees are open to this week.
+              Attendees are signalling the types of conversations they are open to
+              having this week — alumni, colleagues, university peers, and career talks.
             </p>
           </div>
         </div>
@@ -301,22 +299,22 @@ export default function PulsePage() {
 
         {!loading && data && connectionTotal > 0 && (
           <>
-            <div className="story-grid">
+            <div className="story-grid story-grid--intent">
               {[
                 { label: "Alumni connections", val: data.openToAlumni, color: "#6929c4" },
                 { label: "Past colleagues", val: data.openToColleague, color: "#0f62fe" },
                 { label: "University community", val: data.openToUniversity, color: "#005d5d" },
                 { label: "Career conversations", val: data.openToCareer, color: "#b45309" },
-              ].map(s => (
+              ].map(item => (
                 <div
-                  key={s.label}
-                  className="story-card story-card-large"
-                  style={{ borderTop: `3px solid ${s.color}` }}
+                  key={item.label}
+                  className="story-card story-card-compact story-card-intent"
+                  style={{ borderTop: `3px solid ${item.color}` }}
                 >
-                  <p className="quiet-count" style={{ color: s.color, fontSize: "clamp(2.4rem, 4vw, 3.2rem)" }}>
-                    {s.val}
+                  <p className="quiet-count quiet-count--sm" style={{ color: item.color }}>
+                    {item.val}
                   </p>
-                  <p className="story-card-body" style={{ margin: 0 }}>{s.label}</p>
+                  <p className="story-card-body" style={{ margin: 0 }}>{item.label}</p>
                 </div>
               ))}
             </div>
@@ -329,14 +327,14 @@ export default function PulsePage() {
       </section>
 
       {/* 2. Relationship Intelligence */}
-      <section className="story-section">
+      <section className="story-section story-section--compact">
         <div className="story-head-with-picto">
           <CarbonPicto type="globe" />
           <div>
             <span style={KICKER}>Relationship intelligence</span>
             <h2>Where connections are forming.</h2>
             <p className="story-lead">
-              Top universities, former employers, and countries represented in the room.
+              Universities, former employers, countries, and interest groups represented in the room.
             </p>
           </div>
         </div>
@@ -369,12 +367,12 @@ export default function PulsePage() {
       </section>
 
       {/* 3. Communities Taking Shape */}
-      <section className="story-section">
+      <section className="story-section story-section--compact">
         <div className="story-head-with-picto">
           <CarbonPicto type="community" />
           <div>
             <span style={KICKER}>Communities taking shape</span>
-            <h2>Shared interests surfacing.</h2>
+            <h2>Top communities.</h2>
             <p className="story-lead">
               AI, Cloud, Community, and the domains attendees are rallying around this week.
             </p>
@@ -399,15 +397,13 @@ export default function PulsePage() {
       </section>
 
       {/* 4. Learning Signals */}
-      <section className="story-section">
+      <section className="story-section story-section--compact">
         <div className="story-head-with-picto">
           <CarbonPicto type="learn" />
           <div>
             <span style={KICKER}>Learning signals</span>
             <h2>What people are here to learn.</h2>
-            <p className="story-lead">
-              Top tracks and topics across the session catalog.
-            </p>
+            <p className="story-lead">Top tracks and topics across the session catalog.</p>
           </div>
         </div>
 
@@ -434,8 +430,8 @@ export default function PulsePage() {
             </>
           ) : (
             <>
-              <h2>Pulse becomes personal when Compass knows your intent.</h2>
-              <p>Build your Compass to turn these event signals into a focused plan.</p>
+              <h2>Build My Compass to go deeper.</h2>
+              <p>Turn these event signals into a focused plan for TechXchange.</p>
             </>
           )}
         </div>

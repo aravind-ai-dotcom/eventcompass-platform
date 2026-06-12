@@ -1416,14 +1416,12 @@ export default function ExperiencePage() {
 
   return (
     <>
-      {/* ── ParticipantHero — right column now holds score + signal card ── */}
+      {/* ── ParticipantHero ── */}
       <section className="section no-top-border">
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "28px", alignItems: "start" }}>
           <div>
             <div className="section-kicker">My Compass</div>
-            <h1 style={{ fontSize: "clamp(2.6rem, 5vw, 4.6rem)", lineHeight: 0.97, letterSpacing: "-0.05em", fontWeight: 520, margin: "0 0 12px", color: "var(--text)" }}>
-              {displayName}
-            </h1>
+            <h1 className="experience-hero-title">{displayName}</h1>
             {(jobTitle || company) && (
               <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "1.05rem" }}>
                 {[jobTitle, company].filter(Boolean).join(" · ")}
@@ -1476,37 +1474,18 @@ export default function ExperiencePage() {
         </div>
       </section>
 
-      {/* ── EventUniverseStats ─────────────────────────────────────────── */}
-      <section className="section">
-        <div className="section-head">
-          <div>
-            <div className="section-kicker">Event universe</div>
-            <h2>What Compass is working with.</h2>
-          </div>
-          <p>
-            Compass is looking across every session, Champion, community programme, and hands-on
-            opportunity to shape your TechXchange experience.
-          </p>
-        </div>
-        <div className="pulse-scoreboard">
-          <article><span>Sessions indexed</span><b>{counts.sessions}</b></article>
-          <article><span>Champions available</span><b>{counts.champions}</b></article>
-          <article><span>Attendee signals</span><b>{counts.participants}</b></article>
-          <article><span>Top match score</span><b>{topScore}</b></article>
-        </div>
-      </section>
-
-      {/* ── What You Told Compass ──────────────────────────────────────── */}
-      <WhatYouToldCompass participant={participant} />
-
-      {/* ── NextBestMove  (wiring preserved exactly) ───────────────────── */}
+      {/* ── Next Best Move — primary intelligence surface ──────────────── */}
       {nextBestMove && (
-        <section className="section">
+        <section className="section intelligence-surface intelligence-surface--prominent">
           <div className="section-head narrow">
             <div>
-              <div className="section-kicker">Right now</div>
-              <h2>Your next best move.</h2>
+              <div className="section-kicker">Next best move</div>
+              <h2>The one session to act on now.</h2>
             </div>
+            <p>
+              Compass picked your strongest remaining match — schedule it, then
+              explore Community, Learning, and Fun below.
+            </p>
           </div>
           <NextBestMoveCard
             nextBestMove={{
@@ -1525,6 +1504,37 @@ export default function ExperiencePage() {
         </section>
       )}
 
+      {/* ── Experience balance — Community / Learning / Fun ─────────── */}
+      <section className="section">
+        <div className="section-head narrow">
+          <div>
+            <div className="section-kicker">Your week in balance</div>
+            <h2>Community · Learning · Fun.</h2>
+          </div>
+          <p>
+            How your recommended sessions distribute across the three pillars —
+            adjust anytime as you save or dismiss sessions.
+          </p>
+        </div>
+        <ExperienceBalance sessionCounts={pillarCounts} />
+      </section>
+
+      {/* ── Event context (compact) ──────────────────────────────────── */}
+      <section className="section">
+        <div className="section-head">
+          <div>
+            <div className="section-kicker">Event context</div>
+            <h2>What Compass is working with.</h2>
+          </div>
+          <p>
+            {counts.sessions} sessions · {counts.champions} Champions · {counts.participants} attendee signals indexed.
+            {topScore > 0 && <> Top match score: {topScore}.</>}
+          </p>
+        </div>
+      </section>
+
+      <WhatYouToldCompass participant={participant} />
+
       {/* ── Day-tab experience (sessions only) ─────────────────────────── */}
       <DayTabExperience
         learningList={learningList}
@@ -1535,16 +1545,15 @@ export default function ExperiencePage() {
 
       {/* ── People Compass Recommends ──────────────────────────────────── */}
       {champions.length > 0 && (
-        <section className="section">
+        <section className="section intelligence-band">
           <div className="section-head narrow">
             <div>
-              <div className="section-kicker">People</div>
-              <h2>People Compass Recommends.</h2>
+              <div className="section-kicker">People intelligence</div>
+              <h2>Champions matched to your profile.</h2>
             </div>
             <p>
-              TechXchange is better when you find your people. Below are the Champions
-              scored highest against your profile &mdash; every reason Compass matched
-              them is shown on their card.
+              Scored against your keywords, tracks, and goals — every match reason
+              is shown on the card.
             </p>
           </div>
           <div className="champion-grid three-champions">
@@ -1711,14 +1720,11 @@ export default function ExperiencePage() {
         </div>
       </section>
 
-      {/* ── Experience Balance + Export row ────────────────────────────── */}
+      {/* ── Export + TV (balance moved above) ──────────────────────────── */}
       <section className="section">
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "16px", alignItems: "start" }}>
-          <ExperienceBalance sessionCounts={pillarCounts} />
-          <div style={{ display: "grid", gap: "14px" }}>
-            <ExportPanel participantId={participantId} sessions={allSessions} />
-            <TechXchangeTV />
-          </div>
+          <ExportPanel participantId={participantId} sessions={allSessions} />
+          <TechXchangeTV />
         </div>
       </section>
 

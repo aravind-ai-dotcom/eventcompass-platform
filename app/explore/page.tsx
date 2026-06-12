@@ -1,8 +1,8 @@
 "use client";
 // =============================================================================
 // EventCompass — Explore  /explore
-// Mobile-first story layout: four experience pillars, room intelligence,
-// synthetic persona examples. Live Firestore aggregation preserved.
+// Intelligence surface: pillar strip, room signals, attendee trend signals.
+// Live Firestore aggregation preserved — presentation only.
 // =============================================================================
 import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebase";
@@ -74,42 +74,49 @@ function top(map: Record<string, number>, n = 6) {
   return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, n);
 }
 
+interface ConnectionIntent {
+  alumni: number;
+  colleagues: number;
+  university: number;
+  career: number;
+}
+
 interface RoomData {
   countries: Record<string, number>;
   universities: Record<string, number>;
   employers: Record<string, number>;
   groups: Record<string, number>;
+  connectionIntent: ConnectionIntent;
+  participantCount: number;
 }
 
-interface SyntheticPersona {
-  name: string;
-  role: string;
-  location: string;
-  flag: string;
-  needs: [string, string, string];
-  compassHelp: string;
+interface TrendSignal {
+  kicker: string;
+  headline: string;
+  detail: string;
+  metric: string;
 }
 
 const EXPERIENCE_PILLARS = [
   {
     picto: "community" as const,
     title: "Community",
-    body: "Alumni circles, partner programs, and shared goals forming before the week begins.",
+    body: "Alumni, partners, shared interests.",
   },
   {
     picto: "learning" as const,
     title: "Learning",
-    body: "Labs, certifications, and technical breakouts matched to what you came to build.",
+    body: "Breakouts, labs, expert sessions.",
   },
   {
     picto: "networking" as const,
     title: "Networking",
-    body: "Past colleagues, university peers, and career conversations waiting in the room.",
+    body: "Peers, universities, career talks.",
   },
   {
     picto: "fun" as const,
     title: "Fun",
-    body: "Keynotes, celebrations, and shared moments that anchor the week together.",
+    body: "Keynotes, celebrations, shared moments.",
   },
 ];
 
@@ -137,10 +144,11 @@ function CarbonPicto({ type }: { type: "community" | "learning" | "networking" |
     ),
     learning: (
       <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <path d="M18 8v16L8 38a2 2 0 001.7 3h26.6A2 2 0 0038 38L28 24V8" />
-        <line x1="16" y1="8" x2="32" y2="8" />
-        <circle cx="20" cy="32" r="2" fill="currentColor" stroke="none" />
-        <circle cx="28" cy="36" r="1.5" fill="currentColor" stroke="none" />
+        <rect x="6" y="10" width="36" height="22" rx="1" />
+        <path d="M6 32h36" />
+        <circle cx="24" cy="21" r="5" />
+        <path d="M14 38h20" />
+        <path d="M18 38v4M30 38v4" />
       </svg>
     ),
     networking: (
@@ -161,7 +169,7 @@ function CarbonPicto({ type }: { type: "community" | "learning" | "networking" |
       </svg>
     ),
   };
-  return <div className="carbon-picto">{icons[type]}</div>;
+  return <div className="carbon-picto carbon-picto--sm">{icons[type]}</div>;
 }
 
 function InsightBlock({
@@ -175,7 +183,7 @@ function InsightBlock({
 }) {
   if (rows.length === 0) return null;
   return (
-    <div className="story-card">
+    <div className="story-card story-card-compact">
       <p className="insight-block-title">{title}</p>
       <div className="insight-list">
         {rows.map(([name, count]) => (
@@ -189,53 +197,88 @@ function InsightBlock({
   );
 }
 
-function buildPersonas(room: RoomData | null): SyntheticPersona[] {
-  const topCountry = top(room?.countries ?? {}, 1)[0];
-  const topUni = top(room?.universities ?? {}, 1)[0];
-  const topEmployer = top(room?.employers ?? {}, 1)[0];
-  const topGroups = top(room?.groups ?? {}, 3).map(([g]) => g);
+function buildTrendSignals(room: RoomData | null): TrendSignal[] {
+  if (!room || room.participantCount === 0) return [];
 
-  const countryName = topCountry?.[0] ?? "United States";
-  const uniName = topUni?.[0] ?? "NC State University";
-  const employerName = topEmployer?.[0] ?? "IBM";
-  const trackA = topGroups[0] ?? "Cloud";
-  const trackB = topGroups[1] ?? "AI";
-  const trackC = topGroups[2] ?? "Community";
+  const signals: TrendSignal[] = [];
+  const { connectionIntent: ci } = room;
 
-  return [
-    {
-      name: "Aisha Mensah",
-      role: "Cloud Platform Engineer",
-      location: countryName,
-      flag: countryFlag(countryName),
-      needs: [`${trackA} deep dives`, "Alumni connections", "Hands-on labs"],
-      compassHelp: `Compass would help this attendee find ${trackA} sessions, surface ${employerName} alumni in the room, and match Champions in their domain.`,
-    },
-    {
-      name: "Lucas Fernández",
-      role: "Solutions Architect",
-      location: "Germany",
-      flag: countryFlag("Germany"),
-      needs: [`${trackB} workshops`, "University peers", "Career conversations"],
-      compassHelp: `Compass would help this attendee reconnect with ${uniName} alumni, prioritise ${trackB} learning paths, and flag networking moments worth their time.`,
-    },
-    {
-      name: "Mei Chen",
-      role: "Data & AI Lead",
-      location: "Singapore",
-      flag: countryFlag("Singapore"),
-      needs: [`${trackC} programs`, "Past colleagues", "Certification paths"],
-      compassHelp: `Compass would help this attendee balance ${trackC} community time with scored sessions from former ${employerName} colleagues already attending.`,
-    },
-    {
-      name: "Jordan Okonkwo",
-      role: "Technical Practitioner",
-      location: "Canada",
-      flag: countryFlag("Canada"),
-      needs: ["Peer networking", `${trackA} & ${trackB}`, "Expert access"],
-      compassHelp: "Compass would help this attendee turn a crowded catalog into a focused four-day path shaped by their goals and the people already in the room.",
-    },
-  ];
+  for (const [name, count] of top(room.groups, 3)) {
+    signals.push({
+      kicker: "Interest signal",
+      headline: `${name} is rising in the room`,
+      detail: `${count} attendee${count !== 1 ? "s" : ""} flagged ${name} in their Compass profile.`,
+      metric: String(count),
+    });
+  }
+
+  if (ci.alumni > 0) {
+    signals.push({
+      kicker: "Connection intent",
+      headline: "Alumni reconnections are open",
+      detail: `${ci.alumni} attendee${ci.alumni !== 1 ? "s" : ""} signalled openness to alumni connections.`,
+      metric: String(ci.alumni),
+    });
+  }
+  if (ci.colleagues > 0) {
+    signals.push({
+      kicker: "Connection intent",
+      headline: "Past colleagues in play",
+      detail: `${ci.colleagues} attendee${ci.colleagues !== 1 ? "s" : ""} want to reconnect with former colleagues.`,
+      metric: String(ci.colleagues),
+    });
+  }
+  if (ci.university > 0) {
+    signals.push({
+      kicker: "Connection intent",
+      headline: "University networks active",
+      detail: `${ci.university} attendee${ci.university !== 1 ? "s" : ""} open to university peer connections.`,
+      metric: String(ci.university),
+    });
+  }
+  if (ci.career > 0) {
+    signals.push({
+      kicker: "Connection intent",
+      headline: "Career conversations forming",
+      detail: `${ci.career} attendee${ci.career !== 1 ? "s" : ""} signalled interest in career discussions.`,
+      metric: String(ci.career),
+    });
+  }
+
+  const countryCount = Object.keys(room.countries).length;
+  if (countryCount > 1) {
+    const topCountry = top(room.countries, 1)[0];
+    signals.push({
+      kicker: "Geography",
+      headline: `${countryCount} countries represented`,
+      detail: topCountry
+        ? `Largest cluster: ${topCountry[0]} (${topCountry[1]} attendee${topCountry[1] !== 1 ? "s" : ""}).`
+        : "A globally distributed attendee base is shaping the room.",
+      metric: String(countryCount),
+    });
+  }
+
+  const topEmployer = top(room.employers, 1)[0];
+  if (topEmployer && topEmployer[1] >= 2) {
+    signals.push({
+      kicker: "Employer signal",
+      headline: `${topEmployer[0]} alumni in the room`,
+      detail: `${topEmployer[1]} attendee${topEmployer[1] !== 1 ? "s" : ""} share a former employer — a natural connection thread.`,
+      metric: String(topEmployer[1]),
+    });
+  }
+
+  const topUni = top(room.universities, 1)[0];
+  if (topUni && topUni[1] >= 2) {
+    signals.push({
+      kicker: "Education signal",
+      headline: `${topUni[0]} peers attending`,
+      detail: `${topUni[1]} attendee${topUni[1] !== 1 ? "s" : ""} share this university — a ready-made peer circle.`,
+      metric: String(topUni[1]),
+    });
+  }
+
+  return signals.slice(0, 6);
 }
 
 export default function ExplorePage() {
@@ -250,6 +293,12 @@ export default function ExplorePage() {
         const universities: Record<string, number> = {};
         const employers: Record<string, number> = {};
         const groups: Record<string, number> = {};
+        const connectionIntent: ConnectionIntent = {
+          alumni: 0,
+          colleagues: 0,
+          university: 0,
+          career: 0,
+        };
 
         for (const d of snap.docs) {
           const p = d.data() as RawDoc;
@@ -262,15 +311,37 @@ export default function ExplorePage() {
           ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(groups, t));
           ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(groups, r));
           ((p.career_interests as string[]) ?? []).forEach(c => inc(groups, c));
+
+          const ni = (p.networking_identity as Record<string, unknown>) ?? {};
+          if (ni.open_to_alumni_connections) connectionIntent.alumni++;
+          if (ni.open_to_past_colleague_connections) connectionIntent.colleagues++;
+          if (ni.open_to_university_connections) connectionIntent.university++;
+          if (ni.open_to_career_conversations) connectionIntent.career++;
         }
 
-        setRoom({ countries, universities, employers, groups });
+        setRoom({
+          countries,
+          universities,
+          employers,
+          groups,
+          connectionIntent,
+          participantCount: snap.size,
+        });
       })
-      .catch(() => setRoom({ countries: {}, universities: {}, employers: {}, groups: {} }))
+      .catch(() =>
+        setRoom({
+          countries: {},
+          universities: {},
+          employers: {},
+          groups: {},
+          connectionIntent: { alumni: 0, colleagues: 0, university: 0, career: 0 },
+          participantCount: 0,
+        })
+      )
       .finally(() => setLoading(false));
   }, []);
 
-  const personas = useMemo(() => buildPersonas(room), [room]);
+  const trendSignals = useMemo(() => buildTrendSignals(room), [room]);
 
   const hasRoomData =
     room &&
@@ -281,41 +352,37 @@ export default function ExplorePage() {
 
   return (
     <>
-      <section className="story-hero story-hero--strong">
+      <section className="story-hero story-hero--strong story-hero--compact">
         <div className="section-kicker">Explore</div>
-        <h1>Different attendees need different weeks.</h1>
+        <h1>No two TechXchange journeys are the same.</h1>
         <p>
-          Compass helps each person turn the same event into a personal path through
-          Community, Learning, and Fun — not a one-size-fits-all catalog.
+          Compass reads the room — interests, connections, and geography — so you
+          can see what is forming before you arrive.
         </p>
       </section>
 
-      <section className="story-section no-top-border">
-        <div className="story-head">
+      <section className="story-section story-section--compact no-top-border">
+        <div className="story-head story-head--tight">
           <span style={KICKER}>Experience pillars</span>
           <h2>Four ways to spend your time.</h2>
-          <p className="story-lead">
-            Start with what matters to you. Compass scores the rest against your intent.
-          </p>
         </div>
-        <div className="story-grid">
+        <div className="pillar-strip">
           {EXPERIENCE_PILLARS.map(p => (
-            <article key={p.title} className="story-card story-card-large">
+            <article key={p.title} className="pillar-strip-item story-card story-card-compact">
               <CarbonPicto type={p.picto} />
-              <h3 className="story-card-title">{p.title}</h3>
-              <p className="story-card-body">{p.body}</p>
+              <h3 className="story-card-title story-card-title--sm">{p.title}</h3>
+              <p className="story-card-body story-card-body--sm">{p.body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="story-section">
-        <div className="story-head">
-          <span style={KICKER}>Room intelligence</span>
-          <h2>Look who is already in the room.</h2>
+      <section className="story-section story-section--compact">
+        <div className="story-head story-head--tight">
+          <span style={KICKER}>Attendee trend signals</span>
+          <h2>What the room is telling us.</h2>
           <p className="story-lead">
-            Compass reveals the countries, universities, past employers, and interest groups
-            shaping the room before you even arrive.
+            Live aggregate signals from Compass profiles — no individual data shown.
           </p>
         </div>
 
@@ -323,26 +390,53 @@ export default function ExplorePage() {
           <p style={{ color: "var(--muted)", fontSize: "0.92rem" }}>Reading attendee signals…</p>
         )}
 
+        {!loading && trendSignals.length === 0 && (
+          <p style={{ color: "var(--muted)", fontSize: "0.92rem", lineHeight: 1.55 }}>
+            Trend signals will appear here as attendees build their Compass profiles.{" "}
+            <Link href="/enroll" style={{ color: "var(--accent)" }}>Add your background →</Link>
+          </p>
+        )}
+
+        {!loading && trendSignals.length > 0 && (
+          <div className="trend-signal-grid">
+            {trendSignals.map((s, i) => (
+              <article key={`${s.headline}-${i}`} className="trend-signal-card">
+                <span className="trend-signal-metric">{s.metric}</span>
+                <p className="trend-signal-kicker">{s.kicker}</p>
+                <h3 className="trend-signal-headline">{s.headline}</h3>
+                <p className="trend-signal-detail">{s.detail}</p>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="story-section story-section--compact">
+        <div className="story-head story-head--tight">
+          <span style={KICKER}>Room breakdown</span>
+          <h2>Who is already here.</h2>
+        </div>
+
         {!loading && !hasRoomData && (
           <p style={{ color: "var(--muted)", fontSize: "0.92rem", lineHeight: 1.55 }}>
-            Room signals will appear here as attendees build their Compass profiles.
+            Room breakdown will populate as attendee profiles arrive.
           </p>
         )}
 
         {!loading && hasRoomData && room && (
-          <div className="story-grid">
+          <div className="story-grid story-grid--room">
             <InsightBlock
               title="Countries"
-              rows={top(room.countries, 6)}
+              rows={top(room.countries, 5)}
               renderLabel={name => (
                 <>
                   <span aria-hidden="true">{countryFlag(name)}</span> {name}
                 </>
               )}
             />
-            <InsightBlock title="Universities" rows={top(room.universities, 6)} />
-            <InsightBlock title="Former employers" rows={top(room.employers, 6)} />
-            <InsightBlock title="Groups" rows={top(room.groups, 6)} />
+            <InsightBlock title="Universities" rows={top(room.universities, 5)} />
+            <InsightBlock title="Former employers" rows={top(room.employers, 5)} />
+            <InsightBlock title="Interest groups" rows={top(room.groups, 5)} />
           </div>
         )}
 
@@ -354,52 +448,17 @@ export default function ExplorePage() {
         )}
       </section>
 
-      <section className="story-section">
-        <div className="story-head">
-          <span style={KICKER}>See what Compass can do</span>
-          <h2>One event. A path for every attendee.</h2>
-          <p className="story-lead">
-            Composite profiles inspired by patterns in the room — not real people.
-            Each shows how Compass turns signals into action.
-          </p>
-        </div>
-        <div className="story-grid">
-          {personas.map(p => (
-            <article key={p.name} className="story-card story-card-large">
-              <div className="persona-top">
-                <div>
-                  <h3 className="story-card-title">{p.name}</h3>
-                  <p className="persona-role">{p.role}</p>
-                </div>
-                <span aria-label={p.location}>{p.flag}</span>
-              </div>
-              <ul className="reason-list" style={{ marginBottom: "16px" }}>
-                {p.needs.map(n => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-              <p className="story-card-body" style={{ borderTop: "1px solid var(--line)", paddingTop: "14px", margin: 0 }}>
-                {p.compassHelp}
-              </p>
-            </article>
-          ))}
-        </div>
-        <p className="story-note">
-          Synthetic examples for illustration. Your Compass is computed from your profile and the live catalog.
-        </p>
-      </section>
-
       <section className="final-band">
         <div>
           {user && enrolled ? (
             <>
               <h2>Your Compass is live.</h2>
-              <p>Sessions, Champions, and your personalised plan are ready for you.</p>
+              <p>Sessions, Champions, and your personalised plan are ready.</p>
             </>
           ) : (
             <>
-              <h2>Tell Compass your intent.</h2>
-              <p>Once Compass knows what you want from TechXchange, Explore becomes personal.</p>
+              <h2>Ready to explore TechXchange?</h2>
+              <p>Build My Compass to connect your goals to sessions, champions, and community signals.</p>
             </>
           )}
         </div>
