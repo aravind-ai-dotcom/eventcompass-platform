@@ -136,9 +136,7 @@ function StepLabel({ step, title, subtitle }: { step: string; title: string; sub
       <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 5px" }}>
         {step}
       </p>
-      <h2 style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.9rem)", fontWeight: 520, letterSpacing: "-0.035em", margin: "0 0 6px", color: "var(--text)" }}>
-        {title}
-      </h2>
+      <h2 className="enroll-step-title">{title}</h2>
       <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.92rem", lineHeight: 1.5 }}>{subtitle}</p>
     </div>
   );
@@ -462,15 +460,18 @@ export default function EnrollPage() {
   if (!user && !authed) {
     return (
       <>
-        <section className="compact-hero">
+        <section className="compact-hero enroll-hero">
           <div className="section-kicker">Build My Compass</div>
-          <h1>Your personalised TechXchange starts here.</h1>
+          <h1>Tell Compass once. Refine later.</h1>
           <p>
-            Sign in to build your Compass profile. Your intent, background, and goals
-            power personalised session scores, champion matches, and your Next Best Move.
+            Sign in or create an account to start. A few strong signals are enough —
+            you can always update your profile from My Compass.
           </p>
+          <Link href="#compass-account" className="btn-primary enroll-hero-cta">
+            Create account / Build My Compass →
+          </Link>
         </section>
-        <section className="section no-top-border">
+        <section className="section no-top-border" id="compass-account">
           <AuthPanel onAuthenticated={() => setAuthed(true)} />
         </section>
         <div style={{ height: "64px" }} />
@@ -636,19 +637,19 @@ export default function EnrollPage() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="compact-hero">
+      <section className="compact-hero enroll-hero">
         <div className="section-kicker">
           {isEditMode ? "Refine My Compass" : "Build My Compass"}
         </div>
         <h1>
           {isEditMode
-            ? "Update your Compass profile."
-            : "Tell Compass what matters to you."}
+            ? "Refine what Compass knows."
+            : "Tell Compass once. Refine later."}
         </h1>
         <p>
           {isEditMode
-            ? "Your changes will immediately update your session scores, champion matches, and Next Best Move."
-            : "Compass uses your profile to score every session, surface relevant champions, and surface your Next Best Move. The more you share, the sharper your plan."}
+            ? "Update your goals, interests, or connection intent — your scores and matches refresh immediately."
+            : "Goals and learning interests are enough to start. Add background and connection intent when you are ready."}
         </p>
       </section>
 
@@ -664,8 +665,8 @@ export default function EnrollPage() {
         <section className="section no-top-border">
           <StepLabel
             step="01 · About You"
-            title="Let's start with the basics."
-            subtitle="Your name and location help Compass personalise your badge, introduce you to nearby attendees, and surface region-relevant sessions."
+            title="The basics."
+            subtitle="Name and location — enough for Compass to personalise your badge and regional sessions."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
@@ -708,8 +709,8 @@ export default function EnrollPage() {
         <section className="section">
           <StepLabel
             step="02 · Professional Context"
-            title="Your role shapes your Compass."
-            subtitle="Compass uses your title, industry, and persona to weight session recommendations, match you with relevant IBM Champions, and surface community conversations that fit your career stage."
+            title="Your role at a glance."
+            subtitle="Title and industry help Compass weight sessions and champion matches."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
@@ -770,8 +771,8 @@ export default function EnrollPage() {
         <section className="section">
           <StepLabel
             step="03 · Your Background"
-            title="Find your hidden network."
-            subtitle="Your education and career history unlock alumni, past-colleague, and peer connections you wouldn't find on a conference badge. The more Compass knows about your journey, the better it can find people who share it."
+            title="Unlock hidden connections."
+            subtitle="School and past employers surface alumni and colleague matches — optional, but powerful."
           />
           <div style={{ display: "grid", gap: "14px" }}>
 
@@ -798,28 +799,15 @@ export default function EnrollPage() {
               </div>
             </div>
 
-            <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.09em", margin: 0 }}>
-                Open to connections
-              </p>
-              <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.5, margin: 0 }}>
-                These settings control which background-based connections Compass will surface for you at TechXchange.
-              </p>
-              <CheckRow label="Connect with alumni from my university"  checked={openAlumni}     onChange={setOpenAlumni} />
-              <CheckRow label="Connect with past colleagues"             checked={openColleague}  onChange={setOpenColleague} />
-              <CheckRow label="Connect with my university community"     checked={openUniversity} onChange={setOpenUniversity} />
-              <CheckRow label="Open to career conversations"             checked={openCareer}    onChange={setOpenCareer} />
-            </div>
-
           </div>
         </section>
 
-        {/* ── 04 · Your TechXchange Intent ──────────────────────────────── */}
+        {/* ── 04 · Intent ───────────────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="04 · Your TechXchange Intent"
-            title="What do you want to get out of TechXchange?"
-            subtitle="This is the core of your Compass. Goals and tech tracks are the highest-weighted signals — they drive session scores, champion relevance, and your personalised schedule. The more you select, the more Compass can do."
+            step="04 · Your Intent"
+            title="What brought you to TechXchange?"
+            subtitle="Goals and learning interests drive your Compass scores. Connection intent helps you find the right people."
           />
 
           <IntentSubsection title="Goals — why are you attending?">
@@ -831,9 +819,9 @@ export default function EnrollPage() {
             </div>
           </IntentSubsection>
 
-          <IntentSubsection title="Technology — which tracks are most relevant?">
+          <IntentSubsection title="Learning interests">
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-              Tech tracks carry the highest scoring weight (+25 per match). Select every track where you want to go deep.
+              Select the tracks you want to go deep on. These carry the highest scoring weight.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {TRACKS.map(tr => (
@@ -843,29 +831,38 @@ export default function EnrollPage() {
             </div>
           </IntentSubsection>
 
-          <IntentSubsection title="What I need from TechXchange">
+          <IntentSubsection title="Connection intent">
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-              Compass matches these against session need tags (+15 per match).
+              Who you want to meet — and what kinds of conversations you are open to.
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {NEEDS.map(o => (
-                <Chip key={o.id} label={o.label}
-                  selected={needs.includes(o.id)} onClick={() => tog(needs, setNeeds, o.id)} />
-              ))}
-            </div>
-          </IntentSubsection>
-
-          <IntentSubsection title="Community — who do you want to meet?">
-            <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-              Compass surfaces IBM Champions, community events, and networking moments that match your connection goals.
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
               {COMMUNITY.map(o => (
                 <Chip key={o.id} label={o.label}
                   selected={community.includes(o.id)} onClick={() => tog(community, setCommunity, o.id)} />
               ))}
             </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <CheckRow label="Connect with alumni from my university"  checked={openAlumni}     onChange={setOpenAlumni} />
+              <CheckRow label="Connect with past colleagues"             checked={openColleague}  onChange={setOpenColleague} />
+              <CheckRow label="Connect with my university community"     checked={openUniversity} onChange={setOpenUniversity} />
+              <CheckRow label="Open to career conversations"             checked={openCareer}    onChange={setOpenCareer} />
+            </div>
           </IntentSubsection>
+
+          <details className="enroll-optional-block">
+            <summary>Fine-tune session matches (optional)</summary>
+            <IntentSubsection title="Session needs">
+              <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+                Helps Compass prioritise labs, architecture sessions, and customer stories.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {NEEDS.map(o => (
+                  <Chip key={o.id} label={o.label}
+                    selected={needs.includes(o.id)} onClick={() => tog(needs, setNeeds, o.id)} />
+                ))}
+              </div>
+            </IntentSubsection>
+          </details>
 
           <IntentSubsection title="In your own words — optional">
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
@@ -884,9 +881,9 @@ export default function EnrollPage() {
         {/* ── 05 · Consent & Privacy ────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="05 · Consent & Privacy"
+            step="05 · Consent"
             title="Your data, your choice."
-            subtitle="Compass only uses your profile for personalisation within this event. None of your data is sold or shared outside TechXchange. These settings are yours to change at any time."
+            subtitle="Compass uses your profile only for this event. Change these settings any time."
           />
           <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
@@ -986,21 +983,21 @@ export default function EnrollPage() {
 
               {tracks.length > 0 && (
                 <div>
-                  <p style={kicker}>Technology tracks ({tracks.length})</p>
+                  <p style={kicker}>Learning interests ({tracks.length})</p>
                   <p style={reviewVal}>{tracks.join(", ")}</p>
                 </div>
               )}
 
               {needLabelsPreview.length > 0 && (
                 <div>
-                  <p style={kicker}>What I need ({needLabelsPreview.length})</p>
+                  <p style={kicker}>Session needs ({needLabelsPreview.length})</p>
                   <p style={reviewVal}>{needLabelsPreview.join(", ")}</p>
                 </div>
               )}
 
               {commLabelsPreview.length > 0 && (
                 <div>
-                  <p style={kicker}>Community ({commLabelsPreview.length})</p>
+                  <p style={kicker}>Connection intent ({commLabelsPreview.length})</p>
                   <p style={reviewVal}>{commLabelsPreview.join(", ")}</p>
                 </div>
               )}
@@ -1066,6 +1063,27 @@ export default function EnrollPage() {
 
         <div style={{ height: "48px" }} />
       </div>
+
+      {canSubmit && (
+        <div className="enroll-sticky-cta">
+          <p>{isEditMode ? "Ready to update?" : "Ready to build your Compass?"}</p>
+          <button
+            onClick={handleSave}
+            disabled={!canSubmit || saving}
+            className="btn-primary"
+            style={{
+              opacity: canSubmit && !saving ? 1 : 0.5,
+              cursor: canSubmit && !saving ? "pointer" : "default",
+              minHeight: "44px",
+              padding: "0 24px",
+            }}
+          >
+            {saving
+              ? (isEditMode ? "Updating…" : "Building…")
+              : (isEditMode ? "Update My Compass →" : "Build My Compass →")}
+          </button>
+        </div>
+      )}
     </>
   );
 }

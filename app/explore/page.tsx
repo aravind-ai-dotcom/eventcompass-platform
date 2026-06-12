@@ -281,12 +281,12 @@ export default function ExplorePage() {
 
   return (
     <>
-      <section className="story-hero">
+      <section className="story-hero story-hero--strong">
         <div className="section-kicker">Explore</div>
         <h1>Different attendees need different weeks.</h1>
         <p>
           Compass helps each person turn the same event into a personal path through
-          Community, Learning and Fun.
+          Community, Learning, and Fun — not a one-size-fits-all catalog.
         </p>
       </section>
 
@@ -294,6 +294,9 @@ export default function ExplorePage() {
         <div className="story-head">
           <span style={KICKER}>Experience pillars</span>
           <h2>Four ways to spend your time.</h2>
+          <p className="story-lead">
+            Start with what matters to you. Compass scores the rest against your intent.
+          </p>
         </div>
         <div className="story-grid">
           {EXPERIENCE_PILLARS.map(p => (
@@ -354,10 +357,10 @@ export default function ExplorePage() {
       <section className="story-section">
         <div className="story-head">
           <span style={KICKER}>See what Compass can do</span>
-          <h2>Built for everyone in the room.</h2>
+          <h2>One event. A path for every attendee.</h2>
           <p className="story-lead">
-            Composite profiles inspired by patterns in the room — not real attendees.
-            Each shows how Compass turns signals into a personal path.
+            Composite profiles inspired by patterns in the room — not real people.
+            Each shows how Compass turns signals into action.
           </p>
         </div>
         <div className="story-grid">

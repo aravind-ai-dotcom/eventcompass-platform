@@ -270,12 +270,12 @@ export default function PulsePage() {
 
   return (
     <>
-      <section className="story-hero">
+      <section className="story-hero story-hero--strong">
         <div className="section-kicker">Event Pulse</div>
-        <h1>See the patterns emerging around you.</h1>
+        <h1>See who is here, what is moving, and where opportunities are forming.</h1>
         <p>
-          Live intelligence from TechXchange — who is open to connecting, where relationships
-          are forming, and what people came to learn.
+          Live intelligence from TechXchange — connection intent, relationship patterns,
+          and learning signals shaping the room around you.
         </p>
       </section>
 
@@ -374,9 +374,9 @@ export default function PulsePage() {
           <CarbonPicto type="community" />
           <div>
             <span style={KICKER}>Communities taking shape</span>
-            <h2>Groups finding each other.</h2>
+            <h2>Shared interests surfacing.</h2>
             <p className="story-lead">
-              Top tracks, domains, and interest clusters surfacing from attendee profiles.
+              AI, Cloud, Community, and the domains attendees are rallying around this week.
             </p>
           </div>
         </div>
