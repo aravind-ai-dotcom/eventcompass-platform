@@ -333,13 +333,13 @@ function EnergyIndicator({ learning, community, fun }: {
 
   const segments = [
     { label: "Learning",  w: learnW, color: "#0f62fe" },
-    { label: "Community", w: commW,  color: "#6929c4" },
+    { label: "Community", w: commW,  color: "var(--purple)" },
     { label: "Fun",       w: funW,   color: "#009d9a" },
     { label: "Open",      w: openW,  color: "var(--line-strong)" },
   ].filter(s => s.w > 0);
 
   return (
-    <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "12px 14px" }}>
+    <div className="compass-energy-card">
       <p style={{ color: "var(--accent)", fontSize: "0.64rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.11em", margin: "0 0 9px" }}>
         Energy
       </p>
@@ -928,39 +928,39 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
 
   const score = dimensions.filter(d => d.done).length;
   const pct   = Math.round((score / dimensions.length) * 100);
-  const color = pct === 100 ? "#6929c4" : "var(--accent)"; // IBM purple at full, IBM blue otherwise — no green
+  const complete = pct === 100;
 
   return (
-    <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "12px 14px" }}>
-      {/* Header: kicker + percent */}
+    <div className={`compass-signal-card${complete ? " compass-signal-card--complete" : ""}`}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", marginBottom: "7px" }}>
-        <p style={{ color: "var(--accent)", fontSize: "0.64rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.11em", margin: 0 }}>
-          Compass Signal
-        </p>
-        <span style={{ fontSize: "1.45rem", fontWeight: 520, color, letterSpacing: "-0.03em", lineHeight: 1, flexShrink: 0 }}>
+        <p className="compass-signal-kicker">Compass Signal</p>
+        <span className={`compass-signal-pct${complete ? " compass-signal-pct--complete" : ""}`}>
           {pct}%
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div style={{ height: "3px", background: "var(--line)", borderRadius: "2px", marginBottom: "10px" }}>
-        <div style={{ width: pct + "%", height: "100%", background: color, borderRadius: "2px", transition: "width 0.4s" }} />
+      <div className="compass-signal-bar">
+        <div
+          className={`compass-signal-bar-fill${complete ? " compass-signal-bar-fill--complete" : ""}`}
+          style={{ width: pct + "%" }}
+        />
       </div>
 
-      {/* Status chips */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: pct < 100 ? "10px" : "0" }}>
         {dimensions.map(d => (
-          <span key={d.label} style={{
-            fontSize: "0.69rem", padding: "2px 7px",
-            border: "1px solid " + (d.done ? color : "var(--line)"),
-            color: d.done ? color : "var(--muted)",
-          }}>
+          <span
+            key={d.label}
+            className={[
+              "compass-signal-chip",
+              d.done ? "compass-signal-chip--done" : "",
+              d.done && complete ? "compass-signal-chip--complete" : "",
+            ].filter(Boolean).join(" ")}
+          >
             {d.done ? "✓" : "○"} {d.label}
           </span>
         ))}
       </div>
 
-      {/* Refine link — secondary, compact */}
       {pct < 100 && (
         <a href="/enroll?mode=edit" style={{ display: "block", color: "var(--accent)", fontSize: "0.74rem", textDecoration: "none" }}>
           Refine My Compass &rarr;
@@ -1661,16 +1661,12 @@ export default function ExperiencePage() {
                       )}
                       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                         {isSaved && (
-                          <span style={{ fontSize: "0.68rem", padding: "1px 7px",
-                            border: "1px solid rgba(15,98,254,0.35)", color: IBM_BLUE,
-                            background: "rgba(15,98,254,0.04)", letterSpacing: "0.04em" }}>
+                          <span className="compass-status-badge compass-status-badge--saved">
                             Saved
                           </span>
                         )}
                         {isMeet && (
-                          <span style={{ fontSize: "0.68rem", padding: "1px 7px",
-                            border: "1px solid rgba(105,41,196,0.35)", color: "#6929c4",
-                            background: "rgba(105,41,196,0.04)", letterSpacing: "0.04em" }}>
+                          <span className="compass-status-badge compass-status-badge--meet">
                             Meet Requested
                           </span>
                         )}

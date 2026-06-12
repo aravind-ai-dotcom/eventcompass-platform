@@ -1,8 +1,8 @@
 "use client";
 // =============================================================================
 // EventCompass — Pulse  /pulse
-// Event intelligence story: connection intent, relationship signals,
-// communities, and learning topics. Aggregate Firestore data only.
+// Live event intelligence: connection intent and room composition.
+// Aggregate Firestore participant data only — no catalog metrics.
 // =============================================================================
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
@@ -74,67 +74,18 @@ function top(map: Record<string, number>, n = 6) {
 }
 
 interface PulseData {
-  primaryTracks: Record<string, number>;
-  topics: Record<string, number>;
-  championDomains: Record<string, number>;
   topCountries: Record<string, number>;
   topUniversities: Record<string, number>;
   topPastEmployers: Record<string, number>;
-  topGroups: Record<string, number>;
+  communities: Record<string, number>;
+  careerInterests: Record<string, number>;
   openToAlumni: number;
   openToColleague: number;
   openToUniversity: number;
   openToCareer: number;
 }
 
-const KICKER: React.CSSProperties = {
-  color: "var(--accent)",
-  fontSize: "0.72rem",
-  fontWeight: 680,
-  textTransform: "uppercase",
-  letterSpacing: "0.12em",
-  display: "block",
-  marginBottom: "6px",
-};
-
-function CarbonPicto({ type }: { type: "people" | "globe" | "community" | "learn" }) {
-  const icons: Record<string, React.ReactNode> = {
-    people: (
-      <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-        <circle cx="10" cy="9" r="4" />
-        <circle cx="22" cy="9" r="4" opacity="0.6" />
-        <path d="M2 26c0-5 3.6-8 8-8s8 3 8 8H2z" />
-        <path d="M14 26c0-4 3-7 8-7s8 3 8 7H14z" opacity="0.5" />
-      </svg>
-    ),
-    globe: (
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <circle cx="16" cy="16" r="12" />
-        <ellipse cx="16" cy="16" rx="5" ry="12" />
-        <line x1="4" y1="16" x2="28" y2="16" />
-      </svg>
-    ),
-    community: (
-      <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-        <circle cx="16" cy="9" r="5" />
-        <circle cx="5" cy="17" r="4" opacity="0.7" />
-        <circle cx="27" cy="17" r="4" opacity="0.7" />
-        <path d="M8 28c0-4.4 3.6-8 8-8s8 3.6 8 8H8z" />
-      </svg>
-    ),
-    learn: (
-      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <rect x="4" y="6" width="24" height="16" rx="1" />
-        <path d="M4 22h24" />
-        <circle cx="16" cy="14" r="4" />
-        <path d="M10 26h12" />
-      </svg>
-    ),
-  };
-  return <div className="carbon-picto">{icons[type]}</div>;
-}
-
-function InsightBlock({
+function RoomList({
   title,
   rows,
   renderLabel,
@@ -145,25 +96,23 @@ function InsightBlock({
 }) {
   if (rows.length === 0) return null;
   return (
-    <div className="story-card">
-      <p className="insight-block-title">{title}</p>
-      <div className="insight-list">
+    <div className="room-list">
+      <h3 className="room-list-title">{title}</h3>
+      <ul className="room-list-items">
         {rows.map(([name, count]) => (
-          <div key={name} className="insight-list-item insight-list-item-quiet">
+          <li key={name}>
             <span>{renderLabel ? renderLabel(name) : name}</span>
             <b>{count}</b>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <p style={{ color: "var(--muted)", fontSize: "0.92rem", lineHeight: 1.55, margin: 0 }}>
-      {message}
-    </p>
+    <p className="pulse-empty">{message}</p>
   );
 }
 
@@ -173,43 +122,19 @@ export default function PulsePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [sessSnap, champSnap, partSnap] = await Promise.all([
-          getDocs(collection(db, `${BASE}/sessions`)),
-          getDocs(collection(db, `${BASE}/champions`)),
-          getDocs(collection(db, `${BASE}/participants`)),
-        ]);
-
-        const primaryTracks: Record<string, number> = {};
-        const topics: Record<string, number> = {};
-        const championDomains: Record<string, number> = {};
+    getDocs(collection(db, `${BASE}/participants`))
+      .then(snap => {
         const topCountries: Record<string, number> = {};
         const topUniversities: Record<string, number> = {};
         const topPastEmployers: Record<string, number> = {};
-        const topGroups: Record<string, number> = {};
+        const communities: Record<string, number> = {};
+        const careerInterests: Record<string, number> = {};
         let openToAlumni = 0;
         let openToColleague = 0;
         let openToUniversity = 0;
         let openToCareer = 0;
 
-        for (const d of sessSnap.docs) {
-          const s = d.data() as RawDoc;
-          const tracks = s.tracks as RawDoc | undefined;
-          if (tracks?.primary_track) inc(primaryTracks, tracks.primary_track);
-          ((tracks?.topics as string[]) ?? []).forEach(t => inc(topics, t));
-        }
-
-        for (const d of champSnap.docs) {
-          const c = d.data() as RawDoc;
-          const profile = c.profile as RawDoc | undefined;
-          ((profile?.domains as string[]) ?? []).forEach(dom => {
-            inc(championDomains, dom);
-            inc(topGroups, dom);
-          });
-        }
-
-        for (const d of partSnap.docs) {
+        for (const d of snap.docs) {
           const p = d.data() as RawDoc;
           inc(topCountries, p.country ?? p.geo ?? "");
           const edu = (p.education as Array<Record<string, unknown>>) ?? [];
@@ -217,9 +142,9 @@ export default function PulsePage() {
           const emp = (p.past_employers as Array<Record<string, unknown>>) ?? [];
           for (const e of emp) if (e.company) inc(topPastEmployers, e.company);
           const esp = (p.event_signal_profile as Record<string, unknown>) ?? {};
-          ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(topGroups, t));
-          ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(topGroups, r));
-          ((p.career_interests as string[]) ?? []).forEach(c => inc(topGroups, c));
+          ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(communities, t));
+          ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(communities, r));
+          ((p.career_interests as string[]) ?? []).forEach(c => inc(careerInterests, c));
           const ni = (p.networking_identity as Record<string, boolean>) ?? {};
           if (ni.open_to_alumni_connections) openToAlumni++;
           if (ni.open_to_past_colleague_connections) openToColleague++;
@@ -228,67 +153,52 @@ export default function PulsePage() {
         }
 
         setData({
-          primaryTracks,
-          topics,
-          championDomains,
           topCountries,
           topUniversities,
           topPastEmployers,
-          topGroups,
+          communities,
+          careerInterests,
           openToAlumni,
           openToColleague,
           openToUniversity,
           openToCareer,
         });
-      } catch {
-        setData(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+      })
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
   }, []);
 
   const connectionTotal = data
     ? data.openToAlumni + data.openToColleague + data.openToUniversity + data.openToCareer
     : 0;
 
-  const hasRelationship =
-    data &&
-    (Object.keys(data.topCountries).length > 0 ||
-      Object.keys(data.topUniversities).length > 0 ||
-      Object.keys(data.topPastEmployers).length > 0);
-
-  const hasCommunities =
-    data && Object.keys(data.topGroups).length > 0;
-
-  const hasLearning =
-    data &&
-    (Object.keys(data.primaryTracks).length > 0 || Object.keys(data.topics).length > 0);
+  const hasRoomData = data && (
+    Object.keys(data.topCountries).length > 0 ||
+    Object.keys(data.topUniversities).length > 0 ||
+    Object.keys(data.topPastEmployers).length > 0 ||
+    Object.keys(data.communities).length > 0 ||
+    Object.keys(data.careerInterests).length > 0
+  );
 
   return (
     <>
-      <section className="story-hero story-hero--strong story-hero--compact">
-        <div className="section-kicker">Event Pulse</div>
-        <h1>See who is here, what is moving, and where opportunities are forming.</h1>
+      <section className="story-hero story-hero--strong story-hero--spacious">
+        <div className="section-kicker">Event pulse</div>
+        <h1>The room is taking shape.</h1>
         <p>
-          Event intelligence from TechXchange — connection intent, relationship patterns,
-          and learning signals from the room.
+          See where communities are forming, conversations are beginning, and
+          opportunities are emerging across the event.
         </p>
       </section>
 
-      {/* 1. Connection Intent */}
-      <section className="story-section story-section--compact no-top-border">
-        <div className="story-head-with-picto">
-          <CarbonPicto type="people" />
-          <div>
-            <span style={KICKER}>Connection intent</span>
-            <h2>Open to connections.</h2>
-            <p className="story-lead">
-              Attendees are signalling the types of conversations they are open to
-              having this week — alumni, colleagues, university peers, and career talks.
-            </p>
-          </div>
+      <section className="story-section story-section--spacious no-top-border">
+        <div className="story-head story-head--spacious">
+          <span className="narrative-kicker">Connection intent</span>
+          <h2>Conversations people are open to having.</h2>
+          <p className="story-lead story-lead--wide">
+            Attendees are signalling the types of connections they want this week —
+            alumni reunions, colleague catch-ups, university peers, and career talks.
+          </p>
         </div>
 
         {loading && <EmptyState message="Reading connection signals…" />}
@@ -299,22 +209,16 @@ export default function PulsePage() {
 
         {!loading && data && connectionTotal > 0 && (
           <>
-            <div className="story-grid story-grid--intent">
+            <div className="intent-strip">
               {[
-                { label: "Alumni connections", val: data.openToAlumni, color: "#6929c4" },
-                { label: "Past colleagues", val: data.openToColleague, color: "#0f62fe" },
-                { label: "University community", val: data.openToUniversity, color: "#005d5d" },
-                { label: "Career conversations", val: data.openToCareer, color: "#b45309" },
+                { label: "Alumni connections", val: data.openToAlumni },
+                { label: "Past colleagues", val: data.openToColleague },
+                { label: "University community", val: data.openToUniversity },
+                { label: "Career conversations", val: data.openToCareer },
               ].map(item => (
-                <div
-                  key={item.label}
-                  className="story-card story-card-compact story-card-intent"
-                  style={{ borderTop: `3px solid ${item.color}` }}
-                >
-                  <p className="quiet-count quiet-count--sm" style={{ color: item.color }}>
-                    {item.val}
-                  </p>
-                  <p className="story-card-body" style={{ margin: 0 }}>{item.label}</p>
+                <div key={item.label} className="intent-strip-item">
+                  <p className="intent-strip-count">{item.val}</p>
+                  <p className="intent-strip-label">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -326,30 +230,27 @@ export default function PulsePage() {
         )}
       </section>
 
-      {/* 2. Relationship Intelligence */}
-      <section className="story-section story-section--compact">
-        <div className="story-head-with-picto">
-          <CarbonPicto type="globe" />
-          <div>
-            <span style={KICKER}>Relationship intelligence</span>
-            <h2>Where connections are forming.</h2>
-            <p className="story-lead">
-              Universities, former employers, countries, and interest groups represented in the room.
-            </p>
-          </div>
+      <section className="story-section story-section--spacious">
+        <div className="story-head story-head--spacious">
+          <span className="narrative-kicker">Room composition</span>
+          <h2>Who is already here.</h2>
+          <p className="story-lead story-lead--wide">
+            Geography, education, employers, communities, and career interests
+            shaping the conversations ahead.
+          </p>
         </div>
 
-        {loading && <EmptyState message="Reading relationship signals…" />}
+        {loading && <EmptyState message="Reading the room…" />}
 
-        {!loading && !hasRelationship && (
-          <EmptyState message="Relationship patterns will appear as attendee profiles arrive." />
+        {!loading && !hasRoomData && (
+          <EmptyState message="Room composition will populate as attendee profiles arrive." />
         )}
 
-        {!loading && data && hasRelationship && (
+        {!loading && data && hasRoomData && (
           <>
-            <div className="story-grid">
-              <InsightBlock
-                title="Top countries"
+            <div className="room-composition">
+              <RoomList
+                title="Countries"
                 rows={top(data.topCountries, 6)}
                 renderLabel={name => (
                   <>
@@ -357,67 +258,16 @@ export default function PulsePage() {
                   </>
                 )}
               />
-              <InsightBlock title="Top universities" rows={top(data.topUniversities, 6)} />
-              <InsightBlock title="Top former employers" rows={top(data.topPastEmployers, 6)} />
-              <InsightBlock title="Shared interest clusters" rows={top(data.topGroups, 6)} />
+              <RoomList title="Universities" rows={top(data.topUniversities, 6)} />
+              <RoomList title="Former employers" rows={top(data.topPastEmployers, 6)} />
+              <RoomList title="Communities" rows={top(data.communities, 6)} />
+              <RoomList title="Career interests" rows={top(data.careerInterests, 6)} />
             </div>
-            <p className="story-note">Aggregate counts only. No individual information is shown.</p>
-          </>
-        )}
-      </section>
-
-      {/* 3. Communities Taking Shape */}
-      <section className="story-section story-section--compact">
-        <div className="story-head-with-picto">
-          <CarbonPicto type="community" />
-          <div>
-            <span style={KICKER}>Communities taking shape</span>
-            <h2>Top communities.</h2>
-            <p className="story-lead">
-              AI, Cloud, Community, and the domains attendees are rallying around this week.
+            <p className="story-note">
+              Aggregate counts only. No individual attendee information is shown.{" "}
+              <Link href="/enroll" style={{ color: "var(--accent)" }}>Add your background →</Link>
             </p>
-          </div>
-        </div>
-
-        {loading && <EmptyState message="Reading community signals…" />}
-
-        {!loading && !hasCommunities && (
-          <EmptyState message="Community clusters will appear as attendees share their interests." />
-        )}
-
-        {!loading && data && hasCommunities && (
-          <div className="mobile-scroll-row">
-            {top(data.topGroups, 10).map(([name, count]) => (
-              <span key={name} className="action-chip">
-                {name} <span className="quiet-count-inline">{count}</span>
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 4. Learning Signals */}
-      <section className="story-section story-section--compact">
-        <div className="story-head-with-picto">
-          <CarbonPicto type="learn" />
-          <div>
-            <span style={KICKER}>Learning signals</span>
-            <h2>What people are here to learn.</h2>
-            <p className="story-lead">Top tracks and topics across the session catalog.</p>
-          </div>
-        </div>
-
-        {loading && <EmptyState message="Reading learning signals…" />}
-
-        {!loading && !hasLearning && (
-          <EmptyState message="Learning signals will appear once the session catalog is indexed." />
-        )}
-
-        {!loading && data && hasLearning && (
-          <div className="story-grid">
-            <InsightBlock title="Top tracks" rows={top(data.primaryTracks, 8)} />
-            <InsightBlock title="Top topics" rows={top(data.topics, 8)} />
-          </div>
+          </>
         )}
       </section>
 
@@ -426,12 +276,12 @@ export default function PulsePage() {
           {user && enrolled ? (
             <>
               <h2>Your plan is already taking shape.</h2>
-              <p>These event signals are personalised for your goals and tracks on My Experience.</p>
+              <p>These room signals are personalised for your goals on My Experience.</p>
             </>
           ) : (
             <>
-              <h2>Build My Compass to go deeper.</h2>
-              <p>Turn these event signals into a focused plan for TechXchange.</p>
+              <h2>Join the conversation.</h2>
+              <p>Build My Compass to add your signal and discover who is here for the same reasons you are.</p>
             </>
           )}
         </div>

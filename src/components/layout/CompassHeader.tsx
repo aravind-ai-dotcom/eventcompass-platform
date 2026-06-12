@@ -19,10 +19,11 @@ import { logOut }   from "@/lib/auth";
 type Theme = "dark" | "light";
 
 const NAV_ITEMS = [
-  { href: "/explore",   label: "Explore"   },
-  { href: "/sessions",  label: "Sessions"  },
-  { href: "/champions", label: "Champions" },
-  { href: "/pulse",     label: "Pulse"     },
+  { href: "/explore",       label: "Explore"       },
+  { href: "/journey-maps",  label: "Journey Maps"  },
+  { href: "/sessions",      label: "Sessions"      },
+  { href: "/champions",     label: "Champions"     },
+  { href: "/pulse",         label: "Pulse"         },
 ];
 
 export default function CompassHeader() {

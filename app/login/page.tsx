@@ -2,21 +2,26 @@
 // =============================================================================
 // EventCompass — Login Page  /login
 //
-// Standalone page for direct navigation to sign in / create account.
-// Redirects to /experience after auth if user came from there,
-// otherwise to /enroll to complete their Compass build.
+// New-user-first onboarding: prominent "Build My Compass" path above sign-in.
+// Redirects to /experience if already authenticated.
 // =============================================================================
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AuthPanel    from "@/components/auth/AuthPanel";
 import { useAuth }  from "@/context/AuthContext";
+
+const ONBOARDING_STEPS = [
+  "Tell Compass what matters to you.",
+  "Discover sessions, people, and certifications.",
+  "Build your personalized TechXchange experience.",
+];
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // If already signed in, send to experience
   useEffect(() => {
     if (!loading && user) {
       router.replace("/experience");
@@ -31,18 +36,40 @@ export default function LoginPage() {
     );
   }
 
-  if (user) return null; // redirect in progress
+  if (user) return null;
 
   return (
     <>
-      <section className="compact-hero">
-        <div className="section-kicker">Compass</div>
-        <h1>Start with your Compass account.</h1>
-        <p>Sign in to access your personalized TechXchange experience.</p>
+      <section className="login-onboard" aria-labelledby="login-onboard-heading">
+        <div className="section-kicker">Get started</div>
+        <h1 id="login-onboard-heading">New to Compass?</h1>
+        <p className="login-onboard-lead">
+          Build your attendee profile, discover sessions, find experts, and create
+          your personalized TechXchange experience.
+        </p>
+
+        <ol className="login-steps" aria-label="How to get started">
+          {ONBOARDING_STEPS.map((step, i) => (
+            <li key={step}>
+              <span className="login-step-num" aria-hidden="true">{i + 1}</span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        <Link href="/enroll" className="btn-primary login-onboard-cta">
+          Build My Compass →
+        </Link>
       </section>
-      <section className="section no-top-border">
+
+      <section className="login-signin" aria-labelledby="login-signin-heading">
+        <div className="login-signin-head">
+          <h2 id="login-signin-heading">Already enrolled?</h2>
+          <p>Sign in to open your personalized TechXchange experience.</p>
+        </div>
         <AuthPanel onAuthenticated={() => router.push("/enroll")} />
       </section>
+
       <div style={{ height: "64px" }} />
     </>
   );
