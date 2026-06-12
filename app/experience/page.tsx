@@ -24,9 +24,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebase";
+import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
+import LiveOpportunities from "@/components/experience/LiveOpportunities";
+import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import EventHighlights    from "@/components/experience/EventHighlights";
 import TechXchangeBanner  from "@/components/experience/TechXchangeBanner";
 import CommunityVoices    from "@/components/experience/CommunityVoices";
@@ -375,7 +378,7 @@ function WeekInBalance({ learning, community, fun }: {
 
   const segments = [
     { label: "Learning",  w: learnW, color: "#0f62fe", count: learning },
-    { label: "Community", w: commW,  color: "var(--purple)", count: community },
+    { label: "Community", w: commW,  color: "var(--purple-soft)", count: community },
     { label: "Fun",       w: funW,   color: "#009d9a", count: fun },
     { label: "Open",      w: openW,  color: "var(--line-strong)", count: 0 },
   ].filter(s => s.w > 0);
@@ -396,7 +399,7 @@ function WeekInBalance({ learning, community, fun }: {
       <div className="week-balance-legend">
         {[
           { label: "Learning", count: learning, color: "#0f62fe" },
-          { label: "Community", count: community, color: "var(--purple)" },
+          { label: "Community", count: community, color: "var(--purple-soft)" },
           { label: "Fun", count: fun, color: "#009d9a" },
         ].map(item => (
           <span key={item.label} className="week-balance-legend-item">
@@ -1035,10 +1038,10 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
   const ci      = ((participant.career_interests as string[]) ?? []).slice(0, 5);
 
   const niLabels: string[] = [
-    ni.open_to_alumni_connections         ? "Alumni connections"  : "",
-    ni.open_to_past_colleague_connections ? "Past colleagues"     : "",
-    ni.open_to_university_connections     ? "University community": "",
-    ni.open_to_career_conversations       ? "Career conversations": "",
+    isOpenToAlumniConnections(ni) ? "Alumni connections" : "",
+    ni.open_to_past_colleague_connections ? "Former colleague connections" : "",
+    ni.open_to_career_conversations       ? "Career conversations"         : "",
+    isOpenToMentoringConversations(participant) ? "Mentoring conversations"  : "",
   ].filter(Boolean);
 
   const identityItems = [
@@ -1492,16 +1495,11 @@ export default function ExperiencePage() {
 
   return (
     <>
-      {/* ── Top: week balance above profile + signal ───────────────────── */}
-      <section className="section no-top-border experience-top">
-        <WeekInBalance
-          learning={learningList.length}
-          community={communityList.length}
-          fun={funList.length}
-        />
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: "28px", alignItems: "start", marginTop: "24px" }}>
-          <div>
-            <div className="section-kicker">My Compass</div>
+      {/* ── Hero: profile + sidebar (balance + signal) ─────────────────── */}
+      <section className="section no-top-border">
+        <div className="section-kicker">My Compass</div>
+        <div className="experience-hero-title-row">
+          <div className="experience-hero-copy">
             <h1 className="experience-hero-title">{displayName}</h1>
             {(jobTitle || company) && (
               <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "1.05rem" }}>
@@ -1543,11 +1541,47 @@ export default function ExperiencePage() {
             })()}
           </div>
 
-          {/* Right column: Compass Signal */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px", alignItems: "stretch", minWidth: "190px" }}>
+          <aside className="experience-hero-sidebar" aria-label="Compass summary">
+            <WeekInBalance
+              learning={learningList.length}
+              community={communityList.length}
+              fun={funList.length}
+            />
             <CompassSignalCompact participant={participant} />
-          </div>
+          </aside>
         </div>
+      </section>
+
+      {/* ── Voice Compass ──────────────────────────────────────────────── */}
+      <section className="section">
+        <VoiceCompassButton
+          variant="companion"
+          nextBestMove={
+            nextBestMove
+              ? {
+                  type:     "session",
+                  headline: nextBestMove.title,
+                  subline:  sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
+                  reason:   nextBestMove.compass_reasons[0] ?? "Top Compass match",
+                  score:    nextBestMove.compass_score,
+                  entityId: nextBestMove.id,
+                }
+              : null
+          }
+          topSession={nextBestMove ?? rankedSessionsForVoice[0] ?? null}
+          topChampion={champions[0] ?? null}
+          rankedSessions={rankedSessionsForVoice}
+          participantGoals={pGoals}
+          participantTracks={pTracks}
+        />
+      </section>
+
+      {/* ── Live Opportunities ─────────────────────────────────────────── */}
+      <section className="section live-opportunities-section">
+        <LiveOpportunities
+          participantGoals={pGoals}
+          participantTracks={pTracks}
+        />
       </section>
 
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
@@ -1572,11 +1606,6 @@ export default function ExperiencePage() {
               score:    nextBestMove.compass_score,
               entityId: nextBestMove.id,
             }}
-            topSession={nextBestMove}
-            topChampion={champions[0] ?? null}
-            rankedSessions={rankedSessionsForVoice}
-            participantGoals={pGoals}
-            participantTracks={pTracks}
           />
         </section>
       )}

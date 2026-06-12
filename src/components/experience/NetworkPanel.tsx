@@ -12,6 +12,7 @@ import {
   scoreNetworkMatch,
   type NetworkMatchResult,
 } from "@/services/networkSignalService";
+import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
 
 type RawDoc = Record<string, unknown>;
 
@@ -254,9 +255,8 @@ const matches: MatchWithPhoto[] = allParticipants
       consent.show_public_profile !== false;
 
     const hasOpenTo = Boolean(
-      ni.open_to_alumni_connections ||
+      isOpenToAlumniConnections(ni) ||
       ni.open_to_past_colleague_connections ||
-      ni.open_to_university_connections ||
       ni.open_to_career_conversations
     );
 
@@ -281,9 +281,8 @@ console.log("LinkedIn Gate", {
   linkedin_url: p.linkedin_url,
   show_linkedin: consent.show_linkedin,
   public_profile: consent.public_profile,
-  open_to_alumni: ni.open_to_alumni_connections,
+  open_to_alumni: isOpenToAlumniConnections(ni),
   open_to_colleague: ni.open_to_past_colleague_connections,
-  open_to_university: ni.open_to_university_connections,
   open_to_career: ni.open_to_career_conversations,
   linkedin_url_visible
 });

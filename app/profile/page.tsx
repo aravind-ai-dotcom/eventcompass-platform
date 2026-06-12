@@ -308,7 +308,6 @@ export default function EnrollPage() {
   // Networking identity
   const [openAlumni,     setOpenAlumni]     = useState(false);
   const [openColleague,  setOpenColleague]  = useState(false);
-  const [openUniversity, setOpenUniversity] = useState(false);
   const [openCareer,     setOpenCareer]     = useState(false);
 
   // ── 04 · Your TechXchange Intent ─────────────────────────────────────────
@@ -325,7 +324,6 @@ export default function EnrollPage() {
   const [consentShareWithMatched,        setConsentShareWithMatched]        = useState(false);
   const [consentAllowAlumniMatching,     setConsentAllowAlumniMatching]     = useState(false);
   const [consentAllowEmployerMatching,   setConsentAllowEmployerMatching]   = useState(false);
-  const [consentAllowUniversityMatching, setConsentAllowUniversityMatching] = useState(false);
   const [consentAllowSmsUpdates,         setConsentAllowSmsUpdates]         = useState(false);
   const [consentAllowEventNotifications, setConsentAllowEventNotifications] = useState(true);
 
@@ -413,7 +411,7 @@ export default function EnrollPage() {
         share_with_matched_attendees: consentShareWithMatched,
         allow_alumni_matching:     consentAllowAlumniMatching,
         allow_employer_matching:   consentAllowEmployerMatching,
-        allow_university_matching: consentAllowUniversityMatching,
+        allow_university_matching: consentAllowAlumniMatching,
         allow_sms_updates:         consentAllowSmsUpdates,
         allow_event_notifications: consentAllowEventNotifications,
       };
@@ -421,7 +419,6 @@ export default function EnrollPage() {
       const networkingIdentity = {
         open_to_alumni_connections:         openAlumni,
         open_to_past_colleague_connections: openColleague,
-        open_to_university_connections:     openUniversity,
         open_to_career_conversations:       openCareer,
       };
 
@@ -679,10 +676,9 @@ export default function EnrollPage() {
               <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.5, margin: 0 }}>
                 These settings control which background-based connections Compass will surface for you at TechXchange.
               </p>
-              <CheckRow label="Connect with alumni from my university"  checked={openAlumni}     onChange={setOpenAlumni} />
-              <CheckRow label="Connect with past colleagues"             checked={openColleague}  onChange={setOpenColleague} />
-              <CheckRow label="Connect with my university community"     checked={openUniversity} onChange={setOpenUniversity} />
-              <CheckRow label="Open to career conversations"             checked={openCareer}    onChange={setOpenCareer} />
+              <CheckRow label="Open to alumni connections"   checked={openAlumni}    onChange={setOpenAlumni} />
+              <CheckRow label="Open to past colleagues"      checked={openColleague} onChange={setOpenColleague} />
+              <CheckRow label="Open to career conversations" checked={openCareer}    onChange={setOpenCareer} />
             </div>
 
           </div>
@@ -794,7 +790,7 @@ export default function EnrollPage() {
               />
               <ConsentItem
                 label="Match me with fellow alumni"
-                description="Compass looks for attendees who share your university background and can surface those connections."
+                description="Compass uses your university background to surface alumni, academic community, and shared educational connections."
                 checked={consentAllowAlumniMatching}
                 onChange={setConsentAllowAlumniMatching}
               />
@@ -803,12 +799,6 @@ export default function EnrollPage() {
                 description="Compass uses your past employer to find attendees who share that professional history."
                 checked={consentAllowEmployerMatching}
                 onChange={setConsentAllowEmployerMatching}
-              />
-              <ConsentItem
-                label="Match me with my university community"
-                description="Compass uses your university to surface alumni and community connections at TechXchange."
-                checked={consentAllowUniversityMatching}
-                onChange={setConsentAllowUniversityMatching}
               />
             </ConsentGroup>
 

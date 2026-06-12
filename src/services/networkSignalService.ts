@@ -4,6 +4,8 @@
 // Pure TypeScript. No Firebase. No React. No side effects.
 // =============================================================================
 
+import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
+
 type RawDoc = Record<string, unknown>;
 
 export interface EducationEntry {
@@ -22,7 +24,8 @@ export interface PastEmployerEntry {
 export interface NetworkingIdentity {
   open_to_alumni_connections:          boolean;
   open_to_past_colleague_connections:  boolean;
-  open_to_university_connections:      boolean;
+  /** @deprecated Read via isOpenToAlumniConnections — merged into alumni signal */
+  open_to_university_connections?:     boolean;
   open_to_career_conversations:        boolean;
 }
 
@@ -83,9 +86,8 @@ export function getParticipantNetworkSignals(raw: RawDoc): ParticipantNetworkSig
     career_interests: arrStr(raw.career_interests),
     linkedin_url:     typeof raw.linkedin_url === "string" ? raw.linkedin_url : undefined,
     networking_identity: {
-      open_to_alumni_connections:         ni.open_to_alumni_connections         ?? false,
+      open_to_alumni_connections:         isOpenToAlumniConnections(ni),
       open_to_past_colleague_connections: ni.open_to_past_colleague_connections ?? false,
-      open_to_university_connections:     ni.open_to_university_connections     ?? false,
       open_to_career_conversations:       ni.open_to_career_conversations       ?? false,
     },
     consent_public: !!(
@@ -107,11 +109,11 @@ export function scoreNetworkMatch(
   let score = 0;
   const reasons: string[] = [];
 
-  // Same university (+30)
+  // Same university — alumni signal covers legacy university community intent
   for (const ce of current.education) {
     for (const oe of other.education) {
       if (normalizeName(ce.institution) === normalizeName(oe.institution) &&
-          other.networking_identity.open_to_university_connections) {
+          isOpenToAlumniConnections(other.networking_identity)) {
         score += 30;
         reasons.push(`Alumni: ${ce.institution}`);
         break;
@@ -171,7 +173,7 @@ export function summarizeNetworkPulse(participants: RawDoc[]): NetworkPulseSumma
     for (const e of sig.education)       if (e.institution) { const k = e.institution.trim(); univCounts[k] = (univCounts[k] ?? 0) + 1; }
     for (const e of sig.past_employers)  if (e.company)     { const k = e.company.trim();     empCounts[k]  = (empCounts[k]  ?? 0) + 1; }
     for (const ci of sig.career_interests) if (ci)          { ciCounts[ci] = (ciCounts[ci] ?? 0) + 1; }
-    if (sig.networking_identity.open_to_alumni_connections)         openToAlumni++;
+    if (isOpenToAlumniConnections(sig.networking_identity)) openToAlumni++;
     if (sig.networking_identity.open_to_past_colleague_connections) openToColleagues++;
     if (sig.networking_identity.open_to_career_conversations)       openToCareer++;
   }

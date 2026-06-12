@@ -37,6 +37,10 @@
   ],
   "exclude": [
     "node_modules",
-    "_backup"
+    "_backup",
+    "backups",
+    "baselines",
+    "claude-delivery",
+    "cursor-context"
   ]
 }

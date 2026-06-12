@@ -5,19 +5,10 @@
 
 import type {
   NextBestMove as NextBestMoveData,
-  ScoredSession,
-  ScoredChampion,
 } from "@/types";
-
-import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 
 interface NextBestMoveProps {
   nextBestMove:        NextBestMoveData;
-  topSession?:         ScoredSession | null;
-  topChampion?:        ScoredChampion | null;
-  rankedSessions?:     ScoredSession[];
-  participantGoals?:   string[];
-  participantTracks?:  string[];
   onSkip?: () => void;
   onDone?: () => void;
   onViewDetails?: () => void;
@@ -114,11 +105,6 @@ function ActionButton({
 
 export default function NextBestMove({
   nextBestMove,
-  topSession,
-  topChampion,
-  rankedSessions,
-  participantGoals,
-  participantTracks,
   onSkip,
   onDone,
   onViewDetails,
@@ -248,22 +234,6 @@ export default function NextBestMove({
         </div>
 
         {hasScore && <ScoreBadge score={nextBestMove.score as number} />}
-      </div>
-
-      <div style={{ height: "1px", background: "var(--line)" }} />
-
-      <div style={{ background: "transparent" }}>
-        <VoiceCompassButton
-          variant="companion"
-          nextBestMove={nextBestMove}
-          topSession={topSession ?? null}
-          topChampion={topChampion ?? null}
-          rankedSessions={rankedSessions}
-          participantGoals={participantGoals ?? []}
-          participantTracks={participantTracks ?? []}
-          onDismiss={onSkip}
-          onMarkAttended={onDone}
-        />
       </div>
     </section>
   );

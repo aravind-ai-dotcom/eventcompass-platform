@@ -9,6 +9,7 @@ import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { countryFlag, inc, top } from "@/lib/roomSignals";
+import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 
 const BASE = "organizations/ibm/events/txc2026";
 type RawDoc = Record<string, unknown>;
@@ -20,8 +21,8 @@ interface PulseData {
   communities: Record<string, number>;
   openToAlumni: number;
   openToColleague: number;
-  openToUniversity: number;
   openToCareer: number;
+  openToMentoring: number;
 }
 
 function NostalgiaBox({
@@ -60,8 +61,8 @@ export default function PulsePage() {
         const communities: Record<string, number> = {};
         let openToAlumni = 0;
         let openToColleague = 0;
-        let openToUniversity = 0;
         let openToCareer = 0;
+        let openToMentoring = 0;
 
         for (const d of snap.docs) {
           const p = d.data() as RawDoc;
@@ -74,10 +75,10 @@ export default function PulsePage() {
           ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(communities, t));
           ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(communities, r));
           const ni = (p.networking_identity as Record<string, boolean>) ?? {};
-          if (ni.open_to_alumni_connections) openToAlumni++;
+          if (isOpenToAlumniConnections(ni)) openToAlumni++;
           if (ni.open_to_past_colleague_connections) openToColleague++;
-          if (ni.open_to_university_connections) openToUniversity++;
           if (ni.open_to_career_conversations) openToCareer++;
+          if (isOpenToMentoringConversations(p)) openToMentoring++;
         }
 
         setData({
@@ -87,8 +88,8 @@ export default function PulsePage() {
           communities,
           openToAlumni,
           openToColleague,
-          openToUniversity,
           openToCareer,
+          openToMentoring,
         });
       })
       .catch(() => setData(null))
@@ -104,9 +105,9 @@ export default function PulsePage() {
 
   const connectionItems = data ? [
     { label: "Alumni connections", val: data.openToAlumni, tone: "#a56eff" },
-    { label: "Past colleagues", val: data.openToColleague, tone: "#0f62fe" },
-    { label: "University community", val: data.openToUniversity, tone: "#005d5d" },
+    { label: "Former colleague connections", val: data.openToColleague, tone: "#0f62fe" },
     { label: "Career conversations", val: data.openToCareer, tone: "#b45309" },
+    { label: "Mentoring conversations", val: data.openToMentoring, tone: "#009d9a" },
   ].filter(i => i.val > 0) : [];
 
   return (

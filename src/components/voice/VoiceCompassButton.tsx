@@ -321,59 +321,96 @@ export default function VoiceCompassButton({
       recognitionRef.current?.abort();
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.src = "";
         audioRef.current = null;
       }
     };
   }, []);
 
-  // ── Cloud TTS → browser synthesis fallback ───────────────────────────────
-  const speakCloudVoice = useCallback(async (text: string): Promise<void> => {
-  if (typeof window !== "undefined" && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-  }
+  /** Prime audio during the user gesture so async TTS playback is allowed. */
+  const primeAudioUnlock = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    const unlockedAudio = new Audio();
+    unlockedAudio.preload = "auto";
+    audioRef.current = unlockedAudio;
+    return unlockedAudio;
+  }, []);
 
-  if (audioRef.current) {
-    audioRef.current.pause();
-    audioRef.current = null;
-  }
-
-  setPendingAudioUrl(null);
-
-  try {
-    const res = await fetch("/api/voice", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`/api/voice returned ${res.status}: ${await res.text()}`);
+  // ── Cloud TTS → browser synthesis fallback only when fetch fails ─────────
+  const speakCloudVoice = useCallback(async (
+    text: string,
+    unlockedAudio?: HTMLAudioElement | null,
+  ): Promise<void> => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    setPendingAudioUrl(null);
 
-    const audio = new Audio(url);
-    audioRef.current = audio;
+    const audio = unlockedAudio ?? audioRef.current;
+    if (!audio) {
+      console.warn("[VoiceCompass] No unlocked audio element; playback may be blocked.");
+    }
 
-    setPendingAudioUrl(url);
-return;
-    
+    try {
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
 
-  } catch (err) {
-    console.error("[VoiceCompass] Cloud voice failed:", err);
-  }
+      if (!res.ok) {
+        throw new Error(`/api/voice returned ${res.status}: ${await res.text()}`);
+      }
 
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const targetAudio = audio ?? (() => {
+        const fallback = new Audio();
+        fallback.preload = "auto";
+        audioRef.current = fallback;
+        return fallback;
+      })();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US";
-  utterance.rate = 0.95;
-  utterance.pitch = 1.0;
-  utterance.volume = 1.0;
-  synthRef.current = utterance;
-  window.speechSynthesis.speak(utterance);
-}, []);
+      targetAudio.src = url;
+      targetAudio.load();
+      audioRef.current = targetAudio;
+
+      targetAudio.onended = () => {
+        URL.revokeObjectURL(url);
+        if (audioRef.current === targetAudio) {
+          audioRef.current = null;
+        }
+        setPendingAudioUrl(null);
+      };
+
+      try {
+        await targetAudio.play();
+      } catch (playErr) {
+        if (playErr instanceof DOMException && playErr.name === "NotAllowedError") {
+          setPendingAudioUrl(url);
+          return;
+        }
+        URL.revokeObjectURL(url);
+        throw playErr;
+      }
+    } catch (err) {
+      console.error("[VoiceCompass] Cloud voice failed:", err);
+
+      if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      synthRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
 
   // ── Handle resolved transcript ──────────────────────────────────────────────
   const handleTranscript = useCallback(async (text: string) => {
@@ -404,7 +441,7 @@ return;
     setResponse(voiceResp);
     setVoiceState("generating");
 
-    await speakCloudVoice(voiceResp.spoken);
+    await speakCloudVoice(voiceResp.spoken, audioRef.current);
 
     setVoiceState("result");
 
@@ -426,9 +463,9 @@ return;
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
-    if (audioRef.current) {
+    if (audioRef.current?.src) {
       audioRef.current.pause();
-      audioRef.current = null;
+      audioRef.current.src = "";
     }
 
     setVoiceState("listening");
@@ -485,13 +522,17 @@ return;
 
   if (audioRef.current) {
     audioRef.current.pause();
+    audioRef.current.src = "";
     audioRef.current = null;
   }
   setVoiceState("idle");
   setTranscript("");
   setResponse(null);
   setErrorMsg("");
-  setPendingAudioUrl(null);
+  setPendingAudioUrl(prev => {
+    if (prev) URL.revokeObjectURL(prev);
+    return null;
+  });
 }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -516,9 +557,35 @@ return;
   function handleButtonClick() {
     if (isProcessing) return;
     if (isListening) { recognitionRef.current?.stop(); setVoiceState("idle"); return; }
-    if (showResult || showError) { reset(); setTimeout(startListening, 80); return; }
+    if (showResult || showError) {
+      reset();
+      primeAudioUnlock();
+      setTimeout(startListening, 80);
+      return;
+    }
+    primeAudioUnlock();
     startListening();
   }
+
+  const playPendingVoice = useCallback(async () => {
+    if (!pendingAudioUrl) return;
+    const audio = audioRef.current ?? new Audio();
+    audio.preload = "auto";
+    audio.src = pendingAudioUrl;
+    audio.load();
+    audioRef.current = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(pendingAudioUrl);
+      if (audioRef.current === audio) audioRef.current = null;
+      setPendingAudioUrl(null);
+    };
+    try {
+      await audio.play();
+      setPendingAudioUrl(null);
+    } catch {
+      setPendingAudioUrl(pendingAudioUrl);
+    }
+  }, [pendingAudioUrl]);
 
   // Fallback activities matched to last transcript
   function getFallbackActivities(): ActivityItem[] {
@@ -633,7 +700,7 @@ return;
                         ))}
                       </span>
                     ) : (
-                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={52} />
+                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={44} />
                     )}
                     <span className="ask-compass-trigger-title">Ask Compass</span>
                     <span className="ask-compass-trigger-sub">
@@ -688,17 +755,7 @@ return;
             {pendingAudioUrl && (
               <button
                 type="button"
-                onClick={async () => {
-                  if (!pendingAudioUrl) return;
-                  const audio = new Audio(pendingAudioUrl);
-                  audioRef.current = audio;
-                  audio.onended = () => {
-                    URL.revokeObjectURL(pendingAudioUrl);
-                    audioRef.current = null;
-                    setPendingAudioUrl(null);
-                  };
-                  await audio.play();
-                }}
+                onClick={() => { void playPendingVoice(); }}
                 style={{
                   marginTop: "14px",
                   border: "1px solid var(--accent)",
@@ -847,17 +904,7 @@ return;
             {pendingAudioUrl && (
               <button
                 type="button"
-                onClick={async () => {
-                  if (!pendingAudioUrl) return;
-                  const audio = new Audio(pendingAudioUrl);
-                  audioRef.current = audio;
-                  audio.onended = () => {
-                    URL.revokeObjectURL(pendingAudioUrl);
-                    audioRef.current = null;
-                    setPendingAudioUrl(null);
-                  };
-                  await audio.play();
-                }}
+                onClick={() => { void playPendingVoice(); }}
                 style={{
                   marginTop: "10px",
                   border: "1px solid var(--accent)",

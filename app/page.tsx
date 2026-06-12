@@ -3,47 +3,8 @@
 // EventCompass — Home
 // Lifetime value: Prepare → Meet → Experience → Continue
 // =============================================================================
-import Image from "next/image";
 import Link from "next/link";
-
-const LIFECYCLE = [
-  {
-    id: "prepare",
-    kicker: "Prepare",
-    title: "Shape your goals before you arrive.",
-    body: "Tell Compass what matters — learning paths, certification targets, and connection intent.",
-    image: "/event/learning-lab.jpg",
-    href: "/enroll",
-    cta: "Build My Compass",
-  },
-  {
-    id: "meet",
-    kicker: "Meet",
-    title: "Find your people in the room.",
-    body: "Experts, mentors, peers, and community leaders matched to your interests and experience.",
-    image: "/event/people-v2.jpg",
-    href: "/champions",
-    cta: "Explore people",
-  },
-  {
-    id: "experience",
-    kicker: "Experience",
-    title: "Live TechXchange with clarity.",
-    body: "An AI-powered week plan — sessions prioritized, conflicts resolved, every day intentional.",
-    image: "/event/community-v2.jpg",
-    href: "/experience",
-    cta: "Open My Compass",
-  },
-  {
-    id: "continue",
-    kicker: "Continue",
-    title: "Take it home.",
-    body: "Certification progress, connections, and learning paths that extend beyond the event.",
-    image: "/event/certification.jpg",
-    href: "/explore",
-    cta: "See how Compass works",
-  },
-] as const;
+import HomeLifecycleRotator from "@/components/home/HomeLifecycleRotator";
 
 export default function HomePage() {
   return (
@@ -64,27 +25,7 @@ export default function HomePage() {
       </section>
 
       <section className="story-section story-section--compact no-top-border">
-        <div className="home-lifecycle-grid">
-          {LIFECYCLE.map(phase => (
-            <article key={phase.id} className="home-lifecycle-card">
-              <div className="home-lifecycle-image">
-                <Image
-                  src={phase.image}
-                  alt=""
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-              <div className="home-lifecycle-body">
-                <span className="section-kicker">{phase.kicker}</span>
-                <h2 className="home-lifecycle-title">{phase.title}</h2>
-                <p>{phase.body}</p>
-                <Link href={phase.href} className="action-chip">{phase.cta} →</Link>
-              </div>
-            </article>
-          ))}
-        </div>
+        <HomeLifecycleRotator />
       </section>
 
       <section className="final-band">
