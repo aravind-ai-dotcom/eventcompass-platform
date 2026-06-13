@@ -186,13 +186,11 @@ export default function PulsePage() {
                 title="Former employers"
                 rows={top(data.topPastEmployers, 10)}
                 total={total}
-                withBars
               />
               <NostalgiaBox
                 title="Communities"
                 rows={topCommunities(data.communities, 10)}
                 total={total}
-                withBars
               />
             </div>
             <p className="story-note">
