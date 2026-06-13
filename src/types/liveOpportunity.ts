@@ -14,7 +14,7 @@ export interface LiveOpportunity {
   startTime?: string;
   endTime?: string;
   joinedCount: number;
-  /** First names shown in "Joined:" line */
+  /** Attendee first names (excludes host) */
   joinedNames: string[];
   participantIds?: string[];
   tags?: string[];
@@ -23,4 +23,8 @@ export interface LiveOpportunity {
   status: string;
   matchReasons: string[];
   filterKeys: string[];
+  /** Host display name, e.g. Aravind Ragupathi */
+  hostName?: string;
+  /** Host first name for avatar initial */
+  hostFirstName?: string;
 }

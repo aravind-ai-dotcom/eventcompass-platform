@@ -1208,13 +1208,13 @@ img { max-width: 100%; display: block; }
 /* Voice Compass companion card */
 .voice-companion-card {
   border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 20px 22px 18px;
+  background: transparent;
+  padding: 22px 0 4px;
   overflow: visible;
 }
 .voice-companion-head {
-  margin-bottom: 16px;
-  max-width: 520px;
+  margin-bottom: 18px;
+  max-width: 560px;
 }
 .voice-companion-head h2 {
   font-size: clamp(1.1rem, 1.8vw, 1.35rem);
@@ -1228,6 +1228,51 @@ img { max-width: 100%; display: block; }
   font-size: 0.84rem;
   line-height: 1.45;
   margin: 0;
+}
+.voice-companion-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 560px;
+}
+.voice-companion-dialogue {
+  width: 100%;
+  min-height: 0;
+}
+.voice-companion-transcript {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
+  font-style: italic;
+}
+.voice-companion-response {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+.voice-companion-response--idle {
+  color: var(--muted);
+  font-style: italic;
+}
+.voice-companion-response--error {
+  color: #da1e28;
+}
+.voice-companion-prompts {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--soft);
+  line-height: 1.5;
+}
+.voice-companion-prompt-sep {
+  color: var(--line-strong);
+}
+.voice-companion-unsupported {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 .voice-companion-mic-wrap {
   display: flex;
@@ -2871,8 +2916,55 @@ img { max-width: 100%; display: block; }
 .huddle-row-meta {
   font-size: 0.78rem;
   color: var(--soft);
-  margin: 0;
+  margin: 0 0 8px;
   line-height: 1.35;
+}
+.huddle-role-label {
+  margin: 0 0 4px;
+  font-size: 0.64rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.huddle-host-block {
+  margin: 4px 0 0;
+}
+.huddle-host-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.huddle-host-name {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 560;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.3;
+}
+.huddle-host-name:hover {
+  color: var(--accent);
+}
+.huddle-avatar--host {
+  width: 32px;
+  height: 32px;
+  font-size: 0.74rem;
+  border-color: var(--line-strong);
+  background: rgba(15, 98, 254, 0.06);
+}
+.huddle-attendee-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 10px 0 8px;
+  opacity: 0.65;
+}
+.huddle-attendee-block {
+  margin: 0;
 }
 .huddle-row-people-row {
   display: flex;
@@ -3013,6 +3105,14 @@ img { max-width: 100%; display: block; }
 .start-conversation-note {
   margin-top: 12px;
   font-size: 0.78rem;
+  color: var(--muted);
+}
+.start-conversation-suggest-label {
+  margin: 10px 0 6px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 .start-conversation-actions {
@@ -3167,6 +3267,29 @@ img { max-width: 100%; display: block; }
 }
 .ask-compass-trigger--error {
   border-color: #da1e28;
+}
+.ask-compass-trigger--minimal {
+  max-width: none;
+  width: 100%;
+  min-width: 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-color: var(--line);
+  background: transparent;
+  text-align: left;
+}
+.ask-compass-trigger--minimal .ask-compass-trigger-title {
+  font-size: 0.86rem;
+}
+.ask-compass-trigger--minimal .ask-compass-trigger-sub {
+  max-width: none;
+  font-size: 0.78rem;
+}
+.ask-compass-trigger--minimal .ask-compass-trigger-wave {
+  height: 44px;
 }
 .ask-compass-trigger .beacon-glow-radial {
   opacity: 0.35 !important;
@@ -3576,6 +3699,24 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
 .compass-signal-card--clickable:hover {
   border-color: var(--line-strong);
 }
+.compass-refine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 560;
+  line-height: 1;
+  transition: border-color 0.12s, color 0.12s;
+}
+.compass-signal-card--clickable:hover .compass-refine-chip {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 .day-tab-list {
   display: flex;
@@ -3695,6 +3836,15 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
   text-transform: uppercase;
   color: var(--muted);
   margin-right: 2px;
+}
+.voice-tone-picker--minimal {
+  margin-top: 0;
+}
+.voice-tone-picker--minimal .voice-tone-picker-kicker {
+  text-transform: none;
+  font-size: 0.78rem;
+  font-weight: 560;
+  letter-spacing: 0;
 }
 .voice-tone-chip {
   display: inline-flex;

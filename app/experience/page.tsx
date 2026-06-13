@@ -1017,9 +1017,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
       </div>
 
       {pct < 100 && (
-        <span style={{ display: "block", color: "var(--accent)", fontSize: "0.74rem" }}>
-          Refine My Compass →
-        </span>
+        <span className="compass-refine-chip">Refine My Compass →</span>
       )}
     </a>
   );
@@ -1082,7 +1080,7 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
             Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities.
           </p>
         </div>
-        <a href="/enroll?mode=edit" style={{ color: "var(--accent)", fontSize: "0.88rem", flexShrink: 0 }}>Refine My Compass &rarr;</a>
+        <a href="/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
       </div>
 
       {identityItems.length > 0 && (
@@ -1584,6 +1582,8 @@ export default function ExperiencePage() {
         <LiveOpportunities
           participantGoals={pGoals}
           participantTracks={pTracks}
+          userDisplayName={displayName}
+          userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
         />
       </section>
 
@@ -1754,7 +1754,7 @@ export default function ExperiencePage() {
             Refine your profile to improve signal quality and sharpen every recommendation.
           </p>
         </div>
-        <a href="/enroll?mode=edit" className="btn-primary">Refine My Compass &rarr;</a>
+        <a href="/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
       </section>
 
       {detailChampion && (

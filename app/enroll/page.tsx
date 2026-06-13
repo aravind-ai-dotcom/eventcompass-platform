@@ -101,32 +101,6 @@ const TRACKS = [
   "IT Optimization", "Power", "FinOps",
 ];
 
-const DIAL_CODES = [
-  { code: "+1",  flag: "🇺🇸", label: "US +1" },
-  { code: "+91", flag: "🇮🇳", label: "IN +91" },
-  { code: "+44", flag: "🇬🇧", label: "UK +44" },
-  { code: "+49", flag: "🇩🇪", label: "DE +49" },
-  { code: "+33", flag: "🇫🇷", label: "FR +33" },
-  { code: "+81", flag: "🇯🇵", label: "JP +81" },
-  { code: "+61", flag: "🇦🇺", label: "AU +61" },
-  { code: "+55", flag: "🇧🇷", label: "BR +55" },
-  { code: "+65", flag: "🇸🇬", label: "SG +65" },
-  { code: "+971", flag: "🇦🇪", label: "AE +971" },
-] as const;
-
-function parseMobilePhone(raw: string): { dialCode: string; local: string } {
-  const trimmed = raw.trim();
-  if (!trimmed) return { dialCode: "+1", local: "" };
-  const match = DIAL_CODES
-    .slice()
-    .sort((a, b) => b.code.length - a.code.length)
-    .find(d => trimmed.startsWith(d.code));
-  if (match) {
-    return { dialCode: match.code, local: trimmed.slice(match.code.length).trim() };
-  }
-  return { dialCode: "+1", local: trimmed.replace(/^\+/, "") };
-}
-
 const COMMUNITY = [
   { id: "champions",   label: "Meet IBM Champions"    },
   { id: "customers",   label: "Meet Customers"        },
@@ -269,45 +243,6 @@ function IntentSubsection({ title, children }: { title: string; children: React.
   );
 }
 
-function MobileNumberField({
-  dialCode,
-  local,
-  onDialCodeChange,
-  onLocalChange,
-}: {
-  dialCode: string;
-  local: string;
-  onDialCodeChange: (v: string) => void;
-  onLocalChange: (v: string) => void;
-}) {
-  return (
-    <div className="mobile-number-field">
-      <label className="mobile-number-dial">
-        <span className="sr-only">Country code</span>
-        <select
-          value={dialCode}
-          onChange={e => onDialCodeChange(e.target.value)}
-          aria-label="Country code"
-        >
-          {DIAL_CODES.map(d => (
-            <option key={d.code} value={d.code}>{d.flag} {d.code}</option>
-          ))}
-        </select>
-      </label>
-      <label className="mobile-number-local">
-        <span className="sr-only">Mobile number</span>
-        <input
-          type="tel"
-          value={local}
-          onChange={e => onLocalChange(e.target.value)}
-          placeholder="Mobile number"
-          autoComplete="tel-national"
-        />
-      </label>
-    </div>
-  );
-}
-
 function tog(arr: string[], set: (v: string[]) => void, val: string) {
   set(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
 }
@@ -376,8 +311,7 @@ export default function EnrollPage() {
   // ── 01 · About You ──────────────────────────────────────────────────────────
   const [firstName,   setFirstName]   = useState("");
   const [lastName,    setLastName]    = useState("");
-  const [dialCode,    setDialCode]    = useState("+1");
-  const [mobileLocal, setMobileLocal] = useState("");
+  const [mobilePhone, setMobilePhone] = useState("");
   const [country,     setCountry]     = useState("");
   const [city,        setCity]        = useState("");
 
@@ -449,11 +383,7 @@ export default function EnrollPage() {
         if (ln) setLastName(ln);
 
         const phone = p?.mobile_phone || u?.mobile_phone || "";
-        if (phone) {
-          const parsed = parseMobilePhone(String(phone));
-          setDialCode(parsed.dialCode);
-          setMobileLocal(parsed.local);
-        }
+        if (phone) setMobilePhone(String(phone).trim());
         const ctry = p?.country || u?.country || "";
         if (ctry) setCountry(ctry);
         const ct = p?.city || u?.city || "";
@@ -602,7 +532,7 @@ export default function EnrollPage() {
 
       const goalLabels = GOALS.filter(o => goals.includes(o.id)).map(o => o.label);
       const commLabels = COMMUNITY.filter(o => community.includes(o.id)).map(o => o.label);
-      const mobilePhone = [dialCode, mobileLocal.trim()].filter(Boolean).join(" ").trim();
+      const mobilePhoneValue = mobilePhone.trim();
 
       const keywords = [
         ...goalLabels, ...tracks, ...commLabels,
@@ -640,7 +570,7 @@ export default function EnrollPage() {
           last_name:        last,
           display_name:     displayName,
           email:            user?.email ?? "",
-          mobile_phone:     mobilePhone.trim(),
+          mobile_phone:     mobilePhoneValue,
           organization,
           company:          organization,
           job_title:        jobTitle,
@@ -691,7 +621,7 @@ export default function EnrollPage() {
           first_name:       first,
           last_name:        last,
           email:            user?.email ?? "",
-          mobile_phone:     mobilePhone.trim(),
+          mobile_phone:     mobilePhoneValue,
           country:          country.trim(),
           city:             city.trim(),
           organization,
@@ -775,13 +705,19 @@ export default function EnrollPage() {
             </div>
 
             <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              <FieldLabel>Mobile number</FieldLabel>
-              <MobileNumberField
-                dialCode={dialCode}
-                local={mobileLocal}
-                onDialCodeChange={setDialCode}
-                onLocalChange={setMobileLocal}
+              <FieldLabel>Mobile Phone (Optional)</FieldLabel>
+              <input
+                type="tel"
+                value={mobilePhone}
+                onChange={e => setMobilePhone(e.target.value)}
+                placeholder="+1 919 555 1234"
+                autoComplete="tel"
+                aria-label="Mobile phone"
+                style={iS}
               />
+              <p style={{ color: "var(--muted)", fontSize: "0.78rem", margin: "6px 0 0", lineHeight: 1.45 }}>
+                For SMS notifications and event updates. Include country code if outside the United States.
+              </p>
             </label>
 
             <div style={twoCol}>

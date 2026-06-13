@@ -9,6 +9,15 @@ export interface HuddleParticipantProfile {
 }
 
 const PROFILES: Record<string, HuddleParticipantProfile> = {
+  Aravind: {
+    firstName: "Aravind",
+    lastName: "Ragupathi",
+    organization: "IBM",
+    role: "Product Architect",
+    interests: ["Agentic AI", "Event intelligence", "Architecture"],
+    openTo: ["In-person conversations", "Product feedback"],
+    sharedTopics: ["Agentic AI", "Cloud Architecture"],
+  },
   Priya: {
     firstName: "Priya",
     lastName: "Sharma",

@@ -20,19 +20,26 @@ export const HUDDLE_TOPIC_TAGS = [
   "Community",
 ] as const;
 
-export const HUDDLE_LOCATIONS = [
-  "Community Lounge",
+export const HUDDLE_LOCATION_SUGGESTIONS = [
+  "Hilton Lounge, 2nd Floor",
+  "Community Hub",
   "Certification Zone",
-  "Partner Pavilion",
   "Sandbox Area",
+  "Near Registration",
+  "Lobby Bar",
+  "Partner Pavilion",
 ] as const;
 
 interface StartConversationModalProps {
+  hostName: string;
+  hostFirstName: string;
   onClose: () => void;
   onProposed: (huddle: LiveOpportunity) => void;
 }
 
 export default function StartConversationModal({
+  hostName,
+  hostFirstName,
   onClose,
   onProposed,
 }: StartConversationModalProps) {
@@ -53,7 +60,9 @@ export default function StartConversationModal({
       title: title.trim() || "Open conversation",
       date,
       time,
-      location,
+      location: location.trim(),
+      hostName,
+      hostFirstName,
     };
     const huddle = savePendingHuddle(input);
     onProposed(huddle);
@@ -65,7 +74,7 @@ export default function StartConversationModal({
     (step === 2 && title.trim().length > 0) ||
     (step === 3 && date.length > 0) ||
     (step === 4 && time.length > 0) ||
-    (step === 5 && location.length > 0);
+    (step === 5 && location.trim().length > 0);
 
   return (
     <div className="huddle-mini-overlay" role="dialog" aria-modal="true" aria-label="Start a conversation">
@@ -135,9 +144,18 @@ export default function StartConversationModal({
 
         {step === 5 && (
           <div>
-            <p className="start-conversation-lead">Location</p>
+            <label className="start-conversation-lead" htmlFor="huddle-location">Location</label>
+            <input
+              id="huddle-location"
+              className="start-conversation-input"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="Hilton Lounge, 2nd Floor"
+              required
+            />
+            <p className="start-conversation-suggest-label">Suggestions</p>
             <div className="start-conversation-tags">
-              {HUDDLE_LOCATIONS.map(loc => (
+              {HUDDLE_LOCATION_SUGGESTIONS.map(loc => (
                 <button
                   key={loc}
                   type="button"
@@ -158,6 +176,7 @@ export default function StartConversationModal({
             <p>{topics.join(" · ")}</p>
             <p>{date} · {time}</p>
             <p>{location}</p>
+            <p>Host: {hostName}</p>
             <p className="start-conversation-note">Creates a pending huddle — visible in your feed.</p>
           </div>
         )}

@@ -9,6 +9,8 @@ export interface PendingHuddleInput {
   date: string;
   time: string;
   location: string;
+  hostName: string;
+  hostFirstName: string;
 }
 
 export function loadPendingHuddles(): LiveOpportunity[] {
@@ -31,8 +33,10 @@ export function savePendingHuddle(input: PendingHuddleInput): LiveOpportunity {
     location: input.location,
     startTime: `${input.date} ${input.time}`,
     status: "Pending · awaiting attendees",
-    joinedCount: 1,
-    joinedNames: ["You"],
+    joinedCount: 0,
+    joinedNames: [],
+    hostName: input.hostName,
+    hostFirstName: input.hostFirstName,
     tags: input.topics,
     source: "networking",
     emoji: "💬",
@@ -63,4 +67,60 @@ export function toggleOnMyWay(huddleId: string): Set<string> {
   else ids.add(huddleId);
   localStorage.setItem(ON_MY_WAY_KEY, JSON.stringify([...ids]));
   return ids;
+}
+
+export function hostFirstName(opp: LiveOpportunity): string {
+  if (opp.hostFirstName) return opp.hostFirstName;
+  if (opp.hostName) return opp.hostName.split(/\s+/)[0] ?? "Host";
+  return "Host";
+}
+
+export function hostInitials(opp: LiveOpportunity): string {
+  const first = hostFirstName(opp);
+  const parts = (opp.hostName ?? first).split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
+  }
+  return first.slice(0, 2).toUpperCase();
+}
+
+/** Attendee count including optimistic +1 when current user is heading there. */
+export function headingCount(
+  opp: LiveOpportunity,
+  isOnMyWay: boolean,
+  userFirstName: string,
+): number {
+  const host = hostFirstName(opp);
+  const userAlreadyListed = opp.joinedNames.some(
+    n => n.toLowerCase() === userFirstName.toLowerCase(),
+  );
+  const base = opp.joinedCount;
+  if (isOnMyWay && userFirstName && !userAlreadyListed && userFirstName !== host) {
+    return base + 1;
+  }
+  return base;
+}
+
+/** Participant first names for avatar row (excludes host). */
+export function headingParticipants(
+  opp: LiveOpportunity,
+  isOnMyWay: boolean,
+  userFirstName: string,
+  max = 3,
+): string[] {
+  const host = hostFirstName(opp);
+  let names = opp.joinedNames.filter(n => n !== host);
+  if (isOnMyWay && userFirstName && userFirstName !== host && !names.includes(userFirstName)) {
+    names = [userFirstName, ...names];
+  } else if (!isOnMyWay && userFirstName) {
+    names = names.filter(n => n !== userFirstName);
+  }
+  return names.slice(0, max);
+}
+
+export function extraParticipantCount(
+  total: number,
+  shown: number,
+): number {
+  return Math.max(0, total - shown);
 }

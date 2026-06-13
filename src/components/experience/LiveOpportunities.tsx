@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import {
+  extraParticipantCount,
+  headingCount,
+  headingParticipants,
+  hostFirstName,
+  hostInitials,
   loadOnMyWayIds,
   loadPendingHuddles,
   toggleOnMyWay,
@@ -15,11 +20,15 @@ import StartConversationModal from "@/components/experience/StartConversationMod
 interface LiveOpportunitiesProps {
   participantTracks?: string[];
   participantGoals?: string[];
+  userDisplayName?: string;
+  userFirstName?: string;
 }
 
 export default function LiveOpportunities({
   participantTracks = [],
   participantGoals = [],
+  userDisplayName = "You",
+  userFirstName = "You",
 }: LiveOpportunitiesProps) {
   const [pending, setPending] = useState<LiveOpportunity[]>([]);
   const [onMyWay, setOnMyWay] = useState<Set<string>>(new Set());
@@ -50,8 +59,6 @@ export default function LiveOpportunities({
     setPending(prev => [huddle, ...prev]);
   }, []);
 
-  const extraCount = (total: number, shown: number) => Math.max(0, total - shown);
-
   return (
     <div className="live-opportunities">
       <header className="live-opportunities-head live-opportunities-head--row">
@@ -74,8 +81,11 @@ export default function LiveOpportunities({
       <ul className="huddle-feed" aria-label="Live huddles">
         {visible.map(opp => {
           const isOnMyWay = onMyWay.has(opp.id);
-          const shownNames = opp.joinedNames.slice(0, 3);
-          const extra = extraCount(opp.joinedCount, shownNames.length);
+          const count = headingCount(opp, isOnMyWay, userFirstName);
+          const participants = headingParticipants(opp, isOnMyWay, userFirstName);
+          const extra = extraParticipantCount(count, participants.length);
+          const host = hostFirstName(opp);
+          const hostLabel = opp.hostName ?? host;
 
           return (
             <li key={opp.id}>
@@ -88,32 +98,63 @@ export default function LiveOpportunities({
                 <div className="huddle-row-body">
                   <h3 className="huddle-row-title">{opp.title}</h3>
                   <p className="huddle-row-meta">
-                    {opp.status}
+                    {count} {count === 1 ? "attendee" : "attendees"} heading there
                     {opp.location ? ` · ${opp.location}` : ""}
                     {opp.startTime ? ` · ${opp.startTime}` : ""}
                   </p>
-                  <div className="huddle-row-people-row">
-                    <div className="huddle-row-people-avatars" aria-label="Participants">
-                      {shownNames.map(name => (
-                        <button
-                          key={name}
-                          type="button"
-                          className="huddle-avatar huddle-avatar--btn"
-                          title={name}
-                          onClick={() => setSelectedPerson(name)}
-                        >
-                          {name[0]?.toUpperCase()}
-                        </button>
-                      ))}
-                      {extra > 0 && (
-                        <span className="huddle-avatar huddle-avatar--more">+{extra}</span>
-                      )}
+
+                  <div className="huddle-host-block">
+                    <p className="huddle-role-label">Host</p>
+                    <div className="huddle-host-row">
+                      <button
+                        type="button"
+                        className="huddle-avatar huddle-avatar--host huddle-avatar--btn"
+                        title={hostLabel}
+                        onClick={() => setSelectedPerson(host)}
+                      >
+                        {hostInitials(opp)}
+                      </button>
+                      <button
+                        type="button"
+                        className="huddle-host-name"
+                        onClick={() => setSelectedPerson(host)}
+                      >
+                        {hostLabel}
+                      </button>
                     </div>
-                    <p className="huddle-row-people">
-                      {shownNames.join(", ")}
-                      {extra > 0 ? ` +${extra}` : ""}
-                    </p>
                   </div>
+
+                  <hr className="huddle-attendee-divider" />
+
+                  <div className="huddle-attendee-block">
+                    <p className="huddle-role-label">Heading There</p>
+                    <div className="huddle-row-people-row">
+                      <div className="huddle-row-people-avatars" aria-label="Attendees heading there">
+                        {participants.map(name => (
+                          <button
+                            key={name}
+                            type="button"
+                            className="huddle-avatar huddle-avatar--btn"
+                            title={name}
+                            onClick={() => setSelectedPerson(name)}
+                          >
+                            {name[0]?.toUpperCase()}
+                          </button>
+                        ))}
+                        {extra > 0 && (
+                          <span className="huddle-avatar huddle-avatar--more">+{extra}</span>
+                        )}
+                      </div>
+                      <p className="huddle-row-people">
+                        {participants.length > 0
+                          ? `${participants.join(", ")}${extra > 0 ? ` +${extra}` : ""}`
+                          : extra > 0
+                            ? `+${extra}`
+                            : "Be the first to head over"}
+                      </p>
+                    </div>
+                  </div>
+
                   <p className="huddle-row-match">
                     Matched because: {opp.matchReasons.join(" · ")}
                   </p>
@@ -126,7 +167,7 @@ export default function LiveOpportunities({
                     aria-pressed={isOnMyWay}
                     onClick={() => handleOnMyWay(opp.id)}
                   >
-                    {isOnMyWay ? "On my way ✓" : "On my way"}
+                    {isOnMyWay ? "✓ On My Way" : "On My Way"}
                   </button>
                   <button type="button" className="action-chip">Details</button>
                 </div>
@@ -138,6 +179,8 @@ export default function LiveOpportunities({
 
       {showStart && (
         <StartConversationModal
+          hostName={userDisplayName}
+          hostFirstName={userFirstName}
           onClose={() => setShowStart(false)}
           onProposed={handleProposed}
         />
