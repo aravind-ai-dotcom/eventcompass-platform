@@ -813,6 +813,7 @@ function SessionsPageContent() {
   // Persist schedule arrays to Firestore
   const persist = useCallback(async (updates: {
     saved_schedule?: string[];
+    saved_sessions?: string[];
     certification_goals?: string[];
     removed_sessions?: string[];
     do_not_suggest_sessions?: string[];
@@ -837,10 +838,17 @@ function SessionsPageContent() {
     if (!isLoggedIn) return;
     const nextGoals = certificationGoals.filter(x => x !== id);
     const nextSaved = savedSchedule.filter(x => x !== id);
+    const prevSavedSessions = (participantData.saved_sessions as string[]) ?? [];
+    const nextSavedSessions = prevSavedSessions.filter(x => x !== id);
     setCertificationGoals(nextGoals);
     setSavedSchedule(nextSaved);
-    persist({ certification_goals: nextGoals, saved_schedule: nextSaved });
-  }, [certificationGoals, savedSchedule, persist, isLoggedIn]);
+    setParticipantData(prev => ({ ...prev, saved_sessions: nextSavedSessions }));
+    persist({
+      certification_goals: nextGoals,
+      saved_schedule: nextSaved,
+      saved_sessions: nextSavedSessions,
+    });
+  }, [certificationGoals, savedSchedule, participantData, persist, isLoggedIn]);
 
   const handleSave = useCallback((id: string) => {
     if (!isLoggedIn) return;

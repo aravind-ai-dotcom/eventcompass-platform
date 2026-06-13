@@ -3125,6 +3125,7 @@ img { max-width: 100%; display: block; }
 }
 .certification-journey-section {
   padding-top: 0;
+  border-top: 0;
 }
 .certification-journey-card {
   border: 1px solid var(--line);

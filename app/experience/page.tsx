@@ -1250,6 +1250,7 @@ export default function ExperiencePage() {
   const [allChampions,   setAllChampions]   = useState<ScoredChampion[]>([]);
   const [detailChampion, setDetailChampion] = useState<ScoredChampion | null>(null);
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
+  const [savedSchedule,  setSavedSchedule]  = useState<string[]>([]);
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
   const [savedPeople,    setSavedPeople]    = useState<string[]>([]);
@@ -1294,10 +1295,16 @@ export default function ExperiencePage() {
   const handleRemoveCertificationGoal = useCallback((id: string) => {
     const nextGoals = certificationGoals.filter(x => x !== id);
     const nextSaved = savedSessions.filter(x => x !== id);
+    const nextSchedule = savedSchedule.filter(x => x !== id);
     setCertificationGoals(nextGoals);
     setSavedSessions(nextSaved);
-    persistPrefs({ certification_goals: nextGoals, saved_sessions: nextSaved });
-  }, [certificationGoals, savedSessions, persistPrefs]);
+    setSavedSchedule(nextSchedule);
+    persistPrefs({
+      certification_goals: nextGoals,
+      saved_sessions: nextSaved,
+      saved_schedule: nextSchedule,
+    });
+  }, [certificationGoals, savedSessions, savedSchedule, persistPrefs]);
 
   const handleHideSession = useCallback((id: string) => {
     const next = hiddenSessions.includes(id) ? hiddenSessions : [...hiddenSessions, id];
@@ -1373,12 +1380,12 @@ export default function ExperiencePage() {
             ...participant,
             certification_goals: certificationGoals,
             saved_sessions: savedSessions,
-            saved_schedule: (participant.saved_schedule as string[]) ?? [],
+            saved_schedule: savedSchedule,
           },
           allSessions,
         )
       : [],
-    [participant, certificationGoals, savedSessions, allSessions],
+    [participant, certificationGoals, savedSessions, savedSchedule, allSessions],
   );
   const selectedCertifications = useMemo(
     () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
@@ -1447,6 +1454,7 @@ export default function ExperiencePage() {
 
         // Load persisted action state
         setSavedSessions( (pData.saved_sessions  as string[]) ?? []);
+        setSavedSchedule( (pData.saved_schedule  as string[]) ?? []);
         setCertificationGoals((pData.certification_goals as string[]) ?? []);
         setHiddenSessions((pData.hidden_sessions as string[]) ?? []);
         setSavedPeople(   (pData.saved_people    as string[]) ?? []);

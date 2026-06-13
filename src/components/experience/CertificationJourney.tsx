@@ -21,7 +21,7 @@ export default function CertificationJourney({
   if (!visible) return null;
 
   return (
-    <section className="section certification-journey-section">
+    <section className="section no-top-border certification-journey-section">
       <div className="certification-journey-card">
         <div className="section-kicker">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</div>
         <h2 className="certification-journey-title">
