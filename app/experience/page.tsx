@@ -36,6 +36,10 @@ import CommunityVoices    from "@/components/experience/CommunityVoices";
 import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
+import ConnectionSignals from "@/components/people/ConnectionSignals";
+import ChampionDetailModal from "@/components/people/ChampionDetailModal";
+import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
+import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,6 +152,7 @@ interface ExpPeopleState {
   onSave: (id: string) => void;
   onMeet: (id: string) => void;
   onHide: (id: string) => void;
+  onDetails: (id: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -356,10 +361,11 @@ function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
 // Match badge — used on individual session and champion recommendation cards.
 // Answers: "How relevant is this recommendation to me?"
 function ScoreBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
-  const sz = { sm: { badge: 42, num: "1.1rem" }, md: { badge: 54, num: "1.45rem" }, lg: { badge: 72, num: "2rem" } }[size];
+  if (score === 0) return null;
+  const sz = { sm: { badge: 42, num: "0.95rem" }, md: { badge: 54, num: "1.2rem" }, lg: { badge: 72, num: "1.6rem" } }[size];
   return (
-    <div className="compass-score-badge" style={{ minWidth: sz.badge, minHeight: sz.badge }} title={"Match: " + score}>
-      <span className="score-number" style={{ fontSize: sz.num }}>{score}</span>
+    <div className="compass-score-badge" style={{ minWidth: sz.badge, minHeight: sz.badge }} title={`${score}% match`}>
+      <span className="score-number" style={{ fontSize: sz.num }}>{score}%</span>
       <span className="score-label">match</span>
     </div>
   );
@@ -383,10 +389,16 @@ function WeekInBalance({ learning, community, fun }: {
     { label: "Open",      w: openW,  color: "var(--line-strong)", count: 0 },
   ].filter(s => s.w > 0);
 
+  const learnPct = total > 0 ? Math.round((learning / total) * 100) : 0;
+  const commPct  = total > 0 ? Math.round((community / total) * 100) : 0;
+  const funPct   = total > 0 ? Math.round((fun / total) * 100) : 0;
+
   return (
     <div className="week-balance-card">
       <p className="week-balance-kicker">Your week in balance</p>
-      <p className="week-balance-sub">Community · Learning · Fun</p>
+      <p className="week-balance-sub">
+        Community {commPct}% · Learning {learnPct}% · Fun {funPct}%
+      </p>
       <div className="week-balance-bar">
         {total === 0 ? (
           <div className="week-balance-bar-empty" />
@@ -470,20 +482,16 @@ function ChampionCard({ champion, pState }: { champion: ScoredChampion; pState?:
   const initial = champion.display_name?.[0]?.toUpperCase() ?? "C";
   const org = champion.organization ?? "";
   const domains = (champion.profile?.domains ?? []).slice(0, 3);
-  const avail = champion.attendance?.available_for_1x1;
-  const reasons = champion.compass_reasons ?? [];
+  const reasons = champion.compass_reasons?.length
+    ? champion.compass_reasons
+    : deriveMatchReasons(champion);
+  const intentSnapshot = deriveIntentSnapshot(champion);
+  const isMutual = pState
+    && pState.savedPeople.includes(champion.id)
+    && isMutualWithInbound(champion.display_name, champion.id, pState.savedPeople, SAMPLE_INBOUND_SIGNALS);
 
   return (
-    <article
-      style={{
-        background: "var(--panel)",
-        border: "1px solid var(--line)",
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-      }}
-    >
+    <article className="champion-person-card">
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
         <PersonAvatar initial={initial} />
@@ -514,72 +522,43 @@ function ChampionCard({ champion, pState }: { champion: ScoredChampion; pState?:
               {[champion.title, org].filter(Boolean).join(" · ")}
             </p>
           )}
+          {isMutual && (
+            <span className="connection-signal-badge connection-signal-badge--mutual" style={{ marginTop: "6px", display: "inline-block" }}>
+              Mutual interest
+            </span>
+          )}
         </div>
       </div>
 
       {/* Domains */}
       {domains.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+        <div className="champion-person-tags">
           {domains.map((d) => (
-            <span
-              key={d}
-              style={{
-                fontSize: "0.73rem",
-                padding: "2px 8px",
-                border: "1px solid var(--line)",
-                color: "var(--muted)",
-              }}
-            >
-              {d}
-            </span>
+            <span key={d} className="champion-person-tag">{d}</span>
           ))}
         </div>
       )}
 
-      {/* 1:1 availability */}
-      {avail && (
-        <p style={{ margin: 0, fontSize: "0.78rem", color: IBM_BLUE, fontWeight: 550 }}>
-          Available for 1:1
-        </p>
+      {/* Intent snapshot */}
+      {intentSnapshot.length > 0 && (
+        <div className="champion-person-intent">
+          {intentSnapshot.map(item => (
+            <span key={item} className="champion-person-intent-tag">{item}</span>
+          ))}
+        </div>
       )}
 
       {/* Compass reasons */}
       {reasons.length > 0 && (
-        <div style={{ borderTop: "1px solid var(--line)", paddingTop: "12px", marginTop: "2px" }}>
-          <p
-            style={{
-              color: "var(--muted)",
-              fontSize: "0.7rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.09em",
-              fontWeight: 680,
-              margin: "0 0 8px",
-            }}
-          >
-            Why Compass recommends this connection
-          </p>
-
-          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: "6px" }}>
-            {reasons.slice(0, 4).map((r) => (
-              <li
-                key={r}
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  color: "var(--muted)",
-                  fontSize: "0.82rem",
-                  lineHeight: 1.35,
-                }}
-              >
-                <span style={{ color: IBM_BLUE, fontSize: "0.65rem", lineHeight: 1.35 }}>▪</span>
-                <span>{r}</span>
-              </li>
-            ))}
+        <div className="champion-person-match">
+          <p className="champion-person-match-kicker">Why Compass matched this person</p>
+          <ul className="champion-person-match-list">
+            {reasons.slice(0, 4).map((r) => <li key={r}>{r}</li>)}
           </ul>
         </div>
       )}
       {pState && (
-        <ExpPeopleActionBar id={champion.id} linkedinUrl={champion.linkedin_url} pState={pState} />
+        <ExpPeopleActionBar id={champion.id} pState={pState} />
       )}
     </article>
   );
@@ -629,13 +608,11 @@ function ExpSessionActionBar({ id, sched }: { id: string; sched: ExpScheduleStat
 // People action bar — Save | Meet | LinkedIn ↗ | Do Not Suggest
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ExpPeopleActionBar({ id, linkedinUrl, pState }: {
+function ExpPeopleActionBar({ id, pState }: {
   id: string;
-  linkedinUrl?: string;
   pState: ExpPeopleState;
 }) {
   const isSaved  = pState.savedPeople.includes(id);
-  const isMeet   = pState.meetPeople.includes(id);
   const isHidden = pState.hiddenPeople.includes(id);
 
   const base = {
@@ -655,19 +632,13 @@ function ExpPeopleActionBar({ id, linkedinUrl, pState }: {
   return (
     <div style={{ borderTop: "1px solid var(--line)", paddingTop: "8px", marginTop: "10px",
       display: "flex", flexWrap: "wrap" as const, gap: "5px", alignItems: "center" }}>
-      {pState.isLoggedIn && linkedinUrl && (
-        <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={base}>LinkedIn &#8599;</a>
-      )}
+      <button type="button" onClick={() => pState.onDetails(id)} style={base}>Details</button>
       {isSaved
         ? <button type="button" onClick={() => pState.onSave(id)} style={activeBtn}>&#10003; Saved</button>
-        : <button type="button" onClick={() => pState.onSave(id)} style={base}>Save</button>
-      }
-      {isMeet
-        ? <button type="button" onClick={() => pState.onMeet(id)} style={activeBtn}>&#10003; Meet Requested</button>
-        : <button type="button" onClick={() => pState.onMeet(id)} style={base}>Meet</button>
+        : <button type="button" onClick={() => pState.onSave(id)} style={base}>Save person</button>
       }
       {!isHidden
-        ? <button type="button" onClick={() => pState.onHide(id)} style={{ ...base, opacity: 0.75 }}>Do Not Suggest</button>
+        ? <button type="button" onClick={() => pState.onHide(id)} style={{ ...base, opacity: 0.75 }}>Not for me</button>
         : <span style={badge}>Dismissed</span>
       }
     </div>
@@ -978,7 +949,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
   const complete = pct === 100;
 
   return (
-    <div className={`compass-signal-card${complete ? " compass-signal-card--complete" : ""}`}>
+    <a href="/enroll?mode=edit" className={`compass-signal-card compass-signal-card--clickable${complete ? " compass-signal-card--complete" : ""}`}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", marginBottom: "7px" }}>
         <p className="compass-signal-kicker">Compass Signal</p>
         <span className={`compass-signal-pct${complete ? " compass-signal-pct--complete" : ""}`}>
@@ -1009,11 +980,11 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
       </div>
 
       {pct < 100 && (
-        <a href="/enroll?mode=edit" style={{ display: "block", color: "var(--accent)", fontSize: "0.74rem", textDecoration: "none" }}>
-          Refine My Compass &rarr;
-        </a>
+        <span style={{ display: "block", color: "var(--accent)", fontSize: "0.74rem" }}>
+          Refine My Compass →
+        </span>
       )}
-    </div>
+    </a>
   );
 }
 
@@ -1071,7 +1042,7 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
             Your profile signals
           </h2>
           <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.92rem", maxWidth: "560px", lineHeight: 1.55 }}>
-            Compass uses these signals to personalise session scores, Champion matches, and your week plan.
+            Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities.
           </p>
         </div>
         <a href="/enroll?mode=edit" style={{ color: "var(--accent)", fontSize: "0.88rem", flexShrink: 0 }}>Refine My Compass &rarr;</a>
@@ -1168,7 +1139,7 @@ function DayTabExperience({
       <div className="plan-mode-row" role="group" aria-label="Conflict handling">
         {([
           { id: "best-fit" as const, label: "Best fit" },
-          { id: "show-both" as const, label: "Show both" },
+          { id: "show-both" as const, label: "Show all conflicts" },
           { id: "capacity" as const, label: "Capacity optimization" },
         ]).map(mode => (
           <button
@@ -1183,39 +1154,14 @@ function DayTabExperience({
         ))}
       </div>
 
-      <div
-        role="tablist"
-        aria-label="Event days"
-        style={{
-          display:        "flex",
-          borderBottom:   "1px solid var(--line)",
-          marginBottom:   "28px",
-          overflowX:      "auto",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
+      <div role="tablist" aria-label="Event days" className="day-tab-list">
         {EVENT_DAYS.map(function(day) { return (
           <button
             key={day}
             role="tab"
             aria-selected={activeDay === day}
             onClick={function() { setActiveDay(day); }}
-            style={{
-              padding:      "12px 24px",
-              border:       "none",
-              borderBottom: activeDay === day
-                ? "3px solid var(--accent)"
-                : "3px solid transparent",
-              background:   "transparent",
-              color:        activeDay === day ? "var(--text)" : "var(--muted)",
-              fontSize:     "0.95rem",
-              fontWeight:   activeDay === day ? 650 : 500,
-              fontFamily:   "inherit",
-              cursor:       "pointer",
-              whiteSpace:   "nowrap",
-              marginBottom: "-1px",
-              transition:   "color 0.15s, border-color 0.15s",
-            }}
+            className={`day-tab${activeDay === day ? " is-active" : ""}`}
           >
             {day}
           </button>
@@ -1256,6 +1202,7 @@ export default function ExperiencePage() {
   const [allSessions,  setAllSessions]  = useState<ScoredSession[]>([]);
   const [champions,      setChampions]      = useState<ScoredChampion[]>([]);
   const [allChampions,   setAllChampions]   = useState<ScoredChampion[]>([]);
+  const [detailChampion, setDetailChampion] = useState<ScoredChampion | null>(null);
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
   const [savedPeople,    setSavedPeople]    = useState<string[]>([]);
@@ -1316,13 +1263,10 @@ export default function ExperiencePage() {
     persistPrefs({ hidden_people: next });
   }, [hiddenPeople, persistPrefs]);
 
-  const handleRemovePerson = useCallback((id: string) => {
-    const nextSaved = savedPeople.filter(x => x !== id);
-    const nextMeet  = meetPeople.filter(x => x !== id);
-    setSavedPeople(nextSaved);
-    setMeetPeople(nextMeet);
-    persistPrefs({ saved_people: nextSaved, meet_people: nextMeet });
-  }, [savedPeople, meetPeople, persistPrefs]);
+  const handleDetailsPerson = useCallback((id: string) => {
+    const found = allChampions.find(c => c.id === id) ?? champions.find(c => c.id === id);
+    if (found) setDetailChampion(found);
+  }, [allChampions, champions]);
 
   // ── Derived state for action bars ──────────────────────────────────────────
 
@@ -1335,7 +1279,24 @@ export default function ExperiencePage() {
     savedPeople, meetPeople, hiddenPeople,
     isLoggedIn: !!user,
     onSave: handleSavePerson, onMeet: handleMeetPerson, onHide: handleHidePerson,
-  }), [savedPeople, meetPeople, hiddenPeople, user, handleSavePerson, handleMeetPerson, handleHidePerson]);
+    onDetails: handleDetailsPerson,
+  }), [savedPeople, meetPeople, hiddenPeople, user, handleSavePerson, handleMeetPerson, handleHidePerson, handleDetailsPerson]);
+
+  const savedPersonSignals = useMemo(() => {
+    return savedPeople
+      .map(id => allChampions.find(c => c.id === id))
+      .filter((c): c is ScoredChampion => !!c)
+      .map(c => ({
+        id: c.id,
+        displayName: c.display_name,
+        title: c.title,
+        organization: c.organization,
+        domains: (c.profile?.domains ?? []).slice(0, 3),
+        matchReasons: c.compass_reasons?.length ? c.compass_reasons.slice(0, 3) : deriveMatchReasons(c),
+        intentSnapshot: deriveIntentSnapshot(c),
+        mutual: isMutualWithInbound(c.display_name, c.id, savedPeople, SAMPLE_INBOUND_SIGNALS),
+      }));
+  }, [savedPeople, allChampions]);
 
   const rankedSessionsForVoice = useMemo(
     () => [...learningList, ...communityList, ...funList]
@@ -1387,7 +1348,10 @@ export default function ExperiencePage() {
           .sort((a, b) => b.compass_score - a.compass_score);
         const scoredChampions = allScoredChampions.slice(0, 5);
 
-        const best = scored[0] ?? null;
+        const topCandidates = scored.filter(s => s.compass_score > 0).slice(0, 30);
+        const best = (topCandidates.length > 0
+          ? [...topCandidates].sort(sortByEventTimeThenFit)[0]
+          : scored[0]) ?? null;
 
         setParticipant(pData);
         setAllSessions(scored);
@@ -1487,11 +1451,6 @@ export default function ExperiencePage() {
   const myScheduleSessions = savedSessions
     .map(id => allSessions.find(s => s.id === id))
     .filter((s): s is ScoredSession => !!s);
-
-  // My People — champions from saved or meet lists
-  const myPeopleAll = [...new Set([...savedPeople, ...meetPeople])]
-    .map(id => allChampions.find(c => c.id === id))
-    .filter((c): c is ScoredChampion => !!c);
 
   return (
     <>
@@ -1640,6 +1599,12 @@ export default function ExperiencePage() {
         </section>
       )}
 
+      <ConnectionSignals
+        savedPeople={savedPersonSignals}
+        isLoggedIn={!!user}
+        onShowDetails={handleDetailsPerson}
+      />
+
       {/* ── My Schedule ───────────────────────────────────────────────── */}
       {myScheduleSessions.length > 0 && (
         <section className="section">
@@ -1696,87 +1661,7 @@ export default function ExperiencePage() {
         </section>
       )}
 
-      {/* ── My People ─────────────────────────────────────────────────── */}
-      {myPeopleAll.length > 0 && (
-        <section className="section">
-          <div className="section-head narrow">
-            <div>
-              <div className="section-kicker">My People</div>
-              <h2>{myPeopleAll.length} champion{myPeopleAll.length !== 1 ? "s" : ""} saved.</h2>
-            </div>
-            <p>Champions you&apos;ve saved or requested to meet.</p>
-          </div>
-          <div style={{ display: "grid", gap: "1px", background: "var(--line)" }}>
-            {myPeopleAll.map(c => {
-              const initial = c.display_name?.[0]?.toUpperCase() ?? "C";
-              const org     = c.organization ?? "";
-              const isSaved = savedPeople.includes(c.id);
-              const isMeet  = meetPeople.includes(c.id);
-              return (
-                <div key={c.id} style={{
-                  background: "var(--panel)", padding: "14px 18px",
-                  display: "flex", alignItems: "flex-start",
-                  justifyContent: "space-between", gap: "16px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1, minWidth: 0 }}>
-                    <div aria-hidden="true" style={{
-                      width: "32px", height: "32px", borderRadius: "50%",
-                      background: "rgba(15,98,254,0.06)", border: "1px solid rgba(15,98,254,0.20)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "0.78rem", fontWeight: 500, color: IBM_BLUE, flexShrink: 0,
-                    }}>
-                      {initial}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: "0.95rem", fontWeight: 550, color: "var(--text)",
-                        margin: "0 0 2px", lineHeight: 1.3 }}>
-                        {c.display_name}
-                      </p>
-                      {(c.title || org) && (
-                        <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 5px" }}>
-                          {[c.title, org].filter(Boolean).join(" · ")}
-                        </p>
-                      )}
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {isSaved && (
-                          <span className="compass-status-badge compass-status-badge--saved">
-                            Saved
-                          </span>
-                        )}
-                        {isMeet && (
-                          <span className="compass-status-badge compass-status-badge--meet">
-                            Meet Requested
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePerson(c.id)}
-                    style={{
-                      display: "inline-flex", alignItems: "center",
-                      height: "24px", padding: "0 9px", flexShrink: 0,
-                      border: "1px solid var(--line)", background: "transparent",
-                      color: "var(--muted)", fontSize: "0.70rem", fontWeight: 500,
-                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* ── TechXchange Banner ────────────────────────────────────────── */}
-      <section className="section">
-        <TechXchangeBanner />
-      </section>
-
-      {/* ── Event Highlights — inline with actions ─────────────────────── */}
+      {/* ── Event Highlights ─────────────────────────────────────────── */}
       <section className="section">
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
           <div>
@@ -1786,7 +1671,7 @@ export default function ExperiencePage() {
             </h2>
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "360px", margin: 0, lineHeight: 1.5 }}>
-            Anchor experiences of TechXchange 2026 &mdash; separate from your personalized plan.
+            Anchor experiences of TechXchange 2026 — separate from your personalized plan.
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
@@ -1794,7 +1679,12 @@ export default function ExperiencePage() {
         </div>
       </section>
 
-      {/* ── Export + TV (balance moved above) ──────────────────────────── */}
+      {/* ── IBM TechXchange Advantage ──────────────────────────────────── */}
+      <section className="section">
+        <TechXchangeBanner />
+      </section>
+
+      {/* ── Export + TV ────────────────────────────────────────────────── */}
       <section className="section">
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "16px", alignItems: "start" }}>
           <ExportPanel participantId={participantId} sessions={allSessions} />
@@ -1818,6 +1708,13 @@ export default function ExperiencePage() {
         </div>
         <a href="/enroll?mode=edit" className="btn-primary">Refine My Compass &rarr;</a>
       </section>
+
+      {detailChampion && (
+        <ChampionDetailModal
+          champion={detailChampion}
+          onClose={() => setDetailChampion(null)}
+        />
+      )}
     </>
   );
 }

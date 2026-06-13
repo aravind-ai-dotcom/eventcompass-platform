@@ -7,7 +7,6 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 const BASE = "organizations/ibm/events/txc2026";
-const DEV_FALLBACK_ID = "ATT-0001";
 const IBM_BLUE = "#0f62fe";
 
 const W = {
@@ -47,6 +46,7 @@ interface ScheduleState {
   doNotSuggest:   string[];
   reservedSeats:  string[];
   allSessions:    ScoredSession[];
+  isLoggedIn:     boolean;
   onSave:         (id: string) => void;
   onRemove:       (id: string) => void;
   onDoNotSuggest: (id: string) => void;
@@ -318,7 +318,7 @@ function SessionActionBar({ session, sched, compact = false }: {
   const isSaved   = sched.savedSchedule.includes(session.id);
   const isDns     = sched.doNotSuggest.includes(session.id);
   const isReserved = sched.reservedSeats.includes(session.id);
-  const conflict  = !isSaved && hasConflict(session, sched.savedSchedule, sched.allSessions);
+  const conflict  = sched.isLoggedIn && !isSaved && hasConflict(session, sched.savedSchedule, sched.allSessions);
 
   const baseBtn: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: "3px",
@@ -371,53 +371,51 @@ function SessionActionBar({ session, sched, compact = false }: {
         Info
       </button>
 
-      {/* Reserve seat — simulates RainFocus registration */}
-      {isReserved ? (
-        <span style={savedBtn}>✓ Reserved</span>
+      {!sched.isLoggedIn ? (
+        <span style={{ ...baseBtn, cursor: "default", opacity: 0.85 }}>
+          Sign in to save or reserve
+        </span>
       ) : (
-        <button
-          onClick={() => sched.onReserveSeat(session.id)}
-          style={baseBtn}
-          title="Simulated seat reservation"
-          type="button"
-        >
-          Reserve seat
-        </button>
-      )}
+        <>
+          {isReserved ? (
+            <span style={savedBtn}>✓ Reserved</span>
+          ) : (
+            <button
+              onClick={() => sched.onReserveSeat(session.id)}
+              style={baseBtn}
+              title="Simulated seat reservation"
+              type="button"
+            >
+              Reserve seat
+            </button>
+          )}
 
-      {/* Add to calendar — simulates personal schedule */}
-      {isSaved ? (
-        <button
-          onClick={() => sched.onRemove(session.id)}
-          style={savedBtn}
-          title="Remove from your schedule"
-          type="button"
-        >
-          ✓ On calendar
-        </button>
-      ) : (
-        <button
-          onClick={() => sched.onSave(session.id)}
-          style={baseBtn}
-          title="Add to your personal schedule"
-          type="button"
-        >
-          Add to calendar
-        </button>
-      )}
+          {isSaved ? (
+            <span style={savedBtn}>✓ Added to calendar</span>
+          ) : (
+            <button
+              onClick={() => sched.onSave(session.id)}
+              style={baseBtn}
+              title="Add to your personal schedule"
+              type="button"
+            >
+              Add to calendar
+            </button>
+          )}
 
-      {/* Do not suggest */}
-      {!isDns ? (
-        <button
-          onClick={() => sched.onDoNotSuggest(session.id)}
-          style={{ ...baseBtn, opacity: 0.75 }}
-          title="Hide from recommendations"
-          type="button"
-        >
-          Not for me
-        </button>
-      ) : (
-        <span style={dnsLabel}>Dismissed</span>
+          {!isDns ? (
+            <button
+              onClick={() => sched.onDoNotSuggest(session.id)}
+              style={{ ...baseBtn, opacity: 0.75 }}
+              title="Hide from recommendations"
+              type="button"
+            >
+              Not for me
+            </button>
+          ) : (
+            <span style={dnsLabel}>Dismissed</span>
+          )}
+        </>
       )}
 
       {/* Time conflict warning — full width second row */}
@@ -446,8 +444,8 @@ function SessionActionBar({ session, sched, compact = false }: {
 function ScoreBadge({ score }: { score: number }) {
   if (score === 0) return null;
   return (
-    <div className="compass-score-badge" style={{ minWidth: "46px", minHeight: "46px", flexShrink: 0 }} title={`Match: ${score}`}>
-      <span className="score-number" style={{ fontSize: "1.15rem" }}>{score}</span>
+    <div className="compass-score-badge" style={{ minWidth: "46px", minHeight: "46px", flexShrink: 0 }} title={`${score}% match`}>
+      <span className="score-number" style={{ fontSize: "1.05rem" }}>{score}%</span>
       <span className="score-label">match</span>
     </div>
   );
@@ -518,7 +516,7 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
         <p>
           {room}
           {session.compass_score > 0 && (
-            <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>Match {session.compass_score}</span></>
+            <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>{session.compass_score}% match</span></>
           )}
           {session.compass_reasons[0] && <> · {session.compass_reasons[0]}</>}
         </p>
@@ -592,7 +590,8 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
 
 export default function SessionsPage() {
   const { user, enrolled, loading: authLoading } = useAuth();
-  const participantId = user?.uid ?? DEV_FALLBACK_ID;
+  const isLoggedIn = !!user;
+  const participantId = user?.uid ?? "";
 
   const [allScored,     setAllScored]     = useState<ScoredSession[]>([]);
   const [status,        setStatus]        = useState<"loading" | "ready" | "error">("loading");
@@ -618,16 +617,20 @@ export default function SessionsPage() {
     async function load() {
       try {
         const [pSnap, sessSnap] = await Promise.all([
-          getDoc(doc(db, `${BASE}/participants/${participantId}`)),
+          isLoggedIn
+            ? getDoc(doc(db, `${BASE}/participants/${participantId}`))
+            : Promise.resolve(null),
           getDocs(collection(db, `${BASE}/sessions`)),
         ]);
 
-        const pData = pSnap.exists() ? (pSnap.data() as RawDoc) : {};
+        const pData = pSnap?.exists() ? (pSnap.data() as RawDoc) : {};
 
-        // Load existing schedule state
-        setSavedSchedule((pData.saved_schedule as string[]) ?? []);
-        setRemovedSessions((pData.removed_sessions as string[]) ?? []);
-        setDoNotSuggest((pData.do_not_suggest_sessions as string[]) ?? []);
+        if (isLoggedIn) {
+          setSavedSchedule((pData.saved_schedule as string[]) ?? []);
+          setRemovedSessions((pData.removed_sessions as string[]) ?? []);
+          setDoNotSuggest((pData.do_not_suggest_sessions as string[]) ?? []);
+          setReservedSeats((pData.reserved_seats as string[]) ?? []);
+        }
 
         const rawSessions = sessSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
         const scored = rawSessions
@@ -645,45 +648,52 @@ export default function SessionsPage() {
     }
 
     load();
-  }, [authLoading, participantId]);
+  }, [authLoading, participantId, isLoggedIn]);
 
   // Persist schedule arrays to Firestore
   const persist = useCallback(async (updates: {
     saved_schedule?: string[];
     removed_sessions?: string[];
     do_not_suggest_sessions?: string[];
+    reserved_seats?: string[];
   }) => {
-    if (!participantId) return;
+    if (!isLoggedIn || !participantId) return;
     try {
       await setDoc(doc(db, `${BASE}/participants/${participantId}`), updates, { merge: true });
     } catch (e) {
       console.error("[SessionAction] Firestore write failed:", e);
     }
-  }, [participantId]);
+  }, [participantId, isLoggedIn]);
 
   const handleSave = useCallback((id: string) => {
+    if (!isLoggedIn) return;
     const next = savedSchedule.includes(id) ? savedSchedule : [...savedSchedule, id];
     setSavedSchedule(next);
     persist({ saved_schedule: next });
-  }, [savedSchedule, persist]);
+  }, [savedSchedule, persist, isLoggedIn]);
 
   const handleRemove = useCallback((id: string) => {
+    if (!isLoggedIn) return;
     const nextSaved   = savedSchedule.filter((x) => x !== id);
     const nextRemoved = removedSessions.includes(id) ? removedSessions : [...removedSessions, id];
     setSavedSchedule(nextSaved);
     setRemovedSessions(nextRemoved);
     persist({ saved_schedule: nextSaved, removed_sessions: nextRemoved });
-  }, [savedSchedule, removedSessions, persist]);
+  }, [savedSchedule, removedSessions, persist, isLoggedIn]);
 
   const handleDoNotSuggest = useCallback((id: string) => {
+    if (!isLoggedIn) return;
     const next = doNotSuggest.includes(id) ? doNotSuggest : [...doNotSuggest, id];
     setDoNotSuggest(next);
     persist({ do_not_suggest_sessions: next });
-  }, [doNotSuggest, persist]);
+  }, [doNotSuggest, persist, isLoggedIn]);
 
   const handleReserveSeat = useCallback((id: string) => {
-    setReservedSeats(prev => prev.includes(id) ? prev : [...prev, id]);
-  }, []);
+    if (!isLoggedIn) return;
+    const next = reservedSeats.includes(id) ? reservedSeats : [...reservedSeats, id];
+    setReservedSeats(next);
+    persist({ reserved_seats: next });
+  }, [reservedSeats, persist, isLoggedIn]);
 
   const handleShowInfo = useCallback((session: ScoredSession) => {
     setDetailSession(session);
@@ -694,12 +704,13 @@ export default function SessionsPage() {
     doNotSuggest,
     reservedSeats,
     allSessions: allScored,
+    isLoggedIn,
     onSave: handleSave,
     onRemove: handleRemove,
     onDoNotSuggest: handleDoNotSuggest,
     onReserveSeat: handleReserveSeat,
     onShowInfo: handleShowInfo,
-  }), [savedSchedule, doNotSuggest, reservedSeats, allScored, handleSave, handleRemove, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
+  }), [savedSchedule, doNotSuggest, reservedSeats, allScored, isLoggedIn, handleSave, handleRemove, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
 
   // Filter + derive sections
   const { tracks, types, days } = useMemo(() => {
@@ -716,7 +727,7 @@ export default function SessionsPage() {
     return {
       tracks: ["All", ...Array.from(trackSet).sort()],
       types:  ["All", ...Array.from(typeSet).sort()],
-      days:   ["All", ...Array.from(daySet).sort()],
+      days:   ["All", ...Array.from(daySet).sort((a, b) => daySortKey(a) - daySortKey(b))],
     };
   }, [allScored]);
 
@@ -747,24 +758,17 @@ export default function SessionsPage() {
 
   const trending = useMemo(() => {
     return baseList
-      .filter(s => !recommendedIds.has(s.id) && s.recommendation_rules?.everyone_encouraged)
+      .filter(s => !recommendedIds.has(s.id) && (
+        s.recommendation_rules?.everyone_encouraged ||
+        s.capacity?.status === "limited"
+      ))
       .slice(0, 4);
   }, [baseList, recommendedIds]);
 
-  const hiddenGems = useMemo(() => {
-    const exclude = new Set([...recommendedIds, ...trending.map(s => s.id)]);
-    return baseList
-      .filter(s => !exclude.has(s.id) && s.compass_score > 0)
-      .slice(6, 10);
-  }, [baseList, recommendedIds, trending]);
-
-  const highDemand = useMemo(() => {
-    return baseList
-      .filter(s => s.capacity?.status === "limited")
-      .slice(0, 4);
-  }, [baseList]);
-
-  const catalogSessions = isFiltered ? filtered : allScored;
+  const catalogSessions = useMemo(() => {
+    const list = isFiltered ? filtered : allScored;
+    return list.filter(s => !doNotSuggest.includes(s.id));
+  }, [isFiltered, filtered, allScored, doNotSuggest]);
 
   if (status === "loading") {
     return (
@@ -793,8 +797,8 @@ export default function SessionsPage() {
         <div className="section-kicker">Session intelligence</div>
         <h1>Sessions that fit your week.</h1>
         <p>
-          Compass reads {totalCount} sessions against your profile and surfaces
-          what to prioritize — recommended matches, room momentum, and seats filling fast.
+          Compass reads sessions against your profile and surfaces what to prioritize:
+          recommended matches, room momentum, and seats filling fast.
         </p>
       </section>
 
@@ -817,9 +821,9 @@ export default function SessionsPage() {
         </div>
 
         {tracks.length > 2 && (
-          <div style={{ marginBottom: "14px" }}>
+          <div className="filter-group">
             <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 680, margin: "0 0 8px" }}>Tech track</p>
-            <div className="chip-row" style={{ marginTop: 0 }}>
+            <div className="filter-scroll-row">
               {tracks.slice(0, 12).map((track) => (
                 <FilterChip key={track} label={track} active={trackFilter === track} onClick={() => setTrackFilter(track)} />
               ))}
@@ -828,9 +832,9 @@ export default function SessionsPage() {
         )}
 
         {types.length > 2 && (
-          <div style={{ marginBottom: "14px" }}>
+          <div className="filter-group">
             <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 680, margin: "0 0 8px" }}>Session type</p>
-            <div className="chip-row" style={{ marginTop: 0 }}>
+            <div className="filter-scroll-row">
               {types.slice(0, 10).map((type) => (
                 <FilterChip key={type} label={type} active={typeFilter === type} onClick={() => setTypeFilter(type)} />
               ))}
@@ -839,9 +843,9 @@ export default function SessionsPage() {
         )}
 
         {days.length > 2 && (
-          <div style={{ marginBottom: "14px" }}>
+          <div className="filter-group">
             <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 680, margin: "0 0 8px" }}>Day</p>
-            <div className="chip-row" style={{ marginTop: 0 }}>
+            <div className="filter-scroll-row">
               {days.map((day) => (
                 <FilterChip key={day} label={day} active={dayFilter === day} onClick={() => setDayFilter(day)} />
               ))}
@@ -874,23 +878,9 @@ export default function SessionsPage() {
           />
           <IntelligenceBand
             kicker="Trending"
-            title="Broad appeal across the event."
-            desc="Sessions with wide relevance — many attendees are likely to benefit."
-            sessions={trending}
-            sched={schedState}
-          />
-          <IntelligenceBand
-            kicker="Hidden gems"
-            title="Strong fits beyond the obvious."
-            desc="Well-matched sessions that may not be on everyone's radar yet."
-            sessions={hiddenGems}
-            sched={schedState}
-          />
-          <IntelligenceBand
-            kicker="High demand"
             title="Seats filling fast."
-            desc="Limited-capacity sessions worth booking early."
-            sessions={highDemand}
+            desc="High-demand and broadly relevant sessions worth booking early."
+            sessions={trending}
             sched={schedState}
           />
         </>

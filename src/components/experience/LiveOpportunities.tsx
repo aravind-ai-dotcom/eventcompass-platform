@@ -5,7 +5,7 @@ import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 
 function formatJoined(names: string[], total: number): string {
   const shown = names.slice(0, 3).join(", ");
-  const extra = Math.max(0, total - names.length);
+  const extra = Math.max(0, total - Math.min(3, names.length));
   return extra > 0 ? `${shown} +${extra}` : shown;
 }
 
@@ -19,7 +19,7 @@ export default function LiveOpportunities({
   participantGoals = [],
 }: LiveOpportunitiesProps) {
   const visible = useMemo(() => {
-    return rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals).slice(0, 6);
+    return rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals).slice(0, 4);
   }, [participantTracks, participantGoals]);
 
   return (
@@ -49,8 +49,13 @@ export default function LiveOpportunities({
                   {` · ${opp.joinedCount} joined`}
                 </p>
                 <p className="huddle-row-people">
-                  Joined: {formatJoined(opp.joinedNames, opp.joinedCount)}
+                  Joined by {formatJoined(opp.joinedNames, opp.joinedCount)}
                 </p>
+                <div className="huddle-row-people-avatars" aria-hidden="true">
+                  {opp.joinedNames.slice(0, 3).map(name => (
+                    <span key={name} className="huddle-avatar">{name[0]?.toUpperCase()}</span>
+                  ))}
+                </div>
                 <p className="huddle-row-match">
                   Matched because: {opp.matchReasons.join(" · ")}
                 </p>

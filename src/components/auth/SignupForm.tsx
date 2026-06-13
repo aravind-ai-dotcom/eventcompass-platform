@@ -128,7 +128,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-      <Field label="Full name"     value={fullName}     onChange={setFullName}     error={errors.fullName}     placeholder="Maya Patel"          autoComplete="name" />
+      <Field label="Full name"     value={fullName}     onChange={setFullName}     error={errors.fullName}     placeholder="Full name"          autoComplete="name" />
       <Field label="Email"         type="email"
              value={email}        onChange={setEmail}          error={errors.email}        placeholder="name@company.com"    autoComplete="email" />
       <Field label="Organization"  value={organization} onChange={setOrganization} error={errors.organization} placeholder="Acme Corporation" />

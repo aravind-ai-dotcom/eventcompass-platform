@@ -74,22 +74,24 @@ export default function CompassHeader() {
         <span className="brand-word">Compass</span>
       </Link>
 
-      {/* Nav */}
-      <nav className="main-nav" aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={
-              pathname === item.href || pathname.startsWith(item.href + "/")
-                ? "active"
-                : ""
-            }
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      {/* Nav — horizontal scroll on mobile */}
+      <div className="header-nav-scroll">
+        <nav className="main-nav" aria-label="Main navigation">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={
+                pathname === item.href || pathname.startsWith(item.href + "/")
+                  ? "active"
+                  : ""
+              }
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       {/* Actions */}
       <div className="header-actions">

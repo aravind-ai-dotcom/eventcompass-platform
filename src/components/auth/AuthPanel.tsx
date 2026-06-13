@@ -130,19 +130,19 @@ function MinimalSignupForm({
         <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <FieldLabel>First name</FieldLabel>
           <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-            placeholder="Maya" style={iS} autoComplete="given-name" />
+            placeholder="First name" style={iS} autoComplete="given-name" />
         </label>
         <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <FieldLabel>Last name</FieldLabel>
           <input type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-            placeholder="Patel" style={iS} autoComplete="family-name" />
+            placeholder="Last name" style={iS} autoComplete="family-name" />
         </label>
       </div>
 
       <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         <FieldLabel>Email</FieldLabel>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-          placeholder="you@example.com" style={iS} autoComplete="email" />
+          placeholder="Email" style={iS} autoComplete="email" />
       </label>
 
       <label style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -157,7 +157,7 @@ function MinimalSignupForm({
           <span style={{ color: "var(--muted)", fontWeight: 400 }}>(optional)</span>
         </FieldLabel>
         <input type="text" value={org} onChange={e => setOrg(e.target.value)}
-          placeholder="Acme Corp" style={iS} autoComplete="organization" />
+          placeholder="Company" style={iS} autoComplete="organization" />
       </label>
 
       {error && (

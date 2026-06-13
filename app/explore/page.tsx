@@ -22,7 +22,7 @@ const JOURNEYS: Journey[] = [
     title: "Learning",
     goal: "Learn new technology",
     image: "/event/ibm_txc_banner_1.jpg",
-    flow: ["Goals", "Sessions", "Labs", "Experts"],
+    flow: ["Arrive with a goal", "Follow sessions", "Try it in a lab", "Meet experts", "Build confidence"],
     accent: "#0f62fe",
   },
   {
@@ -30,7 +30,7 @@ const JOURNEYS: Journey[] = [
     title: "Certification",
     goal: "Pass a certification",
     image: "/event/ibm_txc_banner_4.jpg",
-    flow: ["Choose goal", "Build plan", "Attend sessions", "Gain readiness", "Take exam"],
+    flow: ["Choose a certification goal", "Compass builds your plan", "Attend curated sessions", "Gain readiness with SMEs and mentors", "Take the exam"],
     accent: "#a56eff",
   },
   {
@@ -38,7 +38,7 @@ const JOURNEYS: Journey[] = [
     title: "Networking",
     goal: "Find your people",
     image: "/event/ibm_txc_banner_5.jpg",
-    flow: ["Interests", "Experts", "Connections"],
+    flow: ["Share your interests", "Find experts and peers", "Make the connection", "Build meaningful relationships"],
     accent: "#005d5d",
   },
   {
@@ -46,7 +46,7 @@ const JOURNEYS: Journey[] = [
     title: "Community",
     goal: "Find your community",
     image: "/event/community-v2.jpg",
-    flow: ["Communities", "User groups", "Meetups"],
+    flow: ["Identify communities", "Find user groups", "Join meetups", "Build lifelong connections"],
     accent: "#b45309",
   },
   {
@@ -54,7 +54,7 @@ const JOURNEYS: Journey[] = [
     title: "Problem solving",
     goal: "Solve a business challenge",
     image: "/event/expo.jpg",
-    flow: ["Challenge", "Content", "Experts", "Solution"],
+    flow: ["Arrive with a challenge", "Follow relevant content", "Meet experts and peers", "Learn from customers like you", "Develop a path forward"],
     accent: "#da1e28",
   },
 ];

@@ -15,6 +15,7 @@ const BASE = "organizations/ibm/events/txc2026";
 type RawDoc = Record<string, unknown>;
 
 interface PulseData {
+  totalAttendees: number;
   topCountries: Record<string, number>;
   topUniversities: Record<string, number>;
   topPastEmployers: Record<string, number>;
@@ -25,23 +26,43 @@ interface PulseData {
   openToMentoring: number;
 }
 
+function pct(count: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((count / total) * 100);
+}
+
 function NostalgiaBox({
   title,
   rows,
+  total,
   renderLabel,
+  withBars = false,
 }: {
   title: string;
   rows: [string, number][];
+  total: number;
   renderLabel?: (name: string) => React.ReactNode;
+  withBars?: boolean;
 }) {
   if (rows.length === 0) return null;
   return (
-    <article className="nostalgia-box">
+    <article className={`nostalgia-box${withBars ? " nostalgia-box--chart" : ""}`}>
       <h3 className="nostalgia-box-title">{title}</h3>
       <ul className="nostalgia-box-list">
-        {rows.map(([name]) => (
-          <li key={name}>{renderLabel ? renderLabel(name) : name}</li>
-        ))}
+        {rows.map(([name, count]) => {
+          const percent = pct(count, total);
+          return (
+            <li key={name}>
+              <span>{renderLabel ? renderLabel(name) : name}</span>
+              {withBars ? (
+                <div className="nostalgia-bar-track" aria-hidden="true">
+                  <div className="nostalgia-bar-fill" style={{ width: `${Math.max(percent, 4)}%` }} />
+                </div>
+              ) : null}
+              <b>{percent}%</b>
+            </li>
+          );
+        })}
       </ul>
     </article>
   );
@@ -55,6 +76,7 @@ export default function PulsePage() {
   useEffect(() => {
     getDocs(collection(db, `${BASE}/participants`))
       .then(snap => {
+        const totalAttendees = snap.size;
         const topCountries: Record<string, number> = {};
         const topUniversities: Record<string, number> = {};
         const topPastEmployers: Record<string, number> = {};
@@ -82,6 +104,7 @@ export default function PulsePage() {
         }
 
         setData({
+          totalAttendees,
           topCountries,
           topUniversities,
           topPastEmployers,
@@ -104,11 +127,13 @@ export default function PulsePage() {
   );
 
   const connectionItems = data ? [
-    { label: "Alumni connections", val: data.openToAlumni, tone: "#a56eff" },
-    { label: "Former colleague connections", val: data.openToColleague, tone: "#0f62fe" },
-    { label: "Career conversations", val: data.openToCareer, tone: "#b45309" },
-    { label: "Mentoring conversations", val: data.openToMentoring, tone: "#009d9a" },
+    { label: "attendees open to alumni connections", val: data.openToAlumni, tone: "#a56eff" },
+    { label: "attendees open to former-colleague conversations", val: data.openToColleague, tone: "#0f62fe" },
+    { label: "attendees open to career conversations", val: data.openToCareer, tone: "#b45309" },
+    { label: "attendees open to mentoring conversations", val: data.openToMentoring, tone: "#009d9a" },
   ].filter(i => i.val > 0) : [];
+
+  const total = data?.totalAttendees ?? 0;
 
   return (
     <>
@@ -134,18 +159,24 @@ export default function PulsePage() {
               <NostalgiaBox
                 title="Countries"
                 rows={top(data.topCountries, 5)}
+                total={total}
                 renderLabel={name => (
                   <>
                     <span aria-hidden="true">{countryFlag(name)}</span> {name}
                   </>
                 )}
               />
-              <NostalgiaBox title="Universities" rows={top(data.topUniversities, 5)} />
-              <NostalgiaBox title="Former employers" rows={top(data.topPastEmployers, 5)} />
-              <NostalgiaBox title="Communities" rows={top(data.communities, 5)} />
+              <NostalgiaBox
+                title="Universities"
+                rows={top(data.topUniversities, 5)}
+                total={total}
+                withBars
+              />
+              <NostalgiaBox title="Former employers" rows={top(data.topPastEmployers, 5)} total={total} />
+              <NostalgiaBox title="Communities" rows={top(data.communities, 5)} total={total} />
             </div>
             <p className="story-note">
-              Aggregate signals only.{" "}
+              Aggregate signals only. Percentages reflect share of enrolled attendees.{" "}
               <Link href="/enroll" style={{ color: "var(--accent)" }}>Add your background →</Link>
             </p>
           </>
@@ -155,6 +186,9 @@ export default function PulsePage() {
       {!loading && connectionItems.length > 0 && (
         <section className="story-section story-section--spacious">
           <span className="narrative-kicker">Connection intent</span>
+          <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
+            These are attendees who signaled openness to a type of conversation — not matches to you personally.
+          </p>
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (
               <article key={item.label} className="pulse-intent-card" style={{ borderTopColor: item.tone }}>

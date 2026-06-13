@@ -128,12 +128,14 @@ const SNAPSHOTS = [
 ];
 
 const CONTENT_DEFAULTS = [
-  { page: "Home",          title: "Compass. Your TechXchange Advantage.",              body: "The first event intelligence platform that knows who you are, what you need, and who you should meet.",         cta: "Build My Compass",      dest: "/enroll"     },
-  { page: "Explore",       title: "Your personal TechXchange starts here.",            body: "Compass maps your goals, tracks, and career into a personalised four-day plan.",                                 cta: "See the full schedule", dest: "/sessions"   },
-  { page: "Sessions",      title: "Every session. Scored for you.",                    body: "2,481 attendees navigating 600+ sessions. Compass finds your signal.",                                           cta: "Browse all sessions",   dest: "/sessions"   },
-  { page: "Champions",     title: "Meet the people who make TechXchange extraordinary.", body: "IBM Champions bring practical knowledge, generosity, and peer guidance.",                                     cta: "See matched Champions", dest: "/champions"  },
-  { page: "Pulse",         title: "The heartbeat of TechXchange.",                     body: "Live signal from the event floor — sessions, people, and momentum in one view.",                                cta: "View Pulse",            dest: "/pulse"      },
-  { page: "My Experience", title: "TechXchange, built for you.",                       body: "Your personalised four-day plan, scored sessions, and Champion matches — all in one place.",                    cta: "Open My Compass",       dest: "/experience" },
+  { page: "Home",          kicker: "Event intelligence", title: "Compass. Your TechXchange Advantage.",              body: "The first event intelligence platform that knows who you are, what you need, and who you should meet.",         cta: "Build My Compass",      dest: "/enroll"     },
+  { page: "Explore",       kicker: "How Compass works",  title: "How Compass helps you succeed.",                    body: "Five paths through TechXchange — each mapped to sessions, people, and outcomes aligned to what you came to achieve.", cta: "Browse sessions",       dest: "/sessions"   },
+  { page: "Journey Maps",  kicker: "How Compass works",  title: "How Compass helps you succeed.",                    body: "Journey maps live on Explore — milestone pathways for learning, certification, networking, and more.",          cta: "Open Explore",          dest: "/explore"    },
+  { page: "Sessions",      kicker: "Session intelligence", title: "Sessions that fit your week.",                    body: "Compass reads sessions against your profile and surfaces what to prioritize.",                                 cta: "Browse all sessions",   dest: "/sessions"   },
+  { page: "Champions",     kicker: "People intelligence", title: "Find your people before you arrive.",             body: "Experts, mentors, peers, and community leaders matched to your interests.",                                   cta: "See matched Champions", dest: "/champions"  },
+  { page: "Pulse",         kicker: "Event pulse",        title: "The room is taking shape.",                       body: "Communities forming, conversations beginning, opportunities emerging.",                                         cta: "View Pulse",            dest: "/pulse"      },
+  { page: "Enroll",        kicker: "Build your Compass", title: "Tell Compass what matters to you.",               body: "Your goals, tracks, and background shape every session score and champion match.",                            cta: "Build My Compass",      dest: "/enroll"     },
+  { page: "My Experience", kicker: "My Compass",         title: "TechXchange, built for you.",                     body: "Your personalized four-day plan, scored sessions, and Champion matches — all in one place.",                    cta: "Open My Compass",       dest: "/experience" },
 ];
 
 const PERSONA_COLORS: Record<string, string> = {
@@ -2241,8 +2243,8 @@ function ContentView() {
 
   return (
     <div>
-      <SectionHead kicker="Content Management" title="Hero copy for every Compass page."
-        sub="Edit titles, body copy, and CTAs. Local state — wire to Firestore for persistence." />
+      <SectionHead kicker="Content Management" title="Page hero content editor."
+        sub="Edit kicker, headline, body copy, and CTA for each Compass page. Local state — wire to Firestore for persistence." />
       <div style={{ display: "grid", gap: "14px" }}>
         {pages.map((p, i) => (
           <Panel key={p.page}>
@@ -2265,10 +2267,11 @@ function ContentView() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               {[
-                { key: "title", label: "Hero Title",      el: "input"    },
-                { key: "body",  label: "Hero Body",        el: "textarea" },
-                { key: "cta",   label: "CTA Label",        el: "input"    },
-                { key: "dest",  label: "CTA Destination",  el: "input"    },
+                { key: "kicker", label: "Hero Kicker",      el: "input"    },
+                { key: "title", label: "Hero Headline",     el: "input"    },
+                { key: "body",  label: "Hero Body",         el: "textarea" },
+                { key: "cta",   label: "CTA Label",         el: "input"    },
+                { key: "dest",  label: "CTA Destination",   el: "input"    },
               ].map(f => (
                 <div key={f.key}>
                   <label style={{ color: S.muted, fontSize: "0.72rem", textTransform: "uppercase",

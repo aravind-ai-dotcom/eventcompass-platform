@@ -11,6 +11,7 @@ const LIFECYCLE = [
     title: "Shape your goals before you arrive.",
     body: "Tell Compass what matters — learning paths, certification targets, and connection intent.",
     image: "/event/learning-lab.jpg",
+    objectPosition: "center top",
     href: "/enroll",
     cta: "Build My Compass",
   },
@@ -20,6 +21,7 @@ const LIFECYCLE = [
     title: "Find your people in the room.",
     body: "Experts, mentors, peers, and community leaders matched to your interests and experience.",
     image: "/event/people-v2.jpg",
+    objectPosition: "center 55%",
     href: "/champions",
     cta: "Explore people",
   },
@@ -29,6 +31,7 @@ const LIFECYCLE = [
     title: "Live TechXchange with clarity.",
     body: "An AI-powered week plan — sessions prioritized, conflicts resolved, every day intentional.",
     image: "/event/ibm_txc_banner_B.jpg",
+    objectPosition: "center center",
     href: "/experience",
     cta: "Open My Compass",
   },
@@ -38,6 +41,7 @@ const LIFECYCLE = [
     title: "Take it home.",
     body: "Certification progress, connections, and learning paths that extend beyond the event.",
     image: "/event/ibm_txc_banner_A.jpg",
+    objectPosition: "center top",
     href: "/explore",
     cta: "See how Compass works",
   },
@@ -110,7 +114,7 @@ export default function HomeLifecycleRotator() {
                 alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, 55vw"
-                style={{ objectFit: "cover", objectPosition: "center" }}
+                style={{ objectFit: "cover", objectPosition: item.objectPosition }}
                 priority={index === 0}
               />
             </div>

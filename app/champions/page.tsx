@@ -17,6 +17,9 @@ import { db } from "@/lib/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import ChampionDetailModal from "@/components/people/ChampionDetailModal";
+import { displayFirstName, deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
+import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 
 const BASE     = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -36,6 +39,7 @@ interface Champion {
   domains?: string[];
   linkedin_url?: string;
   consent?: { show_linkedin?: boolean };
+  compass_reasons?: string[];
 }
 
 // Threaded into each card
@@ -47,6 +51,7 @@ interface PeopleState {
   onSave:             (id: string) => void;
   onRemove:           (id: string) => void;
   onDoNotSuggest:     (id: string) => void;
+  onDetails:          (id: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,14 +80,12 @@ function PersonAvatar({ initial }: { initial: string }) {
 // PeopleActionBar
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeopleActionBar({ id, linkedinUrl, pState }: {
+function PeopleActionBar({ id, pState }: {
   id: string;
-  linkedinUrl?: string;
   pState: PeopleState;
 }) {
-  const isSaved   = pState.savedPeople.includes(id);
-  const isRemoved = pState.removedPeople.includes(id);
-  const isDns     = pState.doNotSuggestPeople.includes(id);
+  const isSaved = pState.savedPeople.includes(id);
+  const isDns   = pState.doNotSuggestPeople.includes(id);
 
   const base: React.CSSProperties = {
     display: "inline-flex", alignItems: "center",
@@ -107,34 +110,18 @@ function PeopleActionBar({ id, linkedinUrl, pState }: {
       borderTop: "1px solid var(--line)", paddingTop: "8px", marginTop: "10px",
       display: "flex", flexWrap: "wrap" as const, gap: "5px", alignItems: "center",
     }}>
-      {/* View profile — always visible */}
-      <a href={"/champions/" + id} style={base}>Profile &#8599;</a>
+      <button type="button" onClick={() => pState.onDetails(id)} style={base}>Details</button>
 
-      {/* LinkedIn — logged-in only, gated by existing URL */}
-      {pState.isLoggedIn && linkedinUrl && (
-        <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={base}>
-          LinkedIn &#8599;
-        </a>
-      )}
-
-      {/* Save / Saved — logged-in only */}
       {pState.isLoggedIn && (
         isSaved
           ? <button onClick={() => pState.onSave(id)} style={savedBtn} type="button">&#10003; Saved</button>
-          : <button onClick={() => pState.onSave(id)} style={base}     type="button">Save</button>
+          : <button onClick={() => pState.onSave(id)} style={base}     type="button">Save person</button>
       )}
 
-      {/* Remove — logged-in only */}
-      {pState.isLoggedIn && !isRemoved && (
-        <button onClick={() => pState.onRemove(id)} style={{ ...base, opacity: 0.75 }} type="button">Remove</button>
-      )}
-      {isRemoved && <span style={badge}>Removed</span>}
-
-      {/* Do not suggest — logged-in only */}
-      {pState.isLoggedIn && !isDns && !isRemoved && (
+      {pState.isLoggedIn && !isDns && (
         <button onClick={() => pState.onDoNotSuggest(id)} style={{ ...base, opacity: 0.75 }} type="button">Not for me</button>
       )}
-      {isDns && !isRemoved && <span style={badge}>Dismissed</span>}
+      {isDns && <span style={badge}>Dismissed</span>}
     </div>
   );
 }
@@ -143,11 +130,12 @@ function PeopleActionBar({ id, linkedinUrl, pState }: {
 // ChampionCard  (Carbon style)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function displayFirstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? name;
-}
-
-function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: PeopleState; anonymous?: boolean }) {
+function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
+  c: Champion;
+  pState: PeopleState;
+  anonymous?: boolean;
+  profileSignals?: string[];
+}) {
   const initial   = c.display_name[0]?.toUpperCase() ?? "C";
   const org       = c.organization ?? c.company ?? "";
   const loc       = c.geo ?? c.country ?? "";
@@ -155,9 +143,13 @@ function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: P
   const domains   = [...(profileExtra?.domains ?? []), ...(c.domains ?? [])].slice(0, 4);
   const communities = profileExtra?.community_interests ?? [];
   const tags      = [...domains, ...communities].slice(0, 4);
-  const avail     = c.attendance?.available_for_1x1;
   const isRemoved = pState.removedPeople.includes(c.id);
   const shownName = anonymous ? displayFirstName(c.display_name) : c.display_name;
+  const matchReasons = deriveMatchReasons(c, profileSignals);
+  const intentSnapshot = deriveIntentSnapshot(c);
+  const isMutual = !anonymous && pState.isLoggedIn
+    && pState.savedPeople.includes(c.id)
+    && isMutualWithInbound(c.display_name, c.id, pState.savedPeople, SAMPLE_INBOUND_SIGNALS);
 
   return (
     <article className={`champion-person-card${isRemoved ? " champion-person-card--dim" : ""}`}>
@@ -180,6 +172,11 @@ function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: P
               {[c.title, org].filter(Boolean).join(" · ")}
             </p>
           )}
+          {isMutual && (
+            <span className="connection-signal-badge connection-signal-badge--mutual" style={{ marginTop: "6px", display: "inline-block" }}>
+              Mutual interest
+            </span>
+          )}
         </div>
       </div>
 
@@ -191,15 +188,26 @@ function ChampionCard({ c, pState, anonymous = false }: { c: Champion; pState: P
         </div>
       )}
 
-      {!anonymous && avail && (
-        <p style={{ margin: 0, fontSize: "0.78rem", color: IBM_BLUE, fontWeight: 550 }}>
-          Available for 1:1
-        </p>
+      {!anonymous && intentSnapshot.length > 0 && (
+        <div className="champion-person-intent">
+          {intentSnapshot.map(item => (
+            <span key={item} className="champion-person-intent-tag">{item}</span>
+          ))}
+        </div>
+      )}
+
+      {!anonymous && matchReasons.length > 0 && (
+        <div className="champion-person-match">
+          <p className="champion-person-match-kicker">Why Compass matched this person</p>
+          <ul className="champion-person-match-list">
+            {matchReasons.slice(0, 3).map(r => <li key={r}>{r}</li>)}
+          </ul>
+        </div>
       )}
 
       {!anonymous && (
         <div style={{ marginTop: "auto" }}>
-          <PeopleActionBar id={c.id} linkedinUrl={c.linkedin_url} pState={pState} />
+          <PeopleActionBar id={c.id} pState={pState} />
         </div>
       )}
     </article>
@@ -239,12 +247,13 @@ function incDomain(map: Record<string, number>, key: string) {
 // IntelligenceBand — people intelligence presentation slice
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeopleIntelligenceBand({ kicker, desc, champions, pState, anonymous = false }: {
+function PeopleIntelligenceBand({ kicker, desc, champions, pState, anonymous = false, profileSignals = [] }: {
   kicker: string;
   desc: string;
   champions: Champion[];
   pState: PeopleState;
   anonymous?: boolean;
+  profileSignals?: string[];
 }) {
   if (champions.length === 0) return null;
   return (
@@ -254,7 +263,9 @@ function PeopleIntelligenceBand({ kicker, desc, champions, pState, anonymous = f
         <p className="champion-band-desc">{desc}</p>
       </div>
       <div className="intelligence-row intelligence-row--people">
-        {champions.map(c => <ChampionCard key={c.id} c={c} pState={pState} anonymous={anonymous} />)}
+        {champions.map(c => (
+          <ChampionCard key={c.id} c={c} pState={pState} anonymous={anonymous} profileSignals={profileSignals} />
+        ))}
       </div>
     </section>
   );
@@ -277,6 +288,7 @@ export default function ChampionsPage() {
   const [doNotSuggestPeople, setDoNotSuggestPeople] = useState<string[]>([]);
   const [pLoading,           setPLoading]           = useState(false);
   const [profileSignals,     setProfileSignals]     = useState<string[]>([]);
+  const [detailChampion,     setDetailChampion]     = useState<Champion | null>(null);
 
   // Load champions
   useEffect(() => {
@@ -346,6 +358,11 @@ export default function ChampionsPage() {
     persist({ do_not_suggest_people: next });
   }, [doNotSuggestPeople, persist]);
 
+  const handleDetails = useCallback((id: string) => {
+    const found = champions.find(c => c.id === id);
+    if (found) setDetailChampion(found);
+  }, [champions]);
+
   // ── Build PeopleState ──────────────────────────────────────────────────────
 
   const pState = useMemo<PeopleState>(() => ({
@@ -356,7 +373,8 @@ export default function ChampionsPage() {
     onSave:         handleSave,
     onRemove:       handleRemove,
     onDoNotSuggest: handleDns,
-  }), [savedPeople, removedPeople, doNotSuggestPeople, user, pLoading, handleSave, handleRemove, handleDns]);
+    onDetails:      handleDetails,
+  }), [savedPeople, removedPeople, doNotSuggestPeople, user, pLoading, handleSave, handleRemove, handleDns, handleDetails]);
 
   // ── Filter ─────────────────────────────────────────────────────────────────
 
@@ -432,6 +450,7 @@ export default function ChampionsPage() {
     return Object.entries(map).sort(([, a], [, b]) => b - a).slice(0, 6);
   }, [visibleChampions]);
 
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -499,7 +518,9 @@ export default function ChampionsPage() {
             </div>
           ) : (
             <div className="champion-grid three-champions">
-              {filtered.map((c) => <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} />)}
+              {filtered.map((c) => (
+                <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} profileSignals={profileSignals} />
+              ))}
             </div>
           )}
         </section>
@@ -528,6 +549,7 @@ export default function ChampionsPage() {
             champions={recommendedExperts}
             pState={pState}
             anonymous={!user}
+            profileSignals={profileSignals}
           />
 
           {user && profileSignals.length > 0 && (
@@ -537,6 +559,7 @@ export default function ChampionsPage() {
               champions={sharedInterestChampions}
               pState={pState}
               anonymous={false}
+              profileSignals={profileSignals}
             />
           )}
 
@@ -546,6 +569,7 @@ export default function ChampionsPage() {
             champions={mentors}
             pState={pState}
             anonymous={!user}
+            profileSignals={profileSignals}
           />
 
           <PeopleIntelligenceBand
@@ -554,6 +578,7 @@ export default function ChampionsPage() {
             champions={communityLeaders}
             pState={pState}
             anonymous={!user}
+            profileSignals={profileSignals}
           />
 
           <section className="section">
@@ -562,7 +587,9 @@ export default function ChampionsPage() {
               <p className="champion-band-desc">Every expert in the guide.</p>
             </div>
             <div className="champion-grid three-champions">
-              {visibleChampions.map((c) => <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} />)}
+              {visibleChampions.map((c) => (
+                <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} profileSignals={profileSignals} />
+              ))}
             </div>
           </section>
         </>
@@ -587,6 +614,14 @@ export default function ChampionsPage() {
           : <Link href="/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
         }
       </section>
+
+      {detailChampion && (
+        <ChampionDetailModal
+          champion={detailChampion}
+          anonymous={!user}
+          onClose={() => setDetailChampion(null)}
+        />
+      )}
     </>
   );
 }
