@@ -41,8 +41,11 @@ import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import CertificationJourney from "@/components/experience/CertificationJourney";
 import {
   applyCertificationSessionBoost,
+  gatherCertificationGoalIds,
   getCertificationJourneyTitle,
   hasCertificationIntent,
+  isCertificationActivityType,
+  resolveSelectedCertificationGoals,
 } from "@/lib/certificationProfile";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
@@ -76,7 +79,7 @@ const FUN_TYPES = new Set([
 ]);
 
 const LEARNING_TYPES = new Set([
-  "instructor-led lab", "lab", "workshop", "certification",
+  "instructor-led lab", "lab", "workshop",
   "technical breakout", "breakout session", "breakout", "hands-on lab", "demo",
 ]);
 
@@ -100,6 +103,8 @@ interface ScoredSession {
   tech_track?: string | string[];
   compass_score: number;
   compass_reasons: string[];
+  certification_id?: string;
+  certification_code?: string;
 }
 
 interface ScoredChampion {
@@ -195,6 +200,7 @@ function allTracks(raw: RawDoc): string[] {
 }
 
 function sessionMeta(s: ScoredSession): string {
+  if (isCertificationActivityType(s)) return "";
   const raw = s as unknown as RawDoc;
   const day   = resolve(raw, "date",       "schedule.day");
   const start = resolve(raw, "start_time", "schedule.start_time");
@@ -270,7 +276,8 @@ function sessionTypeLabel(s: ScoredSession): string {
   return (s.session_type ?? s.activity_type ?? "Session").trim();
 }
 
-function getPillar(s: ScoredSession): "Learning" | "Community" | "Fun" {
+function getPillar(s: ScoredSession): "Learning" | "Community" | "Fun" | null {
+  if (isCertificationActivityType(s)) return null;
   const t = sessionTypeLabel(s).toLowerCase();
   if (FUN_TYPES.has(t))      return "Fun";
   if (LEARNING_TYPES.has(t)) return "Learning";
@@ -326,7 +333,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   const finalReasons = boosted.reasons;
 
   return {
-    id:           String(raw.id ?? ""),
+    id:           String(raw.id ?? raw.session_id ?? ""),
     title:        String(raw.title ?? "Untitled session"),
     session_type: raw.session_type  as string | undefined,
     activity_type:raw.activity_type as string | undefined,
@@ -337,6 +344,8 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
     start_time:   raw.start_time    as string | undefined,
     room:         raw.room          as string | undefined,
     tech_track:   raw.tech_track    as string | string[] | undefined,
+    certification_id: raw.certification_id as string | undefined,
+    certification_code: raw.certification_code as string | undefined,
     compass_score:   score,
     compass_reasons: finalReasons,
   };
@@ -1176,7 +1185,7 @@ function DayTabExperience({
       <div className="plan-mode-row" role="group" aria-label="Conflict handling">
         {([
           { id: "best-fit" as const, label: "Best fit" },
-          { id: "show-both" as const, label: "Show all conflicts" },
+          { id: "show-both" as const, label: "Show with all conflicts" },
           { id: "capacity" as const, label: "Capacity optimization" },
         ]).map(mode => (
           <button
@@ -1241,6 +1250,7 @@ export default function ExperiencePage() {
   const [allChampions,   setAllChampions]   = useState<ScoredChampion[]>([]);
   const [detailChampion, setDetailChampion] = useState<ScoredChampion | null>(null);
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
+  const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
   const [savedPeople,    setSavedPeople]    = useState<string[]>([]);
   const [meetPeople,     setMeetPeople]     = useState<string[]>([]);
@@ -1263,16 +1273,31 @@ export default function ExperiencePage() {
   // ── Session action handlers ─────────────────────────────────────────────────
 
   const handleSaveSession = useCallback((id: string) => {
+    const session = allSessions.find(s => s.id === id);
+    if (session && isCertificationActivityType(session)) {
+      const nextGoals = certificationGoals.includes(id) ? certificationGoals : [...certificationGoals, id];
+      setCertificationGoals(nextGoals);
+      persistPrefs({ certification_goals: nextGoals });
+      return;
+    }
     const next = savedSessions.includes(id) ? savedSessions : [...savedSessions, id];
     setSavedSessions(next);
     persistPrefs({ saved_sessions: next });
-  }, [savedSessions, persistPrefs]);
+  }, [allSessions, certificationGoals, savedSessions, persistPrefs]);
 
   const handleRemoveSession = useCallback((id: string) => {
     const next = savedSessions.filter(x => x !== id);
     setSavedSessions(next);
     persistPrefs({ saved_sessions: next });
   }, [savedSessions, persistPrefs]);
+
+  const handleRemoveCertificationGoal = useCallback((id: string) => {
+    const nextGoals = certificationGoals.filter(x => x !== id);
+    const nextSaved = savedSessions.filter(x => x !== id);
+    setCertificationGoals(nextGoals);
+    setSavedSessions(nextSaved);
+    persistPrefs({ certification_goals: nextGoals, saved_sessions: nextSaved });
+  }, [certificationGoals, savedSessions, persistPrefs]);
 
   const handleHideSession = useCallback((id: string) => {
     const next = hiddenSessions.includes(id) ? hiddenSessions : [...hiddenSessions, id];
@@ -1371,6 +1396,7 @@ export default function ExperiencePage() {
 
         for (const s of scored) {
           const p = getPillar(s);
+          if (!p) continue;
           if (p === "Learning")  learning.push(s);
           else if (p === "Fun")  fun.push(s);
           else                   community.push(s);
@@ -1385,7 +1411,7 @@ export default function ExperiencePage() {
           .sort((a, b) => b.compass_score - a.compass_score);
         const scoredChampions = allScoredChampions.slice(0, 5);
 
-        const topCandidates = scored.filter(s => s.compass_score > 0).slice(0, 30);
+        const topCandidates = scored.filter(s => s.compass_score > 0 && !isCertificationActivityType(s)).slice(0, 30);
         const best = (topCandidates.length > 0
           ? [...topCandidates].sort(sortByEventTimeThenFit)[0]
           : scored[0]) ?? null;
@@ -1402,6 +1428,7 @@ export default function ExperiencePage() {
 
         // Load persisted action state
         setSavedSessions( (pData.saved_sessions  as string[]) ?? []);
+        setCertificationGoals((pData.certification_goals as string[]) ?? []);
         setHiddenSessions((pData.hidden_sessions as string[]) ?? []);
         setSavedPeople(   (pData.saved_people    as string[]) ?? []);
         setMeetPeople(    (pData.meet_people     as string[]) ?? []);
@@ -1483,14 +1510,30 @@ export default function ExperiencePage() {
 
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
-  const showCertJourney = hasCertificationIntent(participant);
   const certLabel = getCertificationJourneyTitle(participant);
   const trustSignals = buildCompassTrustSignals(participant, sig);
+  const certGoalIds = useMemo(
+    () => gatherCertificationGoalIds(
+      {
+        ...participant,
+        certification_goals: certificationGoals,
+        saved_sessions: savedSessions,
+        saved_schedule: (participant.saved_schedule as string[]) ?? [],
+      },
+      allSessions,
+    ),
+    [participant, certificationGoals, savedSessions, allSessions],
+  );
+  const selectedCertifications = useMemo(
+    () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
+    [allSessions, certGoalIds],
+  );
+  const showCertJourney = hasCertificationIntent(participant) || certGoalIds.length > 0;
 
-  // My Schedule — sessions the user has saved
+  // My Schedule — timed sessions only (certifications are learning goals, not calendar blocks)
   const myScheduleSessions = savedSessions
     .map(id => allSessions.find(s => s.id === id))
-    .filter((s): s is ScoredSession => !!s);
+    .filter((s): s is ScoredSession => !!s && !isCertificationActivityType(s));
 
   return (
     <>
@@ -1587,7 +1630,11 @@ export default function ExperiencePage() {
         />
       </section>
 
-      <CertificationJourney visible={showCertJourney} certificationLabel={certLabel} />
+      <CertificationJourney
+        visible={showCertJourney}
+        certifications={selectedCertifications}
+        onRemove={handleRemoveCertificationGoal}
+      />
 
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
       {nextBestMove && (

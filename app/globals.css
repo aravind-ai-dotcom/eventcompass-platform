@@ -3160,6 +3160,66 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   gap: 8px;
 }
+.certification-goal-list {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.certification-goal-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.certification-goal-body {
+  flex: 1;
+  min-width: 0;
+}
+.certification-goal-title {
+  font-size: 0.95rem;
+  font-weight: 560;
+  margin: 0 0 4px;
+  line-height: 1.35;
+}
+.certification-goal-code {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.certification-goal-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+}
+.certification-goal-meta dt {
+  color: var(--muted);
+  font-weight: 560;
+}
+.certification-goal-meta dd {
+  margin: 0;
+  color: var(--soft);
+}
+.certification-goal-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+.certification-journey-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 18px;
+}
 .certification-view-personal {
   margin: 14px 0 0;
   font-size: 0.9rem;

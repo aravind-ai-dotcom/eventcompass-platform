@@ -403,28 +403,62 @@ const CERT_ENRICHMENT = {
 function buildJourneyAnchor(cert, enrichment, related) {
   const code = certSlug(cert.certification_id);
   const sessionId = `CERT-${code}-JOURNEY`;
-  const slot = {
-    day: cert.exam_day,
-    date: cert.exam_date,
-    start: cert.exam_time,
-    end: addHours(cert.exam_time, 1),
-    room: "Certification Journey Lounge",
-  };
 
-  const base = buildSession(cert, slot, {
-    sessionId,
+  const base = {
+    session_id: sessionId,
     title: cert.title,
-    activityType: "Certification",
-    sessionType: "Certification",
-    kind: "journey",
-    handsOn: false,
-    slotIndex: 11,
-  });
+    description: cert.description,
+    activity_type: "Certification",
+    session_type: "Certification",
+    summary: cert.description,
+    track: cert.track,
+    topics: cert.topics,
+    certification_id: cert.certification_id,
+    certification_code: cert.certification_code,
+    recommended_for: cert.recommended_roles,
+    difficulty: cert.difficulty,
+    tracks: {
+      primary_track: cert.track,
+      secondary_tracks: ["Certification"],
+      topics: [...cert.topics, "Certification", shortTopic(cert)],
+      products: cert.products,
+    },
+    audience: {
+      roles: cert.recommended_roles,
+      industries: ["Technology", "Financial Services", "Healthcare", "Government"],
+    },
+    recommendation_rules: {
+      everyone_encouraged: false,
+      executive_relevant: false,
+      hands_on: false,
+    },
+    compass_intelligence: {
+      intent_tags: ["earn a certification", "hands-on learning", "exam prep"],
+      need_tags: ["certification readiness", "structured learning"],
+      matching_keywords: [
+        ...cert.topics.map(t => t.toLowerCase()),
+        "certification",
+        "exam prep",
+        cert.certification_code.toLowerCase(),
+        shortTopic(cert).toLowerCase(),
+      ],
+    },
+    supports_certification: false,
+    recommended_reason: reasonFor(cert, "journey"),
+    certification_path: {
+      certification_id: cert.certification_id,
+      certification_code: cert.certification_code,
+      milestone: "Achieve",
+    },
+    visibility: "public",
+    capacity: {
+      available_slots: 0,
+      status: "On demand",
+    },
+  };
 
   return {
     ...base,
-    summary: cert.description,
-    certification_code: cert.certification_code,
     certification_url: enrichment.certification_url,
     guide_url: enrichment.guide_url,
     certification_level: enrichment.certification_level,
@@ -436,8 +470,6 @@ function buildJourneyAnchor(cert, enrichment, related) {
     related_huddle_ids: related.huddles,
     related_community_ids: related.communities,
     related_champion_ids: enrichment.champion_ids,
-    supports_certification: false,
-    recommended_reason: reasonFor(cert, "journey"),
     learn_more_url: enrichment.certification_url,
   };
 }

@@ -70,12 +70,15 @@ interface ScoredSession {
 // Schedule interaction state — passed to card components
 interface ScheduleState {
   savedSchedule:  string[];
+  certificationGoals: string[];
   doNotSuggest:   string[];
   reservedSeats:  string[];
   allSessions:    ScoredSession[];
   isLoggedIn:     boolean;
   onSave:         (id: string) => void;
   onRemove:       (id: string) => void;
+  onSaveCertification: (id: string) => void;
+  onRemoveCertification: (id: string) => void;
   onDoNotSuggest: (id: string) => void;
   onReserveSeat:  (id: string) => void;
   onShowInfo:     (session: ScoredSession) => void;
@@ -136,6 +139,7 @@ function sessionRoom(s: ScoredSession): string {
 }
 
 function sessionMeta(s: ScoredSession): string {
+  if (isCertificationActivityType(s)) return "";
   return [sessionDay(s), sessionStart(s), sessionRoom(s)].filter(Boolean).join(" · ");
 }
 
@@ -162,6 +166,7 @@ function parseTime(t: string): number | null {
 
 // Returns true if session overlaps with any saved session on the same day
 function hasConflict(s: ScoredSession, savedIds: string[], allSessions: ScoredSession[]): boolean {
+  if (isCertificationActivityType(s)) return false;
   const day = sessionDay(s);
   if (!day) return false;
   const sStart = parseTime(sessionStart(s));
@@ -171,7 +176,7 @@ function hasConflict(s: ScoredSession, savedIds: string[], allSessions: ScoredSe
   for (const id of savedIds) {
     if (id === s.id) continue;
     const saved = allSessions.find((x) => x.id === id);
-    if (!saved || sessionDay(saved) !== day) continue;
+    if (!saved || isCertificationActivityType(saved) || sessionDay(saved) !== day) continue;
     const oStart = parseTime(sessionStart(saved));
     if (oStart === null) continue;
     const oEnd = parseTime(sessionEnd(saved)) ?? oStart + 60;
@@ -377,10 +382,13 @@ function SessionActionBar({ session, sched, compact = false }: {
   sched: ScheduleState;
   compact?: boolean;
 }) {
-  const isSaved   = sched.savedSchedule.includes(session.id);
+  const isCert = isCertificationActivityType(session);
+  const isSaved   = isCert
+    ? sched.certificationGoals.includes(session.id)
+    : sched.savedSchedule.includes(session.id);
   const isDns     = sched.doNotSuggest.includes(session.id);
   const isReserved = sched.reservedSeats.includes(session.id);
-  const conflict  = sched.isLoggedIn && !isSaved && hasConflict(session, sched.savedSchedule, sched.allSessions);
+  const conflict  = sched.isLoggedIn && !isSaved && !isCert && hasConflict(session, sched.savedSchedule, sched.allSessions);
 
   const baseBtn: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: "3px",
@@ -435,8 +443,45 @@ function SessionActionBar({ session, sched, compact = false }: {
 
       {!sched.isLoggedIn ? (
         <span style={{ ...baseBtn, cursor: "default", opacity: 0.85 }}>
-          Sign in to save or reserve
+          Sign in to save{isCert ? "" : " or reserve"}
         </span>
+      ) : isCert ? (
+        <>
+          {isSaved ? (
+            <span style={savedBtn}>✓ Saved certification</span>
+          ) : (
+            <button
+              onClick={() => sched.onSaveCertification(session.id)}
+              style={baseBtn}
+              title="Add to your certification goals"
+              type="button"
+            >
+              {compact ? "Save certification" : "Add to My Certification Goals"}
+            </button>
+          )}
+          {isSaved && (
+            <button
+              onClick={() => sched.onRemoveCertification(session.id)}
+              style={{ ...baseBtn, opacity: 0.75 }}
+              title="Remove from certification goals"
+              type="button"
+            >
+              Remove
+            </button>
+          )}
+          {!isDns ? (
+            <button
+              onClick={() => sched.onDoNotSuggest(session.id)}
+              style={{ ...baseBtn, opacity: 0.75 }}
+              title="Hide from recommendations"
+              type="button"
+            >
+              Not for me
+            </button>
+          ) : (
+            <span style={dnsLabel}>Dismissed</span>
+          )}
+        </>
       ) : (
         <>
           {isReserved ? (
@@ -556,6 +601,7 @@ function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession
 function CatalogRow({ session, sched }: { session: ScoredSession; sched?: ScheduleState }) {
   const type = sessionType(session);
   const track = primaryTrack(session);
+  const isCert = isCertificationActivityType(session);
   const day = sessionDay(session);
   const start = sessionStart(session);
   const room = sessionRoom(session);
@@ -565,12 +611,13 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
 
   return (
     <article style={isDns ? { opacity: 0.5 } : undefined}>
-      <time>{day}{start ? ` · ${start}` : ""}</time>
+      {!isCert && <time>{day}{start ? ` · ${start}` : ""}</time>}
+      {isCert && <time>On demand</time>}
       <div>
         <span>{type}{track ? ` · ${track}` : ""}</span>
         <h3>{session.title}</h3>
         <p>
-          {room}
+          {isCert ? "Certification testing areas — no fixed time" : room}
           {session.compass_score > 0 && (
             <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>{session.compass_score}% match</span></>
           )}
@@ -676,6 +723,7 @@ function SessionsPageContent() {
 
   // Schedule state — loaded from Firestore, persisted on every action
   const [savedSchedule, setSavedSchedule] = useState<string[]>([]);
+  const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [removedSessions, setRemovedSessions] = useState<string[]>([]);
   const [doNotSuggest,  setDoNotSuggest]  = useState<string[]>([]);
   const [reservedSeats, setReservedSeats] = useState<string[]>([]);
@@ -721,6 +769,7 @@ function SessionsPageContent() {
 
         if (isLoggedIn) {
           setSavedSchedule((pData.saved_schedule as string[]) ?? []);
+          setCertificationGoals((pData.certification_goals as string[]) ?? []);
           setRemovedSessions((pData.removed_sessions as string[]) ?? []);
           setDoNotSuggest((pData.do_not_suggest_sessions as string[]) ?? []);
           setReservedSeats((pData.reserved_seats as string[]) ?? []);
@@ -764,6 +813,7 @@ function SessionsPageContent() {
   // Persist schedule arrays to Firestore
   const persist = useCallback(async (updates: {
     saved_schedule?: string[];
+    certification_goals?: string[];
     removed_sessions?: string[];
     do_not_suggest_sessions?: string[];
     reserved_seats?: string[];
@@ -775,6 +825,22 @@ function SessionsPageContent() {
       console.error("[SessionAction] Firestore write failed:", e);
     }
   }, [participantId, isLoggedIn]);
+
+  const handleSaveCertification = useCallback((id: string) => {
+    if (!isLoggedIn) return;
+    const next = certificationGoals.includes(id) ? certificationGoals : [...certificationGoals, id];
+    setCertificationGoals(next);
+    persist({ certification_goals: next });
+  }, [certificationGoals, persist, isLoggedIn]);
+
+  const handleRemoveCertification = useCallback((id: string) => {
+    if (!isLoggedIn) return;
+    const nextGoals = certificationGoals.filter(x => x !== id);
+    const nextSaved = savedSchedule.filter(x => x !== id);
+    setCertificationGoals(nextGoals);
+    setSavedSchedule(nextSaved);
+    persist({ certification_goals: nextGoals, saved_schedule: nextSaved });
+  }, [certificationGoals, savedSchedule, persist, isLoggedIn]);
 
   const handleSave = useCallback((id: string) => {
     if (!isLoggedIn) return;
@@ -812,16 +878,19 @@ function SessionsPageContent() {
 
   const schedState: ScheduleState = useMemo(() => ({
     savedSchedule,
+    certificationGoals,
     doNotSuggest,
     reservedSeats,
     allSessions: allScored,
     isLoggedIn,
     onSave: handleSave,
     onRemove: handleRemove,
+    onSaveCertification: handleSaveCertification,
+    onRemoveCertification: handleRemoveCertification,
     onDoNotSuggest: handleDoNotSuggest,
     onReserveSeat: handleReserveSeat,
     onShowInfo: handleShowInfo,
-  }), [savedSchedule, doNotSuggest, reservedSeats, allScored, isLoggedIn, handleSave, handleRemove, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
+  }), [savedSchedule, certificationGoals, doNotSuggest, reservedSeats, allScored, isLoggedIn, handleSave, handleRemove, handleSaveCertification, handleRemoveCertification, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
 
   // Filter + derive sections
   const { tracks, types, days } = useMemo(() => {

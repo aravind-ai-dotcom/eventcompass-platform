@@ -864,8 +864,16 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     if (s.title) titleCounts[s.title] = (titleCounts[s.title] ?? 0) + 1;
   }
   const dq: DataQuality = {
-    sessionsMissingDateTime:   sessionRows.filter(s => !s.day && !s.startTime).length,
-    sessionsMissingRoom:       sessionRows.filter(s => !s.room).length,
+    sessionsMissingDateTime:   sessionRows.filter(s => {
+      const t = s.type.toLowerCase();
+      const isCert = t === "certification" || t.includes("certification exam");
+      return !isCert && !s.day && !s.startTime;
+    }).length,
+    sessionsMissingRoom:       sessionRows.filter(s => {
+      const t = s.type.toLowerCase();
+      const isCert = t === "certification" || t.includes("certification exam");
+      return !isCert && !s.room;
+    }).length,
     championsMissingDomains:   championRows.filter(c => c.domains === "—").length,
     participantsMissingPersona: participantRows.filter(p => !p.persona).length,
     participantsMissingConsent: participantRows.filter(

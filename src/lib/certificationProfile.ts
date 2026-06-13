@@ -34,8 +34,9 @@ export const CERTIFICATION_JOURNEY_COPY = {
   pathsHeadline: "Certification journeys available",
   pathsSupporting:
     "Join thousands of attendees using TechXchange to deepen skills, prepare for certifications, and learn alongside a global community.",
-  viewPaths: "Explore learning paths",
+  exploreCertifications: "Explore Certifications",
   viewSupporting: "View sessions for your journey",
+  onDemandNote: "Available on demand at certification testing areas — no fixed time required.",
 } as const;
 
 const DEMO_CERTIFICATIONS: CertificationJourneyRecord[] =
@@ -105,10 +106,67 @@ export function isCertificationActivityType(raw: { session_type?: string; activi
   return type === "certification" || type.includes("certification exam");
 }
 
+export interface SelectedCertificationGoal {
+  id: string;
+  title: string;
+  certification_code?: string;
+  track?: string;
+  topics?: string[];
+  products?: string[];
+}
+
+type CertSessionLike = {
+  id: string;
+  title: string;
+  session_type?: string;
+  activity_type?: string;
+  certification_code?: string;
+  certification_id?: string;
+  tracks?: { primary_track?: string; topics?: string[]; products?: string[] };
+};
+
+/** Collect saved certification catalog item ids from participant profile. */
+export function gatherCertificationGoalIds(
+  participant: ProfileDoc,
+  allSessions: CertSessionLike[],
+): string[] {
+  const explicit = (participant.certification_goals as string[]) ?? [];
+  const savedSchedule = (participant.saved_schedule as string[]) ?? [];
+  const savedSessions = (participant.saved_sessions as string[]) ?? [];
+  const fromSaved = [...savedSchedule, ...savedSessions].filter(id => {
+    const s = allSessions.find(x => x.id === id);
+    return s && isCertificationActivityType(s);
+  });
+  return [...new Set([...explicit, ...fromSaved])];
+}
+
+export function resolveSelectedCertificationGoals(
+  allSessions: CertSessionLike[],
+  ids: string[],
+): SelectedCertificationGoal[] {
+  const goals: SelectedCertificationGoal[] = [];
+  for (const id of ids) {
+    const s = allSessions.find(x => x.id === id);
+    const enrichment = getCertificationEnrichment(String(s?.certification_id ?? id));
+    if (!s && !enrichment) continue;
+    goals.push({
+      id,
+      title: s?.title ?? enrichment?.title ?? id,
+      certification_code: s?.certification_code ?? enrichment?.certification_code,
+      track: s?.tracks?.primary_track ?? enrichment?.track,
+      topics: (s?.tracks?.topics ?? enrichment?.topics ?? []).slice(0, 4),
+      products: (s?.tracks?.products ?? enrichment?.products ?? []).slice(0, 3),
+    });
+  }
+  return goals;
+}
+
 export function getCertificationEnrichment(
-  certificationId: string,
+  lookupId: string,
 ): CertificationJourneyRecord | undefined {
-  return DEMO_CERTIFICATIONS.find(c => c.certification_id === certificationId);
+  return DEMO_CERTIFICATIONS.find(
+    c => c.certification_id === lookupId || c.session_id === lookupId,
+  );
 }
 
 export function listCertificationJourneys(): CertificationJourneyRecord[] {

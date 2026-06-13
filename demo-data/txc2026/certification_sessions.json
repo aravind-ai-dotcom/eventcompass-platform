@@ -1,7 +1,7 @@
 {
   "event_id": "txc2026",
   "organization_id": "ibm",
-  "generated_at": "2026-06-13T13:12:48.332Z",
+  "generated_at": "2026-06-13T13:27:40.881Z",
   "description": "Certification journeys and supporting sessions — breakouts, labs, meetups, and study groups.",
   "sessions": [
     {
@@ -997,6 +997,7 @@
     {
       "session_id": "CERT-QISKIT-JOURNEY",
       "title": "IBM Certified Developer – Fundamentals of Quantum Computation Using Qiskit",
+      "description": "Validates foundational quantum computing concepts, Qiskit programming patterns, circuit design, and runtime execution for developers building quantum applications.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Validates foundational quantum computing concepts, Qiskit programming patterns, circuit design, and runtime execution for developers building quantum applications.",
@@ -1007,23 +1008,13 @@
         "Python"
       ],
       "certification_id": "QISKIT-DEVELOPER-001",
+      "certification_code": "C1000-QISKIT",
       "recommended_for": [
         "Developer",
         "Research Scientist",
         "Data Scientist"
       ],
       "difficulty": "Intermediate",
-      "day": "Wednesday",
-      "start_time": "02:00 PM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-28",
-      "schedule": {
-        "day": "Wednesday",
-        "date": "2026-10-28",
-        "start_time": "02:00 PM",
-        "end_time": "3:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "App Development",
         "secondary_tracks": [
@@ -1089,10 +1080,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-QISKIT",
       "certification_url": "https://www.ibm.com/training/certification/C1000-QISKIT",
       "guide_url": "https://www.ibm.com/training/certification/C1000-QISKIT",
       "certification_level": "Professional",
@@ -2155,6 +2145,7 @@
     {
       "session_id": "CERT-AGENTIC-JOURNEY",
       "title": "IBM Certified Agentic AI Developer",
+      "description": "Demonstrates ability to design, orchestrate, and govern agentic AI workflows using watsonx Orchestrate, assistants, and enterprise automation patterns.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Demonstrates ability to design, orchestrate, and govern agentic AI workflows using watsonx Orchestrate, assistants, and enterprise automation patterns.",
@@ -2166,23 +2157,13 @@
         "Automation"
       ],
       "certification_id": "AGENTIC-AI-001",
+      "certification_code": "C1000-AGENTIC",
       "recommended_for": [
         "Developer",
         "AI Engineer",
         "Solution Architect"
       ],
       "difficulty": "Advanced",
-      "day": "Wednesday",
-      "start_time": "09:00 AM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-28",
-      "schedule": {
-        "day": "Wednesday",
-        "date": "2026-10-28",
-        "start_time": "09:00 AM",
-        "end_time": "10:00 AM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "AI",
         "secondary_tracks": [
@@ -2250,10 +2231,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-AGENTIC",
       "certification_url": "https://www.ibm.com/training/certification/C1000-AGENTIC",
       "guide_url": "https://www.ibm.com/training/certification/C1000-AGENTIC",
       "certification_level": "Advanced",
@@ -3316,6 +3296,7 @@
     {
       "session_id": "CERT-WATSONX-JOURNEY",
       "title": "IBM Certified watsonx AI Engineer",
+      "description": "Covers watsonx.ai model lifecycle, prompt engineering, retrieval-augmented generation, governance controls, and production deployment on IBM Cloud.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Covers watsonx.ai model lifecycle, prompt engineering, retrieval-augmented generation, governance controls, and production deployment on IBM Cloud.",
@@ -3327,23 +3308,13 @@
         "AI Governance"
       ],
       "certification_id": "WATSONX-ENGINEER-001",
+      "certification_code": "C1000-WATSONX",
       "recommended_for": [
         "AI Engineer",
         "MLOps Engineer",
         "Data Scientist"
       ],
       "difficulty": "Advanced",
-      "day": "Tuesday",
-      "start_time": "04:00 PM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-27",
-      "schedule": {
-        "day": "Tuesday",
-        "date": "2026-10-27",
-        "start_time": "04:00 PM",
-        "end_time": "5:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "AI",
         "secondary_tracks": [
@@ -3411,10 +3382,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-WATSONX",
       "certification_url": "https://www.ibm.com/training/certification/C1000-WATSONX",
       "guide_url": "https://www.ibm.com/training/certification/C1000-WATSONX",
       "certification_level": "Advanced",
@@ -4457,6 +4427,7 @@
     {
       "session_id": "CERT-POWER-JOURNEY",
       "title": "IBM Certified Power Systems Administrator",
+      "description": "Validates Power10 administration, virtualization with PowerVM, storage management, high availability, and day-two operations for enterprise workloads.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Validates Power10 administration, virtualization with PowerVM, storage management, high availability, and day-two operations for enterprise workloads.",
@@ -4467,23 +4438,13 @@
         "Operations"
       ],
       "certification_id": "POWER-ADMIN-001",
+      "certification_code": "C1000-POWER",
       "recommended_for": [
         "Systems Administrator",
         "Infrastructure Engineer",
         "Operations Manager"
       ],
       "difficulty": "Intermediate",
-      "day": "Wednesday",
-      "start_time": "11:00 AM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-28",
-      "schedule": {
-        "day": "Wednesday",
-        "date": "2026-10-28",
-        "start_time": "11:00 AM",
-        "end_time": "12:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Power",
         "secondary_tracks": [
@@ -4550,10 +4511,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-POWER",
       "certification_url": "https://www.ibm.com/training/certification/C1000-POWER",
       "guide_url": "https://www.ibm.com/training/certification/C1000-POWER",
       "certification_level": "Professional",
@@ -5585,6 +5545,7 @@
     {
       "session_id": "CERT-OPENSHIFT-JOURNEY",
       "title": "Red Hat OpenShift Architect",
+      "description": "Assesses expertise designing secure, scalable container platforms on OpenShift including networking, GitOps, observability, and hybrid cloud integration.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Assesses expertise designing secure, scalable container platforms on OpenShift including networking, GitOps, observability, and hybrid cloud integration.",
@@ -5595,23 +5556,13 @@
         "OpenShift"
       ],
       "certification_id": "OPENSHIFT-ARCHITECT-001",
+      "certification_code": "C1000-ROSA",
       "recommended_for": [
         "Cloud Architect",
         "Platform Engineer",
         "DevOps Lead"
       ],
       "difficulty": "Advanced",
-      "day": "Tuesday",
-      "start_time": "01:00 PM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-27",
-      "schedule": {
-        "day": "Tuesday",
-        "date": "2026-10-27",
-        "start_time": "01:00 PM",
-        "end_time": "2:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Cloud",
         "secondary_tracks": [
@@ -5677,10 +5628,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-ROSA",
       "certification_url": "https://www.ibm.com/training/certification/C1000-ROSA",
       "guide_url": "https://www.ibm.com/training/certification/C1000-ROSA",
       "certification_level": "Advanced",
@@ -6743,6 +6693,7 @@
     {
       "session_id": "CERT-DATAENG-JOURNEY",
       "title": "IBM Certified Data Engineer – watsonx.data",
+      "description": "Covers data lakehouse architecture, ingestion pipelines, SQL and Spark workloads, data governance, and operational analytics on watsonx.data.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Covers data lakehouse architecture, ingestion pipelines, SQL and Spark workloads, data governance, and operational analytics on watsonx.data.",
@@ -6754,23 +6705,13 @@
         "Spark"
       ],
       "certification_id": "DATA-ENGINEER-001",
+      "certification_code": "C1000-DATAENG",
       "recommended_for": [
         "Data Engineer",
         "Analytics Engineer",
         "Database Administrator"
       ],
       "difficulty": "Intermediate",
-      "day": "Tuesday",
-      "start_time": "09:00 AM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-27",
-      "schedule": {
-        "day": "Tuesday",
-        "date": "2026-10-27",
-        "start_time": "09:00 AM",
-        "end_time": "10:00 AM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Data & AI",
         "secondary_tracks": [
@@ -6838,10 +6779,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-DATAENG",
       "certification_url": "https://www.ibm.com/training/certification/C1000-DATAENG",
       "guide_url": "https://www.ibm.com/training/certification/C1000-DATAENG",
       "certification_level": "Professional",
@@ -7903,6 +7843,7 @@
     {
       "session_id": "CERT-CLOUD-JOURNEY",
       "title": "IBM Certified Cloud Architect",
+      "description": "Validates multi-cloud architecture design on IBM Cloud including VPC, security, resiliency, cost optimization, and integration with enterprise identity.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Validates multi-cloud architecture design on IBM Cloud including VPC, security, resiliency, cost optimization, and integration with enterprise identity.",
@@ -7914,23 +7855,13 @@
         "Resiliency"
       ],
       "certification_id": "CLOUD-ARCHITECT-001",
+      "certification_code": "C1000-CLOUD",
       "recommended_for": [
         "Cloud Architect",
         "Solution Architect",
         "Technical Leader"
       ],
       "difficulty": "Advanced",
-      "day": "Wednesday",
-      "start_time": "04:00 PM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-28",
-      "schedule": {
-        "day": "Wednesday",
-        "date": "2026-10-28",
-        "start_time": "04:00 PM",
-        "end_time": "5:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Cloud",
         "secondary_tracks": [
@@ -7998,10 +7929,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-CLOUD",
       "certification_url": "https://www.ibm.com/training/certification/C1000-CLOUD",
       "guide_url": "https://www.ibm.com/training/certification/C1000-CLOUD",
       "certification_level": "Advanced",
@@ -9074,6 +9004,7 @@
     {
       "session_id": "CERT-MAINFRAME-JOURNEY",
       "title": "IBM Certified z/OS System Administrator",
+      "description": "Demonstrates z/OS systems programming fundamentals, SMP/E, security with RACF, batch processing, and operational recovery for mission-critical workloads.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Demonstrates z/OS systems programming fundamentals, SMP/E, security with RACF, batch processing, and operational recovery for mission-critical workloads.",
@@ -9085,23 +9016,13 @@
         "Batch"
       ],
       "certification_id": "MAINFRAME-ADMIN-001",
+      "certification_code": "C1000-ZOS",
       "recommended_for": [
         "Mainframe Administrator",
         "Systems Programmer",
         "Operations Analyst"
       ],
       "difficulty": "Advanced",
-      "day": "Tuesday",
-      "start_time": "11:00 AM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-27",
-      "schedule": {
-        "day": "Tuesday",
-        "date": "2026-10-27",
-        "start_time": "11:00 AM",
-        "end_time": "12:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Mainframe",
         "secondary_tracks": [
@@ -9170,10 +9091,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-ZOS",
       "certification_url": "https://www.ibm.com/training/certification/C1000-ZOS",
       "guide_url": "https://www.ibm.com/training/certification/C1000-ZOS",
       "certification_level": "Advanced",
@@ -10235,6 +10155,7 @@
     {
       "session_id": "CERT-SECURITY-JOURNEY",
       "title": "IBM Certified Security Analyst – QRadar SIEM",
+      "description": "Covers threat detection with QRadar, log source management, offense investigation, UBA analytics, and incident response workflows for SOC teams.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Covers threat detection with QRadar, log source management, offense investigation, UBA analytics, and incident response workflows for SOC teams.",
@@ -10246,23 +10167,13 @@
         "Security Analytics"
       ],
       "certification_id": "SECURITY-ANALYST-001",
+      "certification_code": "C1000-SEC",
       "recommended_for": [
         "Security Analyst",
         "SOC Engineer",
         "Threat Hunter"
       ],
       "difficulty": "Intermediate",
-      "day": "Wednesday",
-      "start_time": "08:00 AM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-28",
-      "schedule": {
-        "day": "Wednesday",
-        "date": "2026-10-28",
-        "start_time": "08:00 AM",
-        "end_time": "9:00 AM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Security",
         "secondary_tracks": [
@@ -10330,10 +10241,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-SEC",
       "certification_url": "https://www.ibm.com/training/certification/C1000-SEC",
       "guide_url": "https://www.ibm.com/training/certification/C1000-SEC",
       "certification_level": "Professional",
@@ -11395,6 +11305,7 @@
     {
       "session_id": "CERT-IBMI-JOURNEY",
       "title": "IBM Certified IBM i System Administrator",
+      "description": "Validates IBM i administration including subsystem management, security, backup and recovery, performance tuning, and modernization pathways.",
       "activity_type": "Certification",
       "session_type": "Certification",
       "summary": "Validates IBM i administration including subsystem management, security, backup and recovery, performance tuning, and modernization pathways.",
@@ -11406,23 +11317,13 @@
         "Security"
       ],
       "certification_id": "IBM-I-ADMIN-001",
+      "certification_code": "C1000-IBMI",
       "recommended_for": [
         "IBM i Administrator",
         "Systems Administrator",
         "Operations Manager"
       ],
       "difficulty": "Intermediate",
-      "day": "Tuesday",
-      "start_time": "03:00 PM",
-      "location": "Certification Journey Lounge",
-      "date": "2026-10-27",
-      "schedule": {
-        "day": "Tuesday",
-        "date": "2026-10-27",
-        "start_time": "03:00 PM",
-        "end_time": "4:00 PM",
-        "room": "Certification Journey Lounge"
-      },
       "tracks": {
         "primary_track": "Power",
         "secondary_tracks": [
@@ -11490,10 +11391,9 @@
       },
       "visibility": "public",
       "capacity": {
-        "available_slots": 120,
-        "status": "Open"
+        "available_slots": 0,
+        "status": "On demand"
       },
-      "certification_code": "C1000-IBMI",
       "certification_url": "https://www.ibm.com/training/certification/C1000-IBMI",
       "guide_url": "https://www.ibm.com/training/certification/C1000-IBMI",
       "certification_level": "Professional",
