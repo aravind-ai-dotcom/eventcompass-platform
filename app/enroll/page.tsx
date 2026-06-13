@@ -64,7 +64,7 @@ const CAREER_INTERESTS = [
 
 const GOALS = [
   { id: "tech-breakouts",     label: "Attend technical breakouts", icon: "◈" },
-  { id: "earn-cert",          label: "Earn a certification",       icon: "◎" },
+  { id: "earn-cert",          label: "Pursue a certification journey", icon: "◎" },
   { id: "meet-experts",       label: "Meet experts",                 icon: "◉" },
   { id: "join-communities",   label: "Join communities",           icon: "◆" },
   { id: "business-challenge", label: "Solve a business challenge",   icon: "◈" },
@@ -76,7 +76,8 @@ const GOALS = [
 /** Map legacy goal labels from earlier enroll versions → current buckets. */
 const LEGACY_GOAL_LABELS: Record<string, string> = {
   "Learn new technologies":    "Attend technical breakouts",
-  "Earn a certification":      "Earn a certification",
+  "Earn a certification":      "Pursue a certification journey",
+  "Pursue a certification journey": "Pursue a certification journey",
   "Meet IBM experts":          "Meet experts",
   "Explore AI":                "Explore products",
   "Network with peers":        "Join communities",
@@ -774,7 +775,7 @@ export default function EnrollPage() {
             <textarea
               value={hopeText}
               onChange={e => setHopeText(e.target.value)}
-              placeholder="I want to pass a watsonx certification."
+              placeholder="I want to deepen my skills toward a watsonx certification journey."
               rows={3}
               style={{
                 width: "100%", padding: "12px 14px", border: "1px solid var(--line)",

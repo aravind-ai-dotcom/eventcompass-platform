@@ -8,9 +8,13 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
   applyCertificationSessionBoost,
-  getCertificationLabel,
+  CERTIFICATION_JOURNEY_COPY,
+  getCertificationJourneyTitle,
+  isCertificationActivityType,
+  listCertificationJourneys,
 } from "@/lib/certificationProfile";
 import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
+import CertificationSessionDetail from "@/components/sessions/CertificationSessionDetail";
 
 const BASE = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -44,6 +48,23 @@ interface ScoredSession {
   tech_track?: string | string[];
   compass_score: number;
   compass_reasons: string[];
+  summary?: string;
+  certification_id?: string;
+  certification_code?: string;
+  certification_url?: string;
+  guide_url?: string;
+  certification_level?: string;
+  skills_measured?: string[];
+  recommended_background?: string[];
+  estimated_preparation_hours?: number;
+  supports_certification?: boolean;
+  recommended_reason?: string;
+  related_session_ids?: string[];
+  related_lab_ids?: string[];
+  related_champion_ids?: string[];
+  related_huddle_ids?: string[];
+  related_community_ids?: string[];
+  difficulty?: string;
 }
 
 // Schedule interaction state — passed to card components
@@ -193,7 +214,15 @@ function sortSessionsChronological(a: ScoredSession, b: ScoredSession): number {
 // Session detail modal — avoids dead /sessions/{id} routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SessionDetailModal({ session, onClose }: { session: ScoredSession; onClose: () => void }) {
+function SessionDetailModal({
+  session,
+  allSessions,
+  onClose,
+}: {
+  session: ScoredSession;
+  allSessions: ScoredSession[];
+  onClose: () => void;
+}) {
   const type = sessionType(session);
   const track = primaryTrack(session);
   const meta = sessionMeta(session);
@@ -202,6 +231,7 @@ function SessionDetailModal({ session, onClose }: { session: ScoredSession; onCl
     ...(session.tracks?.products ?? []),
     ...(session.tracks?.secondary_tracks ?? []),
   ].filter(Boolean);
+  const isCertJourney = isCertificationActivityType(session);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -219,33 +249,39 @@ function SessionDetailModal({ session, onClose }: { session: ScoredSession; onCl
       aria-labelledby="session-modal-title"
       onClick={onClose}
     >
-      <div className="session-modal" onClick={e => e.stopPropagation()}>
+      <div className={`session-modal${isCertJourney ? " session-modal--certification" : ""}`} onClick={e => e.stopPropagation()}>
         <button type="button" className="session-modal-close" onClick={onClose} aria-label="Close">
           ×
         </button>
-        <p style={{ color: "var(--accent)", fontSize: "0.68rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>
-          {type}{track ? ` · ${track}` : ""}
-        </p>
-        <h2 id="session-modal-title">{session.title}</h2>
-        {meta && <p className="session-modal-meta">{meta}</p>}
-        {session.compass_score > 0 && (
-          <p style={{ fontSize: "0.88rem", color: "var(--text)", margin: "0 0 16px" }}>
-            Compass match: <strong>{session.compass_score}</strong>
-          </p>
-        )}
-        {tags.length > 0 && (
-          <div className="chip-row" style={{ marginBottom: "16px" }}>
-            {tags.slice(0, 8).map(tag => <span key={tag} className="chip">{tag}</span>)}
-          </div>
-        )}
-        {session.compass_reasons.length > 0 && (
+        {isCertJourney ? (
+          <CertificationSessionDetail session={session} allSessions={allSessions} onClose={onClose} />
+        ) : (
           <>
-            <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "0 0 8px" }}>
-              Why Compass matched this
+            <p style={{ color: "var(--accent)", fontSize: "0.68rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>
+              {type}{track ? ` · ${track}` : ""}
             </p>
-            <ul className="session-modal-reasons">
-              {session.compass_reasons.map(r => <li key={r}>{r}</li>)}
-            </ul>
+            <h2 id="session-modal-title">{session.title}</h2>
+            {meta && <p className="session-modal-meta">{meta}</p>}
+            {session.compass_score > 0 && (
+              <p style={{ fontSize: "0.88rem", color: "var(--text)", margin: "0 0 16px" }}>
+                Compass match: <strong>{session.compass_score}</strong>
+              </p>
+            )}
+            {tags.length > 0 && (
+              <div className="chip-row" style={{ marginBottom: "16px" }}>
+                {tags.slice(0, 8).map(tag => <span key={tag} className="chip">{tag}</span>)}
+              </div>
+            )}
+            {session.compass_reasons.length > 0 && (
+              <>
+                <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "0 0 8px" }}>
+                  Why Compass matched this
+                </p>
+                <ul className="session-modal-reasons">
+                  {session.compass_reasons.map(r => <li key={r}>{r}</li>)}
+                </ul>
+              </>
+            )}
           </>
         )}
       </div>
@@ -294,11 +330,11 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   if (sRules.everyone_encouraged) { score += W.broad; reasons.push("Broad event relevance"); }
   if (sRules.hands_on) { score += W.handsOn; reasons.push("Hands-on learning"); }
 
-  const certLabel = getCertificationLabel(participant);
+  const certLabel = getCertificationJourneyTitle(participant);
   const boosted = applyCertificationSessionBoost(score, reasons, participant, raw, certLabel);
 
   return {
-    id: String(raw.id ?? ""),
+    id: String(raw.id ?? raw.session_id ?? ""),
     title: String(raw.title ?? "Untitled session"),
     session_type: raw.session_type as string | undefined,
     activity_type: raw.activity_type as string | undefined,
@@ -310,6 +346,23 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
     start_time: raw.start_time as string | undefined,
     room: raw.room as string | undefined,
     tech_track: raw.tech_track as string | string[] | undefined,
+    summary: raw.summary as string | undefined,
+    certification_id: raw.certification_id as string | undefined,
+    certification_code: raw.certification_code as string | undefined,
+    certification_url: raw.certification_url as string | undefined,
+    guide_url: raw.guide_url as string | undefined,
+    certification_level: raw.certification_level as string | undefined,
+    skills_measured: raw.skills_measured as string[] | undefined,
+    recommended_background: raw.recommended_background as string[] | undefined,
+    estimated_preparation_hours: raw.estimated_preparation_hours as number | undefined,
+    supports_certification: raw.supports_certification as boolean | undefined,
+    recommended_reason: raw.recommended_reason as string | undefined,
+    related_session_ids: raw.related_session_ids as string[] | undefined,
+    related_lab_ids: raw.related_lab_ids as string[] | undefined,
+    related_champion_ids: raw.related_champion_ids as string[] | undefined,
+    related_huddle_ids: raw.related_huddle_ids as string[] | undefined,
+    related_community_ids: raw.related_community_ids as string[] | undefined,
+    difficulty: raw.difficulty as string | undefined,
     compass_score: boosted.score,
     compass_reasons: boosted.reasons,
   };
@@ -636,8 +689,19 @@ function SessionsPageContent() {
   const [typeFromUrlApplied, setTypeFromUrlApplied] = useState(false);
 
   const certLabel = useMemo(
-    () => getCertificationLabel(participantData),
+    () => getCertificationJourneyTitle(participantData),
     [participantData],
+  );
+
+  const learningPathCount = useMemo(() => {
+    const fromSessions = allScored.filter(s => isCertificationActivityType(s)).length;
+    if (fromSessions > 0) return fromSessions;
+    return listCertificationJourneys().length;
+  }, [allScored]);
+
+  const isLearningPathsView = searchParams.get("view") === "learning-paths";
+  const isCertificationView = isLearningPathsView || (
+    typeFilter !== "All" && typeFilter.toLowerCase().includes("certification")
   );
 
   useEffect(() => {
@@ -683,7 +747,13 @@ function SessionsPageContent() {
   useEffect(() => {
     if (status !== "ready" || typeFromUrlApplied) return;
     const typeParam = searchParams.get("type");
-    if (typeParam?.toLowerCase() === "certification") {
+    const viewParam = searchParams.get("view");
+    if (viewParam === "learning-paths") {
+      const match = [...new Set(allScored.map(s => sessionType(s)))].find(t =>
+        t.toLowerCase().includes("certification"),
+      );
+      if (match) setTypeFilter(match);
+    } else if (typeParam?.toLowerCase() === "certification") {
       const typeSet = new Set(allScored.map(s => sessionType(s)));
       const match = [...typeSet].find(t => t.toLowerCase().includes("certification"));
       if (match) setTypeFilter(match);
@@ -835,12 +905,28 @@ function SessionsPageContent() {
   return (
     <>
       <section className="compact-hero story-hero--strong">
-        <div className="section-kicker">Session intelligence</div>
-        <h1>Sessions that fit your week.</h1>
-        <p>
-          Compass reads sessions against your profile and surfaces what to prioritize:
-          recommended matches, room momentum, and seats filling fast.
-        </p>
+        {isCertificationView ? (
+          <>
+            <div className="section-kicker">Certification journeys</div>
+            <h1>{learningPathCount} learning paths available.</h1>
+            <p>{CERTIFICATION_JOURNEY_COPY.pathsSupporting}</p>
+            {certLabel && (
+              <p className="certification-view-personal">
+                Your journey: <strong>{certLabel}</strong> — Compass surfaces sessions, labs, experts,
+                and community moments to help you succeed.
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="section-kicker">Session intelligence</div>
+            <h1>Sessions that fit your week.</h1>
+            <p>
+              Compass reads sessions against your profile and surfaces what to prioritize:
+              recommended matches, room momentum, and seats filling fast.
+            </p>
+          </>
+        )}
       </section>
 
       {/* ── Filters ─────────────────────────────────────────────────── */}
@@ -944,10 +1030,20 @@ function SessionsPageContent() {
       <section className="section">
         <div className="section-head">
           <div>
-            <div className="section-kicker">{isFiltered ? "Filtered results" : "Browse all"}</div>
-            <h2>{isFiltered ? `${catalogSessions.length} session${catalogSessions.length !== 1 ? "s" : ""}` : `All ${totalCount} sessions`}</h2>
+            <div className="section-kicker">{isCertificationView ? "Certification catalog" : isFiltered ? "Filtered results" : "Browse all"}</div>
+            <h2>
+              {isCertificationView
+                ? `${catalogSessions.length} certification journey${catalogSessions.length !== 1 ? "s" : ""}`
+                : isFiltered
+                  ? `${catalogSessions.length} session${catalogSessions.length !== 1 ? "s" : ""}`
+                  : `All ${totalCount} sessions`}
+            </h2>
           </div>
-          <p>Sorted by day and time — match score breaks ties.</p>
+          <p>
+            {isCertificationView
+              ? "One source of truth — certification journeys live in the session catalog alongside everything else at TechXchange."
+              : "Sorted by day and time — match score breaks ties."}
+          </p>
         </div>
 
         {catalogSessions.length === 0 ? (
@@ -990,7 +1086,11 @@ function SessionsPageContent() {
       </section>
 
       {detailSession && (
-        <SessionDetailModal session={detailSession} onClose={() => setDetailSession(null)} />
+        <SessionDetailModal
+          session={detailSession}
+          allSessions={allScored}
+          onClose={() => setDetailSession(null)}
+        />
       )}
     </>
   );

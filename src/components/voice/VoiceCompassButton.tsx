@@ -294,19 +294,15 @@ function CompactCard({
 function VoiceTonePicker({
   tone,
   onChange,
-  minimal = false,
 }: {
   tone: VoiceToneId;
   onChange: (tone: VoiceToneId) => void;
-  minimal?: boolean;
 }) {
   return (
-    <div className={`voice-tone-picker${minimal ? " voice-tone-picker--minimal" : ""}`}>
-      {!minimal && (
-        <span className="voice-tone-picker-label">Choose your Compass voice.</span>
-      )}
+    <div className="voice-tone-picker">
+      <span className="voice-tone-picker-label">Choose your Compass voice.</span>
       <div className="voice-tone-picker-row" role="group" aria-label="Voice tone">
-        <span className="voice-tone-picker-kicker">{minimal ? "Voice:" : "Voice"}</span>
+        <span className="voice-tone-picker-kicker">Voice</span>
         {VOICE_TONE_OPTIONS.map(option => (
           <button
             key={option.id}
@@ -322,14 +318,6 @@ function VoiceTonePicker({
     </div>
   );
 }
-
-const ASK_COMPASS_PROMPTS = [
-  "Who should I meet about Agentic AI?",
-  "Help me prepare for my certification.",
-  "What should I do next?",
-  "Who shares my interests?",
-  "What conversations are forming nearby?",
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
@@ -807,78 +795,87 @@ export default function VoiceCompassButton({
               </p>
             </div>
 
-            <div className="voice-companion-stack">
-              {!unsupported && (
-                <button
-                  onClick={handleButtonClick}
-                  disabled={isProcessing}
-                  aria-live="polite"
-                  aria-label={btnLabel}
-                  className={[
-                    "ask-compass-trigger",
-                    "ask-compass-trigger--minimal",
-                    isListening  ? "ask-compass-trigger--listening"
-                    : isProcessing ? "ask-compass-trigger--processing"
-                    : showResult   ? "ask-compass-trigger--result"
-                    : showError    ? "ask-compass-trigger--error"
-                    :                "",
-                  ].join(" ")}
-                >
-                  <span className="ask-compass-trigger-glow" aria-hidden="true" />
-                  {isListening ? (
-                    <span aria-hidden="true" className="ask-compass-trigger-wave">
-                      {[0,1,2,3,4].map(i => (
-                        <span key={i} style={{
-                          animation: `compass-wave ${0.45 + i * 0.1}s ease-in-out infinite`,
-                          animationDelay: `${i * 0.07}s`,
-                        }} />
-                      ))}
+            <div className="voice-assistant-grid">
+              {/* Left — Ask Compass trigger */}
+              <div className="voice-assistant-mic">
+                {!unsupported && (
+                  <button
+                    onClick={handleButtonClick}
+                    disabled={isProcessing}
+                    aria-live="polite"
+                    aria-label={btnLabel}
+                    className={[
+                      "ask-compass-trigger",
+                      isListening  ? "ask-compass-trigger--listening"
+                      : isProcessing ? "ask-compass-trigger--processing"
+                      : showResult   ? "ask-compass-trigger--result"
+                      : showError    ? "ask-compass-trigger--error"
+                      :                "",
+                    ].join(" ")}
+                  >
+                    <span className="ask-compass-trigger-glow" aria-hidden="true" />
+                    {isListening ? (
+                      <span aria-hidden="true" className="ask-compass-trigger-wave">
+                        {[0,1,2,3,4].map(i => (
+                          <span key={i} style={{
+                            animation: `compass-wave ${0.45 + i * 0.1}s ease-in-out infinite`,
+                            animationDelay: `${i * 0.07}s`,
+                          }} />
+                        ))}
+                      </span>
+                    ) : (
+                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={44} />
+                    )}
+                    <span className="ask-compass-trigger-title">Ask Compass</span>
+                    <span className="ask-compass-trigger-sub">
+                      {isListening ? "Listening…"
+                        : isProcessing ? "Thinking…"
+                        : showResult ? "Tap to ask again"
+                        : showError ? "Tap to try again"
+                        : "Prioritize your next move."}
                     </span>
-                  ) : (
-                    <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={44} />
-                  )}
-                  <span className="ask-compass-trigger-title">Ask Compass</span>
-                  <span className="ask-compass-trigger-sub">
-                    {isListening ? "Listening…"
-                      : isProcessing ? "Thinking…"
-                      : showResult ? "Tap to ask again"
-                      : showError ? "Tap to try again"
-                      : "Tap to speak"}
-                  </span>
-                </button>
-              )}
-
-              <div className="voice-companion-dialogue" aria-live="polite">
-                {transcript && (
-                  <p className="voice-companion-transcript">&ldquo;{transcript}&rdquo;</p>
-                )}
-                {showError && (
-                  <p className="voice-companion-response voice-companion-response--error">{errorMsg}</p>
-                )}
-                {(isThinking || isGenerating) && (
-                  <p className="voice-companion-response voice-companion-response--idle">Thinking through your options…</p>
-                )}
-                {showResult && response && !showError && (
-                  <p className="voice-companion-response">{response.display}</p>
+                  </button>
                 )}
               </div>
 
-              <p className="voice-companion-prompts">
-                {ASK_COMPASS_PROMPTS.map((prompt, i) => (
-                  <span key={prompt}>
-                    {i > 0 && <span className="voice-companion-prompt-sep"> · </span>}
-                    {prompt}
-                  </span>
-                ))}
-              </p>
+              {/* Center — prompt area */}
+              <div className="voice-assistant-prompt">
+                {transcript ? (
+                  <p className="voice-assistant-prompt-text">&ldquo;{transcript}&rdquo;</p>
+                ) : (
+                  <p className="voice-assistant-prompt-text">
+                    {isListening ? "Listening…" : "What should I do next?"}
+                  </p>
+                )}
+                <p className="voice-assistant-prompt-hint">
+                  Try &ldquo;Who should I meet about Agentic AI?&rdquo; · &ldquo;Help me prepare for my certification.&rdquo; · &ldquo;What conversations are forming nearby?&rdquo;
+                </p>
+              </div>
 
-              {!unsupported && (
-                <VoiceTonePicker tone={voiceTone} onChange={handleVoiceToneChange} minimal />
-              )}
+              {/* Right — response panel */}
+              <div className="voice-assistant-response" aria-live="polite">
+                <p className="voice-assistant-response-kicker">Compass says</p>
+                {showError && (
+                  <p className="voice-assistant-response-body" style={{ color: "#DC2626" }}>{errorMsg}</p>
+                )}
+                {(isThinking || isGenerating) && (
+                  <p className="voice-assistant-response-idle">Thinking through your options…</p>
+                )}
+                {showResult && response && !showError && (
+                  <p className="voice-assistant-response-body">{response.display}</p>
+                )}
+                {!showResult && !showError && !isProcessing && (
+                  <p className="voice-assistant-response-idle">Tap the microphone to start.</p>
+                )}
+              </div>
             </div>
 
+            {!unsupported && (
+              <VoiceTonePicker tone={voiceTone} onChange={handleVoiceToneChange} />
+            )}
+
             {unsupported && (
-              <p className="voice-companion-unsupported">
+              <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: "12px 0 0", lineHeight: 1.5 }}>
                 Voice not supported in this browser. Try Chrome or Edge.
               </p>
             )}
@@ -887,8 +884,15 @@ export default function VoiceCompassButton({
               <button
                 type="button"
                 onClick={() => { void playPendingVoice(); }}
-                className="action-chip"
-                style={{ marginTop: "12px" }}
+                style={{
+                  marginTop: "14px",
+                  border: "1px solid var(--accent)",
+                  background: "rgba(15,98,254,0.06)",
+                  color: "var(--accent)",
+                  padding: "8px 12px",
+                  fontSize: "0.84rem",
+                  cursor: "pointer",
+                }}
               >
                 ▶ Play Compass voice
               </button>

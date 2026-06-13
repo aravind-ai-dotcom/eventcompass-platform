@@ -99,8 +99,8 @@ export const SAMPLE_LIVE_HUDDLES: LiveOpportunity[] = [
     hostFirstName: "Nikhil",
     emoji: "📋",
     source: "certification",
-    matchReasons: ["Certification goal", "Exam readiness"],
-    filterKeys: ["certification", "exam"],
+    matchReasons: ["Certification journey", "Study with peers"],
+    filterKeys: ["certification", "study group"],
     tags: ["Certification"],
   },
 ];

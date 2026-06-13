@@ -1208,13 +1208,13 @@ img { max-width: 100%; display: block; }
 /* Voice Compass companion card */
 .voice-companion-card {
   border: 1px solid var(--line);
-  background: transparent;
-  padding: 22px 0 4px;
+  background: var(--panel);
+  padding: 20px 22px 18px;
   overflow: visible;
 }
 .voice-companion-head {
-  margin-bottom: 18px;
-  max-width: 560px;
+  margin-bottom: 16px;
+  max-width: 520px;
 }
 .voice-companion-head h2 {
   font-size: clamp(1.1rem, 1.8vw, 1.35rem);
@@ -3138,6 +3138,113 @@ img { max-width: 100%; display: block; }
   letter-spacing: -0.02em;
   margin: 8px 0 0;
 }
+.certification-journey-copy {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 10px 0 18px;
+  max-width: 56ch;
+}
+.certification-journey-community {
+  list-style: none;
+  margin: 16px 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--soft);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.certification-journey-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.certification-view-personal {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--soft);
+  max-width: 58ch;
+}
+.session-modal--certification {
+  max-width: 640px;
+}
+.cert-detail-kicker {
+  color: var(--purple-soft, var(--accent));
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+}
+.cert-detail-lead {
+  color: var(--soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+.cert-detail-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+}
+.cert-detail-meta dt {
+  color: var(--muted);
+  font-weight: 560;
+}
+.cert-detail-meta dd {
+  margin: 0;
+  color: var(--text);
+}
+.cert-detail-block {
+  margin-bottom: 16px;
+}
+.cert-detail-label {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.cert-detail-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--soft);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+.cert-detail-list--compact {
+  list-style: none;
+  padding-left: 0;
+}
+.cert-detail-list--compact li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cert-detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cert-detail-community-note {
+  margin: 8px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+.cert-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
 .huddle-row-people {
   font-size: 0.74rem;
   color: var(--muted);
@@ -3359,13 +3466,14 @@ img { max-width: 100%; display: block; }
   .voice-assistant-grid {
     grid-template-columns: auto minmax(0, 1fr) minmax(220px, 34%);
     gap: 24px;
-    align-items: center;
+    align-items: stretch;
   }
 }
 .voice-assistant-mic {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   flex-shrink: 0;
   padding: 4px;

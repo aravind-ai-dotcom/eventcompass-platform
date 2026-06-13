@@ -1,0 +1,642 @@
+{
+  "event_id": "txc2026",
+  "organization_id": "ibm",
+  "generated_at": "2026-06-13T13:12:48.330Z",
+  "description": "Synthetic certification learning journeys for Compass Certification Intelligence demos.",
+  "certifications": [
+    {
+      "certification_id": "QISKIT-DEVELOPER-001",
+      "certification_code": "C1000-QISKIT",
+      "title": "IBM Certified Developer – Fundamentals of Quantum Computation Using Qiskit",
+      "description": "Validates foundational quantum computing concepts, Qiskit programming patterns, circuit design, and runtime execution for developers building quantum applications.",
+      "difficulty": "Intermediate",
+      "track": "App Development",
+      "topics": [
+        "Quantum",
+        "Qiskit",
+        "Python"
+      ],
+      "products": [
+        "IBM Quantum Platform",
+        "Qiskit",
+        "Qiskit Runtime"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-QISKIT",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-QISKIT",
+      "certification_level": "Professional",
+      "skills_measured": [
+        "Quantum circuit design",
+        "Qiskit Runtime execution",
+        "Error mitigation",
+        "Python integration"
+      ],
+      "recommended_background": [
+        "Python programming",
+        "Linear algebra basics",
+        "Introductory quantum concepts"
+      ],
+      "estimated_preparation_hours": 48,
+      "session_id": "CERT-QISKIT-JOURNEY",
+      "related_session_ids": [
+        "CERT-QISKIT-TB01",
+        "CERT-QISKIT-TB02",
+        "CERT-QISKIT-TB03",
+        "CERT-QISKIT-TB04",
+        "CERT-QISKIT-TB05",
+        "CERT-QISKIT-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-QISKIT-LAB01",
+        "CERT-QISKIT-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-QUANTUM-01",
+        "CHAMP-QISKIT-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-QISKIT-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-QISKIT-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "AGENTIC-AI-001",
+      "certification_code": "C1000-AGENTIC",
+      "title": "IBM Certified Agentic AI Developer",
+      "description": "Demonstrates ability to design, orchestrate, and govern agentic AI workflows using watsonx Orchestrate, assistants, and enterprise automation patterns.",
+      "difficulty": "Advanced",
+      "track": "AI",
+      "topics": [
+        "Agentic AI",
+        "Assistants",
+        "Workflows",
+        "Automation"
+      ],
+      "products": [
+        "watsonx Orchestrate",
+        "watsonx Assistant",
+        "IBM Cloud"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-AGENTIC",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-AGENTIC",
+      "certification_level": "Advanced",
+      "skills_measured": [
+        "Agent orchestration",
+        "Tool use patterns",
+        "Workflow automation",
+        "AI governance controls"
+      ],
+      "recommended_background": [
+        "Enterprise AI experience",
+        "API integration",
+        "Prompt engineering fundamentals"
+      ],
+      "estimated_preparation_hours": 56,
+      "session_id": "CERT-AGENTIC-JOURNEY",
+      "related_session_ids": [
+        "CERT-AGENTIC-TB01",
+        "CERT-AGENTIC-TB02",
+        "CERT-AGENTIC-TB03",
+        "CERT-AGENTIC-TB04",
+        "CERT-AGENTIC-TB05",
+        "CERT-AGENTIC-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-AGENTIC-LAB01",
+        "CERT-AGENTIC-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-AGENTIC-01",
+        "CHAMP-WATSONX-02"
+      ],
+      "related_huddle_ids": [
+        "CERT-AGENTIC-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-AGENTIC-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "WATSONX-ENGINEER-001",
+      "certification_code": "C1000-WATSONX",
+      "title": "IBM Certified watsonx AI Engineer",
+      "description": "Covers watsonx.ai model lifecycle, prompt engineering, retrieval-augmented generation, governance controls, and production deployment on IBM Cloud.",
+      "difficulty": "Advanced",
+      "track": "AI",
+      "topics": [
+        "watsonx",
+        "Prompt Engineering",
+        "Models",
+        "AI Governance"
+      ],
+      "products": [
+        "watsonx.ai",
+        "watsonx.governance",
+        "IBM Cloud"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-WATSONX",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-WATSONX",
+      "certification_level": "Advanced",
+      "skills_measured": [
+        "Model tuning",
+        "RAG pipelines",
+        "MLOps on watsonx",
+        "Governance policies"
+      ],
+      "recommended_background": [
+        "ML or data science experience",
+        "Cloud deployment basics",
+        "Python or notebook workflows"
+      ],
+      "estimated_preparation_hours": 60,
+      "session_id": "CERT-WATSONX-JOURNEY",
+      "related_session_ids": [
+        "CERT-WATSONX-TB01",
+        "CERT-WATSONX-TB02",
+        "CERT-WATSONX-TB03",
+        "CERT-WATSONX-TB04",
+        "CERT-WATSONX-TB05",
+        "CERT-WATSONX-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-WATSONX-LAB01",
+        "CERT-WATSONX-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-WATSONX-01",
+        "CHAMP-AI-03"
+      ],
+      "related_huddle_ids": [
+        "CERT-WATSONX-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-WATSONX-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "POWER-ADMIN-001",
+      "certification_code": "C1000-POWER",
+      "title": "IBM Certified Power Systems Administrator",
+      "description": "Validates Power10 administration, virtualization with PowerVM, storage management, high availability, and day-two operations for enterprise workloads.",
+      "difficulty": "Intermediate",
+      "track": "Power",
+      "topics": [
+        "Power10",
+        "Virtualization",
+        "Operations"
+      ],
+      "products": [
+        "Power10",
+        "PowerVM",
+        "IBM i",
+        "AIX"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-POWER",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-POWER",
+      "certification_level": "Professional",
+      "skills_measured": [
+        "PowerVM administration",
+        "Storage configuration",
+        "HA/DR operations",
+        "Security hardening"
+      ],
+      "recommended_background": [
+        "AIX or IBM i operations",
+        "Virtualization concepts",
+        "Enterprise systems administration"
+      ],
+      "estimated_preparation_hours": 52,
+      "session_id": "CERT-POWER-JOURNEY",
+      "related_session_ids": [
+        "CERT-POWER-TB01",
+        "CERT-POWER-TB02",
+        "CERT-POWER-TB03",
+        "CERT-POWER-TB04",
+        "CERT-POWER-TB05",
+        "CERT-POWER-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-POWER-LAB01",
+        "CERT-POWER-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-POWER-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-POWER-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-POWER-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "OPENSHIFT-ARCHITECT-001",
+      "certification_code": "C1000-ROSA",
+      "title": "Red Hat OpenShift Architect",
+      "description": "Assesses expertise designing secure, scalable container platforms on OpenShift including networking, GitOps, observability, and hybrid cloud integration.",
+      "difficulty": "Advanced",
+      "track": "Cloud",
+      "topics": [
+        "Containers",
+        "Kubernetes",
+        "OpenShift"
+      ],
+      "products": [
+        "Red Hat OpenShift",
+        "OpenShift Virtualization",
+        "IBM Cloud"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-ROSA",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-ROSA",
+      "certification_level": "Advanced",
+      "skills_measured": [
+        "Cluster architecture",
+        "GitOps pipelines",
+        "Network security",
+        "Hybrid cloud design"
+      ],
+      "recommended_background": [
+        "Kubernetes administration",
+        "Container platforms",
+        "DevOps practices"
+      ],
+      "estimated_preparation_hours": 64,
+      "session_id": "CERT-OPENSHIFT-JOURNEY",
+      "related_session_ids": [
+        "CERT-OPENSHIFT-TB01",
+        "CERT-OPENSHIFT-TB02",
+        "CERT-OPENSHIFT-TB03",
+        "CERT-OPENSHIFT-TB04",
+        "CERT-OPENSHIFT-TB05",
+        "CERT-OPENSHIFT-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-OPENSHIFT-LAB01",
+        "CERT-OPENSHIFT-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-OPENSHIFT-01",
+        "CHAMP-CLOUD-02"
+      ],
+      "related_huddle_ids": [
+        "CERT-OPENSHIFT-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-OPENSHIFT-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "DATA-ENGINEER-001",
+      "certification_code": "C1000-DATAENG",
+      "title": "IBM Certified Data Engineer – watsonx.data",
+      "description": "Covers data lakehouse architecture, ingestion pipelines, SQL and Spark workloads, data governance, and operational analytics on watsonx.data.",
+      "difficulty": "Intermediate",
+      "track": "Data & AI",
+      "topics": [
+        "Data Engineering",
+        "Lakehouse",
+        "SQL",
+        "Spark"
+      ],
+      "products": [
+        "watsonx.data",
+        "IBM Cloud Pak for Data",
+        "Db2"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-DATAENG",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-DATAENG",
+      "certification_level": "Professional",
+      "skills_measured": [
+        "Lakehouse ingestion",
+        "Spark workloads",
+        "Data cataloging",
+        "Pipeline operations"
+      ],
+      "recommended_background": [
+        "SQL proficiency",
+        "Data pipeline experience",
+        "Cloud analytics exposure"
+      ],
+      "estimated_preparation_hours": 50,
+      "session_id": "CERT-DATAENG-JOURNEY",
+      "related_session_ids": [
+        "CERT-DATAENG-TB01",
+        "CERT-DATAENG-TB02",
+        "CERT-DATAENG-TB03",
+        "CERT-DATAENG-TB04",
+        "CERT-DATAENG-TB05",
+        "CERT-DATAENG-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-DATAENG-LAB01",
+        "CERT-DATAENG-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-DATA-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-DATAENG-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-DATAENG-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "CLOUD-ARCHITECT-001",
+      "certification_code": "C1000-CLOUD",
+      "title": "IBM Certified Cloud Architect",
+      "description": "Validates multi-cloud architecture design on IBM Cloud including VPC, security, resiliency, cost optimization, and integration with enterprise identity.",
+      "difficulty": "Advanced",
+      "track": "Cloud",
+      "topics": [
+        "Cloud Architecture",
+        "Hybrid Cloud",
+        "Security",
+        "Resiliency"
+      ],
+      "products": [
+        "IBM Cloud",
+        "IBM Cloud VPC",
+        "IBM Cloud Security"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-CLOUD",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-CLOUD",
+      "certification_level": "Advanced",
+      "skills_measured": [
+        "VPC landing zones",
+        "Hybrid connectivity",
+        "Resiliency design",
+        "Identity and compliance"
+      ],
+      "recommended_background": [
+        "Cloud architecture experience",
+        "Enterprise integration",
+        "Security fundamentals"
+      ],
+      "estimated_preparation_hours": 58,
+      "session_id": "CERT-CLOUD-JOURNEY",
+      "related_session_ids": [
+        "CERT-CLOUD-TB01",
+        "CERT-CLOUD-TB02",
+        "CERT-CLOUD-TB03",
+        "CERT-CLOUD-TB04",
+        "CERT-CLOUD-TB05",
+        "CERT-CLOUD-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-CLOUD-LAB01",
+        "CERT-CLOUD-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-CLOUD-01",
+        "CHAMP-CLOUD-03"
+      ],
+      "related_huddle_ids": [
+        "CERT-CLOUD-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-CLOUD-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "MAINFRAME-ADMIN-001",
+      "certification_code": "C1000-ZOS",
+      "title": "IBM Certified z/OS System Administrator",
+      "description": "Demonstrates z/OS systems programming fundamentals, SMP/E, security with RACF, batch processing, and operational recovery for mission-critical workloads.",
+      "difficulty": "Advanced",
+      "track": "Mainframe",
+      "topics": [
+        "z/OS",
+        "Mainframe Operations",
+        "Security",
+        "Batch"
+      ],
+      "products": [
+        "z/OS",
+        "IBM Z",
+        "RACF",
+        "CICS"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-ZOS",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-ZOS",
+      "certification_level": "Advanced",
+      "skills_measured": [
+        "z/OS operations",
+        "SMP/E management",
+        "RACF security",
+        "Batch and recovery"
+      ],
+      "recommended_background": [
+        "Mainframe operations",
+        "JCL and batch processing",
+        "Systems programming exposure"
+      ],
+      "estimated_preparation_hours": 72,
+      "session_id": "CERT-MAINFRAME-JOURNEY",
+      "related_session_ids": [
+        "CERT-MAINFRAME-TB01",
+        "CERT-MAINFRAME-TB02",
+        "CERT-MAINFRAME-TB03",
+        "CERT-MAINFRAME-TB04",
+        "CERT-MAINFRAME-TB05",
+        "CERT-MAINFRAME-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-MAINFRAME-LAB01",
+        "CERT-MAINFRAME-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-Z-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-MAINFRAME-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-MAINFRAME-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "SECURITY-ANALYST-001",
+      "certification_code": "C1000-SEC",
+      "title": "IBM Certified Security Analyst – QRadar SIEM",
+      "description": "Covers threat detection with QRadar, log source management, offense investigation, UBA analytics, and incident response workflows for SOC teams.",
+      "difficulty": "Intermediate",
+      "track": "Security",
+      "topics": [
+        "SIEM",
+        "Threat Detection",
+        "Incident Response",
+        "Security Analytics"
+      ],
+      "products": [
+        "IBM QRadar SIEM",
+        "IBM Security Verify",
+        "IBM Guardium"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-SEC",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-SEC",
+      "certification_level": "Professional",
+      "skills_measured": [
+        "Log source tuning",
+        "Offense investigation",
+        "UBA analytics",
+        "Incident response"
+      ],
+      "recommended_background": [
+        "SOC operations",
+        "Networking fundamentals",
+        "SIEM experience"
+      ],
+      "estimated_preparation_hours": 44,
+      "session_id": "CERT-SECURITY-JOURNEY",
+      "related_session_ids": [
+        "CERT-SECURITY-TB01",
+        "CERT-SECURITY-TB02",
+        "CERT-SECURITY-TB03",
+        "CERT-SECURITY-TB04",
+        "CERT-SECURITY-TB05",
+        "CERT-SECURITY-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-SECURITY-LAB01",
+        "CERT-SECURITY-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-SEC-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-SECURITY-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-SECURITY-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    },
+    {
+      "certification_id": "IBM-I-ADMIN-001",
+      "certification_code": "C1000-IBMI",
+      "title": "IBM Certified IBM i System Administrator",
+      "description": "Validates IBM i administration including subsystem management, security, backup and recovery, performance tuning, and modernization pathways.",
+      "difficulty": "Intermediate",
+      "track": "Power",
+      "topics": [
+        "IBM i",
+        "System Administration",
+        "Db2 for i",
+        "Security"
+      ],
+      "products": [
+        "IBM i",
+        "Power10",
+        "Db2 for i"
+      ],
+      "guide_url": "https://www.ibm.com/training/certification/C1000-IBMI",
+      "certification_url": "https://www.ibm.com/training/certification/C1000-IBMI",
+      "certification_level": "Professional",
+      "skills_measured": [
+        "Subsystem management",
+        "IBM i security",
+        "Backup and recovery",
+        "Performance tuning"
+      ],
+      "recommended_background": [
+        "IBM i operations",
+        "Db2 for i basics",
+        "Enterprise administration"
+      ],
+      "estimated_preparation_hours": 46,
+      "session_id": "CERT-IBMI-JOURNEY",
+      "related_session_ids": [
+        "CERT-IBMI-TB01",
+        "CERT-IBMI-TB02",
+        "CERT-IBMI-TB03",
+        "CERT-IBMI-TB04",
+        "CERT-IBMI-TB05",
+        "CERT-IBMI-TB06"
+      ],
+      "related_lab_ids": [
+        "CERT-IBMI-LAB01",
+        "CERT-IBMI-LAB02"
+      ],
+      "related_champion_ids": [
+        "CHAMP-IBMI-01"
+      ],
+      "related_huddle_ids": [
+        "CERT-IBMI-HUD01"
+      ],
+      "related_community_ids": [
+        "CERT-IBMI-MEET01"
+      ],
+      "pathway_summary": {
+        "technology_breakouts": 6,
+        "instructor_led_labs": 2,
+        "community_meetups": 1,
+        "study_group_huddles": 1,
+        "certification_journeys": 1
+      }
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { CERTIFICATION_MILESTONES } from "@/lib/certificationProfile";
+import {
+  CERTIFICATION_JOURNEY_COPY,
+  CERTIFICATION_MILESTONES,
+} from "@/lib/certificationProfile";
 
 interface CertificationJourneyProps {
   visible: boolean;
@@ -17,11 +20,13 @@ export default function CertificationJourney({
   return (
     <section className="section certification-journey-section">
       <div className="certification-journey-card">
-        <div className="section-kicker">Certification goals</div>
+        <div className="section-kicker">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</div>
         <h2 className="certification-journey-title">
-          Working toward: {certificationLabel}
+          {CERTIFICATION_JOURNEY_COPY.workingToward} {certificationLabel}
         </h2>
-        <ol className="explore-milestone-path certification-milestone-path" aria-label="Certification pathway">
+        <p className="certification-journey-copy">{CERTIFICATION_JOURNEY_COPY.supporting}</p>
+
+        <ol className="explore-milestone-path certification-milestone-path" aria-label="Certification journey">
           {CERTIFICATION_MILESTONES.map((step, stepIndex) => (
             <li key={step} className="explore-milestone-step">
               <div className="explore-milestone-node">
@@ -41,9 +46,21 @@ export default function CertificationJourney({
             </li>
           ))}
         </ol>
-        <Link href="/sessions?type=certification" className="action-chip">
-          View certification sessions
-        </Link>
+
+        <ul className="certification-journey-community" aria-label="Community along your journey">
+          {CERTIFICATION_JOURNEY_COPY.community.map(line => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+
+        <div className="certification-journey-actions">
+          <Link href="/sessions?type=certification" className="action-chip">
+            {CERTIFICATION_JOURNEY_COPY.viewSupporting}
+          </Link>
+          <Link href="/sessions?view=learning-paths" className="action-chip">
+            {CERTIFICATION_JOURNEY_COPY.viewPaths}
+          </Link>
+        </div>
       </div>
     </section>
   );

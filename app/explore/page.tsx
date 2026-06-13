@@ -27,10 +27,10 @@ const JOURNEYS: Journey[] = [
   },
   {
     id: "certification",
-    title: "Certification",
-    goal: "Pass a certification",
+    title: "Certification journey",
+    goal: "Deepen skills and achieve certification",
     image: "/event/ibm_txc_banner_4.jpg",
-    flow: ["Choose", "Prepare", "Practice", "Mentor", "Certify"],
+    flow: ["Choose", "Learn", "Practice", "Connect", "Achieve"],
     accent: "#a56eff",
   },
   {

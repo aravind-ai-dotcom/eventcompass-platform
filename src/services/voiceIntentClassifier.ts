@@ -450,9 +450,9 @@ export function buildVoiceResponse(
         : "";
 
       const templates = [
-        "Compass can prioritize certification sessions, labs, and expert time{code} before your exam. Set a certification goal in Build My Compass.{huddle}",
-        "For certification prep{code}, focus on labs and study groups matched to {goal}.{huddle}",
-        "Start with a certification goal in Build My Compass — then Sessions and Live Opportunities will surface exam-ready picks.{huddle}",
+        "Compass can connect sessions, labs, study groups, and expert time{code} along your certification journey. Set your goal in Build My Compass.{huddle}",
+        "For your certification journey{code}, focus on learning paths, labs, and peers matched to {goal}.{huddle}",
+        "Start with a certification goal in Build My Compass — Sessions and Live Opportunities will surface what to learn, practice, and attend next.{huddle}",
       ];
       const spoken = fill(pickTemplate(templates, seed), {
         code: codeBit,
@@ -461,7 +461,7 @@ export function buildVoiceResponse(
       });
       return {
         spoken,
-        display: `Certification path · goal: ${goal}${certCode ? ` · ${certCode}` : ""}`,
+        display: `Certification journey · ${goal}${certCode ? ` · ${certCode}` : ""}`,
         action:  "show_sessions",
       };
     }

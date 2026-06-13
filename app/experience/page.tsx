@@ -41,7 +41,7 @@ import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import CertificationJourney from "@/components/experience/CertificationJourney";
 import {
   applyCertificationSessionBoost,
-  getCertificationLabel,
+  getCertificationJourneyTitle,
   hasCertificationIntent,
 } from "@/lib/certificationProfile";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
@@ -320,7 +320,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   if (sRules.everyone_encouraged) { score += W.broad;     reasons.push("Broad event relevance"); }
   if (sRules.hands_on)            { score += W.handsOn;   reasons.push("Hands-on learning"); }
 
-  const certLabel = getCertificationLabel(participant);
+  const certLabel = getCertificationJourneyTitle(participant);
   const boosted = applyCertificationSessionBoost(score, reasons, participant, raw, certLabel);
   score = boosted.score;
   const finalReasons = boosted.reasons;
@@ -1484,7 +1484,7 @@ export default function ExperiencePage() {
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
   const showCertJourney = hasCertificationIntent(participant);
-  const certLabel = getCertificationLabel(participant);
+  const certLabel = getCertificationJourneyTitle(participant);
   const trustSignals = buildCompassTrustSignals(participant, sig);
 
   // My Schedule — sessions the user has saved
