@@ -8,14 +8,14 @@ import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { countryFlag, inc, top } from "@/lib/roomSignals";
+import { countryFlag, inc, incPublicCommunity, incPublicSignal, isInternalParticipant, top, topCommunities } from "@/lib/roomSignals";
 import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 
 const BASE = "organizations/ibm/events/txc2026";
 type RawDoc = Record<string, unknown>;
 
 interface PulseData {
-  totalAttendees: number;
+  audienceTotal: number;
   topCountries: Record<string, number>;
   topUniversities: Record<string, number>;
   topPastEmployers: Record<string, number>;
@@ -51,14 +51,23 @@ function NostalgiaBox({
       <ul className="nostalgia-box-list">
         {rows.map(([name, count]) => {
           const percent = pct(count, total);
-          return (
-            <li key={name}>
-              <span>{renderLabel ? renderLabel(name) : name}</span>
-              {withBars ? (
+          const label = renderLabel ? renderLabel(name) : name;
+          if (withBars) {
+            return (
+              <li key={name} className="nostalgia-item nostalgia-item--chart">
+                <div className="nostalgia-item-head">
+                  <span className="nostalgia-item-label">{label}</span>
+                  <b className="nostalgia-item-pct">{percent}%</b>
+                </div>
                 <div className="nostalgia-bar-track" aria-hidden="true">
                   <div className="nostalgia-bar-fill" style={{ width: `${Math.max(percent, 4)}%` }} />
                 </div>
-              ) : null}
+              </li>
+            );
+          }
+          return (
+            <li key={name} className="nostalgia-item nostalgia-item--inline">
+              <span>{label}</span>
               <b>{percent}%</b>
             </li>
           );
@@ -76,7 +85,7 @@ export default function PulsePage() {
   useEffect(() => {
     getDocs(collection(db, `${BASE}/participants`))
       .then(snap => {
-        const totalAttendees = snap.size;
+        let audienceTotal = 0;
         const topCountries: Record<string, number> = {};
         const topUniversities: Record<string, number> = {};
         const topPastEmployers: Record<string, number> = {};
@@ -88,14 +97,15 @@ export default function PulsePage() {
 
         for (const d of snap.docs) {
           const p = d.data() as RawDoc;
+          if (!isInternalParticipant(p)) audienceTotal++;
           inc(topCountries, p.country ?? p.geo ?? "");
           const edu = (p.education as Array<Record<string, unknown>>) ?? [];
           for (const e of edu) if (e.institution) inc(topUniversities, e.institution);
           const emp = (p.past_employers as Array<Record<string, unknown>>) ?? [];
-          for (const e of emp) if (e.company) inc(topPastEmployers, e.company);
+          for (const e of emp) if (e.company) incPublicSignal(topPastEmployers, e.company);
           const esp = (p.event_signal_profile as Record<string, unknown>) ?? {};
-          ((esp.tech_tracks as string[]) ?? []).forEach(t => inc(communities, t));
-          ((esp.roles_at_txc as string[]) ?? []).forEach(r => inc(communities, r));
+          ((esp.tech_tracks as string[]) ?? []).forEach(t => incPublicCommunity(communities, t));
+          ((esp.roles_at_txc as string[]) ?? []).forEach(r => incPublicCommunity(communities, r));
           const ni = (p.networking_identity as Record<string, boolean>) ?? {};
           if (isOpenToAlumniConnections(ni)) openToAlumni++;
           if (ni.open_to_past_colleague_connections) openToColleague++;
@@ -104,7 +114,7 @@ export default function PulsePage() {
         }
 
         setData({
-          totalAttendees,
+          audienceTotal: Math.max(audienceTotal, 1),
           topCountries,
           topUniversities,
           topPastEmployers,
@@ -133,7 +143,7 @@ export default function PulsePage() {
     { label: "attendees open to mentoring conversations", val: data.openToMentoring, tone: "#009d9a" },
   ].filter(i => i.val > 0) : [];
 
-  const total = data?.totalAttendees ?? 0;
+  const total = data?.audienceTotal ?? 1;
 
   return (
     <>
@@ -172,11 +182,21 @@ export default function PulsePage() {
                 total={total}
                 withBars
               />
-              <NostalgiaBox title="Former employers" rows={top(data.topPastEmployers, 5)} total={total} />
-              <NostalgiaBox title="Communities" rows={top(data.communities, 5)} total={total} />
+              <NostalgiaBox
+                title="Former employers"
+                rows={top(data.topPastEmployers, 10)}
+                total={total}
+                withBars
+              />
+              <NostalgiaBox
+                title="Communities"
+                rows={topCommunities(data.communities, 10)}
+                total={total}
+                withBars
+              />
             </div>
             <p className="story-note">
-              Aggregate signals only. Percentages reflect share of enrolled attendees.{" "}
+              Aggregate signals only. Percentages reflect share of the attendee community.{" "}
               <Link href="/enroll" style={{ color: "var(--accent)" }}>Add your background →</Link>
             </p>
           </>

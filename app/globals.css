@@ -2467,7 +2467,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--line);
   background: var(--panel);
   padding: 20px 18px;
-  min-height: 180px;
+  min-height: 0;
 }
 .nostalgia-box-title {
   font-size: 0.72rem;
@@ -3924,17 +3924,38 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
   line-height: 1.35;
   padding: 4px 0;
 }
+.nostalgia-item--inline {
+  flex-direction: row;
+}
+.nostalgia-item--chart {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 6px 0;
+}
+.nostalgia-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.nostalgia-item-label {
+  min-width: 0;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+.nostalgia-item-pct,
 .nostalgia-box-list b {
   color: var(--accent);
   font-weight: 560;
   font-size: 0.82rem;
   flex-shrink: 0;
+  font-family: var(--font-mono, ui-monospace);
 }
-
 .nostalgia-box--chart .nostalgia-box-list li {
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
 }
 .nostalgia-bar-track {
   height: 4px;

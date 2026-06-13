@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
+import { isInternalParticipant, isSuppressedOrgLabel } from "@/lib/roomSignals";
 
 type RawDoc = Record<string, unknown>;
 
@@ -171,7 +172,12 @@ export function summarizeNetworkPulse(participants: RawDoc[]): NetworkPulseSumma
   for (const p of participants) {
     const sig = getParticipantNetworkSignals(p);
     for (const e of sig.education)       if (e.institution) { const k = e.institution.trim(); univCounts[k] = (univCounts[k] ?? 0) + 1; }
-    for (const e of sig.past_employers)  if (e.company)     { const k = e.company.trim();     empCounts[k]  = (empCounts[k]  ?? 0) + 1; }
+    for (const e of sig.past_employers) {
+      if (e.company && !isSuppressedOrgLabel(e.company)) {
+        const k = e.company.trim();
+        empCounts[k] = (empCounts[k] ?? 0) + 1;
+      }
+    }
     for (const ci of sig.career_interests) if (ci)          { ciCounts[ci] = (ciCounts[ci] ?? 0) + 1; }
     if (isOpenToAlumniConnections(sig.networking_identity)) openToAlumni++;
     if (sig.networking_identity.open_to_past_colleague_connections) openToColleagues++;
@@ -179,13 +185,21 @@ export function summarizeNetworkPulse(participants: RawDoc[]): NetworkPulseSumma
   }
 
   const sortTop = (m: Record<string, number>, n = 6): [string, number][] =>
-    Object.entries(m).sort(([, a], [, b]) => b - a).slice(0, n);
+    Object.entries(m)
+      .filter(([name]) => !isSuppressedOrgLabel(name))
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, n);
+
+  const externalTotal = Math.max(
+    participants.filter(p => !isInternalParticipant(p)).length,
+    1,
+  );
 
   return {
     topUniversities:    sortTop(univCounts),
     topPastEmployers:   sortTop(empCounts),
     topCareerInterests: sortTop(ciCounts),
     openToAlumni, openToColleagues, openToCareer,
-    total: participants.length,
+    total: externalTotal,
   };
 }
