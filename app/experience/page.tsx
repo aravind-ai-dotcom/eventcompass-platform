@@ -1366,6 +1366,25 @@ export default function ExperiencePage() {
     [learningList, communityList, funList],
   );
 
+  const certGoalIds = useMemo(
+    () => participant
+      ? gatherCertificationGoalIds(
+          {
+            ...participant,
+            certification_goals: certificationGoals,
+            saved_sessions: savedSessions,
+            saved_schedule: (participant.saved_schedule as string[]) ?? [],
+          },
+          allSessions,
+        )
+      : [],
+    [participant, certificationGoals, savedSessions, allSessions],
+  );
+  const selectedCertifications = useMemo(
+    () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
+    [allSessions, certGoalIds],
+  );
+
   useEffect(() => {
     async function load() {
       try {
@@ -1452,6 +1471,9 @@ export default function ExperiencePage() {
     }
     if (!authLoading && participantId) {
       load();
+    } else if (!authLoading && !participantId) {
+      setStatus("error");
+      setErrorMsg("Sign in to view your personalized Compass experience.");
     }
   }, [authLoading, participantId]);
 
@@ -1477,9 +1499,16 @@ export default function ExperiencePage() {
           Could not load experience
         </h2>
         <p style={{ color: "var(--muted)", maxWidth: "640px", lineHeight: 1.6 }}>{errorMsg}</p>
-        <p style={{ color: "var(--muted)", marginTop: "10px", fontSize: "0.88rem" }}>
-          Verify Firebase environment variables and Firestore security rules.
-        </p>
+        {!participantId && (
+          <p style={{ marginTop: "16px" }}>
+            <a href="/login" className="action-chip">Sign in →</a>
+          </p>
+        )}
+        {participantId && (
+          <p style={{ color: "var(--muted)", marginTop: "10px", fontSize: "0.88rem" }}>
+            Verify Firebase environment variables and Firestore security rules.
+          </p>
+        )}
       </section>
     );
   }
@@ -1512,22 +1541,6 @@ export default function ExperiencePage() {
   const pTracks = (sig.tech_tracks as string[]) ?? [];
   const certLabel = getCertificationJourneyTitle(participant);
   const trustSignals = buildCompassTrustSignals(participant, sig);
-  const certGoalIds = useMemo(
-    () => gatherCertificationGoalIds(
-      {
-        ...participant,
-        certification_goals: certificationGoals,
-        saved_sessions: savedSessions,
-        saved_schedule: (participant.saved_schedule as string[]) ?? [],
-      },
-      allSessions,
-    ),
-    [participant, certificationGoals, savedSessions, allSessions],
-  );
-  const selectedCertifications = useMemo(
-    () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
-    [allSessions, certGoalIds],
-  );
   const showCertJourney = hasCertificationIntent(participant) || certGoalIds.length > 0;
 
   // My Schedule — timed sessions only (certifications are learning goals, not calendar blocks)
