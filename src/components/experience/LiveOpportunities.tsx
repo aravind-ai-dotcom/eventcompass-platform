@@ -3,13 +3,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import {
+  HUDDLE_COPY,
+  formatHuddleScheduleLabel,
+  isHuddleExpired,
+  isHuddleHost,
+} from "@/lib/huddleLifecycle";
+import {
+  endHuddle,
   extraParticipantCount,
+  formatEndTimeLabel,
   headingCount,
   headingParticipants,
   hostFirstName,
   hostInitials,
+  loadEndedHuddleIds,
   loadOnMyWayIds,
   loadPendingHuddles,
+  normalizeHuddleSchedule,
   toggleOnMyWay,
 } from "@/lib/huddleStorage";
 import { getHuddleParticipant } from "@/lib/huddleParticipants";
@@ -24,6 +34,14 @@ interface LiveOpportunitiesProps {
   userFirstName?: string;
 }
 
+function isVisibleHuddle(
+  h: LiveOpportunity,
+  ended: Set<string>,
+  now: number,
+): boolean {
+  return !ended.has(h.id) && !isHuddleExpired(h, now);
+}
+
 export default function LiveOpportunities({
   participantTracks = [],
   participantGoals = [],
@@ -32,13 +50,23 @@ export default function LiveOpportunities({
 }: LiveOpportunitiesProps) {
   const [pending, setPending] = useState<LiveOpportunity[]>([]);
   const [onMyWay, setOnMyWay] = useState<Set<string>>(new Set());
+  const [ended, setEnded] = useState<Set<string>>(new Set());
+  const [now, setNow] = useState(() => Date.now());
   const [showStart, setShowStart] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
 
-  useEffect(() => {
-    setPending(loadPendingHuddles());
+  const refresh = useCallback(() => {
+    setPending(loadPendingHuddles().map(normalizeHuddleSchedule));
     setOnMyWay(loadOnMyWayIds());
+    setEnded(loadEndedHuddleIds());
+    setNow(Date.now());
   }, []);
+
+  useEffect(() => {
+    refresh();
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [refresh]);
 
   const visible = useMemo(() => {
     const ranked = rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals);
@@ -47,17 +75,22 @@ export default function LiveOpportunities({
     return merged.filter(h => {
       if (seen.has(h.id)) return false;
       seen.add(h.id);
-      return true;
+      return isVisibleHuddle(h, ended, now);
     }).slice(0, 4);
-  }, [participantTracks, participantGoals, pending]);
+  }, [participantTracks, participantGoals, pending, ended, now]);
 
   const handleOnMyWay = useCallback((huddleId: string) => {
     setOnMyWay(toggleOnMyWay(huddleId));
   }, []);
 
   const handleProposed = useCallback((huddle: LiveOpportunity) => {
-    setPending(prev => [huddle, ...prev]);
+    setPending(prev => [normalizeHuddleSchedule(huddle), ...prev]);
   }, []);
+
+  const handleEndCatchup = useCallback((huddleId: string) => {
+    endHuddle(huddleId);
+    refresh();
+  }, [refresh]);
 
   return (
     <div className="live-opportunities">
@@ -65,9 +98,7 @@ export default function LiveOpportunities({
         <div>
           <span className="live-opportunities-kicker">Live opportunities</span>
           <h2 className="live-opportunities-title">Conversations forming around you</h2>
-          <p className="live-opportunities-desc">
-            Physical conversations at the event — signal intent and head over in person.
-          </p>
+          <p className="live-opportunities-desc">{HUDDLE_COPY.sectionLead}</p>
         </div>
         <button
           type="button"
@@ -86,6 +117,9 @@ export default function LiveOpportunities({
           const extra = extraParticipantCount(count, participants.length);
           const host = hostFirstName(opp);
           const hostLabel = opp.hostName ?? host;
+          const scheduleLabel = formatHuddleScheduleLabel(opp);
+          const endLabel = formatEndTimeLabel(opp);
+          const userIsHost = isHuddleHost(opp, userDisplayName);
 
           return (
             <li key={opp.id}>
@@ -97,10 +131,14 @@ export default function LiveOpportunities({
 
                 <div className="huddle-row-body">
                   <h3 className="huddle-row-title">{opp.title}</h3>
+                  <p className="huddle-row-time">{scheduleLabel}</p>
+                  <p className="huddle-row-slot-note">
+                    {HUDDLE_COPY.slotNote}
+                    {endLabel ? ` · wraps ${endLabel}` : ""}
+                  </p>
                   <p className="huddle-row-meta">
                     {count} {count === 1 ? "attendee" : "attendees"} heading there
                     {opp.location ? ` · ${opp.location}` : ""}
-                    {opp.startTime ? ` · ${opp.startTime}` : ""}
                   </p>
 
                   <div className="huddle-host-block">
@@ -169,6 +207,15 @@ export default function LiveOpportunities({
                   >
                     {isOnMyWay ? "✓ On My Way" : "On My Way"}
                   </button>
+                  {userIsHost && (
+                    <button
+                      type="button"
+                      className="action-chip"
+                      onClick={() => handleEndCatchup(opp.id)}
+                    >
+                      {HUDDLE_COPY.endCatchup}
+                    </button>
+                  )}
                   <button type="button" className="action-chip">Details</button>
                 </div>
               </article>

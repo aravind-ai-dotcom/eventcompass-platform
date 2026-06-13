@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { savePendingHuddle, type PendingHuddleInput } from "@/lib/huddleStorage";
+import { HUDDLE_COPY, formatHuddleClock, parseDateAndTimeInput } from "@/lib/huddleLifecycle";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
 
 export const HUDDLE_TOPIC_TAGS = [
@@ -75,6 +76,13 @@ export default function StartConversationModal({
     (step === 3 && date.length > 0) ||
     (step === 4 && time.length > 0) ||
     (step === 5 && location.trim().length > 0);
+
+  const reviewSchedule = date && time
+    ? (() => {
+        const scheduled = parseDateAndTimeInput(date, time);
+        return scheduled ? formatHuddleClock(scheduled) : `${date} · ${time}`;
+      })()
+    : "Time TBD";
 
   return (
     <div className="huddle-mini-overlay" role="dialog" aria-modal="true" aria-label="Start a conversation">
@@ -174,10 +182,11 @@ export default function StartConversationModal({
             <p className="start-conversation-lead">Review</p>
             <p><strong>{title}</strong></p>
             <p>{topics.join(" · ")}</p>
-            <p>{date} · {time}</p>
+            <p>{reviewSchedule}</p>
             <p>{location}</p>
             <p>Host: {hostName}</p>
-            <p className="start-conversation-note">Creates a pending huddle — visible in your feed.</p>
+            <p className="start-conversation-note">{HUDDLE_COPY.modalNote}</p>
+            <p className="start-conversation-note">{HUDDLE_COPY.proposeNote}</p>
           </div>
         )}
 

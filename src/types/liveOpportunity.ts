@@ -11,8 +11,13 @@ export interface LiveOpportunity {
   title: string;
   description: string;
   location?: string;
+  /** Display-friendly clock time, e.g. 2:30 PM */
   startTime?: string;
   endTime?: string;
+  /** ISO — when the catchup begins */
+  scheduledAt?: string;
+  /** ISO — auto-close after 30 minutes */
+  expiresAt?: string;
   joinedCount: number;
   /** Attendee first names (excludes host) */
   joinedNames: string[];

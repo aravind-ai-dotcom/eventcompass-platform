@@ -2913,6 +2913,19 @@ img { max-width: 100%; display: block; }
   margin: 0;
   color: var(--text);
 }
+.huddle-row-time {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+.huddle-row-slot-note {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
 .huddle-row-meta {
   font-size: 0.78rem;
   color: var(--soft);
