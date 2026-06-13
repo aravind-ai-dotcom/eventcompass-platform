@@ -1,4 +1,8 @@
 import textToSpeech from "@google-cloud/text-to-speech";
+import {
+  ENV_DEFAULT_VOICE,
+  isAllowedTtsVoice,
+} from "@/lib/voiceTtsOptions";
 
 function getTtsClient() {
   const encoded = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64;
@@ -19,9 +23,37 @@ function getTtsClient() {
   return new textToSpeech.TextToSpeechClient();
 }
 
+function resolveLanguageCode(voiceName: string): string {
+  if (voiceName.startsWith("en-US-")) return "en-US";
+
+  const envLang = process.env.GOOGLE_TTS_LANGUAGE_CODE?.trim();
+  if (envLang && !envLang.startsWith("en-US-")) return envLang;
+
+  return "en-US";
+}
+
+function resolveVoiceName(requested?: unknown): string {
+  if (typeof requested === "string" && isAllowedTtsVoice(requested)) {
+    return requested;
+  }
+
+  const envVoice = process.env.GOOGLE_TTS_VOICE_NAME?.trim();
+  if (envVoice && isAllowedTtsVoice(envVoice)) {
+    return envVoice;
+  }
+
+  return ENV_DEFAULT_VOICE;
+}
+
 export async function POST(req: Request) {
   try {
-    const { text } = await req.json();
+    const body = await req.json();
+    const text = body?.text;
+    const voiceName = resolveVoiceName(body?.voiceName);
+    const languageCode = resolveLanguageCode(voiceName);
+
+    console.log("[VOICE] Voice selected:", voiceName);
+    console.log("[VOICE] Language code:", languageCode);
 
     if (!text || typeof text !== "string") {
       return Response.json({ error: "Missing text" }, { status: 400 });
@@ -32,8 +64,8 @@ export async function POST(req: Request) {
     const [response] = await client.synthesizeSpeech({
       input: { text: text.slice(0, 900) },
       voice: {
-        languageCode: process.env.GOOGLE_TTS_LANGUAGE_CODE || "en-US",
-        name: process.env.GOOGLE_TTS_VOICE_NAME || "en-US-Neural2-F",
+        languageCode,
+        name: voiceName,
       },
       audioConfig: {
         audioEncoding: "MP3",

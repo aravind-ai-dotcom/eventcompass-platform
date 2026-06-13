@@ -6,7 +6,7 @@
 //
 // Anonymous        → "Build My Compass" primary CTA → /enroll
 // Logged in        → "Build My Compass" → /enroll + Sign out
-// Logged in + enrolled → "My Experience" primary CTA (far right) + Sign out
+// Logged in + enrolled → "My Compass" primary CTA (far right) + Sign out
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { usePathname } from "next/navigation";
@@ -120,7 +120,7 @@ export default function CompassHeader() {
           <>
             {enrolled ? (
               <Link href="/experience" className="btn-primary primary-link">
-                My Experience
+                My Compass
               </Link>
             ) : (
               <Link href="/enroll" className="btn-primary primary-link">

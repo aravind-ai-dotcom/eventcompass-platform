@@ -38,6 +38,9 @@ import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
 import ConnectionSignals from "@/components/people/ConnectionSignals";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
+import CertificationGoals from "@/components/experience/CertificationGoals";
+import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
+import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 
@@ -239,6 +242,25 @@ function scheduleSessionsForDay(
   return [...bySlot.values()].sort(sortByEventTimeThenFit);
 }
 
+function buildCompassTrustSignals(participant: RawDoc, sig: RawDoc): string[] {
+  const tracks = ((sig.tech_tracks as string[]) ?? []);
+  const goals = ((sig.goals as string[]) ?? []);
+  const items: string[] = [];
+  const blob = [...tracks, ...goals].join(" ").toLowerCase();
+
+  if (/cloud|architecture|hybrid/.test(blob)) items.push("Cloud Architecture");
+  if (/agentic|ai|automation|watson/.test(blob)) items.push("Agentic AI");
+  if (/career|growth|leadership|executive/.test(blob)) items.push("Career Growth");
+  if (/community|network|alumni|peer/.test(blob)) items.push("Community Participation");
+  if (/certif|exam|credential/.test(blob)) items.push("Certification Readiness");
+  if (isOpenToMentoringConversations(participant)) items.push("Open to Mentoring");
+
+  if (items.length === 0) {
+    return [...tracks, ...goals].slice(0, 6);
+  }
+  return items;
+}
+
 function sessionTypeLabel(s: ScoredSession): string {
   return (s.session_type ?? s.activity_type ?? "Session").trim();
 }
@@ -430,6 +452,7 @@ function SessionCard({ session, sched }: { session: ScoredSession; sched?: ExpSc
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
   const tags  = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
+  const recommendation = sessionRecommendationLine(session);
   return (
     <article className="opportunity-card">
       <div className="card-meta">
@@ -437,21 +460,14 @@ function SessionCard({ session, sched }: { session: ScoredSession; sched?: ExpSc
         <ScoreBadge score={session.compass_score} size="sm" />
       </div>
       <h3>{session.title}</h3>
+      {recommendation && (
+        <p className="session-recommendation-line">{recommendation}</p>
+      )}
       {meta && <p>{meta}</p>}
       {tags.length > 0 && (
         <div className="chip-row" style={{ marginTop: 0, marginBottom: "12px" }}>
           {tags.map((tag) => <span key={tag} className="chip">{tag}</span>)}
         </div>
-      )}
-      {session.compass_reasons.length > 0 && (
-        <>
-          <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "14px 0 6px" }}>
-            Why Compass picked this
-          </p>
-          <ul className="reason-list">
-            {session.compass_reasons.slice(0, 4).map((r) => <li key={r}>{r}</li>)}
-          </ul>
-        </>
       )}
       {sched && <ExpSessionActionBar id={session.id} sched={sched} />}
     </article>
@@ -1446,6 +1462,10 @@ export default function ExperiencePage() {
 
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
+  const hasCertificationGoal = [...pGoals, ...pTracks].some(v =>
+    /certif|exam|credential/i.test(v),
+  );
+  const trustSignals = buildCompassTrustSignals(participant, sig);
 
   // My Schedule — sessions the user has saved
   const myScheduleSessions = savedSessions
@@ -1460,6 +1480,7 @@ export default function ExperiencePage() {
         <div className="experience-hero-title-row">
           <div className="experience-hero-copy">
             <h1 className="experience-hero-title">{displayName}</h1>
+            <p className="experience-hero-tagline">Your personalized event.</p>
             {(jobTitle || company) && (
               <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "1.05rem" }}>
                 {[jobTitle, company].filter(Boolean).join(" · ")}
@@ -1543,6 +1564,8 @@ export default function ExperiencePage() {
           participantTracks={pTracks}
         />
       </section>
+
+      <CertificationGoals hasCertificationGoal={hasCertificationGoal} />
 
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
       {nextBestMove && (
@@ -1686,11 +1709,13 @@ export default function ExperiencePage() {
 
       {/* ── Export + TV ────────────────────────────────────────────────── */}
       <section className="section">
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "16px", alignItems: "start" }}>
+        <div className="experience-export-grid">
           <ExportPanel participantId={participantId} sessions={allSessions} />
           <TechXchangeTV />
         </div>
       </section>
+
+      <WhyCompassRecommendedWeek signals={trustSignals} />
 
       {/* ── Community Voices ───────────────────────────────────────────── */}
       <section className="section">

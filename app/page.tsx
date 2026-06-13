@@ -12,7 +12,9 @@ export default function HomePage() {
       <section className="hero-shell hero-shell--home hero-shell--compact">
         <div className="hero-copy">
           <span className="eyebrow">IBM TechXchange 2026</span>
-          <h1 className="home-hero-title">Your intelligent guide to TechXchange.</h1>
+          <h1 className="home-hero-title">
+            See who is here, what is moving, and where opportunities are forming.
+          </h1>
           <p>
             Compass starts before the event and continues after you return home —
             prepare, meet, experience, and continue your momentum.

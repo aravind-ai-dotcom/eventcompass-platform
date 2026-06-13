@@ -13,6 +13,11 @@ import type { ReactNode, CSSProperties } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import {
+  VOICE_TONE_OPTIONS,
+  getVoiceNameForTone,
+  type VoiceToneId,
+} from "@/lib/voiceTtsOptions";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -31,35 +36,105 @@ function hasSession()     { return typeof window !== "undefined" && sessionStora
 type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
-  | "ingest"    | "exports"     | "audit"
+  | "credits"   | "voice"       | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
   | "participants" | "sessions-table" | "quality"
   | "health" | "command" | "champion-intel" | "consent-intel"
   | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
 
-const NAV: { id: AdminView; label: string; icon: string }[] = [
-  { id: "dashboard",      label: "Dashboard",        icon: "◈" },
-  { id: "exec-snapshot",  label: "Exec Snapshot",    icon: "⬛" },
-  { id: "health",         label: "Health Center",    icon: "◆" },
-  { id: "command",        label: "Command Center",   icon: "◉" },
-  { id: "right-now",      label: "Right Now",        icon: "⚡" },
-  { id: "content",        label: "Content",          icon: "✎" },
-  { id: "ingest",         label: "Data Ingest",      icon: "⬆" },
-  { id: "personas",       label: "Personas",         icon: "◎" },
-  { id: "champions",      label: "Champions",        icon: "★" },
-  { id: "champion-intel", label: "Champion Intel",   icon: "◇" },
-  { id: "snapshots",      label: "Snapshots",        icon: "◷" },
-  { id: "capacity",       label: "Capacity",         icon: "▦" },
-  { id: "consent",        label: "Consent",          icon: "◻" },
-  { id: "consent-intel",  label: "Consent Intel",    icon: "◈" },
-  { id: "heatmap",        label: "TXC Heat Map",     icon: "▤" },
-  { id: "participants",   label: "Participants",     icon: "▤" },
-  { id: "sessions-table", label: "Sessions",         icon: "▣" },
-  { id: "quality",        label: "Data Quality",     icon: "⚑" },
-  { id: "data-quality",   label: "Quality Center",   icon: "⚐" },
-  { id: "activity",       label: "Activity",         icon: "◉" },
-  { id: "exports",        label: "Exports",          icon: "⬇" },
-  { id: "audit",          label: "Audit Log",        icon: "≡" },
+interface NavItem {
+  id: AdminView;
+  label: string;
+}
+
+interface NavGroup {
+  id: string;
+  label: string;
+  description: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "event-status",
+    label: "Event status",
+    description: "Monitor the live health and operating picture of TechXchange.",
+    items: [
+      { id: "dashboard",     label: "Dashboard"      },
+      { id: "exec-snapshot", label: "Exec Snapshot"  },
+      { id: "command",       label: "Command Center" },
+      { id: "right-now",     label: "Right Now"      },
+      { id: "health",        label: "Health Center"  },
+    ],
+  },
+  {
+    id: "experience",
+    label: "Experience",
+    description: "Control what attendees see, hear, and read across Compass.",
+    items: [
+      { id: "content", label: "Content"       },
+      { id: "voice",   label: "Voice"         },
+      { id: "credits", label: "Credits"       },
+      { id: "access",  label: "Admin Access"  },
+    ],
+  },
+  {
+    id: "attendees",
+    label: "Attendees",
+    description: "Understand participant signals, intent, consent, and audience patterns.",
+    items: [
+      { id: "participants",  label: "Participants"   },
+      { id: "signals",       label: "Signals"        },
+      { id: "personas",      label: "Personas"       },
+      { id: "consent",       label: "Consent"        },
+      { id: "consent-intel", label: "Consent Intel"  },
+      { id: "heatmap",       label: "TXC Heat Map"   },
+    ],
+  },
+  {
+    id: "champions",
+    label: "Champions",
+    description: "Manage expert, mentor, and community-leader intelligence.",
+    items: [
+      { id: "champions",      label: "Champions"      },
+      { id: "champion-intel", label: "Champion Intel" },
+    ],
+  },
+  {
+    id: "sessions",
+    label: "Sessions",
+    description: "Review session catalog, capacity, snapshots, and recommendation inputs.",
+    items: [
+      { id: "sessions-table", label: "Sessions"   },
+      { id: "capacity",       label: "Capacity"   },
+      { id: "snapshots",      label: "Snapshots"  },
+    ],
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    description: "Manage ingest, quality, exports, audit trail, and system activity.",
+    items: [
+      { id: "ingest",       label: "Data Ingest"    },
+      { id: "quality",      label: "Data Quality"   },
+      { id: "data-quality", label: "Quality Center" },
+      { id: "activity",     label: "Activity"       },
+      { id: "exports",      label: "Exports"        },
+      { id: "audit",        label: "Audit Log"      },
+    ],
+  },
 ];
+
+function findNavItem(view: AdminView): NavItem | undefined {
+  for (const group of NAV_GROUPS) {
+    const item = group.items.find(i => i.id === view);
+    if (item) return item;
+  }
+  return undefined;
+}
+
+function findNavGroup(view: AdminView): NavGroup | undefined {
+  return NAV_GROUPS.find(g => g.items.some(i => i.id === view));
+}
 
 // ─── IBM colours ──────────────────────────────────────────────────────────────
 const IBM = {
@@ -86,6 +161,54 @@ const S = {
   dim:    "#6f6f6f",
   line:   "#393939",
   accent: "#78a9ff",
+};
+
+/** Shared form + surface tokens — single Carbon-inspired admin surface. */
+const A = {
+  field: {
+    width: "100%",
+    height: "36px",
+    padding: "0 12px",
+    background: "transparent",
+    border: `1px solid ${S.line}`,
+    color: S.text,
+    fontSize: "0.88rem",
+    fontFamily: "inherit",
+    boxSizing: "border-box" as const,
+  } satisfies CSSProperties,
+  textarea: {
+    width: "100%",
+    minHeight: "72px",
+    padding: "8px 12px",
+    background: "transparent",
+    border: `1px solid ${S.line}`,
+    color: S.text,
+    fontSize: "0.88rem",
+    fontFamily: "inherit",
+    resize: "vertical" as const,
+    boxSizing: "border-box" as const,
+  } satisfies CSSProperties,
+  fieldLabel: {
+    color: S.muted,
+    fontSize: "0.72rem",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.08em",
+    display: "block" as const,
+    marginBottom: "5px",
+  } satisfies CSSProperties,
+  statusRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 0",
+    borderBottom: `1px solid ${S.line}`,
+  } satisfies CSSProperties,
+  divider: {
+    height: "1px",
+    background: S.line,
+    margin: "16px 0",
+    border: "none",
+  } satisfies CSSProperties,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,16 +250,189 @@ const SNAPSHOTS = [
   { name: "Day 2 End",               time: "Oct 29, 22:00", profiles: 8641, saved: 34921, reco: 198421, active: 3124 },
 ];
 
-const CONTENT_DEFAULTS = [
-  { page: "Home",          kicker: "Event intelligence", title: "Compass. Your TechXchange Advantage.",              body: "The first event intelligence platform that knows who you are, what you need, and who you should meet.",         cta: "Build My Compass",      dest: "/enroll"     },
-  { page: "Explore",       kicker: "How Compass works",  title: "How Compass helps you succeed.",                    body: "Five paths through TechXchange — each mapped to sessions, people, and outcomes aligned to what you came to achieve.", cta: "Browse sessions",       dest: "/sessions"   },
-  { page: "Journey Maps",  kicker: "How Compass works",  title: "How Compass helps you succeed.",                    body: "Journey maps live on Explore — milestone pathways for learning, certification, networking, and more.",          cta: "Open Explore",          dest: "/explore"    },
-  { page: "Sessions",      kicker: "Session intelligence", title: "Sessions that fit your week.",                    body: "Compass reads sessions against your profile and surfaces what to prioritize.",                                 cta: "Browse all sessions",   dest: "/sessions"   },
-  { page: "Champions",     kicker: "People intelligence", title: "Find your people before you arrive.",             body: "Experts, mentors, peers, and community leaders matched to your interests.",                                   cta: "See matched Champions", dest: "/champions"  },
-  { page: "Pulse",         kicker: "Event pulse",        title: "The room is taking shape.",                       body: "Communities forming, conversations beginning, opportunities emerging.",                                         cta: "View Pulse",            dest: "/pulse"      },
-  { page: "Enroll",        kicker: "Build your Compass", title: "Tell Compass what matters to you.",               body: "Your goals, tracks, and background shape every session score and champion match.",                            cta: "Build My Compass",      dest: "/enroll"     },
-  { page: "My Experience", kicker: "My Compass",         title: "TechXchange, built for you.",                     body: "Your personalized four-day plan, scored sessions, and Champion matches — all in one place.",                    cta: "Open My Compass",       dest: "/experience" },
+// Future Firestore path (not wired):
+// organizations/ibm/events/txc2026/admin_content/pages/{page_id}
+
+interface ContentPageData {
+  page: string;
+  pageId: string;
+  kicker: string;
+  title: string;
+  body: string;
+  cta: string;
+  dest: string;
+  secondaryCta: string;
+  secondaryDest: string;
+}
+
+const CONTENT_DEFAULTS: ContentPageData[] = [
+  {
+    page: "Home",
+    pageId: "home",
+    kicker: "IBM TechXchange 2026",
+    title: "See who is here, what is moving, and where opportunities are forming.",
+    body: "Compass starts before the event and continues after you return home — prepare, meet, experience, and continue your momentum.",
+    cta: "Build My Compass",
+    dest: "/enroll",
+    secondaryCta: "How Compass works",
+    secondaryDest: "/explore",
+  },
+  {
+    page: "Explore",
+    pageId: "explore",
+    kicker: "How Compass works",
+    title: "How Compass helps you succeed.",
+    body: "Five paths through TechXchange — each mapped to sessions, people, and outcomes aligned to what you came to achieve.",
+    cta: "Browse sessions",
+    dest: "/sessions",
+    secondaryCta: "Build My Compass",
+    secondaryDest: "/enroll",
+  },
+  {
+    page: "Journey Maps",
+    pageId: "journey-maps",
+    kicker: "How Compass works",
+    title: "How Compass helps you succeed.",
+    body: "Journey maps live on Explore — milestone pathways for learning, certification, networking, and more.",
+    cta: "Open Explore",
+    dest: "/explore",
+    secondaryCta: "View journey maps",
+    secondaryDest: "/journey-maps",
+  },
+  {
+    page: "Pulse",
+    pageId: "pulse",
+    kicker: "Event pulse",
+    title: "The room is taking shape.",
+    body: "Communities forming, conversations beginning, opportunities emerging across TechXchange.",
+    cta: "View Pulse",
+    dest: "/pulse",
+    secondaryCta: "Build My Compass",
+    secondaryDest: "/enroll",
+  },
+  {
+    page: "Sessions",
+    pageId: "sessions",
+    kicker: "Session intelligence",
+    title: "Sessions that fit your week.",
+    body: "Compass reads sessions against your profile and surfaces what to prioritize.",
+    cta: "Browse all sessions",
+    dest: "/sessions",
+    secondaryCta: "Open My Compass",
+    secondaryDest: "/experience",
+  },
+  {
+    page: "Champions",
+    pageId: "champions",
+    kicker: "People intelligence",
+    title: "Find your people before you arrive.",
+    body: "Experts, mentors, peers, and community leaders matched to your interests.",
+    cta: "See matched Champions",
+    dest: "/champions",
+    secondaryCta: "Build My Compass",
+    secondaryDest: "/enroll",
+  },
+  {
+    page: "Enroll",
+    pageId: "enroll",
+    kicker: "Build your Compass",
+    title: "Tell Compass what matters to you.",
+    body: "Your goals, tracks, and background shape every session score and champion match.",
+    cta: "Build My Compass",
+    dest: "/enroll",
+    secondaryCta: "Sign in",
+    secondaryDest: "/login",
+  },
+  {
+    page: "My Compass",
+    pageId: "experience",
+    kicker: "My Compass",
+    title: "TechXchange, built for you.",
+    body: "Your personalized four-day plan, scored sessions, and Champion matches — all in one place.",
+    cta: "Open My Compass",
+    dest: "/experience",
+    secondaryCta: "Refine My Compass",
+    secondaryDest: "/enroll?mode=edit",
+  },
 ];
+
+interface AdminAccessUser {
+  name: string;
+  email: string;
+  role: string;
+  accessLevel: "Owner" | "Event Admin" | "Content Editor" | "Read Only";
+  status: "Active" | "Invited";
+  lastActive: string;
+}
+
+const ADMIN_ACCESS_USERS: AdminAccessUser[] = [
+  {
+    name: "Aravind Ragupathi",
+    email: "aravind@media",
+    role: "Owner / Product Admin",
+    accessLevel: "Owner",
+    status: "Active",
+    lastActive: "Just now",
+  },
+  {
+    name: "Angie Borman",
+    email: "angie.borman@ibm.com",
+    role: "Event Admin",
+    accessLevel: "Event Admin",
+    status: "Active",
+    lastActive: "2 hours ago",
+  },
+];
+
+interface TechCreditItem {
+  id: string;
+  label: string;
+  enabled: boolean;
+}
+
+interface CreditsFormData {
+  productName: string;
+  productTagline: string;
+  productCredit: string;
+  createdBy: string;
+  eventContext: string;
+  technologyCredits: TechCreditItem[];
+  aiVoiceCredit: string;
+  copyrightNotice: string;
+  confidentiality: string;
+  version: string;
+  contact: string;
+  disclaimer: string;
+}
+
+const CREDITS_DEFAULTS: CreditsFormData = {
+  productName: "Compass",
+  productTagline: "AI-powered attendee intelligence platform",
+  productCredit:
+    "Compass is an AI-powered attendee intelligence platform designed to help TechXchange participants discover relevant sessions, people, communities, certifications, and live opportunities.",
+  createdBy: "Aravind Ragupathi",
+  eventContext:
+    "Built for IBM TechXchange 2026 experience exploration and attendee journey personalization.",
+  technologyCredits: [
+    { id: "firebase", label: "Firebase", enabled: true },
+    { id: "firestore", label: "Firestore", enabled: true },
+    { id: "nextjs", label: "Next.js", enabled: true },
+    { id: "typescript", label: "TypeScript", enabled: true },
+    { id: "vercel", label: "Vercel", enabled: true },
+    { id: "google-tts", label: "Google Cloud Text-to-Speech", enabled: true },
+    { id: "carbon", label: "IBM Carbon Design inspiration", enabled: true },
+    { id: "elevenlabs", label: "Future Voice Evaluation: ElevenLabs", enabled: true },
+  ],
+  aiVoiceCredit:
+    "Ask Compass uses Google Cloud Text-to-Speech for spoken responses. Guide (Aoede) and Studio (Charon) voices are available for attendee selection.",
+  copyrightNotice: "© 2026 Aravind Ragupathi. All rights reserved.",
+  confidentiality:
+    "Compass contains proprietary concepts, recommendation logic, attendee intelligence, and experience orchestration workflows.\n\nConfidential and proprietary.",
+  version: "Compass Beta",
+  contact: "aravind.media",
+  disclaimer:
+    "Compass is a product prototype and experience concept. All event data, recommendations, and integrations should be validated with official event systems before production use.",
+};
 
 const PERSONA_COLORS: Record<string, string> = {
   Developer: IBM.blue, Architect: IBM.purple, Executive: IBM.maroon,
@@ -685,9 +981,14 @@ function SectionHead({ kicker, title, sub }: { kicker: string; title: string; su
   );
 }
 
-function Panel({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+function Panel({ children, style, noPad }: { children: ReactNode; style?: CSSProperties; noPad?: boolean }) {
   return (
-    <div style={{ background: S.panel, border: `1px solid ${S.line}`, padding: "20px", ...style }}>
+    <div style={{
+      background: S.panel,
+      border: `1px solid ${S.line}`,
+      padding: noPad ? 0 : "20px",
+      ...style,
+    }}>
       {children}
     </div>
   );
@@ -865,14 +1166,14 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
     <div style={{ display: "flex", height: "100vh", background: S.bg,
       overflow: "hidden", fontFamily: "IBM Plex Sans, system-ui, sans-serif" }}>
 
-      {/* Sidebar */}
-      <aside style={{ width: "232px", background: S.sideBg, borderRight: `1px solid ${S.line}`,
+      {/* Sidebar — grouped operator navigation */}
+      <aside style={{ width: "248px", background: S.sideBg, borderRight: `1px solid ${S.line}`,
         display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: `1px solid ${S.line}` }}>
           <p style={{ color: S.accent, fontSize: "0.62rem", fontWeight: 700,
             textTransform: "uppercase", letterSpacing: "0.14em", margin: "0 0 3px" }}>Compass</p>
           <p style={{ color: S.text, fontSize: "1rem", fontWeight: 650,
-            margin: "0 0 2px", letterSpacing: "-0.02em" }}>Admin Console</p>
+            margin: "0 0 2px", letterSpacing: "-0.02em" }}>Operator Console</p>
           <p style={{ color: S.dim, fontSize: "0.72rem", margin: "0 0 10px" }}>IBM TechXchange 2026</p>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "5px",
             fontSize: "0.62rem", color: IBM.green, fontWeight: 650,
@@ -883,24 +1184,45 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
           </span>
         </div>
 
-        <nav style={{ flex: 1, padding: "10px 0" }} aria-label="Admin navigation">
-          {NAV.map(item => {
-            const active = view === item.id;
-            return (
-              <button key={item.id} type="button" onClick={() => setView(item.id)} style={{
-                width: "100%", padding: "9px 20px", border: "none",
-                borderLeft: `3px solid ${active ? S.accent : "transparent"}`,
-                background: active ? "rgba(120,169,255,0.07)" : "transparent",
-                color: active ? S.accent : S.muted,
-                fontSize: "0.86rem", fontFamily: "inherit", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: "10px",
-                fontWeight: active ? 600 : 400, textAlign: "left" as const,
-                transition: "background 0.1s, color 0.1s" }}>
-                <span style={{ fontSize: "0.75rem", opacity: 0.85, flexShrink: 0 }}>{item.icon}</span>
-                {item.label}
-              </button>
-            );
-          })}
+        <nav style={{ flex: 1, padding: "8px 0 12px" }} aria-label="Admin navigation">
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={group.id} style={{ marginBottom: gi < NAV_GROUPS.length - 1 ? "4px" : 0 }}>
+              <div style={{ padding: "14px 20px 6px" }}>
+                <p style={{
+                  color: S.soft, fontSize: "0.62rem", fontWeight: 700,
+                  textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 4px",
+                }}>
+                  {group.label}
+                </p>
+                <p style={{
+                  color: S.dim, fontSize: "0.68rem", margin: 0,
+                  lineHeight: 1.4, maxWidth: "200px",
+                }}>
+                  {group.description}
+                </p>
+              </div>
+              {group.items.map(item => {
+                const active = view === item.id;
+                return (
+                  <button key={item.id} type="button" onClick={() => setView(item.id)} style={{
+                    width: "100%", padding: "8px 20px 8px 24px", border: "none",
+                    borderLeft: `3px solid ${active ? S.accent : "transparent"}`,
+                    background: active ? "rgba(120,169,255,0.07)" : "transparent",
+                    color: active ? S.accent : S.muted,
+                    fontSize: "0.84rem", fontFamily: "inherit", cursor: "pointer",
+                    display: "flex", alignItems: "center",
+                    fontWeight: active ? 600 : 400, textAlign: "left" as const,
+                    transition: "background 0.1s, color 0.1s",
+                  }}>
+                    {item.label}
+                  </button>
+                );
+              })}
+              {gi < NAV_GROUPS.length - 1 && (
+                <hr style={{ ...A.divider, margin: "10px 20px 0" }} />
+              )}
+            </div>
+          ))}
         </nav>
 
         <div style={{ padding: "14px 20px 18px", borderTop: `1px solid ${S.line}` }}>
@@ -918,11 +1240,13 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
         <div style={{ height: "52px", background: S.bg, borderBottom: `1px solid ${S.line}`,
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "0 32px", flexShrink: 0, position: "sticky", top: 0, zIndex: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
             <h1 style={{ color: S.text, fontSize: "0.9rem", fontWeight: 650,
               margin: 0, letterSpacing: "-0.01em" }}>Event Intelligence Center</h1>
-            <span style={{ color: S.dim, fontSize: "0.78rem" }}>
-              {NAV.find(n => n.id === view)?.label}
+            <span style={{ color: S.dim, fontSize: "0.78rem", whiteSpace: "nowrap" }}>
+              {findNavGroup(view)?.label ?? "Admin"}
+              <span style={{ margin: "0 6px", opacity: 0.5 }}>·</span>
+              {findNavItem(view)?.label ?? view}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -2228,67 +2552,649 @@ function ActivityView() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ContentView() {
-  const [pages, setPages] = useState(CONTENT_DEFAULTS.map(p => ({ ...p })));
-  const [saved, setSaved] = useState<string | null>(null);
+  const [pages, setPages] = useState<ContentPageData[]>(() =>
+    CONTENT_DEFAULTS.map(p => ({ ...p })),
+  );
+  const [selected, setSelected] = useState(0);
+  const [saved, setSaved] = useState(false);
 
-  const update = (i: number, key: string, val: string) => {
-    setPages(ps => ps.map((p, idx) => idx === i ? { ...p, [key]: val } : p));
-    setSaved(null);
-  };
+  const page = pages[selected];
 
-  const inp: CSSProperties = { width: "100%", height: "36px", padding: "0 10px",
-    background: "#262626", border: `1px solid ${S.line}`, color: S.text,
-    fontSize: "0.88rem", fontFamily: "inherit", boxSizing: "border-box" };
-  const ta: CSSProperties = { ...inp, height: "64px", padding: "8px 10px", resize: "vertical" as const };
+  function update<K extends keyof ContentPageData>(key: K, val: ContentPageData[K]) {
+    setPages(ps => ps.map((p, idx) => (idx === selected ? { ...p, [key]: val } : p)));
+    setSaved(false);
+  }
 
   return (
     <div>
-      <SectionHead kicker="Content Management" title="Page hero content editor."
-        sub="Edit kicker, headline, body copy, and CTA for each Compass page. Local state — wire to Firestore for persistence." />
-      <div style={{ display: "grid", gap: "14px" }}>
+      <SectionHead
+        kicker="Experience"
+        title="Attendee-facing hero copy."
+        sub="Edit the kicker, headline, body, and CTAs that shape each Compass page. Local state — future path: organizations/ibm/events/txc2026/admin_content/pages/{page_id}"
+      />
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
         {pages.map((p, i) => (
-          <Panel key={p.page}>
-            <div style={{ display: "flex", alignItems: "center",
-              justifyContent: "space-between", marginBottom: "16px" }}>
+          <button
+            key={p.pageId}
+            type="button"
+            onClick={() => { setSelected(i); setSaved(false); }}
+            style={{
+              padding: "6px 12px",
+              border: `1px solid ${selected === i ? IBM.blue : S.line}`,
+              background: selected === i ? "rgba(15,98,254,0.10)" : "transparent",
+              color: selected === i ? S.accent : S.muted,
+              fontSize: "0.8rem",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              fontWeight: selected === i ? 650 : 500,
+            }}
+          >
+            {p.page}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 0.9fr)", gap: "16px", alignItems: "start" }}>
+        <Panel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+            <div>
+              <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700,
+                textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 2px" }}>
+                {page.page}
+              </p>
+              <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0 }}>
+                page_id: {page.pageId}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {saved && (
+                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setSaved(true)}
+                style={{
+                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
+                  cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: "14px" }}>
+            <div>
+              <label style={A.fieldLabel}>Hero kicker</label>
+              <input style={A.field} value={page.kicker} onChange={e => update("kicker", e.target.value)} />
+            </div>
+            <div>
+              <label style={A.fieldLabel}>Hero headline</label>
+              <input style={A.field} value={page.title} onChange={e => update("title", e.target.value)} />
+            </div>
+            <div>
+              <label style={A.fieldLabel}>Hero body</label>
+              <textarea style={{ ...A.textarea, minHeight: "96px" }} value={page.body}
+                onChange={e => update("body", e.target.value)} />
+            </div>
+
+            <hr style={A.divider} />
+            <p style={{ color: S.muted, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+              Primary CTA
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
-                <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700,
-                  textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 2px" }}>{p.page}</p>
-                <p style={{ color: S.muted, fontSize: "0.78rem", margin: 0 }}>{p.dest}</p>
+                <label style={A.fieldLabel}>Label</label>
+                <input style={A.field} value={page.cta} onChange={e => update("cta", e.target.value)} />
               </div>
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                {saved === p.page && (
-                  <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
-                )}
-                <button type="button" onClick={() => setSaved(p.page)}
-                  style={{ padding: "6px 14px", background: IBM.blue, border: "none",
-                    color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
-                    cursor: "pointer", fontWeight: 600 }}>Save</button>
+              <div>
+                <label style={A.fieldLabel}>Destination</label>
+                <input style={A.field} value={page.dest} onChange={e => update("dest", e.target.value)} />
               </div>
             </div>
+
+            <p style={{ color: S.muted, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+              Secondary CTA
+            </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              {[
-                { key: "kicker", label: "Hero Kicker",      el: "input"    },
-                { key: "title", label: "Hero Headline",     el: "input"    },
-                { key: "body",  label: "Hero Body",         el: "textarea" },
-                { key: "cta",   label: "CTA Label",         el: "input"    },
-                { key: "dest",  label: "CTA Destination",   el: "input"    },
-              ].map(f => (
-                <div key={f.key}>
-                  <label style={{ color: S.muted, fontSize: "0.72rem", textTransform: "uppercase",
-                    letterSpacing: "0.08em", display: "block", marginBottom: "5px" }}>
-                    {f.label}
-                  </label>
-                  {f.el === "textarea"
-                    ? <textarea style={ta} value={(p as Record<string, string>)[f.key]}
-                        onChange={e => update(i, f.key, e.target.value)} />
-                    : <input style={inp} value={(p as Record<string, string>)[f.key]}
-                        onChange={e => update(i, f.key, e.target.value)} />
-                  }
+              <div>
+                <label style={A.fieldLabel}>Label</label>
+                <input style={A.field} value={page.secondaryCta} onChange={e => update("secondaryCta", e.target.value)} />
+              </div>
+              <div>
+                <label style={A.fieldLabel}>Destination</label>
+                <input style={A.field} value={page.secondaryDest} onChange={e => update("secondaryDest", e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel>
+          <p style={{ color: S.muted, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 16px" }}>
+            Live preview
+          </p>
+          <div style={{ borderTop: `1px solid ${S.line}`, paddingTop: "18px" }}>
+            <p style={{ color: S.accent, fontSize: "0.72rem", fontWeight: 650, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
+              {page.kicker || "Kicker"}
+            </p>
+            <h3 style={{ color: S.text, fontSize: "1.35rem", fontWeight: 520, letterSpacing: "-0.03em", margin: "0 0 12px", lineHeight: 1.25 }}>
+              {page.title || "Headline"}
+            </h3>
+            <p style={{ color: S.muted, fontSize: "0.9rem", lineHeight: 1.55, margin: "0 0 18px" }}>
+              {page.body || "Body copy"}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 16px", background: IBM.blue, color: "#fff", fontSize: "0.84rem", fontWeight: 600 }}>
+                {page.cta || "Primary CTA"}
+              </span>
+              {page.secondaryCta && (
+                <span style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 16px", border: `1px solid ${S.line}`, color: S.soft, fontSize: "0.84rem" }}>
+                  {page.secondaryCta}
+                </span>
+              )}
+            </div>
+          </div>
+          <p style={{ color: S.dim, fontSize: "0.76rem", margin: "12px 0 0", lineHeight: 1.45 }}>
+            Routes: {page.dest}{page.secondaryDest ? ` · ${page.secondaryDest}` : ""}
+          </p>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Access view
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AccessAdminView() {
+  const accessLevels = ["Owner", "Event Admin", "Content Editor", "Read Only"] as const;
+
+  const credentials = [
+    { label: "Authentication method", value: "Email / IBMid-ready" },
+    { label: "SSO readiness", value: "Planned" },
+    { label: "Admin role model", value: "Demo mode" },
+    { label: "Data access", value: "Scoped by event" },
+  ];
+
+  return (
+    <div>
+      <SectionHead
+        kicker="Admin access"
+        title="Define who can operate Compass."
+        sub="Define who can operate Compass, edit attendee-facing content, review signals, and manage event intelligence."
+      />
+
+      <div style={{ display: "grid", gap: "16px" }}>
+        <Panel noPad>
+          <div style={{ padding: "16px 20px", borderBottom: `1px solid ${S.line}` }}>
+            <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+              Operators
+            </p>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${S.line}`, color: S.muted, textAlign: "left" }}>
+                  {["Name", "Email", "Role", "Access level", "Status", "Last active"].map(h => (
+                    <th key={h} style={{ padding: "10px 16px", fontWeight: 650, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ADMIN_ACCESS_USERS.map(user => (
+                  <tr key={user.email} style={{ borderBottom: `1px solid ${S.line}` }}>
+                    <td style={{ padding: "12px 16px", color: S.text }}>{user.name}</td>
+                    <td style={{ padding: "12px 16px", color: S.muted }}>{user.email}</td>
+                    <td style={{ padding: "12px 16px", color: S.soft }}>{user.role}</td>
+                    <td style={{ padding: "12px 16px", color: S.accent }}>{user.accessLevel}</td>
+                    <td style={{ padding: "12px 16px", color: user.status === "Active" ? IBM.green : S.muted }}>{user.status}</td>
+                    <td style={{ padding: "12px 16px", color: S.dim }}>{user.lastActive}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <Panel>
+            <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px" }}>
+              Access levels
+            </p>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: "8px" }}>
+              {accessLevels.map(level => (
+                <li key={level} style={{ padding: "10px 12px", border: `1px solid ${S.line}`, color: S.soft, fontSize: "0.86rem" }}>
+                  {level}
+                </li>
+              ))}
+            </ul>
+          </Panel>
+
+          <Panel>
+            <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px" }}>
+              Credentials & access
+            </p>
+            <div>
+              {credentials.map((row, i) => (
+                <div key={row.label} style={{
+                  ...A.statusRow,
+                  borderBottom: i < credentials.length - 1 ? A.statusRow.borderBottom : "none",
+                }}>
+                  <span style={{ color: S.muted, fontSize: "0.84rem" }}>{row.label}</span>
+                  <span style={{ color: S.text, fontSize: "0.84rem", fontWeight: 550 }}>{row.value}</span>
                 </div>
               ))}
             </div>
           </Panel>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Voice admin view
+// ─────────────────────────────────────────────────────────────────────────────
+
+function VoiceAdminView() {
+  const [defaultTone, setDefaultTone] = useState<VoiceToneId>("guide");
+  const [lastTest, setLastTest] = useState<"Successful" | "Failed" | "Not run">("Successful");
+  const [testing, setTesting] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const statusRow: CSSProperties = {
+    ...A.statusRow,
+    padding: "12px 0",
+  };
+
+  async function runVoiceTest() {
+    setTesting(true);
+    try {
+      const res = await fetch("/api/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: "Compass voice test successful.",
+          voiceName: getVoiceNameForTone(defaultTone),
+        }),
+      });
+      setLastTest(res.ok ? "Successful" : "Failed");
+    } catch {
+      setLastTest("Failed");
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <div>
+      <SectionHead
+        kicker="Experience"
+        title="Ask Compass voice configuration."
+        sub="Default voice, TTS connectivity, and last test status for demo confidence."
+      />
+
+      <div style={{ display: "grid", gap: "14px" }}>
+        <Panel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+            <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+              Default voice
+            </p>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {saved && (
+                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setSaved(true)}
+                style={{
+                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
+                  cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {VOICE_TONE_OPTIONS.map(option => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => { setDefaultTone(option.id); setSaved(false); }}
+                style={{
+                  padding: "8px 16px",
+                  border: `1px solid ${defaultTone === option.id ? IBM.blue : S.line}`,
+                  background: defaultTone === option.id ? "rgba(15,98,254,0.12)" : "transparent",
+                  color: defaultTone === option.id ? S.accent : S.soft,
+                  fontSize: "0.88rem",
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  fontWeight: defaultTone === option.id ? 650 : 500,
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p style={{ color: S.muted, fontSize: "0.82rem", margin: "12px 0 0", lineHeight: 1.5 }}>
+            Guide → en-US-Chirp3-HD-Aoede · Studio → en-US-Chirp3-HD-Charon
+          </p>
+        </Panel>
+
+        <Panel>
+          <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+            Production status
+          </p>
+          <div>
+            <div style={statusRow}>
+              <span style={{ color: S.soft, fontSize: "0.88rem" }}>Google TTS</span>
+              <span style={{ color: IBM.green, fontSize: "0.88rem", fontWeight: 650 }}>Connected ✓</span>
+            </div>
+            <div style={{ ...statusRow, borderBottom: "none" }}>
+              <span style={{ color: S.soft, fontSize: "0.88rem" }}>Last voice test</span>
+              <span style={{
+                color: lastTest === "Successful" ? IBM.green : lastTest === "Failed" ? IBM.red : S.muted,
+                fontSize: "0.88rem",
+                fontWeight: 650,
+              }}>
+                {testing ? "Running…" : lastTest}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { void runVoiceTest(); }}
+            disabled={testing}
+            style={{
+              marginTop: "14px",
+              padding: "8px 14px",
+              background: "transparent",
+              border: `1px solid ${S.line}`,
+              color: S.soft,
+              fontSize: "0.82rem",
+              fontFamily: "inherit",
+              cursor: testing ? "wait" : "pointer",
+            }}
+          >
+            Run voice test
+          </button>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Signals admin view
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SignalsAdminView({ data }: { data: AdminData }) {
+  const metrics = [
+    { label: "Attendee profiles", value: data.totalParticipants.toLocaleString(), note: "Enrolled Compass profiles" },
+    { label: "Session intelligence", value: data.totalSessions.toLocaleString(), note: "Scored against attendee signals" },
+    { label: "Champion matches", value: data.totalChampions.toLocaleString(), note: "People intelligence index" },
+    { label: "Connection signals", value: "14", note: "New mutual-interest signals today" },
+    { label: "Live huddles", value: "6", note: "Conversations forming nearby" },
+    { label: "Last refresh", value: data.lastRefresh ? data.lastRefresh.toLocaleTimeString() : "Moments ago", note: "Platform sync status" },
+  ];
+
+  return (
+    <div>
+      <SectionHead
+        kicker="Attendees"
+        title="Live intelligence at a glance."
+        sub="Demo-ready summary of attendee signals, matches, and platform activity."
+      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+        {metrics.map(m => (
+          <Panel key={m.label}>
+            <p style={{ color: S.muted, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px" }}>
+              {m.label}
+            </p>
+            <p style={{ color: S.text, fontSize: "1.6rem", fontWeight: 520, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+              {m.value}
+            </p>
+            <p style={{ color: S.dim, fontSize: "0.82rem", margin: 0, lineHeight: 1.45 }}>{m.note}</p>
+          </Panel>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Credits view
+// ─────────────────────────────────────────────────────────────────────────────
+
+function CreditsView() {
+  const [credits, setCredits] = useState<CreditsFormData>(() => ({
+    ...CREDITS_DEFAULTS,
+    technologyCredits: CREDITS_DEFAULTS.technologyCredits.map(item => ({ ...item })),
+  }));
+  const [saved, setSaved] = useState(false);
+
+  const inp = A.field;
+  const ta = { ...A.textarea, minHeight: "88px" };
+  const fieldLabel = A.fieldLabel;
+
+  function updateField<K extends keyof Omit<CreditsFormData, "technologyCredits">>(
+    key: K,
+    value: CreditsFormData[K],
+  ) {
+    setCredits(prev => ({ ...prev, [key]: value }));
+    setSaved(false);
+  }
+
+  function updateTech(id: string, patch: Partial<TechCreditItem>) {
+    setCredits(prev => ({
+      ...prev,
+      technologyCredits: prev.technologyCredits.map(item =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
+    }));
+    setSaved(false);
+  }
+
+  return (
+    <div>
+      <SectionHead
+        kicker="Experience"
+        title="Product credits and confidentiality."
+        sub="Product credit, technology acknowledgments, copyright, confidentiality, and prototype disclaimer."
+      />
+
+      <div style={{ display: "grid", gap: "14px" }}>
+        <Panel>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+            <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: 0 }}>
+              Product & ownership
+            </p>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {saved && (
+                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setSaved(true)}
+                style={{
+                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
+                  cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div>
+                <label style={fieldLabel}>Product name</label>
+                <input
+                  style={inp}
+                  value={credits.productName}
+                  onChange={e => updateField("productName", e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={fieldLabel}>Version</label>
+                <input
+                  style={inp}
+                  value={credits.version}
+                  onChange={e => updateField("version", e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label style={fieldLabel}>Product tagline</label>
+              <input
+                style={inp}
+                value={credits.productTagline}
+                onChange={e => updateField("productTagline", e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={fieldLabel}>Product description</label>
+              <textarea
+                style={ta}
+                value={credits.productCredit}
+                onChange={e => updateField("productCredit", e.target.value)}
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div>
+                <label style={fieldLabel}>Created by</label>
+                <input
+                  style={inp}
+                  value={credits.createdBy}
+                  onChange={e => updateField("createdBy", e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={fieldLabel}>Contact</label>
+                <input
+                  style={inp}
+                  value={credits.contact}
+                  onChange={e => updateField("contact", e.target.value)}
+                />
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div>
+                <label style={fieldLabel}>Copyright notice</label>
+                <input
+                  style={inp}
+                  value={credits.copyrightNotice}
+                  onChange={e => updateField("copyrightNotice", e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={fieldLabel}>Event / platform context</label>
+                <input
+                  style={inp}
+                  value={credits.eventContext}
+                  onChange={e => updateField("eventContext", e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label style={fieldLabel}>Confidentiality</label>
+              <textarea
+                style={{ ...ta, height: "96px" }}
+                value={credits.confidentiality}
+                onChange={e => updateField("confidentiality", e.target.value)}
+              />
+            </div>
+          </div>
+        </Panel>
+
+        <Panel>
+          <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 16px" }}>
+            Technology credits
+          </p>
+          <div style={{ display: "grid", gap: "10px" }}>
+            {credits.technologyCredits.map(item => (
+              <div
+                key={item.id}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "24px minmax(0, 1fr)",
+                  gap: "10px",
+                  alignItems: "center",
+                  padding: "8px 10px",
+                  borderBottom: `1px solid ${S.line}`,
+                  background: "transparent",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={item.enabled}
+                  onChange={e => updateTech(item.id, { enabled: e.target.checked })}
+                  aria-label={`Include ${item.label}`}
+                />
+                <input
+                  style={{ ...inp, height: "32px" }}
+                  value={item.label}
+                  onChange={e => updateTech(item.id, { label: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel>
+          <p style={{ color: S.accent, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 16px" }}>
+            AI / voice & disclaimer
+          </p>
+          <div style={{ display: "grid", gap: "12px" }}>
+            <div>
+              <label style={fieldLabel}>AI / voice credit</label>
+              <textarea
+                style={ta}
+                value={credits.aiVoiceCredit}
+                onChange={e => updateField("aiVoiceCredit", e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={fieldLabel}>Disclaimer / prototype note</label>
+              <textarea
+                style={{ ...ta, height: "72px" }}
+                value={credits.disclaimer}
+                onChange={e => updateField("disclaimer", e.target.value)}
+              />
+            </div>
+          </div>
+        </Panel>
+
+        <Panel>
+          <p style={{ color: S.muted, fontSize: "0.78rem", fontWeight: 650, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 12px" }}>
+            Preview
+          </p>
+          <div style={{ display: "grid", gap: "10px", color: S.soft, fontSize: "0.88rem", lineHeight: 1.55 }}>
+            <p style={{ margin: 0, fontWeight: 650, color: S.text }}>{credits.productName}</p>
+            <p style={{ margin: 0 }}>{credits.productTagline}</p>
+            <p style={{ margin: 0 }}>{credits.productCredit}</p>
+            <p style={{ margin: 0 }}>Created by {credits.createdBy}</p>
+            <p style={{ margin: 0 }}>{credits.eventContext}</p>
+            <ul style={{ margin: 0, paddingLeft: "18px" }}>
+              {credits.technologyCredits.filter(t => t.enabled).map(t => (
+                <li key={t.id}>{t.label}</li>
+              ))}
+            </ul>
+            <p style={{ margin: 0 }}>{credits.aiVoiceCredit}</p>
+            <p style={{ margin: 0, color: S.accent }}>{credits.copyrightNotice}</p>
+            <p style={{ margin: 0, whiteSpace: "pre-line" }}>{credits.confidentiality}</p>
+            <p style={{ margin: 0 }}>{credits.version} · {credits.contact}</p>
+            <p style={{ margin: 0, color: S.muted, fontSize: "0.82rem" }}>{credits.disclaimer}</p>
+          </div>
+        </Panel>
       </div>
     </div>
   );
@@ -3411,6 +4317,10 @@ export default function AdminPage() {
     quality:          <DataQualityView       data={data} />,
     activity:         <ActivityView />,
     content:          <ContentView />,
+    voice:            <VoiceAdminView />,
+    credits:          <CreditsView />,
+    access:           <AccessAdminView />,
+    signals:          <SignalsAdminView data={data} />,
     ingest:           <IngestView            data={data} />,
     exports:          <ExportsView />,
     audit:            <AuditView />,

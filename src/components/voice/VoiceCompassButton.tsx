@@ -39,6 +39,14 @@ import {
   type VoiceResponse,
 } from "@/services/voiceIntentClassifier";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
+import { compassLiveSignalText } from "@/lib/compassLiveSignal";
+import {
+  VOICE_TONE_OPTIONS,
+  VOICE_TONE_STORAGE_KEY,
+  getVoiceNameForTone,
+  resolveStoredTone,
+  type VoiceToneId,
+} from "@/lib/voiceTtsOptions";
 
 /** Tiny silent WAV — unlocks audio playback during the user gesture. */
 const SILENT_WAV =
@@ -280,6 +288,38 @@ function CompactCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Voice tone picker — Guide / Studio Google TTS A/B
+// ─────────────────────────────────────────────────────────────────────────────
+
+function VoiceTonePicker({
+  tone,
+  onChange,
+}: {
+  tone: VoiceToneId;
+  onChange: (tone: VoiceToneId) => void;
+}) {
+  return (
+    <div className="voice-tone-picker">
+      <span className="voice-tone-picker-label">Choose your Compass voice.</span>
+      <div className="voice-tone-picker-row" role="group" aria-label="Voice tone">
+        <span className="voice-tone-picker-kicker">Voice</span>
+        {VOICE_TONE_OPTIONS.map(option => (
+          <button
+            key={option.id}
+            type="button"
+            className={`voice-tone-chip${tone === option.id ? " is-active" : ""}`}
+            aria-pressed={tone === option.id}
+            onClick={() => onChange(option.id)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -307,6 +347,7 @@ export default function VoiceCompassButton({
   const [errorMsg,   setErrorMsg]   = useState("");
 
   const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
+  const [voiceTone, setVoiceTone] = useState<VoiceToneId>("guide");
   const [activeSession, setActiveSession] = useState<ScoredSession | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -317,6 +358,18 @@ export default function VoiceCompassButton({
   // Check support on mount
   useEffect(() => {
     if (!getSpeechRecognition()) setVoiceState("unsupported");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setVoiceTone(resolveStoredTone(localStorage.getItem(VOICE_TONE_STORAGE_KEY)));
+  }, []);
+
+  const handleVoiceToneChange = useCallback((tone: VoiceToneId) => {
+    setVoiceTone(tone);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(VOICE_TONE_STORAGE_KEY, tone);
+    }
   }, []);
 
   // Cancel speech on unmount
@@ -377,6 +430,7 @@ export default function VoiceCompassButton({
   const speakCloudVoice = useCallback(async (
     text: string,
     unlockedAudio?: HTMLAudioElement | null,
+    voiceName?: string,
   ): Promise<void> => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -389,7 +443,7 @@ export default function VoiceCompassButton({
       console.warn("[VoiceCompass] No unlocked audio element; playback may be blocked.");
     }
 
-    console.log("[VoiceCompass] Google TTS request started");
+    console.log("[VoiceCompass] Google TTS request started", { voiceName });
 
     let cloudAudioReady = false;
     let blobUrl: string | null = null;
@@ -398,7 +452,7 @@ export default function VoiceCompassButton({
       const res = await fetch("/api/voice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, voiceName }),
       });
 
       if (!res.ok) {
@@ -464,7 +518,7 @@ export default function VoiceCompassButton({
       console.error("[VoiceCompass] Cloud voice failed:", err);
       fallbackToSpeechSynthesis(text);
     }
-  }, [fallbackToSpeechSynthesis]);
+  }, [fallbackToSpeechSynthesis, voiceTone]);
 
   // ── Handle resolved transcript ──────────────────────────────────────────────
   const handleTranscript = useCallback(async (text: string) => {
@@ -502,7 +556,7 @@ export default function VoiceCompassButton({
     setResponse(voiceResp);
     setVoiceState("generating");
 
-    await speakCloudVoice(voiceResp.spoken, audioRef.current);
+    await speakCloudVoice(voiceResp.spoken, audioRef.current, getVoiceNameForTone(voiceTone));
 
     setVoiceState("result");
 
@@ -732,7 +786,13 @@ export default function VoiceCompassButton({
           <>
             <div className="voice-companion-head">
               <h2>Ask Compass</h2>
-              <p>Prioritize your next move — sessions, people, and moments across your week.</p>
+              <p>
+                Sessions. People. Certifications. Community.
+                What would you like help with?
+              </p>
+              <p className="compass-live-signal" aria-live="polite">
+                {compassLiveSignalText()}
+              </p>
             </div>
 
             <div className="voice-assistant-grid">
@@ -809,6 +869,10 @@ export default function VoiceCompassButton({
                 )}
               </div>
             </div>
+
+            {!unsupported && (
+              <VoiceTonePicker tone={voiceTone} onChange={handleVoiceToneChange} />
+            )}
 
             {unsupported && (
               <p style={{ color: "var(--muted)", fontSize: "0.84rem", margin: "12px 0 0", lineHeight: 1.5 }}>
@@ -934,6 +998,10 @@ export default function VoiceCompassButton({
             </button>
           )}
         </div>
+
+        {!unsupported && (
+          <VoiceTonePicker tone={voiceTone} onChange={handleVoiceToneChange} />
+        )}
 
         {/* ── Unsupported ───────────────────────────────────────────────────── */}
         {unsupported && (

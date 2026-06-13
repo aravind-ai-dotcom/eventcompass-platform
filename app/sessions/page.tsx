@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
 
 const BASE = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -460,6 +461,7 @@ function RecommendedCard({ session, sched }: { session: ScoredSession; sched?: S
   const track = primaryTrack(session);
   const meta = sessionMeta(session);
   const tags = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
+  const recommendation = sessionRecommendationLine(session);
 
   return (
     <article className="opportunity-card" style={{ display: "flex", flexDirection: "column" }}>
@@ -468,21 +470,14 @@ function RecommendedCard({ session, sched }: { session: ScoredSession; sched?: S
         <ScoreBadge score={session.compass_score} />
       </div>
       <h3>{session.title}</h3>
+      {recommendation && (
+        <p className="session-recommendation-line">{recommendation}</p>
+      )}
       {meta && <p>{meta}</p>}
       {tags.length > 0 && (
         <div className="chip-row" style={{ marginTop: 0, marginBottom: "12px" }}>
           {tags.map((tag) => <span key={tag} className="chip">{tag}</span>)}
         </div>
-      )}
-      {session.compass_reasons.length > 0 && (
-        <>
-          <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "12px 0 6px" }}>
-            Why Compass matched this
-          </p>
-          <ul className="reason-list">
-            {session.compass_reasons.slice(0, 3).map((r) => <li key={r}>{r}</li>)}
-          </ul>
-        </>
       )}
       {sched && (
         <div style={{ marginTop: "auto" }}>
