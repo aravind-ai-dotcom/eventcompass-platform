@@ -1,5 +1,7 @@
 interface SessionLike {
   compass_reasons?: string[];
+  session_type?: string;
+  activity_type?: string;
   tracks?: {
     primary_track?: string;
     topics?: string[];
@@ -12,9 +14,30 @@ interface SessionLike {
 }
 
 /** One-line “why should I care?” copy for session cards. */
-export function sessionRecommendationLine(session: SessionLike): string | null {
+export function sessionRecommendationLine(
+  session: SessionLike,
+  certLabel?: string | null,
+): string | null {
   const reasons = session.compass_reasons ?? [];
   const joined = reasons.join(" ").toLowerCase();
+  const type = String(session.session_type ?? session.activity_type ?? "").toLowerCase();
+
+  if (certLabel) {
+    if (reasons.some(r => /certification goal/i.test(r))) {
+      const short = certLabel.replace(/^IBM\s+/i, "");
+      return `Recommended for your ${short} certification goal.`;
+    }
+    if (/exam readiness/i.test(joined) || type.includes("lab")) {
+      return "Supports exam readiness.";
+    }
+    if (type.includes("certification")) {
+      const short = certLabel.replace(/^IBM\s+/i, "");
+      return `Recommended for your ${short} certification goal.`;
+    }
+    if (session.recommendation_rules?.everyone_encouraged && /certif/.test(joined)) {
+      return "Popular among certification candidates.";
+    }
+  }
 
   if (/certif|exam|credential/.test(joined)) {
     return "Supports your certification goal.";
@@ -23,7 +46,9 @@ export function sessionRecommendationLine(session: SessionLike): string | null {
     return "Matches your community interests.";
   }
   if (session.recommendation_rules?.everyone_encouraged) {
-    return "Popular among architects attending TechXchange.";
+    return certLabel
+      ? "Popular among certification candidates."
+      : "Popular among architects attending TechXchange.";
   }
 
   const track = session.tracks?.primary_track?.trim();

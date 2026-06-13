@@ -38,7 +38,12 @@ import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import { useAuth } from "@/context/AuthContext";
 import ConnectionSignals from "@/components/people/ConnectionSignals";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
-import CertificationGoals from "@/components/experience/CertificationGoals";
+import CertificationJourney from "@/components/experience/CertificationJourney";
+import {
+  applyCertificationSessionBoost,
+  getCertificationLabel,
+  hasCertificationIntent,
+} from "@/lib/certificationProfile";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
@@ -315,6 +320,11 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   if (sRules.everyone_encouraged) { score += W.broad;     reasons.push("Broad event relevance"); }
   if (sRules.hands_on)            { score += W.handsOn;   reasons.push("Hands-on learning"); }
 
+  const certLabel = getCertificationLabel(participant);
+  const boosted = applyCertificationSessionBoost(score, reasons, participant, raw, certLabel);
+  score = boosted.score;
+  const finalReasons = boosted.reasons;
+
   return {
     id:           String(raw.id ?? ""),
     title:        String(raw.title ?? "Untitled session"),
@@ -328,7 +338,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
     room:         raw.room          as string | undefined,
     tech_track:   raw.tech_track    as string | string[] | undefined,
     compass_score:   score,
-    compass_reasons: reasons,
+    compass_reasons: finalReasons,
   };
 }
 
@@ -360,6 +370,17 @@ function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
 
   const reasons: string[] = shared.map(kw => "Shared expertise: " + kw);
   if (attendance?.available_for_1x1 === true) reasons.push("Available for 1:1");
+
+  if (hasCertificationIntent(participant)) {
+    const domains = lower([
+      ...((profile.domains as string[]) ?? []),
+      ...((raw.domains as string[]) ?? []),
+    ]);
+    if (domains.some(d => /certif|qiskit|developer|training|sme|exam/i.test(d))) {
+      score += 15;
+      reasons.unshift("Recommended for your certification goal");
+    }
+  }
 
   return {
     id:           String(raw.id ?? ""),
@@ -447,12 +468,12 @@ function WeekInBalance({ learning, community, fun }: {
   );
 }
 
-function SessionCard({ session, sched }: { session: ScoredSession; sched?: ExpScheduleState }) {
+function SessionCard({ session, sched, certLabel }: { session: ScoredSession; sched?: ExpScheduleState; certLabel?: string | null }) {
   const type  = sessionTypeLabel(session);
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
   const tags  = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
-  const recommendation = sessionRecommendationLine(session);
+  const recommendation = sessionRecommendationLine(session, certLabel);
   return (
     <article className="opportunity-card">
       <div className="card-meta">
@@ -897,7 +918,7 @@ function HighlightActionCard({ h }: { h: typeof HIGHLIGHT_DATA[number] }) {
   );
 }
 
-function PillarSection({ pillar, sessions, limit = 3, sched }: { pillar: string; sessions: ScoredSession[]; limit?: number; sched?: ExpScheduleState }) {
+function PillarSection({ pillar, sessions, limit = 3, sched, certLabel }: { pillar: string; sessions: ScoredSession[]; limit?: number; sched?: ExpScheduleState; certLabel?: string | null }) {
   const PILLAR_META: Record<string, { kicker: string; heading: string; desc: string }> = {
     Learning:  { kicker: "Learning",  heading: "Sessions matched to your goals.",       desc: "Labs, breakouts, and workshops scored against your tracks and keywords." },
     Community: { kicker: "Community", heading: "People and moments worth your time.",   desc: "Expert sessions and community experiences for your profile." },
@@ -912,7 +933,7 @@ function PillarSection({ pillar, sessions, limit = 3, sched }: { pillar: string;
         <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.88rem" }}>{meta.desc}</p>
       </div>
       <div className="opportunity-grid three">
-        {sessions.slice(0, limit).map((s) => <SessionCard key={s.id} session={s} sched={sched} />)}
+        {sessions.slice(0, limit).map((s) => <SessionCard key={s.id} session={s} sched={sched} certLabel={certLabel} />)}
       </div>
       {sessions.length > limit && (
         <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginTop: "12px" }}>
@@ -1124,11 +1145,13 @@ function DayTabExperience({
   communityList,
   funList,
   sched,
+  certLabel,
 }: {
   learningList:  ScoredSession[];
   communityList: ScoredSession[];
   funList:       ScoredSession[];
   sched?: ExpScheduleState;
+  certLabel?: string | null;
 }) {
   const [activeDay, setActiveDay] = useState<EventDay>("Monday");
   const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
@@ -1191,13 +1214,13 @@ function DayTabExperience({
       ) : (
         <div style={{ display: "grid", gap: "36px" }}>
           {dayLearning.length > 0 && (
-            <PillarSection pillar="Learning" sessions={dayLearning} limit={3} sched={sched} />
+            <PillarSection pillar="Learning" sessions={dayLearning} limit={3} sched={sched} certLabel={certLabel} />
           )}
           {dayCommunity.length > 0 && (
-            <PillarSection pillar="Community" sessions={dayCommunity} limit={3} sched={sched} />
+            <PillarSection pillar="Community" sessions={dayCommunity} limit={3} sched={sched} certLabel={certLabel} />
           )}
           {dayFun.length > 0 && (
-            <PillarSection pillar="Fun" sessions={dayFun} limit={3} sched={sched} />
+            <PillarSection pillar="Fun" sessions={dayFun} limit={3} sched={sched} certLabel={certLabel} />
           )}
         </div>
       )}
@@ -1462,9 +1485,8 @@ export default function ExperiencePage() {
 
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
-  const hasCertificationGoal = [...pGoals, ...pTracks].some(v =>
-    /certif|exam|credential/i.test(v),
-  );
+  const showCertJourney = hasCertificationIntent(participant);
+  const certLabel = getCertificationLabel(participant);
   const trustSignals = buildCompassTrustSignals(participant, sig);
 
   // My Schedule — sessions the user has saved
@@ -1565,7 +1587,7 @@ export default function ExperiencePage() {
         />
       </section>
 
-      <CertificationGoals hasCertificationGoal={hasCertificationGoal} />
+      <CertificationJourney visible={showCertJourney} certificationLabel={certLabel} />
 
       {/* ── Next Best Move — primary intelligence surface ──────────────── */}
       {nextBestMove && (
@@ -1601,6 +1623,7 @@ export default function ExperiencePage() {
         communityList={communityList}
         funList={funList}
         sched={schedState}
+        certLabel={certLabel}
       />
 
       {/* ── People Compass Recommends ──────────────────────────────────── */}

@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import {
+  applyCertificationSessionBoost,
+  getCertificationLabel,
+} from "@/lib/certificationProfile";
 import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
 
 const BASE = "organizations/ibm/events/txc2026";
@@ -289,6 +294,9 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
   if (sRules.everyone_encouraged) { score += W.broad; reasons.push("Broad event relevance"); }
   if (sRules.hands_on) { score += W.handsOn; reasons.push("Hands-on learning"); }
 
+  const certLabel = getCertificationLabel(participant);
+  const boosted = applyCertificationSessionBoost(score, reasons, participant, raw, certLabel);
+
   return {
     id: String(raw.id ?? ""),
     title: String(raw.title ?? "Untitled session"),
@@ -302,8 +310,8 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
     start_time: raw.start_time as string | undefined,
     room: raw.room as string | undefined,
     tech_track: raw.tech_track as string | string[] | undefined,
-    compass_score: score,
-    compass_reasons: reasons,
+    compass_score: boosted.score,
+    compass_reasons: boosted.reasons,
   };
 }
 
@@ -456,12 +464,12 @@ function ScoreBadge({ score }: { score: number }) {
 // RecommendedCard — grid card with action bar
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RecommendedCard({ session, sched }: { session: ScoredSession; sched?: ScheduleState }) {
+function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession; sched?: ScheduleState; certLabel?: string | null }) {
   const type = sessionType(session);
   const track = primaryTrack(session);
   const meta = sessionMeta(session);
   const tags = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
-  const recommendation = sessionRecommendationLine(session);
+  const recommendation = sessionRecommendationLine(session, certLabel);
 
   return (
     <article className="opportunity-card" style={{ display: "flex", flexDirection: "column" }}>
@@ -531,12 +539,13 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
 // IntelligenceBand — presentation slice of scored sessions (no scoring change)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function IntelligenceBand({ kicker, title, desc, sessions, sched }: {
+function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel }: {
   kicker: string;
   title: string;
   desc: string;
   sessions: ScoredSession[];
   sched: ScheduleState;
+  certLabel?: string | null;
 }) {
   if (sessions.length === 0) return null;
   return (
@@ -549,7 +558,7 @@ function IntelligenceBand({ kicker, title, desc, sessions, sched }: {
         <p>{desc}</p>
       </div>
       <div className="intelligence-row">
-        {sessions.map(s => <RecommendedCard key={s.id} session={s} sched={sched} />)}
+        {sessions.map(s => <RecommendedCard key={s.id} session={s} sched={sched} certLabel={certLabel} />)}
       </div>
     </section>
   );
@@ -584,11 +593,30 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SessionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="section no-top-border">
+          <div className="section-kicker">Loading&#8230;</div>
+          <h1 style={{ fontSize: "clamp(2rem,4vw,3.5rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "12px 0 16px", color: "var(--text)" }}>
+            Loading sessions&#8230;
+          </h1>
+        </section>
+      }
+    >
+      <SessionsPageContent />
+    </Suspense>
+  );
+}
+
+function SessionsPageContent() {
   const { user, enrolled, loading: authLoading } = useAuth();
+  const searchParams = useSearchParams();
   const isLoggedIn = !!user;
   const participantId = user?.uid ?? "";
 
   const [allScored,     setAllScored]     = useState<ScoredSession[]>([]);
+  const [participantData, setParticipantData] = useState<RawDoc>({});
   const [status,        setStatus]        = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,      setErrorMsg]      = useState("");
   const [totalCount,    setTotalCount]    = useState(0);
@@ -605,6 +633,12 @@ export default function SessionsPage() {
   const [trackFilter, setTrackFilter] = useState("All");
   const [typeFilter,  setTypeFilter]  = useState("All");
   const [dayFilter,   setDayFilter]   = useState("All");
+  const [typeFromUrlApplied, setTypeFromUrlApplied] = useState(false);
+
+  const certLabel = useMemo(
+    () => getCertificationLabel(participantData),
+    [participantData],
+  );
 
   useEffect(() => {
     if (authLoading) return;
@@ -619,6 +653,7 @@ export default function SessionsPage() {
         ]);
 
         const pData = pSnap?.exists() ? (pSnap.data() as RawDoc) : {};
+        setParticipantData(pData);
 
         if (isLoggedIn) {
           setSavedSchedule((pData.saved_schedule as string[]) ?? []);
@@ -644,6 +679,17 @@ export default function SessionsPage() {
 
     load();
   }, [authLoading, participantId, isLoggedIn]);
+
+  useEffect(() => {
+    if (status !== "ready" || typeFromUrlApplied) return;
+    const typeParam = searchParams.get("type");
+    if (typeParam?.toLowerCase() === "certification") {
+      const typeSet = new Set(allScored.map(s => sessionType(s)));
+      const match = [...typeSet].find(t => t.toLowerCase().includes("certification"));
+      if (match) setTypeFilter(match);
+    }
+    setTypeFromUrlApplied(true);
+  }, [status, searchParams, allScored, typeFromUrlApplied]);
 
   // Persist schedule arrays to Firestore
   const persist = useCallback(async (updates: {
@@ -870,6 +916,7 @@ export default function SessionsPage() {
             desc="Highest-scored sessions against your goals, tracks, role, and needs."
             sessions={recommended}
             sched={schedState}
+            certLabel={certLabel}
           />
           <IntelligenceBand
             kicker="Trending"
@@ -877,6 +924,7 @@ export default function SessionsPage() {
             desc="High-demand and broadly relevant sessions worth booking early."
             sessions={trending}
             sched={schedState}
+            certLabel={certLabel}
           />
         </>
       )}
@@ -888,6 +936,7 @@ export default function SessionsPage() {
           desc="Compass scores within your filtered results."
           sessions={recommended}
           sched={schedState}
+          certLabel={certLabel}
         />
       )}
 

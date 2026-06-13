@@ -7,6 +7,7 @@
 // Anonymous        → "Build My Compass" primary CTA → /enroll
 // Logged in        → "Build My Compass" → /enroll + Sign out
 // Logged in + enrolled → "My Compass" primary CTA (far right) + Sign out
+// Mobile           → compact hamburger drawer
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { usePathname } from "next/navigation";
@@ -42,15 +43,41 @@ function MoonIcon() {
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M4.5 4.5l9 9M13.5 4.5l-9 9" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function CompassHeader() {
   const pathname = usePathname();
   const { user, enrolled } = useAuth();
   const [theme, setTheme] = useState<Theme>("dark");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("compass_theme") as Theme | null;
     if (stored) applyTheme(stored);
   }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
   const applyTheme = useCallback((t: Theme) => {
     document.body.setAttribute("data-theme", t);
@@ -58,9 +85,18 @@ export default function CompassHeader() {
     setTheme(t);
   }, []);
 
+  function isActive(href: string) {
+    return pathname === href || pathname.startsWith(href + "/");
+  }
+
+  const drawerLinks = [
+    { href: "/", label: "Compass" },
+    ...NAV_ITEMS,
+    ...(user && enrolled ? [{ href: "/experience", label: "My Compass" }] : []),
+  ];
+
   return (
     <header className="site-header">
-      {/* Brand */}
       <Link href="/" className="brand" aria-label="Compass home">
         <Image
           src={theme === "dark" ? "/compass-mark-white.jpeg" : "/compass-mark-black.png"}
@@ -74,18 +110,23 @@ export default function CompassHeader() {
         <span className="brand-word">Compass</span>
       </Link>
 
-      {/* Nav — horizontal scroll on mobile */}
-      <div className="header-nav-scroll">
+      <button
+        type="button"
+        className="header-menu-toggle"
+        aria-label={menuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen(open => !open)}
+      >
+        {menuOpen ? <CloseIcon /> : <MenuIcon />}
+      </button>
+
+      <div className="header-nav-scroll header-nav-desktop">
         <nav className="main-nav" aria-label="Main navigation">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={
-                pathname === item.href || pathname.startsWith(item.href + "/")
-                  ? "active"
-                  : ""
-              }
+              className={isActive(item.href) ? "active" : ""}
             >
               {item.label}
             </Link>
@@ -93,7 +134,6 @@ export default function CompassHeader() {
         </nav>
       </div>
 
-      {/* Actions */}
       <div className="header-actions">
         <div className="theme-toggle" role="group" aria-label="Color mode">
           <button
@@ -119,28 +159,80 @@ export default function CompassHeader() {
         {user ? (
           <>
             {enrolled ? (
-              <Link href="/experience" className="btn-primary primary-link">
+              <Link href="/experience" className="btn-primary primary-link header-cta-desktop">
                 My Compass
               </Link>
             ) : (
-              <Link href="/enroll" className="btn-primary primary-link">
+              <Link href="/enroll" className="btn-primary primary-link header-cta-desktop">
                 Build My Compass
               </Link>
             )}
             <button
               type="button"
               onClick={async () => { try { await logOut(); } catch {} }}
-              className="header-sign-out"
+              className="header-sign-out header-cta-desktop"
             >
               Sign out
             </button>
           </>
         ) : (
-          <Link href="/enroll" className="btn-primary primary-link">
+          <Link href="/enroll" className="btn-primary primary-link header-cta-desktop">
             Build My Compass
           </Link>
         )}
       </div>
+
+      {menuOpen && (
+        <>
+          <button
+            type="button"
+            className="header-drawer-backdrop"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+          />
+          <nav className="header-drawer" aria-label="Mobile navigation">
+            {drawerLinks.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={isActive(item.href) ? "active" : ""}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <div className="header-drawer-actions">
+              {user ? (
+                enrolled ? (
+                  <Link href="/experience" className="btn-primary" onClick={() => setMenuOpen(false)}>
+                    My Compass
+                  </Link>
+                ) : (
+                  <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
+                    Build My Compass
+                  </Link>
+                )
+              ) : (
+                <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
+                  Build My Compass
+                </Link>
+              )}
+              {user && (
+                <button
+                  type="button"
+                  className="header-sign-out"
+                  onClick={async () => {
+                    setMenuOpen(false);
+                    try { await logOut(); } catch {}
+                  }}
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          </nav>
+        </>
+      )}
     </header>
   );
 }

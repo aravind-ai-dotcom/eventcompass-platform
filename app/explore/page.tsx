@@ -22,7 +22,7 @@ const JOURNEYS: Journey[] = [
     title: "Learning",
     goal: "Learn new technology",
     image: "/event/ibm_txc_banner_1.jpg",
-    flow: ["Arrive with a goal", "Follow sessions", "Try it in a lab", "Meet experts", "Build confidence"],
+    flow: ["Set a goal", "Learn", "Practice", "Connect", "Apply"],
     accent: "#0f62fe",
   },
   {
@@ -30,7 +30,7 @@ const JOURNEYS: Journey[] = [
     title: "Certification",
     goal: "Pass a certification",
     image: "/event/ibm_txc_banner_4.jpg",
-    flow: ["Choose a certification goal", "Compass builds your plan", "Attend curated sessions", "Gain readiness with SMEs and mentors", "Take the exam"],
+    flow: ["Choose", "Prepare", "Practice", "Mentor", "Certify"],
     accent: "#a56eff",
   },
   {
@@ -38,23 +38,23 @@ const JOURNEYS: Journey[] = [
     title: "Networking",
     goal: "Find your people",
     image: "/event/ibm_txc_banner_5.jpg",
-    flow: ["Share your interests", "Find experts and peers", "Make the connection", "Build meaningful relationships"],
+    flow: ["Discover", "Connect", "Meet", "Share", "Grow"],
     accent: "#005d5d",
   },
   {
     id: "community",
     title: "Community",
-    goal: "Find your community",
+    goal: "Build community",
     image: "/event/community-v2.jpg",
-    flow: ["Identify communities", "Find user groups", "Join meetups", "Build lifelong connections"],
+    flow: ["Explore", "Join", "Participate", "Contribute", "Belong"],
     accent: "#b45309",
   },
   {
     id: "problem-solving",
     title: "Problem solving",
-    goal: "Solve a business challenge",
+    goal: "Solve a challenge",
     image: "/event/expo.jpg",
-    flow: ["Arrive with a challenge", "Follow relevant content", "Meet experts and peers", "Learn from customers like you", "Develop a path forward"],
+    flow: ["Define", "Learn", "Discuss", "Refine", "Deliver"],
     accent: "#da1e28",
   },
 ];
@@ -123,7 +123,7 @@ export default function ExplorePage() {
           {user && enrolled ? (
             <>
               <h2>Your journey is underway.</h2>
-              <p>Open My Experience to see your personalized path taking shape.</p>
+              <p>Open My Compass to see your personalized path taking shape.</p>
             </>
           ) : (
             <>
