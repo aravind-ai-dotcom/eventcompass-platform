@@ -14,6 +14,9 @@ interface Journey {
   image: string;
   flow: string[];
   accent: string;
+  summary?: string;
+  href?: string;
+  accessLabel?: string;
 }
 
 const JOURNEYS: Journey[] = [
@@ -32,6 +35,18 @@ const JOURNEYS: Journey[] = [
     image: "/event/ibm_txc_banner_4.jpg",
     flow: ["Choose", "Learn", "Practice", "Connect", "Achieve"],
     accent: "#a56eff",
+  },
+  {
+    id: "champions",
+    title: "Champions",
+    goal: "Learn. Connect. Contribute. Inspire.",
+    image: "/event/ibm-champion-journey.png",
+    flow: ["Learn", "Connect", "Contribute", "Inspire"],
+    accent: "#0f62fe",
+    summary:
+      "IBM Champions are builders, mentors, and advocates who help others navigate change. Compass connects you with the people, communities, and conversations where you can contribute the greatest value — so every TechXchange moment leaves the community stronger than you found it.",
+    href: "/champions",
+    accessLabel: "Meet Champions",
   },
   {
     id: "networking",
@@ -68,7 +83,7 @@ export default function ExplorePage() {
         <div className="section-kicker">How Compass works</div>
         <h1>How Compass helps you succeed.</h1>
         <p>
-          Five paths through TechXchange — each mapped to sessions, people, and
+          Six paths through TechXchange — each mapped to sessions, people, and
           outcomes aligned to what you came to achieve.
         </p>
       </section>
@@ -96,6 +111,9 @@ export default function ExplorePage() {
               <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
                 {journey.goal}
               </h2>
+              {journey.summary && (
+                <p className="explore-journey-summary">{journey.summary}</p>
+              )}
               <ol className="explore-milestone-path" aria-label={`${journey.title} pathway`}>
                 {journey.flow.map((step, stepIndex) => (
                   <li key={step} className="explore-milestone-step">
@@ -113,6 +131,11 @@ export default function ExplorePage() {
                   </li>
                 ))}
               </ol>
+              {journey.href && journey.accessLabel && (
+                <Link href={journey.href} className="explore-journey-access">
+                  {journey.accessLabel} →
+                </Link>
+              )}
             </div>
           </section>
         ))}
