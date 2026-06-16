@@ -13,12 +13,19 @@ import {
   type EventKnowledgeKey,
   type PersonaKey,
 } from "@/data/eventKnowledge";
+import {
+  getKnowledgeResponse,
+  matchKnowledgeIntent,
+} from "@/services/knowledge/knowledgeResolver";
+import type { KnowledgeIntentId, VoiceLocale } from "@/services/knowledge/knowledgeTypes";
+import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Intent type
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type VoiceIntent =
+  | KnowledgeIntentId
   | "event_knowledge"
   | "compass_conversation"
   | "fun_discovery"
@@ -67,6 +74,8 @@ export interface VoiceResponseContext {
   rankedSessions?:     ScoredSession[];
   liveHuddles?:        LiveOpportunity[];
   isEnrolled?:         boolean;
+  experience?:         VoiceExperience;
+  locale?:             VoiceLocale;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +94,7 @@ const KEYWORD_BUCKETS: Record<
     | "compass_conversation"
     | "fun_discovery"
     | "persona_guidance"
+    | KnowledgeIntentId
   >,
   string[]
 > = {
@@ -193,7 +203,13 @@ const PUBLIC_INTENTS = new Set<VoiceIntent>([
   "event_knowledge",
   "compass_conversation",
   "fun_discovery",
+  "fun_recommendation",
   "persona_guidance",
+  "certification_prep",
+  "champion_match",
+  "champion_playful",
+  "champion_path",
+  "out_of_scope_location",
   "dismiss",
   "mark_attended",
 ]);
@@ -227,7 +243,10 @@ function matchPhraseList(norm: string, phrases: string[]): boolean {
   return phrases.some(phrase => norm.includes(phrase));
 }
 
-export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
+export function classifyVoiceIntent(
+  transcript: string,
+  experience: VoiceExperience = "techxchange",
+): ClassifiedIntent {
   const norm = normalise(transcript);
 
   for (const [intent, patterns] of ACTION_PATTERNS) {
@@ -240,6 +259,11 @@ export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
 
   if (CERT_CODE.test(transcript)) {
     return { intent: "certification_help", transcript, confidence: "high" };
+  }
+
+  const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
+  if (knowledgeIntent) {
+    return { intent: knowledgeIntent, transcript, confidence: "high" };
   }
 
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
@@ -392,11 +416,28 @@ function isEnrolled(ctx: VoiceResponseContext): boolean {
   );
 }
 
-function notEnrolledResponse(): VoiceResponse {
-  return {
-    spoken:  "Build your Compass first so I can personalize this.",
-    display: "Build My Compass first to unlock personalized voice answers.",
-  };
+function notEnrolledResponse(locale: VoiceLocale = "en-US"): VoiceResponse {
+  const spoken =
+    locale === "zh-CN"
+      ? "请先构建 My Compass，以便我为您提供个性化回答。"
+      : "Build your Compass first so I can personalize this.";
+  const display =
+    locale === "zh-CN"
+      ? "请先构建 My Compass 以解锁个性化语音回答。"
+      : "Build My Compass first to unlock personalized voice answers.";
+  return { spoken, display };
+}
+
+function knowledgeVoiceResponse(
+  intent: KnowledgeIntentId,
+  ctx: VoiceResponseContext,
+  action?: VoiceResponseAction,
+): VoiceResponse | null {
+  const experience = ctx.experience ?? "techxchange";
+  const locale = ctx.locale ?? "en-US";
+  const response = getKnowledgeResponse(intent, locale, experience);
+  if (!response) return null;
+  return { spoken: response.spoken, display: response.display, action };
 }
 
 function pickTemplate(templates: string[], seed: string): string {
@@ -420,12 +461,27 @@ export function buildVoiceResponse(
   const { intent, transcript } = classified;
   const norm = normalise(transcript);
   const seed = transcript + intent;
+  const locale = ctx.locale ?? "en-US";
+  const experience = ctx.experience ?? "techxchange";
 
   if (!isEnrolled(ctx) && !PUBLIC_INTENTS.has(intent)) {
-    return notEnrolledResponse();
+    return notEnrolledResponse(locale);
   }
 
   switch (intent) {
+
+    case "certification_prep":
+    case "champion_match":
+    case "fun_recommendation":
+    case "out_of_scope_location":
+    case "champion_playful":
+    case "champion_path": {
+      const action = intent === "champion_match" ? "show_champions" as const : undefined;
+      return knowledgeVoiceResponse(intent, ctx, action) ?? {
+        spoken:  "Let me help you with that on Compass.",
+        display: "Open Compass for more guidance.",
+      };
+    }
 
     case "event_knowledge": {
       const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;
@@ -448,6 +504,14 @@ export function buildVoiceResponse(
     }
 
     case "fun_discovery": {
+      const knowledge = knowledgeVoiceResponse("fun_recommendation", ctx);
+      if (knowledge) {
+        const huddle = huddleHint(ctx, norm);
+        return {
+          spoken: knowledge.spoken + (huddle ? huddle : ""),
+          display: knowledge.display,
+        };
+      }
       const huddle = huddleHint(ctx, norm);
       const spoken =
         "Yes. If you are looking for something social, start with Sandbox Block Party and the live conversations forming around your interests." +
@@ -697,6 +761,11 @@ export function buildVoiceResponse(
 
     case "fallback":
     default: {
+      const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
+      if (knowledgeIntent) {
+        const knowledge = knowledgeVoiceResponse(knowledgeIntent, ctx);
+        if (knowledge) return knowledge;
+      }
       const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
       if (eventTopic) {
         const answer = EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];

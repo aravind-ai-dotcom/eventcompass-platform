@@ -1,0 +1,15 @@
+{
+  "podcastSummary": "播客摘要",
+  "clipSummary": "视频片段摘要",
+  "listenInChinese": "中文收听",
+  "readInChinese": "中文阅读",
+  "generateChineseSummary": "生成中文摘要",
+  "skoCompass": "SKO Compass",
+  "salesKickoff": "销售启动大会",
+  "nextBestMove": "下一步推荐",
+  "recommendedForYou": "为您推荐",
+  "keyTakeaways": "关键要点",
+  "actionItems": "行动建议",
+  "segmentSummary": "分段摘要",
+  "buildCompassFirst": "请先构建 My Compass 以解锁个性化语音回答。"
+}

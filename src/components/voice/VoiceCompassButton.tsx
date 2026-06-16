@@ -38,6 +38,10 @@ import {
   pickSessionRecommendation,
   type VoiceResponse,
 } from "@/services/voiceIntentClassifier";
+import { normalizeVoiceInput } from "@/services/voice/sttNormalizer";
+import { applyTtsPronunciation } from "@/services/voice/voicePronunciation";
+import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
+import { localeFromSpeechLang, type UiLocale } from "@/services/i18n/voiceLocale";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
 import {
@@ -90,6 +94,8 @@ interface VoiceCompassButtonProps {
   participantGoals?:       string[];
   participantTracks?:      string[];
   isEnrolled?:             boolean;
+  voiceExperience?:        VoiceExperience;
+  voiceLocale?:            UiLocale;
   onDismiss?:              () => void;
   onMarkAttended?:         () => void;
   onNavigateExperience?:   () => void;
@@ -332,6 +338,8 @@ export default function VoiceCompassButton({
   participantGoals,
   participantTracks,
   isEnrolled,
+  voiceExperience = "techxchange",
+  voiceLocale,
   onDismiss,
   onMarkAttended,
   onNavigateExperience,
@@ -354,6 +362,7 @@ export default function VoiceCompassButton({
   const synthRef       = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef       = useRef<HTMLAudioElement | null>(null);
   const recentRecsRef  = useRef<string[]>([]);
+  const speechLangRef  = useRef("en-US");
 
   // Check support on mount
   useEffect(() => {
@@ -527,7 +536,9 @@ export default function VoiceCompassButton({
 
     await new Promise<void>(resolve => setTimeout(resolve, 300));
 
-    const classified = classifyVoiceIntent(text);
+    const locale = voiceLocale ?? localeFromSpeechLang(speechLangRef.current);
+    const normalized = normalizeVoiceInput(text, voiceExperience);
+    const classified = classifyVoiceIntent(normalized, voiceExperience);
     const pool = rankedSessions?.length
       ? rankedSessions
       : topSession ? [topSession] : [];
@@ -551,12 +562,15 @@ export default function VoiceCompassButton({
       participantTracks: participantTracks ?? [],
       liveHuddles:       rankedHuddles,
       isEnrolled:        isEnrolled ?? true,
+      experience:        voiceExperience,
+      locale,
     });
 
     setResponse(voiceResp);
     setVoiceState("generating");
 
-    await speakCloudVoice(voiceResp.spoken, audioRef.current, getVoiceNameForTone(voiceTone));
+    const ttsText = applyTtsPronunciation(voiceResp.spoken, voiceExperience);
+    await speakCloudVoice(ttsText, audioRef.current, getVoiceNameForTone(voiceTone));
 
     setVoiceState("result");
 
@@ -568,6 +582,7 @@ export default function VoiceCompassButton({
     nextBestMove, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
     speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience, isEnrolled,
+    voiceExperience, voiceLocale,
   ]);
 
   // ── Start listening ─────────────────────────────────────────────────────────
@@ -589,7 +604,8 @@ export default function VoiceCompassButton({
     setErrorMsg("");
 
     const recognition           = new SpeechRecognition();
-    recognition.lang            = "en-US";
+    recognition.lang            = voiceLocale === "zh-CN" ? "zh-CN" : "en-US";
+    speechLangRef.current       = recognition.lang;
     recognition.interimResults  = false;
     recognition.maxAlternatives = 1;
     recognition.continuous      = false;
@@ -623,7 +639,7 @@ export default function VoiceCompassButton({
     };
 
     recognition.start();
-  }, [handleTranscript]);
+  }, [handleTranscript, voiceLocale]);
 
   // ── Reset to idle ───────────────────────────────────────────────────────────
   
