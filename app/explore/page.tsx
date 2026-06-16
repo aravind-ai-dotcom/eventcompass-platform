@@ -14,7 +14,8 @@ interface Journey {
   image: string;
   flow: string[];
   accent: string;
-  summary?: string;
+  summary?: string | string[];
+  closing?: string;
   href?: string;
   accessLabel?: string;
 }
@@ -37,18 +38,6 @@ const JOURNEYS: Journey[] = [
     accent: "#a56eff",
   },
   {
-    id: "champions",
-    title: "Champions",
-    goal: "Learn. Connect. Contribute. Inspire.",
-    image: "/event/ibm-champion-journey.png",
-    flow: ["Learn", "Connect", "Contribute", "Inspire"],
-    accent: "#0f62fe",
-    summary:
-      "IBM Champions are builders, mentors, and advocates who help others navigate change. Compass connects you with the people, communities, and conversations where you can contribute the greatest value — so every TechXchange moment leaves the community stronger than you found it.",
-    href: "/champions",
-    accessLabel: "Meet Champions",
-  },
-  {
     id: "networking",
     title: "Networking",
     goal: "Find your people",
@@ -63,6 +52,18 @@ const JOURNEYS: Journey[] = [
     image: "/event/community-v2.jpg",
     flow: ["Explore", "Join", "Participate", "Contribute", "Belong"],
     accent: "#b45309",
+  },
+  {
+    id: "champions",
+    title: "Champions",
+    goal: "",
+    image: "/event/ibm-champion-journey.png",
+    flow: ["Learn", "Connect", "Contribute", "Inspire"],
+    accent: "#0f62fe",
+    closing:
+      "Your experience is more than a schedule. It is the opportunity to leave the community stronger than you found it.",
+    href: "/champions",
+    accessLabel: "Meet Champions",
   },
   {
     id: "problem-solving",
@@ -98,7 +99,7 @@ export default function ExplorePage() {
             <div className="explore-journey-image">
               <Image
                 src={journey.image}
-                alt=""
+                alt={journey.id === "champions" ? "IBM Champions connecting at TechXchange" : ""}
                 fill
                 sizes="(max-width: 768px) 100vw, 480px"
                 style={{ objectFit: "cover" }}
@@ -108,11 +109,19 @@ export default function ExplorePage() {
               <span className="narrative-kicker" style={{ color: journey.accent }}>
                 {journey.title}
               </span>
-              <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
-                {journey.goal}
-              </h2>
+              {journey.goal ? (
+                <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
+                  {journey.goal}
+                </h2>
+              ) : (
+                <h2 id={`journey-${journey.id}`} className="sr-only">{journey.title}</h2>
+              )}
               {journey.summary && (
-                <p className="explore-journey-summary">{journey.summary}</p>
+                <div className="explore-journey-narrative">
+                  {(Array.isArray(journey.summary) ? journey.summary : [journey.summary]).map((paragraph) => (
+                    <p key={paragraph} className="explore-journey-summary">{paragraph}</p>
+                  ))}
+                </div>
               )}
               <ol className="explore-milestone-path" aria-label={`${journey.title} pathway`}>
                 {journey.flow.map((step, stepIndex) => (
@@ -132,9 +141,14 @@ export default function ExplorePage() {
                 ))}
               </ol>
               {journey.href && journey.accessLabel && (
-                <Link href={journey.href} className="explore-journey-access">
-                  {journey.accessLabel} →
-                </Link>
+                <div className="explore-journey-foot">
+                  <Link href={journey.href} className="explore-journey-access">
+                    {journey.accessLabel} →
+                  </Link>
+                  {journey.closing && (
+                    <p className="explore-journey-footnote">{journey.closing}</p>
+                  )}
+                </div>
               )}
             </div>
           </section>

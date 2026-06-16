@@ -1136,20 +1136,45 @@ img { max-width: 100%; display: block; }
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--muted);
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   max-width: 520px;
+}
+.explore-journey-narrative .explore-journey-summary:last-of-type {
+  margin-bottom: 0;
+}
+.explore-journey-closing {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 16px 0 0;
+  max-width: 520px;
+  font-weight: 520;
 }
 .explore-journey-access {
   display: inline-block;
-  margin-top: 18px;
   font-size: 0.88rem;
   font-weight: 560;
   color: var(--accent);
   text-decoration: none;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
 }
 .explore-journey-access:hover {
   text-decoration: underline;
+}
+.explore-journey-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 20px;
+  margin-top: 18px;
+}
+.explore-journey-footnote {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 0;
+  max-width: 440px;
 }
 .explore-pathway {
   list-style: none;

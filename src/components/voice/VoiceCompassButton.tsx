@@ -1013,7 +1013,7 @@ export default function VoiceCompassButton({
         {/* ── Idle hint — minimal one-liner ─────────────────────────────────── */}
         {voiceState === "idle" && !unsupported && (
           <p style={{ color: "var(--muted)", fontSize: "0.73rem", margin: "7px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
-            Try: &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Who to meet?&rdquo; &middot; &ldquo;Find AI sessions&rdquo;
+            Try: &ldquo;What is TechXchange?&rdquo; &middot; &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Anything fun tonight?&rdquo;
           </p>
         )}
 

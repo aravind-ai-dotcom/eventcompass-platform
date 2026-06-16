@@ -7,12 +7,22 @@
 
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
+import {
+  EVENT_KNOWLEDGE,
+  PERSONA_GUIDANCE,
+  type EventKnowledgeKey,
+  type PersonaKey,
+} from "@/data/eventKnowledge";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Intent type
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type VoiceIntent =
+  | "event_knowledge"
+  | "compass_conversation"
+  | "fun_discovery"
+  | "persona_guidance"
   | "next_best_move"
   | "find_sessions"
   | "find_people"
@@ -30,6 +40,7 @@ export interface ClassifiedIntent {
   intent:     VoiceIntent;
   transcript: string;
   confidence: "high" | "low";
+  topic?:     string;
 }
 
 export type VoiceResponseAction =
@@ -63,7 +74,18 @@ export interface VoiceResponseContext {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const KEYWORD_BUCKETS: Record<
-  Exclude<VoiceIntent, "fallback" | "dismiss" | "mark_attended" | "why_recommended" | "add_to_agenda">,
+  Exclude<
+    VoiceIntent,
+    | "fallback"
+    | "dismiss"
+    | "mark_attended"
+    | "why_recommended"
+    | "add_to_agenda"
+    | "event_knowledge"
+    | "compass_conversation"
+    | "fun_discovery"
+    | "persona_guidance"
+  >,
   string[]
 > = {
   find_sessions: [
@@ -114,6 +136,68 @@ const ACTION_PATTERNS: Array<[VoiceIntent, string[]]> = [
 
 const CERT_CODE = /\bc\d{3,5}\b/i;
 
+const EVENT_KNOWLEDGE_PATTERNS: Array<[EventKnowledgeKey, string[]]> = [
+  ["event_dates", ["when is techxchange", "when is the event", "what dates is techxchange", "when does techxchange"]],
+  ["event_location", ["where is the event", "where is techxchange", "where is it located", "event location"]],
+  ["tracks", ["what tracks are there", "what tracks", "technical tracks", "event tracks"]],
+  ["community_day", ["what is community day"]],
+  ["partner_day", ["what is partner day"]],
+  ["sandbox_block_party", ["what is sandbox block party", "what is the sandbox block party"]],
+  ["certification_program", ["what certifications are available", "certifications available", "certification opportunities"]],
+  ["champions_program", ["what are ibm champions", "who are ibm champions", "what is the champions program", "ibm champions program"]],
+  ["event_purpose", ["what is the event about", "purpose of the event", "why techxchange"]],
+  ["event_overview", ["what is this event", "what is techxchange", "tell me about techxchange", "what is the event"]],
+];
+
+const COMPASS_CONVERSATION_PATTERNS = [
+  "what do you do",
+  "how can you help me",
+  "how can you help",
+  "what is compass",
+  "what is the biggest concern",
+  "biggest concern you have",
+  "what should i focus on",
+  "am i trying to do too much",
+  "trying to do too much",
+  "too much on my plate",
+];
+
+const PERSONA_PATTERNS: Array<[PersonaKey, string[]]> = [
+  ["partner", ["i am a partner", "i'm a partner", "im a partner"]],
+  ["champion", ["i am a champion", "i'm a champion", "im a champion", "i am an ibm champion", "i'm an ibm champion"]],
+  ["student", ["i am a student", "i'm a student", "im a student"]],
+  ["executive", ["i am an executive", "i'm an executive", "im an executive", "i am a executive", "i'm a executive"]],
+  ["finops", ["i'm in finops", "i am in finops", "im in finops", "financial operations", "in fin ops", "i'm in financial operations"]],
+  ["developer", ["i am a developer", "i'm a developer", "im a developer"]],
+  ["architect", ["i am an architect", "i'm an architect", "im an architect", "i am a architect", "i'm a architect"]],
+];
+
+const FUN_DISCOVERY_PATTERNS = [
+  "anything fun",
+  "something fun today",
+  "something fun",
+  "social fun",
+  "block party",
+  "sandbox party",
+  "celebration",
+  "after hours",
+  "where are people gathering",
+  "what is happening tonight",
+  "what's happening tonight",
+  "happening tonight",
+  "fun tonight",
+  "fun thing",
+];
+
+const PUBLIC_INTENTS = new Set<VoiceIntent>([
+  "event_knowledge",
+  "compass_conversation",
+  "fun_discovery",
+  "persona_guidance",
+  "dismiss",
+  "mark_attended",
+]);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // classifyVoiceIntent
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,6 +214,19 @@ function scoreKeywords(norm: string, keywords: string[]): number {
   return score;
 }
 
+function matchTopic(norm: string, patterns: Array<[string, string[]]>): string | null {
+  for (const [topic, phrases] of patterns) {
+    for (const phrase of phrases) {
+      if (norm.includes(phrase)) return topic;
+    }
+  }
+  return null;
+}
+
+function matchPhraseList(norm: string, phrases: string[]): boolean {
+  return phrases.some(phrase => norm.includes(phrase));
+}
+
 export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
   const norm = normalise(transcript);
 
@@ -143,6 +240,24 @@ export function classifyVoiceIntent(transcript: string): ClassifiedIntent {
 
   if (CERT_CODE.test(transcript)) {
     return { intent: "certification_help", transcript, confidence: "high" };
+  }
+
+  const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
+  if (eventTopic) {
+    return { intent: "event_knowledge", transcript, confidence: "high", topic: eventTopic };
+  }
+
+  if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
+    return { intent: "compass_conversation", transcript, confidence: "high" };
+  }
+
+  const personaTopic = matchTopic(norm, PERSONA_PATTERNS);
+  if (personaTopic) {
+    return { intent: "persona_guidance", transcript, confidence: "high", topic: personaTopic };
+  }
+
+  if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
+    return { intent: "fun_discovery", transcript, confidence: "high" };
   }
 
   let best: VoiceIntent = "fallback";
@@ -306,11 +421,48 @@ export function buildVoiceResponse(
   const norm = normalise(transcript);
   const seed = transcript + intent;
 
-  if (!isEnrolled(ctx) && intent !== "dismiss" && intent !== "mark_attended") {
+  if (!isEnrolled(ctx) && !PUBLIC_INTENTS.has(intent)) {
     return notEnrolledResponse();
   }
 
   switch (intent) {
+
+    case "event_knowledge": {
+      const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;
+      const answer = EVENT_KNOWLEDGE[key] ?? EVENT_KNOWLEDGE.event_overview;
+      return { spoken: answer, display: answer };
+    }
+
+    case "compass_conversation": {
+      if (
+        norm.includes("biggest concern") ||
+        norm.includes("focus on") ||
+        norm.includes("too much")
+      ) {
+        const spoken =
+          "The biggest challenge is focus. TechXchange has many sessions, people, certifications, and conversations. My job is to help you decide what matters most for your goals.";
+        return { spoken, display: EVENT_KNOWLEDGE.compass_biggest_concern };
+      }
+      const spoken = EVENT_KNOWLEDGE.compass_about;
+      return { spoken, display: spoken };
+    }
+
+    case "fun_discovery": {
+      const huddle = huddleHint(ctx, norm);
+      const spoken =
+        "Yes. If you are looking for something social, start with Sandbox Block Party and the live conversations forming around your interests." +
+        (huddle ? huddle : " Networking and Entertainment in the evening is another good place to gather.");
+      return {
+        spoken,
+        display: "Sandbox Block Party · live conversations · evening networking",
+      };
+    }
+
+    case "persona_guidance": {
+      const persona = (classified.topic ?? "developer") as PersonaKey;
+      const spoken = PERSONA_GUIDANCE[persona] ?? PERSONA_GUIDANCE.developer;
+      return { spoken, display: spoken };
+    }
 
     case "next_best_move": {
       const session = sessionForContext(ctx);
@@ -545,6 +697,25 @@ export function buildVoiceResponse(
 
     case "fallback":
     default: {
+      const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
+      if (eventTopic) {
+        const answer = EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];
+        return { spoken: answer, display: answer };
+      }
+      if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
+        const spoken = EVENT_KNOWLEDGE.compass_about;
+        return { spoken, display: spoken };
+      }
+      const personaTopic = matchTopic(norm, PERSONA_PATTERNS);
+      if (personaTopic) {
+        const spoken = PERSONA_GUIDANCE[personaTopic as PersonaKey];
+        return { spoken, display: spoken };
+      }
+      if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
+        const spoken =
+          "Yes. If you are looking for something social, start with Sandbox Block Party and the live conversations forming around your interests.";
+        return { spoken, display: "Sandbox Block Party · live conversations" };
+      }
       const session = sessionForContext(ctx);
       if (session) {
         return {
@@ -553,8 +724,8 @@ export function buildVoiceResponse(
         };
       }
       return {
-        spoken:  "Ask about your next move, sessions, people to meet, live huddles, certification, or your day plan.",
-        display: "Try: What should I do now? · Who should I meet? · Any alumni here? · Certification help",
+        spoken:  "Ask about TechXchange, what Compass does, sessions, people to meet, live huddles, certification, or something fun tonight.",
+        display: "Try: What is TechXchange? · What is Compass? · Who should I meet? · Anything fun tonight?",
       };
     }
   }
