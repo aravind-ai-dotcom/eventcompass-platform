@@ -4,6 +4,9 @@
 
 import { experienceToEventId } from "@/lib/compassEventPaths";
 import { loadKnowledgeRecords } from "@/services/knowledge/knowledgeService";
+import { loadSkoKnowledgeRecords } from "@/services/knowledge/skoKnowledgeService";
+import { loadGovernanceSummaries } from "@/services/summaries/summaryService";
+import { loadTranslationMemoryRecords } from "@/services/translations/translationMemoryService";
 import { loadVoiceDictionaryRecords } from "@/services/voice/voiceDictionaryService";
 import { loadSttNormalizationRecords } from "@/services/voice/sttNormalizationService";
 
@@ -15,11 +18,21 @@ export async function ensureGovernanceLoaded(
   const eventId = experienceToEventId(experience);
   if (loaded.has(eventId)) return;
 
-  await Promise.all([
-    loadKnowledgeRecords(eventId),
-    loadVoiceDictionaryRecords(eventId),
-    loadSttNormalizationRecords(eventId),
-  ]);
+  if (experience === "sko") {
+    await Promise.all([
+      loadSkoKnowledgeRecords(eventId),
+      loadTranslationMemoryRecords(eventId),
+      loadGovernanceSummaries(eventId),
+      loadVoiceDictionaryRecords(eventId),
+      loadSttNormalizationRecords(eventId),
+    ]);
+  } else {
+    await Promise.all([
+      loadKnowledgeRecords(eventId),
+      loadVoiceDictionaryRecords(eventId),
+      loadSttNormalizationRecords(eventId),
+    ]);
+  }
 
   loaded.add(eventId);
 }

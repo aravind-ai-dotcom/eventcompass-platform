@@ -9,7 +9,11 @@ const SKO_ADMIN_LINKS = [
   { href: "/setup/sko/agenda", label: "Agenda" },
   { href: "/setup/sko/speakers", label: "Speakers" },
   { href: "/setup/sko/ingest", label: "Ingest" },
+  { href: "/setup/sko/knowledge", label: "Knowledge" },
+  { href: "/setup/sko/summaries", label: "Summaries" },
+  { href: "/setup/sko/translations", label: "Translations" },
   { href: "/setup/sko/pulse", label: "Pulse Metrics" },
+  { href: "/setup/sko/export", label: "Export" },
   { href: "/setup/sko/publish", label: "Publish" },
 ];
 

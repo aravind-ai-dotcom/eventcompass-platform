@@ -7,10 +7,15 @@ import { db } from "@/lib/firebase";
 import {
   experienceToEventId,
   knowledgeAnalyticsCollection,
+  SKO_EVENT_ID,
   TXC_EVENT_ID,
   type CompassEventId,
 } from "@/lib/compassEventPaths";
 import { getActiveKnowledgeRecords, loadKnowledgeRecords } from "./knowledgeService";
+import {
+  loadSkoKnowledgeRecords,
+  matchSkoKnowledgeQuestion,
+} from "./skoKnowledgeService";
 import type {
   KnowledgeAnalyticsRecord,
   KnowledgeMatchResult,
@@ -26,13 +31,27 @@ interface ScoredMatch extends KnowledgeMatchResult {
 }
 
 export async function ensureKnowledgeLoaded(eventId: CompassEventId | string = TXC_EVENT_ID): Promise<void> {
+  if (eventId === SKO_EVENT_ID || eventId === "sko2026") {
+    await loadSkoKnowledgeRecords(eventId);
+    return;
+  }
   await loadKnowledgeRecords(eventId);
 }
 
 export function matchKnowledgeQuestion(
   question: string,
   eventId: CompassEventId | string = TXC_EVENT_ID,
+  options?: { language?: GovernanceLanguage; geoId?: string },
 ): KnowledgeMatchResult | null {
+  if (eventId === SKO_EVENT_ID || eventId === "sko2026") {
+    return matchSkoKnowledgeQuestion(
+      question,
+      options?.language ?? "en-US",
+      eventId,
+      options?.geoId,
+    );
+  }
+
   const norm = normalise(question);
   if (!norm) return null;
 
@@ -131,7 +150,9 @@ export function matchKnowledgeForExperience(
 ): KnowledgeMatchResult | null {
   const eventId = experienceToEventId(experience);
   const raw = options?.normalizedQuestion ?? question;
-  return matchKnowledgeQuestion(raw, eventId);
+  return matchKnowledgeQuestion(raw, eventId, {
+    language: options?.language,
+  });
 }
 
 export async function matchAndLogKnowledge(
@@ -149,6 +170,7 @@ export async function matchAndLogKnowledge(
   const match = matchKnowledgeQuestion(
     options.normalizedQuestion ?? question,
     eventId,
+    { language: options.language },
   );
 
   void logKnowledgeAnalytics(eventId, {
