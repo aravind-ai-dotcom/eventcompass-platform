@@ -4407,3 +4407,191 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
   .setup-split { grid-template-columns: 1fr; }
 }
 
+/* Compass SKO product */
+.sko-app { min-height: 100vh; }
+.sko-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.sko-header-inner {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  flex-wrap: wrap;
+}
+.sko-brand { text-decoration: none; color: var(--text); display: grid; gap: 2px; }
+.sko-brand-kicker { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.sko-brand-title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; }
+.sko-nav { display: flex; gap: 6px; flex: 1; }
+.sko-nav-link {
+  padding: 6px 10px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.sko-nav-link.is-active { color: var(--text); border-bottom-color: var(--accent); }
+.sko-header-actions { display: flex; gap: 8px; align-items: center; }
+.sko-section { padding: 28px 0 56px; display: grid; gap: 24px; }
+.sko-kicker { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; }
+.sko-lead { color: var(--muted); font-size: 1rem; line-height: 1.55; max-width: 62ch; margin: 0; }
+.sko-muted { color: var(--muted); font-size: 0.9rem; }
+.sko-error { color: #da1e28; font-size: 0.88rem; margin: 0; }
+.sko-message { color: var(--accent); font-size: 0.88rem; }
+.sko-btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sko-btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sko-btn--ghost { background: transparent; }
+.sko-btn--block { width: 100%; }
+.sko-link-btn { background: none; border: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; }
+.sko-link-back { color: var(--muted); font-size: 0.88rem; text-decoration: none; }
+.sko-login-page { min-height: 70vh; display: flex; align-items: center; justify-content: center; }
+.sko-login-card {
+  width: min(440px, 100%);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+.sko-login-card h1 { margin: 0; font-size: 1.5rem; }
+.sko-auth-panel { display: grid; gap: 12px; }
+.sko-auth-panel h2 { margin: 0; font-size: 1.1rem; }
+.sko-field { display: grid; gap: 6px; font-size: 0.84rem; color: var(--muted); }
+.sko-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sko-select {
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  padding: 8px 10px;
+  width: 100%;
+}
+.sko-auth-links { display: flex; justify-content: space-between; gap: 12px; }
+.sko-auth-switch { font-size: 0.88rem; color: var(--muted); margin: 0; }
+.sko-hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 0 0 12px; letter-spacing: -0.03em; }
+.sko-home-grid, .sko-compass-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.sko-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px 20px;
+  display: grid;
+  gap: 12px;
+}
+.sko-panel h2 { margin: 0; font-size: 1.05rem; }
+.sko-geo-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.sko-geo-card {
+  border: 1px solid var(--line);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+.sko-geo-name { font-weight: 600; }
+.sko-geo-meta, .sko-geo-city { font-size: 0.84rem; color: var(--muted); }
+.sko-status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.sko-status--completed { color: #24a148; }
+.sko-status--upcoming { color: var(--muted); }
+.sko-agenda-preview { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.sko-agenda-preview li { display: flex; gap: 10px; align-items: baseline; font-size: 0.9rem; }
+.sko-agenda-order {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--muted);
+  min-width: 1.5rem;
+}
+.sko-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.sko-chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.sko-chip.is-selected { border-color: var(--accent); background: rgba(15, 98, 254, 0.08); }
+.sko-chip--static { cursor: default; }
+.sko-hint { font-size: 0.82rem; font-weight: normal; color: var(--muted); }
+.sko-enroll-header h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0 0 10px; }
+.sko-enroll-section { display: grid; gap: 12px; }
+.sko-enroll-section h2 { margin: 0; font-size: 1.1rem; }
+.sko-persona-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.sko-persona-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  font: inherit;
+  color: inherit;
+}
+.sko-persona-card.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.sko-persona-card h3 { margin: 0; font-size: 1rem; }
+.sko-persona-card p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+.sko-persona-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.sko-persona-card li { font-size: 0.8rem; color: var(--soft); padding-left: 14px; position: relative; }
+.sko-persona-card li::before { content: "·"; position: absolute; left: 0; }
+.sko-enroll-save { justify-self: start; margin-top: 8px; }
+.sko-compass-header h1 { margin: 0 0 8px; font-size: 1.8rem; }
+.sko-moments-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.sko-moments-list li { display: grid; gap: 4px; }
+.sko-pulse-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sko-metric-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+.sko-metric-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.sko-metric-value { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+.sko-source-cite { font-size: 0.82rem; color: var(--muted); font-style: italic; }
+.sko-quotes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.sko-quote-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 16px;
+  margin: 0;
+}
+.sko-quote-card footer { margin-top: 10px; font-size: 0.82rem; color: var(--muted); }
+.sko-podcast-formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.sko-format-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.sko-format-card.is-selected { border-color: var(--accent); }
+.sko-format-card span { font-size: 0.82rem; color: var(--muted); }
+.sko-audio-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.sko-pre { white-space: pre-wrap; font-size: 0.82rem; background: var(--surface); padding: 10px; border: 1px solid var(--line); }
+.sko-script-details summary { cursor: pointer; color: var(--accent); }
+.sko-checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.sko-checklist li.is-done { color: #24a148; }
+@media (max-width: 960px) {
+  .sko-home-grid, .sko-compass-grid, .sko-persona-grid, .sko-quotes-grid, .sko-podcast-formats, .sko-pulse-metrics, .sko-geo-cards { grid-template-columns: 1fr; }
+  .sko-field-row { grid-template-columns: 1fr; }
+}
+

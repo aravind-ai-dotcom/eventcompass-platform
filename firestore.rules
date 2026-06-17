@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isSeTeam() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accessType == 'se_team';
+    }
+
+    // Public SKO catalog (read-only for authenticated users)
+    match /editions/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /geos/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /markets/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /sellerPersonas/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /speakers/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /contentItems/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /contentAssets/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /contentClips/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /pulseMetrics/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /pulseQuotes/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isSeTeam();
+    }
+    match /ingestJobs/{doc} {
+      allow read, write: if isSeTeam();
+    }
+
+    // User profiles
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isSeTeam();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isSeTeam();
+    }
+
+    // User-owned briefs and podcasts
+    match /briefs/{doc} {
+      allow read, write: if isSignedIn()
+        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
+    }
+    match /briefItems/{doc} {
+      allow read, write: if isSignedIn();
+    }
+    match /podcasts/{doc} {
+      allow read: if isSignedIn()
+        && (resource.data.userId == request.auth.uid || isSeTeam());
+      allow write: if isSignedIn()
+        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
+    }
+    match /seatReservations/{doc} {
+      allow read, write: if isSignedIn()
+        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
+    }
+
+    // Legacy TXC paths — keep permissive for prototype
+    match /organizations/{org}/events/{event}/{collection}/{doc} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

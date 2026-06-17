@@ -1,4 +1,12 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 export default function CompassFooter() {
+  const pathname = usePathname();
+  if (pathname.startsWith("/sko") || pathname.startsWith("/setup/sko")) {
+    return null;
+  }
   return (
     <footer className="site-footer">
       <span>EventCompass · IBM TechXchange 2026</span>

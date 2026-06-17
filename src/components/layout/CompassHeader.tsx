@@ -61,6 +61,9 @@ function CloseIcon() {
 
 export default function CompassHeader() {
   const pathname = usePathname();
+  if (pathname.startsWith("/sko") || pathname.startsWith("/setup/sko")) {
+    return null;
+  }
   const { user, enrolled } = useAuth();
   const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
