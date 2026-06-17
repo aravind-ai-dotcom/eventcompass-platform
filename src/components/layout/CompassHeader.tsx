@@ -16,6 +16,7 @@ import Image           from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth }  from "@/context/AuthContext";
 import { logOut }   from "@/lib/auth";
+import { getSkoUserProfile } from "@/lib/skoAuth";
 
 type Theme = "dark" | "light";
 
@@ -67,6 +68,21 @@ export default function CompassHeader() {
   const { user, enrolled } = useAuth();
   const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [skoCompassHref, setSkoCompassHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setSkoCompassHref(null);
+      return;
+    }
+    void getSkoUserProfile(user.uid).then(p => {
+      if (!p) {
+        setSkoCompassHref(null);
+        return;
+      }
+      setSkoCompassHref(p.profileComplete ? "/sko/compass" : "/sko/enroll");
+    });
+  }, [user]);
 
   useEffect(() => {
     const stored = localStorage.getItem("compass_theme") as Theme | null;
@@ -95,6 +111,7 @@ export default function CompassHeader() {
   const drawerLinks = [
     { href: "/", label: "Compass" },
     ...NAV_ITEMS,
+    ...(skoCompassHref ? [{ href: skoCompassHref, label: "SKO Compass" }] : []),
     ...(user && enrolled ? [{ href: "/experience", label: "My Compass" }] : []),
   ];
 
@@ -161,15 +178,20 @@ export default function CompassHeader() {
 
         {user ? (
           <>
-            {enrolled ? (
-              <Link href="/experience" className="btn-primary primary-link header-cta-desktop">
-                My Compass
+            {skoCompassHref && (
+              <Link href={skoCompassHref} className="btn-primary primary-link header-cta-desktop">
+                SKO Compass
               </Link>
-            ) : (
+            )}
+            {enrolled ? (
+              <Link href="/experience" className={`${skoCompassHref ? "header-sign-out" : "btn-primary primary-link"} header-cta-desktop`}>
+                {skoCompassHref ? "TechXchange" : "My Compass"}
+              </Link>
+            ) : !skoCompassHref ? (
               <Link href="/enroll" className="btn-primary primary-link header-cta-desktop">
                 Build My Compass
               </Link>
-            )}
+            ) : null}
             <button
               type="button"
               onClick={async () => { try { await logOut(); } catch {} }}
@@ -206,15 +228,22 @@ export default function CompassHeader() {
             ))}
             <div className="header-drawer-actions">
               {user ? (
-                enrolled ? (
-                  <Link href="/experience" className="btn-primary" onClick={() => setMenuOpen(false)}>
-                    My Compass
-                  </Link>
-                ) : (
-                  <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
-                    Build My Compass
-                  </Link>
-                )
+                <>
+                  {skoCompassHref && (
+                    <Link href={skoCompassHref} className="btn-primary" onClick={() => setMenuOpen(false)}>
+                      SKO Compass
+                    </Link>
+                  )}
+                  {enrolled ? (
+                    <Link href="/experience" className={skoCompassHref ? "header-drawer-link" : "btn-primary"} onClick={() => setMenuOpen(false)}>
+                      {skoCompassHref ? "TechXchange Compass" : "My Compass"}
+                    </Link>
+                  ) : !skoCompassHref ? (
+                    <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
+                      Build My Compass
+                    </Link>
+                  ) : null}
+                </>
               ) : (
                 <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
                   Build My Compass

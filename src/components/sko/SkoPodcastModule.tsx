@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { useSkoAudioPlayer, useStopAudioOnRouteChange } from "@/hooks/useSkoAudioPlayer";
+import { isChineseBriefingEnabled, labelForKey } from "@/lib/skoLocale";
 import type { SkoPodcast, SkoPodcastFormat, SkoPodcastLanguage } from "@/types/sko";
 import { SKO_PODCAST_FORMATS } from "@/types/sko";
 
 interface Props {
   userId: string;
   geoId: string;
+  marketId?: string;
   podcasts: SkoPodcast[];
 }
-
-const APAC_GEOS = new Set(["APAC", "GCG", "HK"]);
 
 const LANGUAGE_OPTIONS: { id: SkoPodcastLanguage; label: string }[] = [
   { id: "en-US", label: "English" },
@@ -19,8 +19,8 @@ const LANGUAGE_OPTIONS: { id: SkoPodcastLanguage; label: string }[] = [
   { id: "zh-TW", label: "繁體中文" },
 ];
 
-export default function SkoPodcastModule({ userId, geoId, podcasts }: Props) {
-  const isApac = APAC_GEOS.has(geoId);
+export default function SkoPodcastModule({ userId, geoId, marketId, podcasts }: Props) {
+  const isApac = isChineseBriefingEnabled(geoId, marketId);
   const [format, setFormat] = useState<SkoPodcastFormat>("seller_podcast_15min");
   const [language, setLanguage] = useState<SkoPodcastLanguage>("en-US");
   const [voice, setVoice] = useState("Warm narrator");
@@ -38,9 +38,9 @@ export default function SkoPodcastModule({ userId, geoId, podcasts }: Props) {
   useStopAudioOnRouteChange(stop);
 
   return (
-    <article className="sko-panel sko-podcast-module">
+    <article id="podcast" className="sko-panel sko-podcast-module">
       <header>
-        <p className="sko-kicker">Podcast</p>
+        <p className="sko-kicker">Podcast · {isApac ? labelForKey("Podcast Summary", "zh-CN") : "Podcast"}</p>
         <h2>Your SKO Briefing Podcast</h2>
       </header>
 
@@ -60,7 +60,7 @@ export default function SkoPodcastModule({ userId, geoId, podcasts }: Props) {
 
       {isApac && (
         <div className="sko-enroll-section">
-          <h3>Language</h3>
+          <h3>{labelForKey("Listen in Chinese", "zh-CN")} / Language</h3>
           <div className="sko-chip-row">
             {LANGUAGE_OPTIONS.map(opt => (
               <button

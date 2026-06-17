@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSkoAuth } from "@/context/SkoAuthContext";
+import SkoChineseBriefingBar from "@/components/sko/SkoChineseBriefingBar";
+import SkoPodcastModule from "@/components/sko/SkoPodcastModule";
+import { isChineseBriefingEnabled, labelForKey } from "@/lib/skoLocale";
 import {
   listContentClips,
   listContentItems,
@@ -11,7 +14,6 @@ import {
   listUserPodcasts,
 } from "@/services/sko/skoFirestoreService";
 import type { SkoBrief, SkoContentClip, SkoContentItem, SkoPodcast } from "@/types/sko";
-import SkoPodcastModule from "@/components/sko/SkoPodcastModule";
 
 export default function SkoCompassPage() {
   const { user, profile, profileComplete, loading } = useSkoAuth();
@@ -48,6 +50,7 @@ export default function SkoCompassPage() {
   }
 
   const brief = briefs[0];
+  const showChinese = isChineseBriefingEnabled(profile?.geoId, profile?.marketId);
 
   return (
     <section className="sko-section sko-compass">
@@ -60,9 +63,15 @@ export default function SkoCompassPage() {
         <Link href="/sko/enroll" className="sko-link-btn">Refine intent →</Link>
       </header>
 
+      <SkoChineseBriefingBar
+        geoId={profile?.geoId}
+        marketId={profile?.marketId}
+        onCompassPage
+      />
+
       {brief && (
-        <article className="sko-panel sko-brief-card">
-          <h2>{brief.title}</h2>
+        <article id="briefing" className="sko-panel sko-brief-card">
+          <h2>{showChinese ? labelForKey("Read in Chinese", "zh-CN") : "Your briefing"}</h2>
           <p>{brief.summary}</p>
         </article>
       )}
@@ -70,12 +79,13 @@ export default function SkoCompassPage() {
       <SkoPodcastModule
         userId={user.uid}
         geoId={String(profile?.geoId ?? "Americas")}
+        marketId={profile?.marketId}
         podcasts={podcasts}
       />
 
       <div className="sko-compass-grid">
-        <article className="sko-panel">
-          <h2>Key moments</h2>
+        <article id="moments" className="sko-panel">
+          <h2>{showChinese ? labelForKey("Clip Summary", "zh-CN") : "Key moments"}</h2>
           <ul className="sko-moments-list">
             {clips.map(clip => (
               <li key={clip.id}>
@@ -87,8 +97,8 @@ export default function SkoCompassPage() {
           </ul>
         </article>
 
-        <article className="sko-panel">
-          <h2>Agenda highlights</h2>
+        <article id="summaries" className="sko-panel">
+          <h2>{showChinese ? labelForKey("Key Takeaways", "zh-CN") : "Agenda highlights"}</h2>
           <ul className="sko-agenda-preview">
             {agenda.map(item => (
               <li key={item.id}>

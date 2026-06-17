@@ -4525,7 +4525,16 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
   cursor: pointer;
 }
 .sko-chip.is-selected { border-color: var(--accent); background: rgba(15, 98, 254, 0.08); }
-.sko-chip--static { cursor: default; }
+.sko-chip--zh { border-color: rgba(15, 98, 254, 0.45); text-decoration: none; color: var(--text); }
+.sko-chinese-bar {
+  border: 1px solid rgba(15, 98, 254, 0.35);
+  background: rgba(15, 98, 254, 0.06);
+  padding: 16px 18px;
+  display: grid;
+  gap: 10px;
+}
+.sko-chinese-bar-title { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.sko-chinese-bar-note { margin: 0; font-size: 0.82rem; }
 .sko-hint { font-size: 0.82rem; font-weight: normal; color: var(--muted); }
 .sko-enroll-header h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0 0 10px; }
 .sko-enroll-section { display: grid; gap: 12px; }

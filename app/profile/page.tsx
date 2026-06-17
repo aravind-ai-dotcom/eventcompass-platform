@@ -30,6 +30,7 @@ import { useRouter }           from "next/navigation";
 import Link                    from "next/link";
 import AuthPanel               from "@/components/auth/AuthPanel";
 import { useAuth }             from "@/context/AuthContext";
+import { getSkoUserProfile }   from "@/lib/skoAuth";
 import { db }                  from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -327,11 +328,16 @@ export default function EnrollPage() {
   const [consentAllowSmsUpdates,         setConsentAllowSmsUpdates]         = useState(false);
   const [consentAllowEventNotifications, setConsentAllowEventNotifications] = useState(true);
 
-  // ── Enrolled redirect ─────────────────────────────────────────────────────
+  // ── SKO sellers → SKO Compass; else TXC enrolled → /experience ───────────
   useEffect(() => {
-    if (!loading && user && enrolled) {
-      router.replace("/experience");
-    }
+    if (loading || !user) return;
+    void getSkoUserProfile(user.uid).then(p => {
+      if (p) {
+        router.replace(p.profileComplete ? "/sko/compass" : "/sko/enroll");
+        return;
+      }
+      if (enrolled) router.replace("/experience");
+    });
   }, [loading, user, enrolled, router]);
 
   // ── Auth loading ──────────────────────────────────────────────────────────
