@@ -18,6 +18,8 @@ import {
   matchKnowledgeIntent,
 } from "@/services/knowledge/knowledgeResolver";
 import type { KnowledgeIntentId, VoiceLocale } from "@/services/knowledge/knowledgeTypes";
+import { isKnowledgeIntentId, KNOWLEDGE_INTENT_IDS } from "@/services/knowledge/knowledgeTypes";
+import { trackKnowledgeIntent } from "@/services/knowledge/knowledgeAnalytics";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -163,7 +165,6 @@ const COMPASS_CONVERSATION_PATTERNS = [
   "what do you do",
   "how can you help me",
   "how can you help",
-  "what is compass",
   "what is the biggest concern",
   "biggest concern you have",
   "what should i focus on",
@@ -173,7 +174,6 @@ const COMPASS_CONVERSATION_PATTERNS = [
 ];
 
 const PERSONA_PATTERNS: Array<[PersonaKey, string[]]> = [
-  ["partner", ["i am a partner", "i'm a partner", "im a partner"]],
   ["champion", ["i am a champion", "i'm a champion", "im a champion", "i am an ibm champion", "i'm an ibm champion"]],
   ["student", ["i am a student", "i'm a student", "im a student"]],
   ["executive", ["i am an executive", "i'm an executive", "im an executive", "i am a executive", "i'm a executive"]],
@@ -203,15 +203,10 @@ const PUBLIC_INTENTS = new Set<VoiceIntent>([
   "event_knowledge",
   "compass_conversation",
   "fun_discovery",
-  "fun_recommendation",
   "persona_guidance",
-  "certification_prep",
-  "champion_match",
-  "champion_playful",
-  "champion_path",
-  "out_of_scope_location",
   "dismiss",
   "mark_attended",
+  ...KNOWLEDGE_INTENT_IDS,
 ]);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -437,6 +432,7 @@ function knowledgeVoiceResponse(
   const locale = ctx.locale ?? "en-US";
   const response = getKnowledgeResponse(intent, locale, experience);
   if (!response) return null;
+  trackKnowledgeIntent(intent, experience, locale, "voice");
   return { spoken: response.spoken, display: response.display, action };
 }
 
@@ -468,20 +464,15 @@ export function buildVoiceResponse(
     return notEnrolledResponse(locale);
   }
 
-  switch (intent) {
+  if (isKnowledgeIntentId(intent)) {
+    const action = intent === "champion_match" ? "show_champions" as const : undefined;
+    return knowledgeVoiceResponse(intent, ctx, action) ?? {
+      spoken:  "Let me help you with that on Compass.",
+      display: "Open Compass for more guidance.",
+    };
+  }
 
-    case "certification_prep":
-    case "champion_match":
-    case "fun_recommendation":
-    case "out_of_scope_location":
-    case "champion_playful":
-    case "champion_path": {
-      const action = intent === "champion_match" ? "show_champions" as const : undefined;
-      return knowledgeVoiceResponse(intent, ctx, action) ?? {
-        spoken:  "Let me help you with that on Compass.",
-        display: "Open Compass for more guidance.",
-      };
-    }
+  switch (intent) {
 
     case "event_knowledge": {
       const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;

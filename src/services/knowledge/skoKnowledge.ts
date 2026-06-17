@@ -1,26 +1,12 @@
 // =============================================================================
-// Compass Knowledge — SKO responses (incl. Chinese podcast / clip summaries)
+// Compass Knowledge — SKO event-specific overrides
+// Shared Compass knowledge lives in compassKnowledge.ts
 // =============================================================================
 
 import type { KnowledgeItem } from "./knowledgeTypes";
 
-export const SKO_KNOWLEDGE: KnowledgeItem[] = [
-  {
-    intent: "fun_recommendation",
-    examples: [
-      "something fun at sko",
-      "social thing at sales kickoff",
-      "networking at sko",
-    ],
-    experience: "sko",
-    response: {
-      "en-US":
-        "Yes — SKO is not only about sessions. Look for regional meetups, RevTech moments, networking breaks, and informal gatherings where sellers connect with peers and leaders. Compass can help you balance learning, pipeline focus, and community.",
-      "zh-CN":
-        "当然有——SKO 不仅仅是会议。您可以关注区域聚会、RevTech 环节、社交休息时段以及非正式聚会，与同行和领导者建立联系。Compass 可以帮助您平衡学习、管道重点与社区连接。",
-    },
-  },
-];
+/** SKO-only knowledge overrides; empty when shared items suffice */
+export const SKO_KNOWLEDGE: KnowledgeItem[] = [];
 
 /** Template strings for SKO podcast / clip / segment summaries */
 export const SKO_SUMMARY_TEMPLATES = {
