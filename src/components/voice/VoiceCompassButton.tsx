@@ -39,6 +39,7 @@ import {
   type VoiceResponse,
 } from "@/services/voiceIntentClassifier";
 import { normalizeVoiceInput } from "@/services/voice/sttNormalizer";
+import { ensureGovernanceLoaded } from "@/services/governance/governanceLoader";
 import { applyTtsPronunciation } from "@/services/voice/voicePronunciation";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 import { localeFromSpeechLang, type UiLocale } from "@/services/i18n/voiceLocale";
@@ -364,6 +365,11 @@ export default function VoiceCompassButton({
   const recentRecsRef  = useRef<string[]>([]);
   const speechLangRef  = useRef("en-US");
 
+  // Preload Firestore governance cache for voice matching
+  useEffect(() => {
+    void ensureGovernanceLoaded(voiceExperience);
+  }, [voiceExperience]);
+
   // Check support on mount
   useEffect(() => {
     if (!getSpeechRecognition()) setVoiceState("unsupported");
@@ -536,6 +542,7 @@ export default function VoiceCompassButton({
 
     await new Promise<void>(resolve => setTimeout(resolve, 300));
 
+    await ensureGovernanceLoaded(voiceExperience);
     const locale = voiceLocale ?? localeFromSpeechLang(speechLangRef.current);
     const normalized = normalizeVoiceInput(text, voiceExperience);
     const classified = classifyVoiceIntent(normalized, voiceExperience);

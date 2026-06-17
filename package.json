@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:txc-governance": "tsx scripts/seed-txc-compass-governance.ts"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.1",

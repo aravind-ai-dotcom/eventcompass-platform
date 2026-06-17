@@ -4,9 +4,10 @@
 
 import enUS from "./en-US.json";
 import zhCN from "./zh-CN.json";
-import type { VoiceLocale } from "@/services/knowledge/knowledgeTypes";
+import type { GovernanceLanguage } from "@/types/compassGovernance";
 
-export type UiLocale = VoiceLocale;
+export type UiLocale = GovernanceLanguage;
+export type VoiceLocale = GovernanceLanguage;
 
 const UI_STRINGS: Record<UiLocale, Record<string, string>> = {
   "en-US": enUS,

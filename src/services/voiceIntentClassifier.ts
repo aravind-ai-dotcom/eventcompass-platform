@@ -2,7 +2,7 @@
 // EventCompass — Voice Intent Classifier
 // src/services/voiceIntentClassifier.ts
 //
-// Pure TypeScript. No Firebase. No React. No LLM calls. No side effects.
+// Pure TypeScript matching. Firestore knowledge loaded into cache before use.
 // =============================================================================
 
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
@@ -16,18 +16,15 @@ import {
 import {
   getKnowledgeResponse,
   matchKnowledgeIntent,
+  type VoiceLocale,
 } from "@/services/knowledge/knowledgeResolver";
-import type { KnowledgeIntentId, VoiceLocale } from "@/services/knowledge/knowledgeTypes";
-import { isKnowledgeIntentId, KNOWLEDGE_INTENT_IDS } from "@/services/knowledge/knowledgeTypes";
-import { trackKnowledgeIntent } from "@/services/knowledge/knowledgeAnalytics";
+import { logKnowledgeAnalytics } from "@/services/knowledge/knowledgeMatchingService";
+import { experienceToEventId } from "@/lib/compassEventPaths";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Intent type
-// ─────────────────────────────────────────────────────────────────────────────
+export type { VoiceLocale };
 
-export type VoiceIntent =
-  | KnowledgeIntentId
+export type CoreVoiceIntent =
   | "event_knowledge"
   | "compass_conversation"
   | "fun_discovery"
@@ -44,6 +41,9 @@ export type VoiceIntent =
   | "mark_attended"
   | "why_recommended"
   | "add_to_agenda";
+
+/** Core intents or Firestore knowledge intent id (e.g. WHAT_IS_COMPASS) */
+export type VoiceIntent = CoreVoiceIntent | string;
 
 export interface ClassifiedIntent {
   intent:     VoiceIntent;
@@ -86,7 +86,7 @@ export interface VoiceResponseContext {
 
 const KEYWORD_BUCKETS: Record<
   Exclude<
-    VoiceIntent,
+    CoreVoiceIntent,
     | "fallback"
     | "dismiss"
     | "mark_attended"
@@ -96,7 +96,6 @@ const KEYWORD_BUCKETS: Record<
     | "compass_conversation"
     | "fun_discovery"
     | "persona_guidance"
-    | KnowledgeIntentId
   >,
   string[]
 > = {
@@ -130,7 +129,7 @@ const KEYWORD_BUCKETS: Record<
   ],
 };
 
-const ACTION_PATTERNS: Array<[VoiceIntent, string[]]> = [
+const ACTION_PATTERNS: Array<[CoreVoiceIntent, string[]]> = [
   ["mark_attended", [
     "i went to that", "i attended", "i was there", "mark as attended", "mark attended",
   ]],
@@ -199,15 +198,23 @@ const FUN_DISCOVERY_PATTERNS = [
   "fun thing",
 ];
 
-const PUBLIC_INTENTS = new Set<VoiceIntent>([
+const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "event_knowledge",
   "compass_conversation",
   "fun_discovery",
   "persona_guidance",
   "dismiss",
   "mark_attended",
-  ...KNOWLEDGE_INTENT_IDS,
 ]);
+
+function isPublicIntent(intent: VoiceIntent, experience: VoiceExperience): boolean {
+  if (PUBLIC_CORE_INTENTS.has(intent as CoreVoiceIntent)) return true;
+  return getKnowledgeResponse(intent, "en-US", experience) !== null;
+}
+
+function isFirestoreKnowledgeIntent(intent: VoiceIntent, experience: VoiceExperience): boolean {
+  return getKnowledgeResponse(intent, "en-US", experience) !== null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // classifyVoiceIntent
@@ -279,7 +286,7 @@ export function classifyVoiceIntent(
     return { intent: "fun_discovery", transcript, confidence: "high" };
   }
 
-  let best: VoiceIntent = "fallback";
+  let best: CoreVoiceIntent = "fallback";
   let bestScore = 0;
 
   for (const [intent, keywords] of Object.entries(KEYWORD_BUCKETS) as Array<
@@ -424,15 +431,22 @@ function notEnrolledResponse(locale: VoiceLocale = "en-US"): VoiceResponse {
 }
 
 function knowledgeVoiceResponse(
-  intent: KnowledgeIntentId,
+  intent: string,
   ctx: VoiceResponseContext,
+  rawQuestion: string,
   action?: VoiceResponseAction,
 ): VoiceResponse | null {
   const experience = ctx.experience ?? "techxchange";
   const locale = ctx.locale ?? "en-US";
   const response = getKnowledgeResponse(intent, locale, experience);
   if (!response) return null;
-  trackKnowledgeIntent(intent, experience, locale, "voice");
+  void logKnowledgeAnalytics(experienceToEventId(experience), {
+    rawQuestion,
+    matchedIntent: intent,
+    experience,
+    language: locale,
+    source: "voice",
+  });
   return { spoken: response.spoken, display: response.display, action };
 }
 
@@ -460,19 +474,19 @@ export function buildVoiceResponse(
   const locale = ctx.locale ?? "en-US";
   const experience = ctx.experience ?? "techxchange";
 
-  if (!isEnrolled(ctx) && !PUBLIC_INTENTS.has(intent)) {
+  if (!isEnrolled(ctx) && !isPublicIntent(intent, experience)) {
     return notEnrolledResponse(locale);
   }
 
-  if (isKnowledgeIntentId(intent)) {
-    const action = intent === "champion_match" ? "show_champions" as const : undefined;
-    return knowledgeVoiceResponse(intent, ctx, action) ?? {
+  if (isFirestoreKnowledgeIntent(intent, experience)) {
+    const action = intent === "CHAMPION_MATCH" ? "show_champions" as const : undefined;
+    return knowledgeVoiceResponse(intent, ctx, transcript, action) ?? {
       spoken:  "Let me help you with that on Compass.",
       display: "Open Compass for more guidance.",
     };
   }
 
-  switch (intent) {
+  switch (intent as CoreVoiceIntent) {
 
     case "event_knowledge": {
       const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;
@@ -495,7 +509,7 @@ export function buildVoiceResponse(
     }
 
     case "fun_discovery": {
-      const knowledge = knowledgeVoiceResponse("fun_recommendation", ctx);
+      const knowledge = knowledgeVoiceResponse("FUN_RECOMMENDATION", ctx, transcript);
       if (knowledge) {
         const huddle = huddleHint(ctx, norm);
         return {
@@ -754,7 +768,7 @@ export function buildVoiceResponse(
     default: {
       const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
       if (knowledgeIntent) {
-        const knowledge = knowledgeVoiceResponse(knowledgeIntent, ctx);
+        const knowledge = knowledgeVoiceResponse(knowledgeIntent, ctx, transcript);
         if (knowledge) return knowledge;
       }
       const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
