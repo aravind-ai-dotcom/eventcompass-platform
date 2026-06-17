@@ -239,10 +239,17 @@ export async function createIngestJob(
 // ── Pulse ───────────────────────────────────────────────────────────────────
 
 export async function listPulseMetrics(geoId?: string): Promise<SkoPulseMetrics[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.pulseMetrics));
-  let metrics = snap.docs.map(d => mapDoc<SkoPulseMetrics>(d.id, d.data()));
-  if (geoId) metrics = metrics.filter(m => m.geoId === geoId);
-  return metrics;
+  try {
+    const snap = await skoRead(SKO_COLLECTIONS.pulseMetrics, () =>
+      getDocs(collection(db, SKO_COLLECTIONS.pulseMetrics)),
+    );
+    let metrics = snap.docs.map(d => mapDoc<SkoPulseMetrics>(d.id, d.data()));
+    if (geoId) metrics = metrics.filter(m => m.geoId === geoId);
+    return metrics;
+  } catch (err) {
+    if (isFirestorePermissionError(err)) return [];
+    throw err;
+  }
 }
 
 export async function savePulseMetrics(metrics: SkoPulseMetrics): Promise<void> {
@@ -250,12 +257,19 @@ export async function savePulseMetrics(metrics: SkoPulseMetrics): Promise<void> 
 }
 
 export async function listPulseQuotes(geoId?: string): Promise<SkoPulseQuote[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.pulseQuotes));
-  let quotes = snap.docs
-    .map(d => mapDoc<SkoPulseQuote>(d.id, d.data()))
-    .filter(q => q.approved);
-  if (geoId) quotes = quotes.filter(q => q.geoId === geoId);
-  return quotes.sort((a, b) => a.sortOrder - b.sortOrder);
+  try {
+    const snap = await skoRead(SKO_COLLECTIONS.pulseQuotes, () =>
+      getDocs(collection(db, SKO_COLLECTIONS.pulseQuotes)),
+    );
+    let quotes = snap.docs
+      .map(d => mapDoc<SkoPulseQuote>(d.id, d.data()))
+      .filter(q => q.approved);
+    if (geoId) quotes = quotes.filter(q => q.geoId === geoId);
+    return quotes.sort((a, b) => a.sortOrder - b.sortOrder);
+  } catch (err) {
+    if (isFirestorePermissionError(err)) return [];
+    throw err;
+  }
 }
 
 export async function savePulseQuote(quote: SkoPulseQuote): Promise<void> {
@@ -303,13 +317,22 @@ export async function listPodcastsByGeo(geoId: string): Promise<SkoPodcast[]> {
 // ── Seat reservations ───────────────────────────────────────────────────────
 
 export async function getUserSeatReservation(userId: string): Promise<SkoSeatReservation | null> {
-  const q = query(
-    collection(db, SKO_COLLECTIONS.seatReservations),
-    where("userId", "==", userId),
-  );
-  const snap = await getDocs(q);
-  const doc0 = snap.docs[0];
-  return doc0 ? mapDoc<SkoSeatReservation>(doc0.id, doc0.data()) : null;
+  try {
+    const q = query(
+      collection(db, SKO_COLLECTIONS.seatReservations),
+      where("userId", "==", userId),
+    );
+    const snap = await skoRead(
+      SKO_COLLECTIONS.seatReservations,
+      () => getDocs(q),
+      userId,
+    );
+    const doc0 = snap.docs[0];
+    return doc0 ? mapDoc<SkoSeatReservation>(doc0.id, doc0.data()) : null;
+  } catch (err) {
+    if (isFirestorePermissionError(err)) return null;
+    throw err;
+  }
 }
 
 export async function saveSeatReservation(reservation: SkoSeatReservation): Promise<void> {

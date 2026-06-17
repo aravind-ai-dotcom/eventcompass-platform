@@ -10,7 +10,8 @@
     "seed:txc-governance": "tsx scripts/seed-txc-compass-governance.ts",
     "seed:sko-product": "tsx scripts/seed-sko-product.ts",
     "seed:sko-governance": "tsx scripts/seed-sko-governance.ts",
-    "deploy:firestore-rules": "firebase deploy --only firestore:rules --project eventcompass-ai"
+    "deploy:firestore-rules": "firebase deploy --only firestore:rules --project eventcompass-ai",
+    "deploy:firestore-rules:admin": "tsx scripts/deploy-firestore-rules.ts"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.1",
