@@ -4457,6 +4457,7 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
   justify-content: center;
 }
 .sko-btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sko-btn--secondary { border-color: rgba(15, 98, 254, 0.45); color: var(--accent); background: transparent; }
 .sko-btn--ghost { background: transparent; }
 .sko-btn--block { width: 100%; }
 .sko-link-btn { background: none; border: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; }
@@ -4535,6 +4536,29 @@ body[data-theme="light"] .experience-hero-sidebar .compass-signal-card {
 }
 .sko-chinese-bar-title { margin: 0; font-size: 0.95rem; font-weight: 600; }
 .sko-chinese-bar-note { margin: 0; font-size: 0.82rem; }
+.sko-help-note {
+  padding: 12px 14px;
+  border: 1px dashed var(--line);
+  font-size: 0.88rem;
+  margin: 0;
+}
+.hero-actions--secondary { margin-top: 10px; }
+.setup-hub { padding: 32px 0 48px; display: grid; gap: 20px; }
+.setup-hub-lead { color: var(--muted); margin: 0; }
+.setup-hub-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.setup-hub-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+}
+.setup-hub-card h2 { margin: 0; }
+.setup-hub-card ul { margin: 0; padding-left: 18px; }
+.setup-hub-foot { font-size: 0.88rem; color: var(--muted); }
+@media (max-width: 768px) {
+  .setup-hub-grid { grid-template-columns: 1fr; }
+}
 .sko-hint { font-size: 0.82rem; font-weight: normal; color: var(--muted); }
 .sko-enroll-header h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 0 0 10px; }
 .sko-enroll-section { display: grid; gap: 12px; }

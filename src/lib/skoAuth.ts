@@ -22,8 +22,21 @@ export async function getSkoUserProfile(uid: string): Promise<SkoUserProfile | n
   const snap = await getDoc(doc(db, SKO_COLLECTIONS.users, uid));
   if (!snap.exists()) return null;
   const data = snap.data();
-  if (data.product !== "sko") return null;
-  return { uid, ...data } as SkoUserProfile;
+
+  const hasSkoIntent = Boolean(data.geoId && data.personaId);
+  const isSko =
+    data.product === "sko" ||
+    data.profileComplete === true ||
+    hasSkoIntent;
+
+  if (!isSko) return null;
+
+  return {
+    uid,
+    ...data,
+    product: "sko",
+    profileComplete: Boolean(data.profileComplete ?? hasSkoIntent),
+  } as SkoUserProfile;
 }
 
 export async function signUpSkoUser(input: {
@@ -68,11 +81,15 @@ export async function signUpSkoUser(input: {
 
 export async function signInSkoUser(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-  await setDoc(
-    doc(db, SKO_COLLECTIONS.users, cred.user.uid),
-    { lastLoginAt: serverTimestamp(), updatedAt: serverTimestamp() },
-    { merge: true },
-  );
+  const ref = doc(db, SKO_COLLECTIONS.users, cred.user.uid);
+  const existing = await getDoc(ref);
+  if (existing.exists()) {
+    await setDoc(
+      ref,
+      { lastLoginAt: serverTimestamp(), updatedAt: serverTimestamp() },
+      { merge: true },
+    );
+  }
   return cred;
 }
 

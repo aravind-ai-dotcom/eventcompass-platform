@@ -69,7 +69,7 @@ export default function SkoEnrollPage() {
 
   useEffect(() => {
     if (!loading && user && profileComplete) {
-      router.replace("/sko/compass");
+      router.replace("/profile");
     }
   }, [user, profileComplete, loading, router]);
 
@@ -147,7 +147,7 @@ export default function SkoEnrollPage() {
         partnerFocus: accessType === "partner",
       });
       await refreshProfile();
-      router.push("/sko/compass");
+      router.push("/profile");
     } catch {
       setError("Could not save your profile. Please try again.");
     } finally {

@@ -43,9 +43,9 @@ export function labelForKey(key: string, locale: "en-US" | "zh-CN"): string {
 }
 
 export const SKO_CHINESE_ACTIONS = [
-  { key: "Listen in Chinese", href: "/sko/compass#podcast", anchor: "podcast" },
-  { key: "Read in Chinese", href: "/sko/compass#briefing", anchor: "briefing" },
-  { key: "Generate Chinese Summary", href: "/sko/compass#summaries", anchor: "summaries" },
-  { key: "Podcast Summary", href: "/sko/compass#podcast", anchor: "podcast" },
-  { key: "Clip Summary", href: "/sko/compass#moments", anchor: "moments" },
+  { key: "Listen in Chinese", href: "/profile#podcast", anchor: "podcast" },
+  { key: "Read in Chinese", href: "/profile#briefing", anchor: "briefing" },
+  { key: "Generate Chinese Summary", href: "/profile#summaries", anchor: "summaries" },
+  { key: "Podcast Summary", href: "/profile#podcast", anchor: "podcast" },
+  { key: "Clip Summary", href: "/profile#moments", anchor: "moments" },
 ] as const;

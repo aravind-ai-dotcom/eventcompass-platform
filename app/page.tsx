@@ -23,6 +23,10 @@ export default function HomePage() {
             <Link href="/enroll" className="btn-primary">Build My Compass</Link>
             <Link href="/explore" className="btn-secondary">How Compass works</Link>
           </div>
+          <div className="hero-actions hero-actions--secondary">
+            <Link href="/sko" className="btn-secondary">Compass SKO →</Link>
+            <Link href="/sko/login" className="btn-secondary">SKO seller sign in</Link>
+          </div>
         </div>
       </section>
 

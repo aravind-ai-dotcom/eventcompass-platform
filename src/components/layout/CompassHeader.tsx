@@ -62,7 +62,13 @@ function CloseIcon() {
 
 export default function CompassHeader() {
   const pathname = usePathname();
-  if (pathname.startsWith("/sko") || pathname.startsWith("/setup/sko")) {
+  if (
+    pathname.startsWith("/sko") ||
+    pathname.startsWith("/setup/sko") ||
+    pathname === "/profile" ||
+    pathname === "/content" ||
+    pathname === "/pulse"
+  ) {
     return null;
   }
   const { user, enrolled } = useAuth();
@@ -80,7 +86,7 @@ export default function CompassHeader() {
         setSkoCompassHref(null);
         return;
       }
-      setSkoCompassHref(p.profileComplete ? "/sko/compass" : "/sko/enroll");
+      setSkoCompassHref(p.profileComplete ? "/profile" : "/sko/enroll");
     });
   }, [user]);
 

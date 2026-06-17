@@ -33,6 +33,14 @@ import type {
   SkoSpeaker,
 } from "@/types/sko";
 import { SKO_EDITION_ID } from "@/types/sko";
+import {
+  SKO_CLIPS,
+  SKO_CONTENT_ITEMS,
+  SKO_EDITION,
+  SKO_GEOS,
+  SKO_MARKETS,
+  SKO_PERSONAS,
+} from "@/data/seeds/skoProductSeed";
 
 function mapDoc<T extends { id: string }>(id: string, data: DocumentData): T {
   return { id, ...data } as T;
@@ -42,7 +50,8 @@ function mapDoc<T extends { id: string }>(id: string, data: DocumentData): T {
 
 export async function getActiveEdition(): Promise<SkoEdition | null> {
   const snap = await getDoc(doc(db, SKO_COLLECTIONS.editions, SKO_EDITION_ID));
-  return snap.exists() ? mapDoc<SkoEdition>(snap.id, snap.data()) : null;
+  if (snap.exists()) return mapDoc<SkoEdition>(snap.id, snap.data());
+  return SKO_EDITION;
 }
 
 export async function saveEdition(edition: SkoEdition): Promise<void> {
@@ -57,6 +66,7 @@ export async function listGeos(editionId = SKO_EDITION_ID): Promise<SkoGeo[]> {
     where("editionId", "==", editionId),
   );
   const snap = await getDocs(q);
+  if (snap.empty) return SKO_GEOS;
   return snap.docs.map(d => mapDoc<SkoGeo>(d.id, d.data())).sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -68,7 +78,9 @@ export async function saveGeo(geo: SkoGeo): Promise<void> {
 
 export async function listMarkets(geoId?: string): Promise<SkoMarket[]> {
   const snap = await getDocs(collection(db, SKO_COLLECTIONS.markets));
-  let markets = snap.docs.map(d => mapDoc<SkoMarket>(d.id, d.data()));
+  let markets = snap.empty
+    ? SKO_MARKETS
+    : snap.docs.map(d => mapDoc<SkoMarket>(d.id, d.data()));
   if (geoId) markets = markets.filter(m => m.geoId === geoId);
   return markets.filter(m => m.active).sort((a, b) => a.sortOrder - b.sortOrder);
 }
@@ -81,10 +93,10 @@ export async function saveMarket(market: SkoMarket): Promise<void> {
 
 export async function listSellerPersonas(): Promise<SkoSellerPersona[]> {
   const snap = await getDocs(collection(db, SKO_COLLECTIONS.sellerPersonas));
-  return snap.docs
-    .map(d => mapDoc<SkoSellerPersona>(d.id, d.data()))
-    .filter(p => p.active)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const records = snap.empty
+    ? SKO_PERSONAS
+    : snap.docs.map(d => mapDoc<SkoSellerPersona>(d.id, d.data()));
+  return records.filter(p => p.active).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 // ── Speakers ────────────────────────────────────────────────────────────────
@@ -111,7 +123,9 @@ export async function listContentItems(
     where("editionId", "==", editionId),
   );
   const snap = await getDocs(q);
-  let items = snap.docs.map(d => mapDoc<SkoContentItem>(d.id, d.data()));
+  let items = snap.empty
+    ? SKO_CONTENT_ITEMS
+    : snap.docs.map(d => mapDoc<SkoContentItem>(d.id, d.data()));
   if (geoId) items = items.filter(i => i.geoId === geoId || i.geoId === "global");
   return items.sort((a, b) => a.agendaOrder - b.agendaOrder);
 }
@@ -129,7 +143,9 @@ export async function listContentAssets(contentId?: string): Promise<SkoContentA
 
 export async function listContentClips(contentId?: string): Promise<SkoContentClip[]> {
   const snap = await getDocs(collection(db, SKO_COLLECTIONS.contentClips));
-  let clips = snap.docs.map(d => mapDoc<SkoContentClip>(d.id, d.data()));
+  let clips = snap.empty
+    ? SKO_CLIPS
+    : snap.docs.map(d => mapDoc<SkoContentClip>(d.id, d.data()));
   if (contentId) clips = clips.filter(c => c.contentId === contentId);
   return clips;
 }

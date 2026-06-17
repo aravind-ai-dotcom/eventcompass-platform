@@ -12,7 +12,7 @@ export default function SkoLoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace(profileComplete ? "/sko/compass" : "/sko/enroll");
+      router.replace(profileComplete ? "/profile" : "/sko/enroll");
     }
   }, [user, profileComplete, loading, router]);
 
@@ -27,9 +27,9 @@ export default function SkoLoginPage() {
         <h1>Sign in to continue</h1>
         <p className="sko-lead">Access your SKO Compass briefing, podcasts, and seller momentum tools.</p>
         <SkoAuthPanel
-          onAuthenticated={(complete) => router.push(complete ? "/sko/compass" : "/sko/enroll")}
+          onAuthenticated={(complete) => router.push(complete ? "/profile" : "/sko/enroll")}
         />
-        <Link href="/sko" className="sko-link-back">← Back to SKO home</Link>
+        <Link href="/content" className="sko-link-back">← Back to Explore SKO</Link>
       </div>
     </section>
   );
