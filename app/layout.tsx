@@ -1,23 +1,13 @@
 // =============================================================================
-// EventCompass — Root Layout
-//
-// - IBM Plex Sans + IBM Plex Mono via next/font (zero layout shift)
-// - data-theme="dark" on <html> — CompassHeader toggles it client-side
-// - CompassHeader (sticky nav, theme switch, CTA)
-// - CompassFooter
-// - globals.css design system
-// - <main className="compass-main"> provides the max-width container
-//   so individual pages don't need to repeat it
+// Compass SKO — Root Layout (product-neutral shell)
+// SKO vs TechXchange chrome is selected in RouteChrome by pathname.
 // =============================================================================
 
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import CompassHeader from "@/components/layout/CompassHeader";
-import CompassFooter from "@/components/layout/CompassFooter";
-import { AuthProvider } from "@/context/AuthContext";
+import RouteChrome from "@/components/layout/RouteChrome";
 
-// IBM Plex Sans — primary typeface for all body, headings, nav, buttons
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -25,7 +15,6 @@ const ibmPlexSans = IBM_Plex_Sans({
   display: "swap",
 });
 
-// IBM Plex Mono — time/date, session IDs, kicker numbers, code
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
@@ -34,9 +23,9 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Compass | IBM TechXchange 2026",
+  title: "Compass SKO | IBM Sales Enablement",
   description:
-    "AI-powered event intelligence. Find your sessions, people, and opportunities at IBM TechXchange.",
+    "SKO2H 2026 seller briefing — personalized geo, market, and persona intelligence for IBM Sales Enablement.",
 };
 
 export default function RootLayout({
@@ -45,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="light">
       <body
         className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
         style={{
@@ -53,16 +42,7 @@ export default function RootLayout({
             "var(--font-sans, 'IBM Plex Sans', system-ui, sans-serif)",
         }}
       >
-        <AuthProvider>
-          <CompassHeader />
-          {/*
-            compass-main sets width: min(1180px, calc(100% - 40px)) and centers
-            the content — defined in globals.css. Pages render inside this
-            container and do not need their own max-width wrapper.
-          */}
-          <main className="compass-main">{children}</main>
-          <CompassFooter />
-        </AuthProvider>
+        <RouteChrome>{children}</RouteChrome>
       </body>
     </html>
   );

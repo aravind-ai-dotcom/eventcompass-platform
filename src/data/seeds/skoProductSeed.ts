@@ -28,10 +28,10 @@ export const SKO_EDITION: SkoEdition = {
 };
 
 export const SKO_GEOS: SkoGeo[] = [
-  { id: "geo-emea", editionId: SKO_EDITION_ID, name: "EMEA", date: "2026-07-07", deliveryType: "Live", cityLabel: "Madrid", status: "completed" },
-  { id: "geo-apac", editionId: SKO_EDITION_ID, name: "APAC", date: "2026-07-13", deliveryType: "Live", cityLabel: "Singapore", status: "upcoming" },
-  { id: "geo-americas", editionId: SKO_EDITION_ID, name: "Americas", date: "2026-07-27", deliveryType: "Virtual", cityLabel: "Virtual", status: "upcoming" },
-  { id: "geo-japan", editionId: SKO_EDITION_ID, name: "Japan", date: "2026-07-30", deliveryType: "Live", cityLabel: "Tokyo", status: "upcoming" },
+  { id: "geo-emea", editionId: SKO_EDITION_ID, name: "EMEA", date: "2026-07-07", deliveryType: "Live", cityLabel: "Madrid", status: "completed", imageUrl: "/geo/madrid.jpg" },
+  { id: "geo-apac", editionId: SKO_EDITION_ID, name: "APAC", date: "2026-07-13", deliveryType: "Live", cityLabel: "Singapore", status: "upcoming", imageUrl: "/geo/singapore-marina-bay.jpg" },
+  { id: "geo-americas", editionId: SKO_EDITION_ID, name: "Americas", date: "2026-07-27", deliveryType: "Virtual", cityLabel: "Virtual studio", status: "upcoming", imageUrl: "/geo/americas-virtual.jpg" },
+  { id: "geo-japan", editionId: SKO_EDITION_ID, name: "Japan", date: "2026-07-30", deliveryType: "Live", cityLabel: "Tokyo", status: "upcoming", imageUrl: "/geo/tokyo-tower-day.jpg" },
 ];
 
 export const SKO_MARKETS: SkoMarket[] = [

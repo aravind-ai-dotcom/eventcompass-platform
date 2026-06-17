@@ -39,7 +39,7 @@ export default function SkoHeader() {
           {user ? (
             <>
               {!profileComplete && (
-                <Link href="/sko/enroll" className="sko-btn sko-btn--primary">
+                <Link href="/enroll" className="sko-btn sko-btn--primary">
                   Complete enrollment
                 </Link>
               )}
@@ -48,7 +48,7 @@ export default function SkoHeader() {
               </button>
             </>
           ) : (
-            <Link href="/sko/login" className="sko-btn sko-btn--primary">
+            <Link href="/login" className="sko-btn sko-btn--primary">
               Sign in
             </Link>
           )}

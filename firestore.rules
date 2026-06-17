@@ -1,5 +1,11 @@
 rules_version = '2';
 
+// =============================================================================
+// PROTOTYPE RULES — NOT PRODUCTION
+// Permissive authenticated access for all sko_* collections.
+// Deploy: npx firebase-tools deploy --only firestore:rules
+// =============================================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -7,89 +13,37 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(uid) {
-      return isSignedIn() && request.auth.uid == uid;
+    function isSkoCollection(name) {
+      return name.matches('sko_.*');
     }
 
-    function isSeTeam() {
-      return isSignedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accessType == 'se_team';
+    // All sko_* collections — authenticated read/write (prototype only)
+    match /{collection}/{doc} {
+      allow read, write: if isSignedIn() && isSkoCollection(collection);
     }
 
-    // Public SKO catalog (read-only for authenticated users)
-    match /editions/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /geos/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /markets/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /sellerPersonas/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /speakers/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /contentItems/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /contentAssets/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /contentClips/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /pulseMetrics/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /pulseQuotes/{doc} {
-      allow read: if isSignedIn();
-      allow write: if isSeTeam();
-    }
-    match /ingestJobs/{doc} {
-      allow read, write: if isSeTeam();
-    }
-
-    // User profiles
+    // TechXchange users (separate namespace)
     match /users/{uid} {
-      allow read: if isOwner(uid) || isSeTeam();
-      allow create: if isOwner(uid);
-      allow update: if isOwner(uid) || isSeTeam();
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // User-owned briefs and podcasts
-    match /briefs/{doc} {
-      allow read, write: if isSignedIn()
-        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
-    }
-    match /briefItems/{doc} {
+    // TechXchange event data
+    match /organizations/{org}/events/{event}/{subcollection}/{doc} {
       allow read, write: if isSignedIn();
-    }
-    match /podcasts/{doc} {
-      allow read: if isSignedIn()
-        && (resource.data.userId == request.auth.uid || isSeTeam());
-      allow write: if isSignedIn()
-        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
-    }
-    match /seatReservations/{doc} {
-      allow read, write: if isSignedIn()
-        && (resource == null || resource.data.userId == request.auth.uid || isSeTeam());
     }
 
-    // Legacy TXC paths — keep permissive for prototype
-    match /organizations/{org}/events/{event}/{collection}/{doc} {
-      allow read, write: if isSignedIn();
-    }
+    // Legacy unprefixed collections — authenticated read during migration
+    match /editions/{doc} { allow read: if isSignedIn(); }
+    match /geos/{doc} { allow read: if isSignedIn(); }
+    match /markets/{doc} { allow read: if isSignedIn(); }
+    match /sellerPersonas/{doc} { allow read: if isSignedIn(); }
+    match /speakers/{doc} { allow read: if isSignedIn(); }
+    match /contentItems/{doc} { allow read: if isSignedIn(); }
+    match /contentClips/{doc} { allow read: if isSignedIn(); }
+    match /pulseMetrics/{doc} { allow read: if isSignedIn(); }
+    match /pulseQuotes/{doc} { allow read: if isSignedIn(); }
+    match /briefs/{doc} { allow read, write: if isSignedIn(); }
+    match /podcasts/{doc} { allow read, write: if isSignedIn(); }
+    match /seatReservations/{doc} { allow read, write: if isSignedIn(); }
   }
 }

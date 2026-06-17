@@ -1,30 +1,21 @@
 "use client";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CompassHeader
-// Brand | Nav | Theme toggle | CTA
-//
-// Anonymous        → "Build My Compass" primary CTA → /enroll
-// Logged in        → "Build My Compass" → /enroll + Sign out
-// Logged in + enrolled → "My Compass" primary CTA (far right) + Sign out
-// Mobile           → compact hamburger drawer
-// ─────────────────────────────────────────────────────────────────────────────
+// TechXchange header — only rendered on /txc/* routes via RouteChrome.
 
 import { usePathname } from "next/navigation";
-import Link            from "next/link";
-import Image           from "next/image";
+import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { useAuth }  from "@/context/AuthContext";
-import { logOut }   from "@/lib/auth";
-import { getSkoUserProfile } from "@/lib/skoAuth";
+import { useAuth } from "@/context/AuthContext";
+import { logOut } from "@/lib/auth";
 
 type Theme = "dark" | "light";
 
 const NAV_ITEMS = [
-  { href: "/explore",   label: "Explore"   },
-  { href: "/sessions",  label: "Sessions"  },
-  { href: "/champions", label: "Champions" },
-  { href: "/pulse",     label: "Pulse"     },
+  { href: "/txc/explore", label: "Explore" },
+  { href: "/txc/sessions", label: "Sessions" },
+  { href: "/txc/champions", label: "Champions" },
+  { href: "/txc/experience", label: "My Compass" },
 ];
 
 function SunIcon() {
@@ -62,33 +53,9 @@ function CloseIcon() {
 
 export default function CompassHeader() {
   const pathname = usePathname();
-  if (
-    pathname.startsWith("/sko") ||
-    pathname.startsWith("/setup/sko") ||
-    pathname === "/profile" ||
-    pathname === "/content" ||
-    pathname === "/pulse"
-  ) {
-    return null;
-  }
   const { user, enrolled } = useAuth();
   const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [skoCompassHref, setSkoCompassHref] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) {
-      setSkoCompassHref(null);
-      return;
-    }
-    void getSkoUserProfile(user.uid).then(p => {
-      if (!p) {
-        setSkoCompassHref(null);
-        return;
-      }
-      setSkoCompassHref(p.profileComplete ? "/profile" : "/sko/enroll");
-    });
-  }, [user]);
 
   useEffect(() => {
     const stored = localStorage.getItem("compass_theme") as Theme | null;
@@ -115,15 +82,13 @@ export default function CompassHeader() {
   }
 
   const drawerLinks = [
-    { href: "/", label: "Compass" },
+    { href: "/txc", label: "TechXchange" },
     ...NAV_ITEMS,
-    ...(skoCompassHref ? [{ href: skoCompassHref, label: "SKO Compass" }] : []),
-    ...(user && enrolled ? [{ href: "/experience", label: "My Compass" }] : []),
   ];
 
   return (
     <header className="site-header">
-      <Link href="/" className="brand" aria-label="Compass home">
+      <Link href="/txc" className="brand" aria-label="TechXchange Compass home">
         <Image
           src={theme === "dark" ? "/compass-mark-white.jpeg" : "/compass-mark-black.png"}
           alt=""
@@ -134,142 +99,71 @@ export default function CompassHeader() {
           priority
         />
         <span className="brand-word">Compass</span>
+        <span className="brand-sub">TechXchange</span>
       </Link>
 
-      <button
-        type="button"
-        className="header-menu-toggle"
-        aria-label={menuOpen ? "Close menu" : "Open menu"}
-        aria-expanded={menuOpen}
-        onClick={() => setMenuOpen(open => !open)}
-      >
-        {menuOpen ? <CloseIcon /> : <MenuIcon />}
-      </button>
-
-      <div className="header-nav-scroll header-nav-desktop">
-        <nav className="main-nav" aria-label="Main navigation">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={isActive(item.href) ? "active" : ""}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      <div className="header-actions">
-        <div className="theme-toggle" role="group" aria-label="Color mode">
-          <button
-            type="button"
-            className={theme === "light" ? "active" : ""}
-            aria-label="Light mode"
-            aria-pressed={theme === "light"}
-            onClick={() => applyTheme("light")}
+      <nav className="site-nav" aria-label="TechXchange navigation">
+        {NAV_ITEMS.map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`site-nav-link${isActive(item.href) ? " is-active" : ""}`}
           >
-            <SunIcon />
-          </button>
-          <button
-            type="button"
-            className={theme === "dark" ? "active" : ""}
-            aria-label="Dark mode"
-            aria-pressed={theme === "dark"}
-            onClick={() => applyTheme("dark")}
-          >
-            <MoonIcon />
-          </button>
-        </div>
-
-        {user ? (
-          <>
-            {skoCompassHref && (
-              <Link href={skoCompassHref} className="btn-primary primary-link header-cta-desktop">
-                SKO Compass
-              </Link>
-            )}
-            {enrolled ? (
-              <Link href="/experience" className={`${skoCompassHref ? "header-sign-out" : "btn-primary primary-link"} header-cta-desktop`}>
-                {skoCompassHref ? "TechXchange" : "My Compass"}
-              </Link>
-            ) : !skoCompassHref ? (
-              <Link href="/enroll" className="btn-primary primary-link header-cta-desktop">
-                Build My Compass
-              </Link>
-            ) : null}
-            <button
-              type="button"
-              onClick={async () => { try { await logOut(); } catch {} }}
-              className="header-sign-out header-cta-desktop"
-            >
-              Sign out
-            </button>
-          </>
-        ) : (
-          <Link href="/enroll" className="btn-primary primary-link header-cta-desktop">
-            Build My Compass
+            {item.label}
           </Link>
+        ))}
+      </nav>
+
+      <div className="site-header-actions">
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => applyTheme(theme === "dark" ? "light" : "dark")}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        {user && enrolled ? (
+          <Link href="/txc/experience" className="btn-primary site-header-cta">My Compass</Link>
+        ) : (
+          <Link href="/txc/enroll" className="btn-primary site-header-cta">Build My Compass</Link>
         )}
+
+        {user && (
+          <button type="button" className="btn-ghost" onClick={() => void logOut()}>
+            Sign out
+          </button>
+        )}
+
+        <button
+          type="button"
+          className="menu-toggle"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMenuOpen(v => !v)}
+        >
+          {menuOpen ? <CloseIcon /> : <MenuIcon />}
+        </button>
       </div>
 
       {menuOpen && (
-        <>
-          <button
-            type="button"
-            className="header-drawer-backdrop"
-            aria-label="Close menu"
-            onClick={() => setMenuOpen(false)}
-          />
-          <nav className="header-drawer" aria-label="Mobile navigation">
+        <div className="mobile-drawer" role="dialog" aria-modal="true">
+          <nav className="mobile-drawer-nav">
             {drawerLinks.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={isActive(item.href) ? "active" : ""}
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link key={item.href} href={item.href} className="mobile-drawer-link">
                 {item.label}
               </Link>
             ))}
-            <div className="header-drawer-actions">
-              {user ? (
-                <>
-                  {skoCompassHref && (
-                    <Link href={skoCompassHref} className="btn-primary" onClick={() => setMenuOpen(false)}>
-                      SKO Compass
-                    </Link>
-                  )}
-                  {enrolled ? (
-                    <Link href="/experience" className={skoCompassHref ? "header-drawer-link" : "btn-primary"} onClick={() => setMenuOpen(false)}>
-                      {skoCompassHref ? "TechXchange Compass" : "My Compass"}
-                    </Link>
-                  ) : !skoCompassHref ? (
-                    <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
-                      Build My Compass
-                    </Link>
-                  ) : null}
-                </>
-              ) : (
-                <Link href="/enroll" className="btn-primary" onClick={() => setMenuOpen(false)}>
-                  Build My Compass
-                </Link>
-              )}
-              {user && (
-                <button
-                  type="button"
-                  className="header-sign-out"
-                  onClick={async () => {
-                    setMenuOpen(false);
-                    try { await logOut(); } catch {}
-                  }}
-                >
-                  Sign out
-                </button>
-              )}
-            </div>
+            {user ? (
+              <button type="button" className="mobile-drawer-link" onClick={() => void logOut()}>
+                Sign out
+              </button>
+            ) : (
+              <Link href="/txc/login" className="mobile-drawer-link">Sign in</Link>
+            )}
           </nav>
-        </>
+        </div>
       )}
     </header>
   );

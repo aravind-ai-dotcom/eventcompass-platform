@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSkoAuth } from "@/context/SkoAuthContext";
+import { resolveGeoImageUrl } from "@/lib/skoGeoImages";
 import {
   getActiveEdition,
   getUserSeatReservation,
@@ -44,10 +46,10 @@ export default function SkoHomeView() {
         <h1>{edition?.theme ?? "AI Creates Advantage"}</h1>
         <p className="sko-lead">{edition?.headline ?? "Turning organizational strategy into seller action."}</p>
         {!user && (
-          <Link href="/sko/login" className="sko-btn sko-btn--primary">Sign in to SKO Compass</Link>
+          <Link href="/login" className="sko-btn sko-btn--primary">Sign in to SKO Compass</Link>
         )}
         {user && !profileComplete && (
-          <Link href="/sko/enroll" className="sko-btn sko-btn--primary">Build Your SKO Compass</Link>
+          <Link href="/enroll" className="sko-btn sko-btn--primary">Build Your SKO Compass</Link>
         )}
         {user && profileComplete && (
           <>
@@ -63,6 +65,15 @@ export default function SkoHomeView() {
           <div className="sko-geo-cards">
             {geos.map(geo => (
               <div key={geo.id} className="sko-geo-card">
+                <div className="sko-geo-card-image">
+                  <Image
+                    src={resolveGeoImageUrl(geo)}
+                    alt={`${geo.name} — ${geo.cityLabel}`}
+                    width={480}
+                    height={270}
+                    sizes="(max-width: 768px) 100vw, 240px"
+                  />
+                </div>
                 <span className="sko-geo-name">{geo.name}</span>
                 <span className="sko-geo-city">{geo.cityLabel}</span>
                 <span className="sko-geo-meta">{geo.deliveryType} · {geo.date}</span>

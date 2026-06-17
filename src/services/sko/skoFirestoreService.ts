@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { SKO_COLLECTIONS } from "@/lib/skoCollections";
+import { isFirestorePermissionError, skoFirestoreOp } from "@/lib/skoFirestoreDebug";
 import type {
   SkoBrief,
   SkoBriefItem,
@@ -46,11 +47,49 @@ function mapDoc<T extends { id: string }>(id: string, data: DocumentData): T {
   return { id, ...data } as T;
 }
 
+const SERVICE_ROUTE = "skoFirestoreService";
+
+async function skoRead<T>(
+  collection: string,
+  fn: () => Promise<T>,
+  uid?: string | null,
+): Promise<T> {
+  return skoFirestoreOp(
+    { route: SERVICE_ROUTE, collection, operation: "read" },
+    uid ?? null,
+    fn,
+  );
+}
+
+async function skoReadWithSeedFallback<T>(
+  collection: string,
+  fn: () => Promise<T>,
+  fallback: T,
+  uid?: string | null,
+): Promise<T> {
+  try {
+    return await skoRead(collection, fn, uid);
+  } catch (err) {
+    if (isFirestorePermissionError(err)) {
+      console.warn(`[SKO Firestore] permission denied on ${collection}; using local seed fallback`);
+      return fallback;
+    }
+    throw err;
+  }
+}
+
 // ── Edition ─────────────────────────────────────────────────────────────────
 
 export async function getActiveEdition(): Promise<SkoEdition | null> {
-  const snap = await getDoc(doc(db, SKO_COLLECTIONS.editions, SKO_EDITION_ID));
-  if (snap.exists()) return mapDoc<SkoEdition>(snap.id, snap.data());
+  try {
+    const snap = await skoRead(SKO_COLLECTIONS.editions, () =>
+      getDoc(doc(db, SKO_COLLECTIONS.editions, SKO_EDITION_ID)),
+    );
+    if (snap.exists()) return mapDoc<SkoEdition>(snap.id, snap.data());
+  } catch (err) {
+    if (!isFirestorePermissionError(err)) throw err;
+    console.warn("[SKO Firestore] editions read denied; using seed edition");
+  }
   return SKO_EDITION;
 }
 
@@ -61,13 +100,19 @@ export async function saveEdition(edition: SkoEdition): Promise<void> {
 // ── Geos ────────────────────────────────────────────────────────────────────
 
 export async function listGeos(editionId = SKO_EDITION_ID): Promise<SkoGeo[]> {
-  const q = query(
-    collection(db, SKO_COLLECTIONS.geos),
-    where("editionId", "==", editionId),
+  return skoReadWithSeedFallback(
+    SKO_COLLECTIONS.geos,
+    async () => {
+      const q = query(
+        collection(db, SKO_COLLECTIONS.geos),
+        where("editionId", "==", editionId),
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) return SKO_GEOS;
+      return snap.docs.map(d => mapDoc<SkoGeo>(d.id, d.data())).sort((a, b) => a.date.localeCompare(b.date));
+    },
+    SKO_GEOS,
   );
-  const snap = await getDocs(q);
-  if (snap.empty) return SKO_GEOS;
-  return snap.docs.map(d => mapDoc<SkoGeo>(d.id, d.data())).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export async function saveGeo(geo: SkoGeo): Promise<void> {
@@ -77,12 +122,18 @@ export async function saveGeo(geo: SkoGeo): Promise<void> {
 // ── Markets ─────────────────────────────────────────────────────────────────
 
 export async function listMarkets(geoId?: string): Promise<SkoMarket[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.markets));
-  let markets = snap.empty
-    ? SKO_MARKETS
-    : snap.docs.map(d => mapDoc<SkoMarket>(d.id, d.data()));
-  if (geoId) markets = markets.filter(m => m.geoId === geoId);
-  return markets.filter(m => m.active).sort((a, b) => a.sortOrder - b.sortOrder);
+  const markets = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.markets,
+    async () => {
+      const snap = await getDocs(collection(db, SKO_COLLECTIONS.markets));
+      if (snap.empty) return SKO_MARKETS;
+      return snap.docs.map(d => mapDoc<SkoMarket>(d.id, d.data()));
+    },
+    SKO_MARKETS,
+  );
+  let filtered = markets;
+  if (geoId) filtered = filtered.filter(m => m.geoId === geoId);
+  return filtered.filter(m => m.active).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export async function saveMarket(market: SkoMarket): Promise<void> {
@@ -92,10 +143,15 @@ export async function saveMarket(market: SkoMarket): Promise<void> {
 // ── Personas ────────────────────────────────────────────────────────────────
 
 export async function listSellerPersonas(): Promise<SkoSellerPersona[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.sellerPersonas));
-  const records = snap.empty
-    ? SKO_PERSONAS
-    : snap.docs.map(d => mapDoc<SkoSellerPersona>(d.id, d.data()));
+  const records = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.sellerPersonas,
+    async () => {
+      const snap = await getDocs(collection(db, SKO_COLLECTIONS.sellerPersonas));
+      if (snap.empty) return SKO_PERSONAS;
+      return snap.docs.map(d => mapDoc<SkoSellerPersona>(d.id, d.data()));
+    },
+    SKO_PERSONAS,
+  );
   return records.filter(p => p.active).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
@@ -118,14 +174,19 @@ export async function listContentItems(
   editionId = SKO_EDITION_ID,
   geoId?: string,
 ): Promise<SkoContentItem[]> {
-  const q = query(
-    collection(db, SKO_COLLECTIONS.contentItems),
-    where("editionId", "==", editionId),
+  let items = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.contentItems,
+    async () => {
+      const q = query(
+        collection(db, SKO_COLLECTIONS.contentItems),
+        where("editionId", "==", editionId),
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) return SKO_CONTENT_ITEMS;
+      return snap.docs.map(d => mapDoc<SkoContentItem>(d.id, d.data()));
+    },
+    SKO_CONTENT_ITEMS,
   );
-  const snap = await getDocs(q);
-  let items = snap.empty
-    ? SKO_CONTENT_ITEMS
-    : snap.docs.map(d => mapDoc<SkoContentItem>(d.id, d.data()));
   if (geoId) items = items.filter(i => i.geoId === geoId || i.geoId === "global");
   return items.sort((a, b) => a.agendaOrder - b.agendaOrder);
 }
@@ -142,10 +203,15 @@ export async function listContentAssets(contentId?: string): Promise<SkoContentA
 }
 
 export async function listContentClips(contentId?: string): Promise<SkoContentClip[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.contentClips));
-  let clips = snap.empty
-    ? SKO_CLIPS
-    : snap.docs.map(d => mapDoc<SkoContentClip>(d.id, d.data()));
+  let clips = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.contentClips,
+    async () => {
+      const snap = await getDocs(collection(db, SKO_COLLECTIONS.contentClips));
+      if (snap.empty) return SKO_CLIPS;
+      return snap.docs.map(d => mapDoc<SkoContentClip>(d.id, d.data()));
+    },
+    SKO_CLIPS,
+  );
   if (contentId) clips = clips.filter(c => c.contentId === contentId);
   return clips;
 }
@@ -199,9 +265,14 @@ export async function savePulseQuote(quote: SkoPulseQuote): Promise<void> {
 // ── Briefs & Podcasts ───────────────────────────────────────────────────────
 
 export async function listUserBriefs(userId: string): Promise<SkoBrief[]> {
-  const q = query(collection(db, SKO_COLLECTIONS.briefs), where("userId", "==", userId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => mapDoc<SkoBrief>(d.id, d.data()));
+  try {
+    const q = query(collection(db, SKO_COLLECTIONS.briefs), where("userId", "==", userId));
+    const snap = await skoRead(SKO_COLLECTIONS.briefs, () => getDocs(q), userId);
+    return snap.docs.map(d => mapDoc<SkoBrief>(d.id, d.data()));
+  } catch (err) {
+    if (isFirestorePermissionError(err)) return [];
+    throw err;
+  }
 }
 
 export async function listBriefItems(briefId: string): Promise<SkoBriefItem[]> {
@@ -213,9 +284,14 @@ export async function listBriefItems(briefId: string): Promise<SkoBriefItem[]> {
 }
 
 export async function listUserPodcasts(userId: string): Promise<SkoPodcast[]> {
-  const q = query(collection(db, SKO_COLLECTIONS.podcasts), where("userId", "==", userId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => mapDoc<SkoPodcast>(d.id, d.data()));
+  try {
+    const q = query(collection(db, SKO_COLLECTIONS.podcasts), where("userId", "==", userId));
+    const snap = await skoRead(SKO_COLLECTIONS.podcasts, () => getDocs(q), userId);
+    return snap.docs.map(d => mapDoc<SkoPodcast>(d.id, d.data()));
+  } catch (err) {
+    if (isFirestorePermissionError(err)) return [];
+    throw err;
+  }
 }
 
 export async function listPodcastsByGeo(geoId: string): Promise<SkoPodcast[]> {

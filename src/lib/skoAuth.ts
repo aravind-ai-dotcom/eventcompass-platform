@@ -1,5 +1,5 @@
 // =============================================================================
-// Compass SKO — Firebase Authentication + user profile
+// Compass SKO — Firebase Authentication + user profile (sko_users only)
 // =============================================================================
 
 import {
@@ -13,30 +13,63 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { SKO_COLLECTIONS } from "@/lib/skoCollections";
+import {
+  firestoreErrorMessage,
+  isFirestorePermissionError,
+  skoFirestoreOp,
+} from "@/lib/skoFirestoreDebug";
 import type { SkoAccessType, SkoUserProfile } from "@/types/sko";
 import { friendlyAuthError } from "@/lib/auth";
 
 export { friendlyAuthError };
 
-export async function getSkoUserProfile(uid: string): Promise<SkoUserProfile | null> {
-  const snap = await getDoc(doc(db, SKO_COLLECTIONS.users, uid));
-  if (!snap.exists()) return null;
-  const data = snap.data();
+export type SkoProfileLoadResult =
+  | { profile: SkoUserProfile; error: null }
+  | { profile: null; error: null }
+  | { profile: null; error: string };
 
-  const hasSkoIntent = Boolean(data.geoId && data.personaId);
-  const isSko =
-    data.product === "sko" ||
-    data.profileComplete === true ||
-    hasSkoIntent;
+export async function getSkoUserProfile(
+  uid: string,
+  route = "skoAuth.getSkoUserProfile",
+): Promise<SkoProfileLoadResult> {
+  try {
+    const snap = await skoFirestoreOp(
+      { route, collection: SKO_COLLECTIONS.users, operation: "read", docId: uid },
+      uid,
+      () => getDoc(doc(db, SKO_COLLECTIONS.users, uid)),
+    );
 
-  if (!isSko) return null;
+    if (!snap.exists()) {
+      return { profile: null, error: null };
+    }
 
-  return {
-    uid,
-    ...data,
-    product: "sko",
-    profileComplete: Boolean(data.profileComplete ?? hasSkoIntent),
-  } as SkoUserProfile;
+    const data = snap.data();
+
+    if (data.product !== "sko") {
+      return { profile: null, error: null };
+    }
+
+    return {
+      profile: {
+        uid,
+        ...data,
+        product: "sko",
+        profileComplete: Boolean(data.profileComplete),
+      } as SkoUserProfile,
+      error: null,
+    };
+  } catch (err) {
+    if (isFirestorePermissionError(err)) {
+      return {
+        profile: null,
+        error: "We could not load your SKO profile yet.",
+      };
+    }
+    return {
+      profile: null,
+      error: firestoreErrorMessage(err),
+    };
+  }
 }
 
 export async function signUpSkoUser(input: {
@@ -70,11 +103,16 @@ export async function signUpSkoUser(input: {
     updatedAt: new Date().toISOString(),
   };
 
-  await setDoc(doc(db, SKO_COLLECTIONS.users, cred.user.uid), {
-    ...profile,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+  await skoFirestoreOp(
+    { route: "skoAuth.signUpSkoUser", collection: SKO_COLLECTIONS.users, operation: "write", docId: cred.user.uid },
+    cred.user.uid,
+    () =>
+      setDoc(doc(db, SKO_COLLECTIONS.users, cred.user.uid), {
+        ...profile,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }),
+  );
 
   return cred.user;
 }
@@ -83,11 +121,12 @@ export async function signInSkoUser(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
   const ref = doc(db, SKO_COLLECTIONS.users, cred.user.uid);
   const existing = await getDoc(ref);
-  if (existing.exists()) {
-    await setDoc(
-      ref,
-      { lastLoginAt: serverTimestamp(), updatedAt: serverTimestamp() },
-      { merge: true },
+  if (existing.exists() && existing.data()?.product === "sko") {
+    await skoFirestoreOp(
+      { route: "skoAuth.signInSkoUser", collection: SKO_COLLECTIONS.users, operation: "write", docId: cred.user.uid },
+      cred.user.uid,
+      () =>
+        setDoc(ref, { lastLoginAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true }),
     );
   }
   return cred;
@@ -105,15 +144,22 @@ export async function saveSkoIntentProfile(
   uid: string,
   intent: Partial<SkoUserProfile>,
 ): Promise<void> {
-  await setDoc(
-    doc(db, SKO_COLLECTIONS.users, uid),
-    {
-      ...intent,
-      product: "sko",
-      profileComplete: true,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
+  await skoFirestoreOp(
+    { route: "skoAuth.saveSkoIntentProfile", collection: SKO_COLLECTIONS.users, operation: "write", docId: uid },
+    uid,
+    () =>
+      setDoc(
+        doc(db, SKO_COLLECTIONS.users, uid),
+        {
+          uid,
+          slackHandle: intent.slackHandle ?? "",
+          ...intent,
+          product: "sko",
+          profileComplete: true,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      ),
   );
 }
 

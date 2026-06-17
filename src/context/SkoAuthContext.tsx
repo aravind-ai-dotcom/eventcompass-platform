@@ -5,13 +5,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getSkoUserProfile } from "@/lib/skoAuth";
+import { clearLastSkoFirestoreError } from "@/lib/skoFirestoreDebug";
 import type { SkoUserProfile } from "@/types/sko";
+
+const PROFILE_LOAD_TIMEOUT_MS = 8000;
 
 interface SkoAuthContextValue {
   user: User | null;
@@ -19,6 +23,8 @@ interface SkoAuthContextValue {
   profileComplete: boolean;
   isAdmin: boolean;
   loading: boolean;
+  profileError: string | null;
+  profileTimedOut: boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -28,6 +34,8 @@ const SkoAuthContext = createContext<SkoAuthContextValue>({
   profileComplete: false,
   isAdmin: false,
   loading: true,
+  profileError: null,
+  profileTimedOut: false,
   refreshProfile: async () => {},
 });
 
@@ -35,25 +43,58 @@ export function SkoAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<SkoUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileTimedOut, setProfileTimedOut] = useState(false);
+  const loadGen = useRef(0);
 
-  const loadProfile = useCallback(async (u: User) => {
-    const p = await getSkoUserProfile(u.uid);
-    setProfile(p);
+  const loadProfile = useCallback(async (u: User, route: string) => {
+    const gen = ++loadGen.current;
+    setProfileError(null);
+    setProfileTimedOut(false);
+
+    const timeout = window.setTimeout(() => {
+      if (loadGen.current === gen) {
+        setProfileTimedOut(true);
+        setLoading(false);
+      }
+    }, PROFILE_LOAD_TIMEOUT_MS);
+
+    try {
+      const result = await getSkoUserProfile(u.uid, route);
+      if (loadGen.current !== gen) return;
+      setProfile(result.profile);
+      setProfileError(result.error);
+      if (!result.error) clearLastSkoFirestoreError();
+    } catch {
+      if (loadGen.current !== gen) return;
+      setProfile(null);
+      setProfileError("We could not load your SKO profile yet.");
+    } finally {
+      window.clearTimeout(timeout);
+      if (loadGen.current === gen) {
+        setLoading(false);
+      }
+    }
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await loadProfile(user);
+    if (!user) return;
+    setLoading(true);
+    await loadProfile(user, "SkoAuthContext.refreshProfile");
   }, [user, loadProfile]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
-        await loadProfile(u);
+        setLoading(true);
+        await loadProfile(u, "SkoAuthContext.onAuthStateChanged");
       } else {
         setProfile(null);
+        setProfileError(null);
+        setProfileTimedOut(false);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsub;
   }, [loadProfile]);
@@ -66,6 +107,8 @@ export function SkoAuthProvider({ children }: { children: ReactNode }) {
         profileComplete: Boolean(profile?.profileComplete),
         isAdmin: profile?.accessType === "se_team",
         loading,
+        profileError,
+        profileTimedOut,
         refreshProfile,
       }}
     >

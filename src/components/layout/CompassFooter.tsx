@@ -4,13 +4,7 @@ import { usePathname } from "next/navigation";
 
 export default function CompassFooter() {
   const pathname = usePathname();
-  if (
-    pathname.startsWith("/sko") ||
-    pathname.startsWith("/setup/sko") ||
-    pathname === "/profile" ||
-    pathname === "/content" ||
-    pathname === "/pulse"
-  ) {
+  if (!pathname.startsWith("/txc")) {
     return null;
   }
   return (

@@ -1,57 +1,50 @@
 "use client";
-// =============================================================================
-// EventCompass — Login Page  /login
-// New-user-first: Build My Compass is the primary path.
-// =============================================================================
 
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import AuthPanel from "@/components/auth/AuthPanel";
-import { useAuth } from "@/context/AuthContext";
+import { useSkoAuth } from "@/context/SkoAuthContext";
+import SkoAuthPanel from "@/components/sko/SkoAuthPanel";
+import SkoProfileErrorPanel from "@/components/sko/SkoProfileErrorPanel";
 
-export default function LoginPage() {
-  const { user, loading } = useAuth();
+export default function SkoLoginPage() {
+  const { user, profileComplete, loading, profileError, refreshProfile } = useSkoAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace("/experience");
+    if (!loading && user && !profileError) {
+      router.replace(profileComplete ? "/profile" : "/enroll");
     }
-  }, [user, loading, router]);
+  }, [user, profileComplete, loading, profileError, router]);
 
   if (loading) {
+    return <section className="sko-section"><p className="sko-muted">Loading sign in…</p></section>;
+  }
+
+  if (profileError) {
     return (
-      <section className="section no-top-border">
-        <p style={{ color: "var(--muted)" }}>Loading…</p>
-      </section>
+      <SkoProfileErrorPanel
+        message={profileError}
+        onRetry={() => void refreshProfile()}
+      />
     );
   }
 
   if (user) return null;
 
   return (
-    <>
-      <section className="login-onboard login-onboard-primary" aria-labelledby="login-onboard-heading">
-        <div className="section-kicker">Get started</div>
-        <h1 id="login-onboard-heading">New to Compass?</h1>
-        <p className="login-onboard-lead">
-          Build your personalized TechXchange experience.
+    <section className="sko-login-page">
+      <div className="sko-login-card">
+        <p className="sko-kicker">IBM Sales Enablement</p>
+        <h1>Sign in to SKO Compass</h1>
+        <p className="sko-lead">
+          Access your SKO2H 2026 briefing, podcasts, and seller momentum tools.
         </p>
-        <Link href="/enroll" className="btn-primary login-onboard-cta">
-          Build My Compass →
-        </Link>
-      </section>
-
-      <section className="login-signin" aria-labelledby="login-signin-heading" id="sign-in">
-        <div className="login-signin-head">
-          <h2 id="login-signin-heading">Already have an account?</h2>
-          <p>Sign in to open your personalized TechXchange experience.</p>
-        </div>
-        <AuthPanel onAuthenticated={() => router.push("/experience")} />
-      </section>
-
-      <div style={{ height: "64px" }} />
-    </>
+        <SkoAuthPanel
+          onAuthenticated={(complete) => router.push(complete ? "/profile" : "/enroll")}
+        />
+        <Link href="/content" className="sko-link-back">← Explore SKO</Link>
+      </div>
+    </section>
   );
 }

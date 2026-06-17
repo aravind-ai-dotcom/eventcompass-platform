@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSkoAuth } from "@/context/SkoAuthContext";
 import SkoChineseBriefingBar from "@/components/sko/SkoChineseBriefingBar";
 import SkoPodcastModule from "@/components/sko/SkoPodcastModule";
+import SkoProfileErrorPanel from "@/components/sko/SkoProfileErrorPanel";
+import SkoProfileDebugPanel from "@/components/sko/SkoProfileDebugPanel";
 import { isChineseBriefingEnabled, labelForKey } from "@/lib/skoLocale";
 import { getDemoBrief, getDemoPodcasts } from "@/lib/skoDemoContent";
 import {
@@ -16,65 +19,113 @@ import {
 } from "@/services/sko/skoFirestoreService";
 import type { SkoBrief, SkoContentClip, SkoContentItem, SkoPodcast } from "@/types/sko";
 
-interface Props {
-  loginPath?: string;
-  enrollPath?: string;
-}
-
-export default function SkoCompassView({
-  loginPath = "/sko/login",
-  enrollPath = "/sko/enroll",
-}: Props) {
-  const { user, profile, profileComplete, loading } = useSkoAuth();
+export default function SkoCompassView() {
+  const {
+    user,
+    profile,
+    profileComplete,
+    loading,
+    profileError,
+    refreshProfile,
+  } = useSkoAuth();
   const router = useRouter();
   const [briefs, setBriefs] = useState<SkoBrief[]>([]);
   const [podcasts, setPodcasts] = useState<SkoPodcast[]>([]);
   const [clips, setClips] = useState<SkoContentClip[]>([]);
   const [agenda, setAgenda] = useState<SkoContentItem[]>([]);
+  const [contentReady, setContentReady] = useState(false);
 
+  // 1. Not signed in → /login
   useEffect(() => {
-    if (!loading && !user) router.replace(loginPath);
-    else if (!loading && user && !profileComplete) router.replace(enrollPath);
-  }, [user, profileComplete, loading, router, loginPath, enrollPath]);
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
+  // 2–3. Signed in but no / incomplete profile → /enroll (not an error)
   useEffect(() => {
-    if (!user) return;
+    if (!loading && user && !profileError && !profileComplete) {
+      router.replace("/enroll");
+    }
+  }, [loading, user, profileComplete, profileError, router]);
+
+  // 4. Load compass content when profile is complete
+  useEffect(() => {
+    if (!user || !profileComplete || !profile) return;
+    setContentReady(false);
     void (async () => {
-      const geo = profile?.geoId;
-      const [b, p, c, items] = await Promise.all([
-        listUserBriefs(user.uid),
-        listUserPodcasts(user.uid),
-        listContentClips(),
-        listContentItems(undefined, geo ? String(geo) : undefined),
-      ]);
-      setBriefs(b.length ? b : [getDemoBrief(profile?.geoId, profile?.marketId)]);
-      setPodcasts(p.length ? p : getDemoPodcasts(user.uid, profile?.geoId, profile?.marketId));
-      setClips(c.length ? c.slice(0, 6) : []);
-      setAgenda(items.slice(0, 5));
+      try {
+        const geo = profile.geoId;
+        const [b, p, c, items] = await Promise.all([
+          listUserBriefs(user.uid),
+          listUserPodcasts(user.uid),
+          listContentClips(),
+          listContentItems(undefined, geo ? String(geo) : undefined),
+        ]);
+        setBriefs(b.length ? b : [getDemoBrief(profile.geoId, profile.marketId)]);
+        setPodcasts(p.length ? p : getDemoPodcasts(user.uid, profile.geoId, profile.marketId));
+        setClips(c.length ? c.slice(0, 6) : []);
+        setAgenda(items.slice(0, 5));
+      } finally {
+        setContentReady(true);
+      }
     })();
-  }, [user, profile?.geoId, profile?.marketId]);
+  }, [user, profile, profileComplete]);
 
-  if (loading || !user || !profileComplete) {
+  if (loading) {
     return <section className="sko-section"><p className="sko-muted">Loading My Compass…</p></section>;
   }
 
+  // Real Firestore / network failure only
+  if (profileError) {
+    return (
+      <>
+        <SkoProfileDebugPanel />
+        <SkoProfileErrorPanel
+          message={profileError}
+          onRetry={() => void refreshProfile()}
+        />
+      </>
+    );
+  }
+
+  if (!user || !profileComplete || !profile) {
+    return (
+      <section className="sko-section">
+        <SkoProfileDebugPanel />
+        <p className="sko-muted">Redirecting to SKO enrollment…</p>
+        <Link href="/enroll" className="sko-link-btn">Continue to enrollment →</Link>
+      </section>
+    );
+  }
+
+  if (!contentReady) {
+    return (
+      <section className="sko-section">
+        <SkoProfileDebugPanel />
+        <p className="sko-muted">Loading your briefing…</p>
+      </section>
+    );
+  }
+
   const brief = briefs[0];
-  const showChinese = isChineseBriefingEnabled(profile?.geoId, profile?.marketId);
+  const showChinese = isChineseBriefingEnabled(profile.geoId, profile.marketId);
 
   return (
     <section className="sko-section sko-compass">
+      <SkoProfileDebugPanel />
       <header className="sko-compass-header">
-        <p className="sko-kicker">My Compass</p>
-        <h1>Welcome back, {profile?.firstName ?? profile?.displayName}</h1>
+        <p className="sko-kicker">My Compass · SKO2H 2026</p>
+        <h1>Welcome back, {profile.firstName ?? profile.displayName}</h1>
         <p className="sko-lead">
-          {profile?.geoId} · {profile?.marketId?.replace(/-/g, " ")} · Personalized SKO briefing
+          {profile.geoId} · {profile.marketId?.replace(/-/g, " ")} · Personalized SKO briefing
         </p>
-        <Link href={enrollPath} className="sko-link-btn">Refine intent →</Link>
+        <Link href="/enroll" className="sko-link-btn">Refine intent →</Link>
       </header>
 
       <SkoChineseBriefingBar
-        geoId={profile?.geoId}
-        marketId={profile?.marketId}
+        geoId={profile.geoId}
+        marketId={profile.marketId}
         onCompassPage
       />
 
@@ -93,8 +144,8 @@ export default function SkoCompassView({
 
       <SkoPodcastModule
         userId={user.uid}
-        geoId={String(profile?.geoId ?? "Americas")}
-        marketId={profile?.marketId}
+        geoId={String(profile.geoId ?? "Americas")}
+        marketId={profile.marketId}
         podcasts={podcasts}
       />
 

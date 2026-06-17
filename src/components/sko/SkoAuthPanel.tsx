@@ -46,8 +46,8 @@ export default function SkoAuthPanel({ onAuthenticated }: Props) {
     try {
       const cred = await signInSkoUser(email, password);
       const { getSkoUserProfile } = await import("@/lib/skoAuth");
-      const profile = await getSkoUserProfile(cred.user.uid);
-      onAuthenticated(Boolean(profile?.profileComplete));
+      const result = await getSkoUserProfile(cred.user.uid, "SkoAuthPanel.handleLogin");
+      onAuthenticated(Boolean(result.profile?.profileComplete));
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {

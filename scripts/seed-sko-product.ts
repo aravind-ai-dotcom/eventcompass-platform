@@ -1,6 +1,7 @@
 /**
- * Seed Compass SKO product collections in Firestore.
+ * Seed Compass SKO product collections in Firestore (sko_* namespace only).
  * Run: npm run seed:sko-product
+ * Deploy rules first: firebase deploy --only firestore:rules
  */
 import admin from "firebase-admin";
 import path from "path";
