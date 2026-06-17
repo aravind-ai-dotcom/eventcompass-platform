@@ -35,12 +35,14 @@ import type {
 } from "@/types/sko";
 import { SKO_EDITION_ID } from "@/types/sko";
 import {
+  SKO_ASSETS,
   SKO_CLIPS,
   SKO_CONTENT_ITEMS,
   SKO_EDITION,
   SKO_GEOS,
   SKO_MARKETS,
   SKO_PERSONAS,
+  SKO_SPEAKERS,
 } from "@/data/seeds/skoProductSeed";
 
 function mapDoc<T extends { id: string }>(id: string, data: DocumentData): T {
@@ -53,11 +55,13 @@ async function skoRead<T>(
   collection: string,
   fn: () => Promise<T>,
   uid?: string | null,
+  quiet = true,
 ): Promise<T> {
   return skoFirestoreOp(
     { route: SERVICE_ROUTE, collection, operation: "read" },
     uid ?? null,
     fn,
+    { quiet },
   );
 }
 
@@ -158,8 +162,15 @@ export async function listSellerPersonas(): Promise<SkoSellerPersona[]> {
 // ── Speakers ────────────────────────────────────────────────────────────────
 
 export async function listSpeakers(geoId?: string): Promise<SkoSpeaker[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.speakers));
-  let speakers = snap.docs.map(d => mapDoc<SkoSpeaker>(d.id, d.data()));
+  let speakers = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.speakers,
+    async () => {
+      const snap = await getDocs(collection(db, SKO_COLLECTIONS.speakers));
+      if (snap.empty) return SKO_SPEAKERS;
+      return snap.docs.map(d => mapDoc<SkoSpeaker>(d.id, d.data()));
+    },
+    SKO_SPEAKERS,
+  );
   if (geoId) speakers = speakers.filter(s => s.geoId === geoId || !s.geoId);
   return speakers;
 }
@@ -196,8 +207,15 @@ export async function saveContentItem(item: SkoContentItem): Promise<void> {
 }
 
 export async function listContentAssets(contentId?: string): Promise<SkoContentAsset[]> {
-  const snap = await getDocs(collection(db, SKO_COLLECTIONS.contentAssets));
-  let assets = snap.docs.map(d => mapDoc<SkoContentAsset>(d.id, d.data()));
+  let assets = await skoReadWithSeedFallback(
+    SKO_COLLECTIONS.contentAssets,
+    async () => {
+      const snap = await getDocs(collection(db, SKO_COLLECTIONS.contentAssets));
+      if (snap.empty) return SKO_ASSETS;
+      return snap.docs.map(d => mapDoc<SkoContentAsset>(d.id, d.data()));
+    },
+    SKO_ASSETS,
+  );
   if (contentId) assets = assets.filter(a => a.contentId === contentId);
   return assets;
 }

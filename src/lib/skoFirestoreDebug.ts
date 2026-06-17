@@ -43,9 +43,8 @@ export function isFirestorePermissionError(err: unknown): boolean {
 }
 
 export function firestoreErrorMessage(err: unknown): string {
-  if (!err || typeof err !== "object") return "Unknown Firestore error";
-  const e = err as { code?: string; message?: string };
-  return [e.code, e.message].filter(Boolean).join(": ") || "Unknown Firestore error";
+  const { code, message } = normalizeFirestoreError(err);
+  return `${code}: ${message}`;
 }
 
 function authSnapshot() {
@@ -57,16 +56,43 @@ function authSnapshot() {
   };
 }
 
+function normalizeFirestoreError(err: unknown): { code: string; message: string } {
+  if (err && typeof err === "object") {
+    const e = err as { code?: string; message?: string; name?: string };
+    return {
+      code: e.code ?? e.name ?? "unknown",
+      message: e.message ?? String(err),
+    };
+  }
+  return { code: "unknown", message: String(err) };
+}
+
+function formatErrorRecord(record: SkoFirestoreErrorRecord): string {
+  return [
+    `[SKO Firestore] ${record.operation} ${record.collection}`,
+    record.docId ? `doc=${record.docId}` : null,
+    `route=${record.route}`,
+    `uid=${record.uid ?? "none"}`,
+    `auth=${record.authenticated}`,
+    `code=${record.code}`,
+    `message=${record.message}`,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+}
+
 /** Log and rethrow — never log secrets. */
 export async function skoFirestoreOp<T>(
   context: SkoFirestoreLogContext,
   uid: string | null | undefined,
   fn: () => Promise<T>,
+  options?: { quiet?: boolean },
 ): Promise<T> {
   const authInfo = authSnapshot();
   try {
     return await fn();
   } catch (err) {
+    const { code, message } = normalizeFirestoreError(err);
     const record: SkoFirestoreErrorRecord = {
       route: context.route,
       collection: context.collection,
@@ -75,12 +101,19 @@ export async function skoFirestoreOp<T>(
       uid: uid ?? authInfo.uid,
       email: authInfo.email,
       authenticated: authInfo.authenticated,
-      code: (err as { code?: string })?.code ?? "unknown",
-      message: (err as { message?: string })?.message ?? String(err),
+      code,
+      message,
       at: new Date().toISOString(),
     };
     lastError = record;
-    console.error("[SKO Firestore]", record);
+    const line = formatErrorRecord(record);
+    if (options?.quiet) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(line);
+      }
+    } else {
+      console.error(line);
+    }
     throw err;
   }
 }

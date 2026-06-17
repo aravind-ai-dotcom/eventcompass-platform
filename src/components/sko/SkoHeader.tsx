@@ -18,7 +18,7 @@ export default function SkoHeader() {
   return (
     <header className="sko-header">
       <div className="sko-header-inner">
-        <Link href="/content" className="sko-brand">
+        <Link href="/" className="sko-brand">
           <span className="sko-brand-kicker">IBM Sales Enablement</span>
           <span className="sko-brand-title">Compass SKO</span>
         </Link>

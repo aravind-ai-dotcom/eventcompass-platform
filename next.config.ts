@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
       { source: "/sko/enroll", destination: "/enroll", permanent: false },
       { source: "/sko/compass", destination: "/profile", permanent: false },
       { source: "/sko/pulse", destination: "/pulse", permanent: false },
-      { source: "/sko", destination: "/content", permanent: false },
+      { source: "/sko", destination: "/", permanent: false },
       { source: "/experience", destination: "/txc/experience", permanent: false },
       { source: "/explore", destination: "/txc/explore", permanent: false },
       { source: "/sessions", destination: "/txc/sessions", permanent: false },

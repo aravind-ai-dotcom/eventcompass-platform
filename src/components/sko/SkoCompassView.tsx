@@ -143,7 +143,6 @@ export default function SkoCompassView() {
       )}
 
       <SkoPodcastModule
-        userId={user.uid}
         geoId={String(profile.geoId ?? "Americas")}
         marketId={profile.marketId}
         podcasts={podcasts}

@@ -1,7 +1,5 @@
-"use client";
-
-import SkoHomeView from "@/components/sko/SkoHomeView";
+import SkoExploreView from "@/components/sko/SkoExploreView";
 
 export default function ContentPage() {
-  return <SkoHomeView />;
+  return <SkoExploreView />;
 }

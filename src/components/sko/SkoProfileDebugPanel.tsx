@@ -4,11 +4,15 @@ import { SKO_COLLECTIONS } from "@/lib/skoCollections";
 import { getLastSkoFirestoreError } from "@/lib/skoFirestoreDebug";
 import { useSkoAuth } from "@/context/SkoAuthContext";
 
+/** Dev-only diagnostics — shown only when something is actually wrong. */
 export default function SkoProfileDebugPanel() {
   if (process.env.NODE_ENV !== "development") return null;
 
   const { user, profile, profileComplete, profileError } = useSkoAuth();
   const lastFs = getLastSkoFirestoreError();
+
+  if (!profileError && !lastFs) return null;
+
   const docPath = user ? `${SKO_COLLECTIONS.users}/${user.uid}` : "—";
 
   return (
@@ -21,7 +25,7 @@ export default function SkoProfileDebugPanel() {
         <div><dt>Profile doc path</dt><dd><code>{docPath}</code></dd></div>
         <div><dt>Profile complete</dt><dd>{String(profileComplete)}</dd></div>
         <div><dt>Context error</dt><dd>{profileError ?? "—"}</dd></div>
-        <div><dt>Last Firestore error</dt><dd>{lastFs ? `${lastFs.code}: ${lastFs.message}` : "—"}</dd></div>
+        <div><dt>Last Firestore error</dt><dd>{lastFs ? `${lastFs.code}: ${lastFs.message} (${lastFs.collection})` : "—"}</dd></div>
         {lastFs && (
           <>
             <div><dt>FS route</dt><dd>{lastFs.route}</dd></div>
