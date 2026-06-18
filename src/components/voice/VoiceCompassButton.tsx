@@ -43,6 +43,8 @@ import { ensureGovernanceLoaded } from "@/services/governance/governanceLoader";
 import { applyTtsPronunciation } from "@/services/voice/voicePronunciation";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 import { localeFromSpeechLang, type UiLocale } from "@/services/i18n/voiceLocale";
+import { resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
+import { primaryMatchReason } from "@/lib/personCardHelpers";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
 import {
@@ -223,6 +225,7 @@ interface CompactCardProps {
   title:       string;
   type:        string;
   meta?:       string;
+  why?:        string;
   infoHref:    string;
   sessionId?:  string;
   championId?: string;
@@ -233,7 +236,7 @@ interface CompactCardProps {
 }
 
 function CompactCard({
-  title, type, meta, infoHref,
+  title, type, meta, why, infoHref,
   sessionId, championId,
   onAddToSchedule, onDoNotSuggestSession,
   onSavePerson, onDoNotSuggestPerson,
@@ -260,6 +263,9 @@ function CompactCard({
       </div>
       {meta && (
         <p style={{ color: "var(--muted)", fontSize: "0.75rem", margin: 0, lineHeight: 1.4 }}>{meta}</p>
+      )}
+      {why && (
+        <p className="voice-compact-why">{why}</p>
       )}
       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", paddingTop: "2px" }}>
         <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "rgba(15,98,254,0.35)" }}>
@@ -764,6 +770,14 @@ export default function VoiceCompassButton({
     (topChampion as unknown as Record<string, unknown>).company      as string | undefined,
   ].filter(Boolean).slice(0, 2).join(" · ") : "";
 
+  const profileSignals = [...(participantTracks ?? []), ...(participantGoals ?? [])];
+  const sessionWhy = displaySession
+    ? resolveSessionWhyLine(displaySession as ScoredSession, null)
+    : undefined;
+  const champWhy = topChampion
+    ? primaryMatchReason(topChampion as ScoredChampion, profileSignals) ?? undefined
+    : undefined;
+
   // ─────────────────────────────────────────────────────────────────────────
   // Render
   // ─────────────────────────────────────────────────────────────────────────
@@ -871,7 +885,7 @@ export default function VoiceCompassButton({
                   </p>
                 )}
                 <p className="voice-assistant-prompt-hint">
-                  Try &ldquo;Who should I meet about Agentic AI?&rdquo; · &ldquo;Help me prepare for my certification.&rdquo; · &ldquo;What conversations are forming nearby?&rdquo;
+                  Try &ldquo;What should I do next?&rdquo; · &ldquo;Who should I meet?&rdquo; · &ldquo;Why this session?&rdquo;
                 </p>
               </div>
 
@@ -928,7 +942,8 @@ export default function VoiceCompassButton({
                     title={(displaySession as unknown as Record<string, unknown>).title as string ?? "Session"}
                     type="Session"
                     meta={sessionMeta || undefined}
-                    infoHref="/sessions"
+                    why={sessionWhy}
+                    infoHref="/txc/sessions"
                     sessionId={displaySession.id}
                     onAddToSchedule={onAddToSchedule}
                     onDoNotSuggestSession={onDoNotSuggestSession}
@@ -939,7 +954,8 @@ export default function VoiceCompassButton({
                     title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
                     type="Champion"
                     meta={champMeta || undefined}
-                    infoHref="/champions"
+                    why={champWhy}
+                    infoHref="/txc/champions"
                     championId={topChampion.id}
                     onSavePerson={onSavePerson}
                     onDoNotSuggestPerson={onDoNotSuggestPerson}
@@ -1079,7 +1095,8 @@ export default function VoiceCompassButton({
                 title={(displaySession as unknown as Record<string, unknown>).title as string ?? "Session"}
                 type="Session"
                 meta={sessionMeta || undefined}
-                infoHref="/sessions"
+                why={sessionWhy}
+                infoHref="/txc/sessions"
                 sessionId={displaySession.id}
                 onAddToSchedule={onAddToSchedule}
                 onDoNotSuggestSession={onDoNotSuggestSession}
@@ -1091,7 +1108,8 @@ export default function VoiceCompassButton({
                 title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
                 type="Champion"
                 meta={champMeta || undefined}
-                infoHref="/champions"
+                why={champWhy}
+                infoHref="/txc/champions"
                 championId={topChampion.id}
                 onSavePerson={onSavePerson}
                 onDoNotSuggestPerson={onDoNotSuggestPerson}

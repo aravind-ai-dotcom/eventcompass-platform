@@ -33,8 +33,11 @@ import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import CommunityVoices    from "@/components/experience/CommunityVoices";
 import { useAuth } from "@/context/AuthContext";
-import ConnectionSignals from "@/components/people/ConnectionSignals";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
+import RecommendedConnectionsSection from "@/components/people/RecommendedConnectionsSection";
+import PeopleTrackingSection from "@/components/people/PeopleTrackingSection";
+import PeopleInterestedSection from "@/components/people/PeopleInterestedSection";
+import type { RecommendedPerson } from "@/components/people/RecommendedConnectionCard";
 import CertificationJourney from "@/components/experience/CertificationJourney";
 import {
   applyCertificationSessionBoost,
@@ -47,11 +50,42 @@ import {
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
-import ChampionMatchCarousel from "@/components/experience/ChampionMatchCarousel";
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
-import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
+import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
+
+function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
+  const names = new Set<string>();
+  for (const session of rawSessions) {
+    const speakers = session.speakers;
+    if (!Array.isArray(speakers)) continue;
+    for (const speaker of speakers) {
+      const name =
+        typeof speaker === "string"
+          ? speaker
+          : String((speaker as RawDoc).name ?? (speaker as RawDoc).display_name ?? "");
+      if (name.trim()) names.add(name.trim().toLowerCase());
+    }
+  }
+  return names;
+}
+
+function toRecommendedPerson(
+  champion: ScoredChampion,
+  speakerNames: Set<string>,
+): RecommendedPerson {
+  return {
+    id: champion.id,
+    display_name: champion.display_name,
+    title: champion.title,
+    organization: champion.organization,
+    profile: champion.profile,
+    attendance: champion.attendance,
+    compass_reasons: champion.compass_reasons,
+    is_speaker: speakerNames.has(champion.display_name.toLowerCase()),
+  };
+}
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -155,18 +189,6 @@ interface ExpScheduleState {
   onSave:   (id: string) => void;
   onRemove: (id: string) => void;
   onHide:   (id: string) => void;
-}
-
-// Action state threaded through champion recommendation cards
-interface ExpPeopleState {
-  savedPeople:  string[];
-  meetPeople:   string[];
-  hiddenPeople: string[];
-  isLoggedIn:   boolean;
-  onSave: (id: string) => void;
-  onMeet: (id: string) => void;
-  onHide: (id: string) => void;
-  onDetails: (id: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -505,114 +527,6 @@ function SessionCard({ session, sched, certLabel }: { session: ScoredSession; sc
   );
 }
 
-// ── Carbon atom — circular person avatar (matches Champions page) ────────────
-function PersonAvatar({ initial }: { initial: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        width: "36px", height: "36px", borderRadius: "50%",
-        background: "rgba(15, 98, 254, 0.06)",
-        border: "1px solid rgba(15, 98, 254, 0.20)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "0.82rem", fontWeight: 500, color: IBM_BLUE,
-        letterSpacing: "0.02em", flexShrink: 0,
-      }}
-    >
-      {initial}
-    </div>
-  );
-}
-
-
-function ChampionCard({ champion, pState }: { champion: ScoredChampion; pState?: ExpPeopleState }) {
-  const initial = champion.display_name?.[0]?.toUpperCase() ?? "C";
-  const org = champion.organization ?? "";
-  const domains = (champion.profile?.domains ?? []).slice(0, 3);
-  const reasons = champion.compass_reasons?.length
-    ? champion.compass_reasons
-    : deriveMatchReasons(champion);
-  const intentSnapshot = deriveIntentSnapshot(champion);
-  const isMutual = pState
-    && pState.savedPeople.includes(champion.id)
-    && isMutualWithInbound(champion.display_name, champion.id, pState.savedPeople, SAMPLE_INBOUND_SIGNALS);
-
-  return (
-    <article className="champion-person-card">
-      {/* Header row */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-        <PersonAvatar initial={initial} />
-
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <h3
-            style={{
-              margin: 0,
-              fontSize: "0.97rem",
-              fontWeight: 600,
-              color: "var(--text)",
-              lineHeight: 1.3,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {champion.display_name}
-          </h3>
-
-          {(champion.title || org) && (
-            <p
-              style={{
-                margin: "2px 0 0",
-                fontSize: "0.82rem",
-                color: "var(--muted)",
-                lineHeight: 1.35,
-              }}
-            >
-              {[champion.title, org].filter(Boolean).join(" · ")}
-            </p>
-          )}
-          {isMutual && (
-            <span className="connection-signal-badge connection-signal-badge--mutual" style={{ marginTop: "6px", display: "inline-block" }}>
-              Mutual interest
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Domains */}
-      {domains.length > 0 && (
-        <div className="champion-person-tags">
-          {domains.map((d) => (
-            <span key={d} className="champion-person-tag">{d}</span>
-          ))}
-        </div>
-      )}
-
-      {/* Intent snapshot */}
-      {intentSnapshot.length > 0 && (
-        <div className="champion-person-intent">
-          {intentSnapshot.map(item => (
-            <span key={item} className="champion-person-intent-tag">{item}</span>
-          ))}
-        </div>
-      )}
-
-      {/* Compass reasons */}
-      {reasons.length > 0 && (
-        <div className="champion-person-match">
-          <p className="champion-person-match-kicker">Why Compass matched this person</p>
-          <ul className="champion-person-match-list">
-            {reasons.slice(0, 4).map((r) => <li key={r}>{r}</li>)}
-          </ul>
-        </div>
-      )}
-      {pState && (
-        <ExpPeopleActionBar id={champion.id} pState={pState} />
-      )}
-    </article>
-  );
-}
-
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Session action bar — Info ↗ | + Add / ✓ Added | Do Not Suggest
 // ─────────────────────────────────────────────────────────────────────────────
@@ -645,47 +559,6 @@ function ExpSessionActionBar({ id, sched }: { id: string; sched: ExpScheduleStat
       }
       {!isHidden
         ? <button type="button" onClick={() => sched.onHide(id)} style={{ ...base, opacity: 0.75 }}>Do Not Suggest</button>
-        : <span style={badge}>Dismissed</span>
-      }
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// People action bar — Save | Meet | LinkedIn ↗ | Do Not Suggest
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ExpPeopleActionBar({ id, pState }: {
-  id: string;
-  pState: ExpPeopleState;
-}) {
-  const isSaved  = pState.savedPeople.includes(id);
-  const isHidden = pState.hiddenPeople.includes(id);
-
-  const base = {
-    display: "inline-flex" as const, alignItems: "center",
-    height: "24px", padding: "0 9px",
-    border: "1px solid var(--line)", background: "transparent",
-    color: "var(--muted)" as string, fontSize: "0.70rem", fontWeight: 500,
-    cursor: "pointer", fontFamily: "inherit",
-    letterSpacing: "0.01em", whiteSpace: "nowrap" as const, textDecoration: "none",
-  };
-  const activeBtn = { ...base, border: "1px solid rgba(15,98,254,0.35)", color: IBM_BLUE, background: "rgba(15,98,254,0.04)" };
-  const badge = {
-    fontSize: "0.68rem", color: "var(--muted)", padding: "2px 7px",
-    border: "1px solid var(--line)", letterSpacing: "0.06em", textTransform: "uppercase" as const,
-  };
-
-  return (
-    <div style={{ borderTop: "1px solid var(--line)", paddingTop: "8px", marginTop: "10px",
-      display: "flex", flexWrap: "wrap" as const, gap: "5px", alignItems: "center" }}>
-      <button type="button" onClick={() => pState.onDetails(id)} style={base}>Details</button>
-      {isSaved
-        ? <button type="button" onClick={() => pState.onSave(id)} style={activeBtn}>&#10003; Saved</button>
-        : <button type="button" onClick={() => pState.onSave(id)} style={base}>Save person</button>
-      }
-      {!isHidden
-        ? <button type="button" onClick={() => pState.onHide(id)} style={{ ...base, opacity: 0.75 }}>Not for me</button>
         : <span style={badge}>Dismissed</span>
       }
     </div>
@@ -997,7 +870,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
 
   return (
     <a href="/txc/enroll?mode=edit" className={`compass-signal-card compass-signal-card--clickable${complete ? " compass-signal-card--complete" : ""}`}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", marginBottom: "7px" }}>
+      <div className="compass-signal-head">
         <p className="compass-signal-kicker">Compass Signal</p>
         <span className={`compass-signal-pct${complete ? " compass-signal-pct--complete" : ""}`}>
           {pct}%
@@ -1011,7 +884,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
         />
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: pct < 100 ? "10px" : "0" }}>
+      <div className={`compass-signal-chips${complete ? " compass-signal-chips--complete" : ""}`}>
         {dimensions.map(d => (
           <span
             key={d.label}
@@ -1106,16 +979,14 @@ function WhatYouToldCompass({ participant, embedded = false }: { participant: Ra
 
       {/* Signal groups — individual bordered cards, all labels consistently muted */}
       {groups.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
+        <div className="profile-signals-grid">
           {groups.map(function(group) { return (
-            <div key={group.label} style={{ background: "var(--panel)", border: "1px solid var(--line)", padding: "12px 16px" }}>
-              <p style={{ color: "var(--muted)", fontSize: "0.7rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 9px" }}>
-                {group.label}
-              </p>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "5px" }}>
+            <div key={group.label} className="profile-signal-card">
+              <p className="profile-signal-card-title">{group.label}</p>
+              <ul className="profile-signal-card-list">
                 {group.items.map(function(item) { return (
-                  <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: "6px", color: "var(--soft)", fontSize: "0.88rem", lineHeight: 1.35 }}>
-                    <span style={{ color: "var(--muted)", fontSize: "0.45rem", marginTop: "0.55em", flexShrink: 0 }}>&#9670;</span>
+                  <li key={item}>
+                    <span aria-hidden="true">&#9670;</span>
                     {item}
                   </li>
                 ); })}
@@ -1329,6 +1200,7 @@ export default function ExperiencePage() {
   const [meetPeople,     setMeetPeople]     = useState<string[]>([]);
   const [hiddenPeople,   setHiddenPeople]   = useState<string[]>([]);
   const [featuredChampions, setFeaturedChampions] = useState<FeaturedChampion[]>([]);
+  const [sessionSpeakerNames, setSessionSpeakerNames] = useState<Set<string>>(() => new Set());
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
   const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,     setErrorMsg]     = useState("");
@@ -1427,13 +1299,6 @@ export default function ExperiencePage() {
     onSave: handleSaveSession, onRemove: handleRemoveSession, onHide: handleHideSession,
   }), [savedSessions, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession]);
 
-  const expPeopleState = useMemo<ExpPeopleState>(() => ({
-    savedPeople, meetPeople, hiddenPeople,
-    isLoggedIn: !!user,
-    onSave: handleSavePerson, onMeet: handleMeetPerson, onHide: handleHidePerson,
-    onDetails: handleDetailsPerson,
-  }), [savedPeople, meetPeople, hiddenPeople, user, handleSavePerson, handleMeetPerson, handleHidePerson, handleDetailsPerson]);
-
   const savedPersonSignals = useMemo(() => {
     return savedPeople
       .map(id => allChampions.find(c => c.id === id))
@@ -1444,7 +1309,7 @@ export default function ExperiencePage() {
         title: c.title,
         organization: c.organization,
         domains: (c.profile?.domains ?? []).slice(0, 3),
-        matchReasons: c.compass_reasons?.length ? c.compass_reasons.slice(0, 3) : deriveMatchReasons(c),
+        matchReasons: c.compass_reasons?.length ? deriveMatchReasons(c).slice(0, 3) : deriveMatchReasons(c),
         intentSnapshot: deriveIntentSnapshot(c),
         mutual: isMutualWithInbound(c.display_name, c.id, savedPeople, SAMPLE_INBOUND_SIGNALS),
       }));
@@ -1494,6 +1359,8 @@ export default function ExperiencePage() {
         const pData        = pSnap.data() as RawDoc;
         const rawSessions  = sessSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
         const rawChampions = champSnap.docs.map((d) => ({ id: d.id, ...d.data() } as RawDoc));
+
+        setSessionSpeakerNames(extractSessionSpeakerNames(rawSessions));
 
         const scored = rawSessions
           .map((s) => scoreSession(pData, s))
@@ -1641,6 +1508,39 @@ export default function ExperiencePage() {
 
   const sharedMomentItems = isMobile ? HIGHLIGHT_DATA.slice(0, 1) : HIGHLIGHT_DATA;
   const recommendedSessions = learningList.slice(0, 3);
+  const profileSignals = [...pTracks, ...pGoals];
+
+  const viewerUniversities = ((participant.education as Array<{ institution?: string }> | undefined) ?? [])
+    .map(e => e.institution?.trim().toLowerCase())
+    .filter((u): u is string => !!u);
+
+  const peopleBadgeContext = { viewerUniversities };
+
+  const recommendedPeople = champions
+    .filter(c => !hiddenPeople.includes(c.id))
+    .map(c => toRecommendedPerson(c, sessionSpeakerNames));
+
+  const trackedConnections = savedPersonSignals.map(p => {
+    const champ = allChampions.find(c => c.id === p.id);
+    return {
+      person: champ
+        ? toRecommendedPerson(champ, sessionSpeakerNames)
+        : {
+            id: p.id,
+            display_name: p.displayName,
+            title: p.title,
+            organization: p.organization,
+            profile: p.domains?.length ? { domains: p.domains } : undefined,
+            compass_reasons: p.matchReasons,
+          },
+      mutual: p.mutual,
+    };
+  });
+
+  const savedChampionRefs = savedPeople
+    .map(id => allChampions.find(c => c.id === id))
+    .filter((c): c is ScoredChampion => !!c)
+    .map(c => ({ id: c.id, display_name: c.display_name }));
 
   return (
     <>
@@ -1704,7 +1604,7 @@ export default function ExperiencePage() {
                         type: "session",
                         headline: nextBestMove.title,
                         subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-                        reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
+                        reason: resolveSessionWhyLine(nextBestMove, certLabel),
                         score: nextBestMove.compass_score,
                         entityId: nextBestMove.id,
                       }
@@ -1716,6 +1616,10 @@ export default function ExperiencePage() {
                 participantGoals={pGoals}
                 participantTracks={pTracks}
                 isEnrolled
+                onAddToSchedule={handleSaveSession}
+                onDoNotSuggestSession={handleHideSession}
+                onSavePerson={handleSavePerson}
+                onDoNotSuggestPerson={handleHidePerson}
               />
             </div>
           )}
@@ -1733,7 +1637,7 @@ export default function ExperiencePage() {
                   type: "session",
                   headline: nextBestMove.title,
                   subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-                  reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
+                  reason: resolveSessionWhyLine(nextBestMove, certLabel),
                   score: nextBestMove.compass_score,
                   entityId: nextBestMove.id,
                 }}
@@ -1773,7 +1677,7 @@ export default function ExperiencePage() {
           )}
         </CompassSection>
 
-        {/* MY GOALS */}
+        {/* MY GOALS — certifications and credential paths */}
         <CompassSection
           id="goals"
           expanded={hydrated && isSectionExpanded("goals")}
@@ -1787,7 +1691,14 @@ export default function ExperiencePage() {
               embedded
             />
           )}
+        </CompassSection>
 
+        {/* MY LEARNING — sessions, week plan, saved schedule */}
+        <CompassSection
+          id="learning"
+          expanded={hydrated && isSectionExpanded("learning")}
+          onToggle={() => toggleSection("learning")}
+        >
           {isModuleVisible("four_day_plan") && (
             <DayTabExperience
               learningList={learningList}
@@ -1819,7 +1730,7 @@ export default function ExperiencePage() {
             <div className="compass-module-block">
               <div className="section-head narrow">
                 <div>
-                  <div className="section-kicker">My schedule</div>
+                  <div className="section-kicker">Saved schedule</div>
                   <h2>{myScheduleSessions.length} session{myScheduleSessions.length !== 1 ? "s" : ""} saved.</h2>
                 </div>
               </div>
@@ -1858,28 +1769,37 @@ export default function ExperiencePage() {
           expanded={hydrated && isSectionExpanded("people")}
           onToggle={() => toggleSection("people")}
         >
-          {isModuleVisible("champion_matches") && champions.length > 0 && (
-            <div className="compass-module-block intelligence-band">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Champion matches</div>
-                  <h2>People worth meeting.</h2>
-                </div>
-              </div>
-              <div className="champion-grid three-champions champion-grid--desktop-only">
-                {champions.map(c => <ChampionCard key={c.id} champion={c} pState={expPeopleState} />)}
-              </div>
-              <ChampionMatchCarousel count={champions.length}>
-                {champions.map(c => <ChampionCard key={c.id} champion={c} pState={expPeopleState} />)}
-              </ChampionMatchCarousel>
-            </div>
+          {isModuleVisible("recommended_connections") && (
+            <RecommendedConnectionsSection
+              people={recommendedPeople}
+              profileSignals={profileSignals}
+              badgeContext={peopleBadgeContext}
+              embedded
+              actions={{
+                savedPeople,
+                hiddenPeople,
+                onSave: handleSavePerson,
+                onHide: handleHidePerson,
+                onDetails: handleDetailsPerson,
+              }}
+            />
           )}
 
-          {isModuleVisible("connection_signals") && (
-            <ConnectionSignals
-              savedPeople={savedPersonSignals}
-              isLoggedIn={!!user}
+          {isModuleVisible("people_tracking") && (
+            <PeopleTrackingSection
+              tracked={trackedConnections}
+              profileSignals={profileSignals}
+              savedPeople={savedPeople}
+              onSave={handleSavePerson}
               onShowDetails={handleDetailsPerson}
+              embedded
+            />
+          )}
+
+          {isModuleVisible("people_interested_in_me") && (
+            <PeopleInterestedSection
+              inboundSignals={SAMPLE_INBOUND_SIGNALS}
+              savedChampionRefs={savedChampionRefs}
               embedded
             />
           )}
@@ -1891,19 +1811,18 @@ export default function ExperiencePage() {
           expanded={hydrated && isSectionExpanded("profile")}
           onToggle={() => toggleSection("profile")}
         >
-          {isModuleVisible("week_balance") && (
-            <div className="compass-module-block">
-              <WeekInBalance
-                learning={learningList.length}
-                community={communityList.length}
-                fun={funList.length}
-              />
-            </div>
-          )}
-
-          {isModuleVisible("compass_signal") && (
-            <div className="compass-module-block">
-              <CompassSignalCompact participant={participant} />
+          {(isModuleVisible("week_balance") || isModuleVisible("compass_signal")) && (
+            <div className="compass-profile-summary">
+              {isModuleVisible("week_balance") && (
+                <WeekInBalance
+                  learning={learningList.length}
+                  community={communityList.length}
+                  fun={funList.length}
+                />
+              )}
+              {isModuleVisible("compass_signal") && (
+                <CompassSignalCompact participant={participant} />
+              )}
             </div>
           )}
 
@@ -1912,9 +1831,7 @@ export default function ExperiencePage() {
           )}
 
           {isModuleVisible("intent_summary") && (
-            <div className="compass-module-block">
-              <WhyCompassRecommendedWeek signals={trustSignals} />
-            </div>
+            <WhyCompassRecommendedWeek signals={trustSignals} embedded defaultOpen />
           )}
         </CompassSection>
 

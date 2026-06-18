@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import {
   HUDDLE_COPY,
+  formatHuddleMatchLine,
   formatHuddleScheduleLabel,
   isHuddleExpired,
   isHuddleHost,
+  isHuddleLiveNow,
 } from "@/lib/huddleLifecycle";
 import {
   endHuddle,
@@ -32,7 +34,6 @@ interface LiveOpportunitiesProps {
   participantGoals?: string[];
   userDisplayName?: string;
   userFirstName?: string;
-  /** Max huddles shown before "View more" (default 4). */
   visibleLimit?: number;
 }
 
@@ -57,6 +58,7 @@ export default function LiveOpportunities({
   const [now, setNow] = useState(() => Date.now());
   const [showStart, setShowStart] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   const refresh = useCallback(() => {
@@ -68,7 +70,7 @@ export default function LiveOpportunities({
 
   useEffect(() => {
     refresh();
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, [refresh]);
 
@@ -84,6 +86,7 @@ export default function LiveOpportunities({
   }, [participantTracks, participantGoals, pending, ended, now]);
 
   const visible = showAll ? visibleAll : visibleAll.slice(0, visibleLimit);
+  const liveCount = visibleAll.filter(h => isHuddleLiveNow(h, now)).length;
 
   const handleOnMyWay = useCallback((huddleId: string) => {
     setOnMyWay(toggleOnMyWay(huddleId));
@@ -104,7 +107,11 @@ export default function LiveOpportunities({
         <div>
           <span className="live-opportunities-kicker">Live opportunities</span>
           <h2 className="live-opportunities-title">Conversations forming around you</h2>
-          <p className="live-opportunities-desc">{HUDDLE_COPY.sectionLead}</p>
+          <p className="live-opportunities-desc">
+            {liveCount > 0
+              ? `${liveCount} catchup${liveCount === 1 ? "" : "s"} happening now — join before the window closes.`
+              : HUDDLE_COPY.sectionLead}
+          </p>
         </div>
         <button
           type="button"
@@ -118,6 +125,7 @@ export default function LiveOpportunities({
       <ul className="huddle-feed" aria-label="Live huddles">
         {visible.map(opp => {
           const isOnMyWay = onMyWay.has(opp.id);
+          const isLive = isHuddleLiveNow(opp, now);
           const count = headingCount(opp, isOnMyWay, userFirstName);
           const participants = headingParticipants(opp, isOnMyWay, userFirstName);
           const extra = extraParticipantCount(count, participants.length);
@@ -126,54 +134,38 @@ export default function LiveOpportunities({
           const scheduleLabel = formatHuddleScheduleLabel(opp);
           const endLabel = formatEndTimeLabel(opp);
           const userIsHost = isHuddleHost(opp, userDisplayName);
+          const isExpanded = expandedId === opp.id;
+          const whyLine = formatHuddleMatchLine(opp.matchReasons);
 
           return (
             <li key={opp.id}>
-              <article className="huddle-row">
+              <article className={`huddle-row${isLive ? " huddle-row--live" : ""}`}>
                 <div className="huddle-row-badge">
+                  {isLive && <span className="huddle-live-dot" aria-hidden="true" />}
                   <span aria-hidden="true">{opp.emoji}</span>
-                  {opp.category}
+                  {isLive ? "Live now" : opp.category}
                 </div>
 
                 <div className="huddle-row-body">
                   <h3 className="huddle-row-title">{opp.title}</h3>
-                  <p className="huddle-row-time">{scheduleLabel}</p>
-                  <p className="huddle-row-slot-note">
-                    {HUDDLE_COPY.slotNote}
-                    {endLabel ? ` · wraps ${endLabel}` : ""}
-                  </p>
-                  <p className="huddle-row-meta">
-                    {count} {count === 1 ? "attendee" : "attendees"} heading there
+                  <p className="huddle-row-time">{isLive ? "Happening now" : scheduleLabel}</p>
+                  <p className="huddle-row-meta huddle-row-meta--compact">
+                    {count} heading there
                     {opp.location ? ` · ${opp.location}` : ""}
+                    {hostLabel ? ` · Host ${hostLabel}` : ""}
                   </p>
+                  <p className="huddle-row-match">{whyLine}</p>
 
-                  <div className="huddle-host-block">
-                    <p className="huddle-role-label">Host</p>
-                    <div className="huddle-host-row">
-                      <button
-                        type="button"
-                        className="huddle-avatar huddle-avatar--host huddle-avatar--btn"
-                        title={hostLabel}
-                        onClick={() => setSelectedPerson(host)}
-                      >
-                        {hostInitials(opp)}
-                      </button>
-                      <button
-                        type="button"
-                        className="huddle-host-name"
-                        onClick={() => setSelectedPerson(host)}
-                      >
-                        {hostLabel}
-                      </button>
-                    </div>
-                  </div>
-
-                  <hr className="huddle-attendee-divider" />
-
-                  <div className="huddle-attendee-block">
-                    <p className="huddle-role-label">Heading There</p>
-                    <div className="huddle-row-people-row">
-                      <div className="huddle-row-people-avatars" aria-label="Attendees heading there">
+                  {isExpanded && (
+                    <div className="huddle-row-detail">
+                      {opp.description && <p>{opp.description}</p>}
+                      {!isLive && (
+                        <p className="huddle-row-slot-note">
+                          {HUDDLE_COPY.slotNote}
+                          {endLabel ? ` · wraps ${endLabel}` : ""}
+                        </p>
+                      )}
+                      <div className="huddle-row-people-compact">
                         {participants.map(name => (
                           <button
                             key={name}
@@ -188,20 +180,14 @@ export default function LiveOpportunities({
                         {extra > 0 && (
                           <span className="huddle-avatar huddle-avatar--more">+{extra}</span>
                         )}
-                      </div>
-                      <p className="huddle-row-people">
-                        {participants.length > 0
-                          ? `${participants.join(", ")}${extra > 0 ? ` +${extra}` : ""}`
-                          : extra > 0
-                            ? `+${extra}`
+                        <span className="huddle-row-people">
+                          {participants.length > 0
+                            ? `${participants.join(", ")}${extra > 0 ? ` +${extra}` : ""}`
                             : "Be the first to head over"}
-                      </p>
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  <p className="huddle-row-match">
-                    Matched because: {opp.matchReasons.join(" · ")}
-                  </p>
+                  )}
                 </div>
 
                 <div className="huddle-row-actions">
@@ -222,7 +208,14 @@ export default function LiveOpportunities({
                       {HUDDLE_COPY.endCatchup}
                     </button>
                   )}
-                  <button type="button" className="action-chip">Details</button>
+                  <button
+                    type="button"
+                    className="action-chip"
+                    aria-expanded={isExpanded}
+                    onClick={() => setExpandedId(isExpanded ? null : opp.id)}
+                  >
+                    {isExpanded ? "Less" : "Details"}
+                  </button>
                 </div>
               </article>
             </li>

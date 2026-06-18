@@ -101,3 +101,24 @@ export function isHuddleHost(opp: LiveOpportunity, userDisplayName: string): boo
   if (!userDisplayName.trim() || !opp.hostName) return false;
   return opp.hostName.trim().toLowerCase() === userDisplayName.trim().toLowerCase();
 }
+
+/** Catchup is underway — started but not yet expired. */
+export function isHuddleLiveNow(opp: LiveOpportunity, now = Date.now()): boolean {
+  if (!opp.scheduledAt || !opp.expiresAt) return false;
+  const start = new Date(opp.scheduledAt).getTime();
+  const end = new Date(opp.expiresAt).getTime();
+  return start <= now && end > now;
+}
+
+/** One attendee-facing WHY line for a huddle. */
+export function formatHuddleMatchLine(reasons: string[]): string {
+  if (reasons.length === 0) return "Forming near you based on your profile.";
+  const first = reasons[0];
+  if (/aligns with|matches your|supports your|you both/i.test(first)) {
+    return first.endsWith(".") ? first : `${first}.`;
+  }
+  if (reasons.length === 1) {
+    return `Aligns with your ${first.toLowerCase()} focus.`;
+  }
+  return `Aligns with your ${first.toLowerCase()} and ${reasons[1].toLowerCase()} focus.`;
+}

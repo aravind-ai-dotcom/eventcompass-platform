@@ -1,3 +1,13 @@
+export type ConnectionBadgeId =
+  | "champion"
+  | "speaker"
+  | "alumni"
+  | "peer"
+  | "partner"
+  | "mentor"
+  | "community-leader"
+  | "certification-guide";
+
 export interface InboundConnectionSignal {
   id: string;
   fromFirstName: string;

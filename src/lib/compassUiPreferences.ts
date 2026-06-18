@@ -3,6 +3,7 @@
 export const COMPASS_SECTION_IDS = [
   "today",
   "goals",
+  "learning",
   "people",
   "profile",
   "community",
@@ -19,8 +20,9 @@ export const COMPASS_MODULE_IDS = [
   "four_day_plan",
   "recommended_sessions",
   "my_schedule",
-  "champion_matches",
-  "connection_signals",
+  "recommended_connections",
+  "people_tracking",
+  "people_interested_in_me",
   "compass_signal",
   "profile_signals",
   "intent_summary",
@@ -43,6 +45,7 @@ export const COMPASS_UI_STORAGE_KEY = "compass_ui_preferences";
 export const COMPASS_SECTION_LABELS: Record<CompassSectionId, string> = {
   today: "Today",
   goals: "My Goals",
+  learning: "My Learning",
   people: "My People",
   profile: "My Profile",
   community: "Community",
@@ -56,9 +59,10 @@ export const COMPASS_MODULE_LABELS: Record<CompassModuleId, string> = {
   certification_journey: "Certification Journey",
   four_day_plan: "Four-Day Plan",
   recommended_sessions: "Recommended sessions",
-  my_schedule: "My schedule",
-  champion_matches: "Champions",
-  connection_signals: "Connection signals",
+  my_schedule: "Saved schedule",
+  recommended_connections: "Recommended connections",
+  people_tracking: "People I'm tracking",
+  people_interested_in_me: "People interested in me",
   compass_signal: "Compass Signal",
   profile_signals: "Profile signals",
   intent_summary: "Intent summary",
@@ -74,6 +78,7 @@ function defaultSections(isMobile: boolean): Record<CompassSectionId, boolean> {
     return {
       today: true,
       goals: false,
+      learning: false,
       people: false,
       profile: false,
       community: false,
@@ -82,6 +87,7 @@ function defaultSections(isMobile: boolean): Record<CompassSectionId, boolean> {
   return {
     today: true,
     goals: true,
+    learning: true,
     people: false,
     profile: false,
     community: false,
@@ -129,6 +135,19 @@ export function readCompassUiPreferences(isMobile = false): CompassUiPreferences
     if (parsed.modules) {
       for (const [key, value] of Object.entries(parsed.modules)) {
         if (isModuleId(key) && typeof value === "boolean") modules[key] = value;
+      }
+      // Migrate legacy people module ids
+      const legacy = parsed.modules as Record<string, boolean | undefined>;
+      if (legacy.champion_matches !== undefined && legacy.recommended_connections === undefined) {
+        modules.recommended_connections = legacy.champion_matches;
+      }
+      if (legacy.connection_signals !== undefined) {
+        if (legacy.people_tracking === undefined) {
+          modules.people_tracking = legacy.connection_signals;
+        }
+        if (legacy.people_interested_in_me === undefined) {
+          modules.people_interested_in_me = legacy.connection_signals;
+        }
       }
     }
 

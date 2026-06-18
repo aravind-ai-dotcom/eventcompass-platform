@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: "/txc/explore", label: "Explore" },
   { href: "/txc/sessions", label: "Sessions" },
   { href: "/txc/champions", label: "Champions" },
-  { href: "/pulse", label: "Pulse" },
+  { href: "/txc/pulse", label: "Pulse" },
 ];
 
 const DRAWER_TAIL = { href: "/txc/experience", label: "My Compass" };
@@ -59,10 +59,19 @@ export default function CompassHeader() {
   const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const applyTheme = useCallback((t: Theme) => {
+    document.documentElement.setAttribute("data-theme", t);
+    document.body.removeAttribute("data-theme");
+    localStorage.setItem("compass_theme", t);
+    setTheme(t);
+  }, []);
+
   useEffect(() => {
     const stored = localStorage.getItem("compass_theme") as Theme | null;
-    if (stored) applyTheme(stored);
-  }, []);
+    const current = document.documentElement.getAttribute("data-theme") as Theme | null;
+    const resolved = stored === "light" || stored === "dark" ? stored : current === "light" ? "light" : "dark";
+    applyTheme(resolved);
+  }, [applyTheme]);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -72,12 +81,6 @@ export default function CompassHeader() {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
-
-  const applyTheme = useCallback((t: Theme) => {
-    document.body.setAttribute("data-theme", t);
-    localStorage.setItem("compass_theme", t);
-    setTheme(t);
-  }, []);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + "/");

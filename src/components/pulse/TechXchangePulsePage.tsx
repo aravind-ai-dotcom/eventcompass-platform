@@ -203,9 +203,9 @@ export default function TechXchangePulsePage() {
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
         ) : (
-          <Link href="/enroll" className="btn-primary">Build My Compass →</Link>
+          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
         )}
       </section>
     </>

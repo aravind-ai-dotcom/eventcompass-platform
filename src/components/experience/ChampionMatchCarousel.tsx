@@ -27,12 +27,13 @@ export default function ChampionMatchCarousel({ count, children }: ChampionMatch
       </div>
       {count > 1 && (
         <div className="champion-match-carousel-controls">
+          <p className="champion-match-carousel-hint">Swipe for more connections</p>
           <button
             type="button"
             className="champion-match-carousel-btn"
             onClick={() => go(-1)}
             disabled={index === 0}
-            aria-label="Previous champion"
+            aria-label="Previous connection"
           >
             ←
           </button>
@@ -44,7 +45,7 @@ export default function ChampionMatchCarousel({ count, children }: ChampionMatch
             className="champion-match-carousel-btn"
             onClick={() => go(1)}
             disabled={index >= max}
-            aria-label="Next champion"
+            aria-label="Next connection"
           >
             →
           </button>

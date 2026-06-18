@@ -1,3 +1,5 @@
+import { humanizeMatchReasons, humanizeScoringReason } from "@/lib/sessionRecommendationLine";
+
 interface PersonLike {
   display_name?: string;
   title?: string;
@@ -45,7 +47,7 @@ export function deriveMatchReasons(
   profileSignals: string[] = [],
 ): string[] {
   if (person.compass_reasons?.length) {
-    return person.compass_reasons.slice(0, 3);
+    return humanizeMatchReasons(person.compass_reasons.slice(0, 2));
   }
   const domains = person.profile?.domains ?? [];
   if (profileSignals.length > 0 && domains.length > 0) {
@@ -60,4 +62,17 @@ export function deriveMatchReasons(
     return [`Expertise in ${domains.slice(0, 2).join(" and ")}`];
   }
   return [];
+}
+
+/** Single primary WHY line for people cards. */
+export function primaryMatchReason(
+  person: PersonLike,
+  profileSignals: string[] = [],
+): string | null {
+  const reasons = deriveMatchReasons(person, profileSignals);
+  if (reasons[0]) return reasons[0];
+  if (person.compass_reasons?.[0]) {
+    return humanizeScoringReason(person.compass_reasons[0]);
+  }
+  return null;
 }

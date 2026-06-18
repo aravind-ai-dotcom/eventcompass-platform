@@ -306,7 +306,7 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
     title: "The room is taking shape.",
     body: "Communities forming, conversations beginning, opportunities emerging across TechXchange.",
     cta: "View Pulse",
-    dest: "/pulse",
+    dest: "/txc/pulse",
     secondaryCta: "Build My Compass",
     secondaryDest: "/enroll",
   },

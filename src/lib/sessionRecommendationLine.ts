@@ -15,6 +15,59 @@ interface SessionLike {
   };
 }
 
+/** Default when scoring produced no readable reason. */
+export const DEFAULT_RECOMMENDATION_REASON = "Strong fit for your goals this week.";
+
+/** Turn raw scoring strings into attendee-friendly copy. */
+export function humanizeScoringReason(reason: string): string {
+  const t = reason.trim();
+  if (!t) return "";
+
+  const track = t.match(/^track match:\s*(.+)$/i);
+  if (track) return `Aligns with your ${track[1]} track.`;
+
+  const goal = t.match(/^goal match:\s*(.+)$/i);
+  if (goal) return `Supports your goal: ${goal[1]}.`;
+
+  const keyword = t.match(/^keyword match:\s*(.+)$/i);
+  if (keyword) return `Matches your interest in ${keyword[1]}.`;
+
+  const need = t.match(/^need match:\s*(.+)$/i);
+  if (need) return `Addresses what you said you need: ${need[1]}.`;
+
+  const role = t.match(/^role match:\s*(.+)$/i);
+  if (role) return `Built for your role as ${role[1]}.`;
+
+  const industry = t.match(/^industry match:\s*(.+)$/i);
+  if (industry) return `Relevant to your industry (${industry[1]}).`;
+
+  const shared = t.match(/^shared expertise:\s*(.+)$/i);
+  if (shared) return `You both work in ${shared[1]}.`;
+
+  if (/available for 1:1/i.test(t)) return "Available for a 1:1 conversation.";
+  if (/executive relevant/i.test(t)) return "Relevant for executive priorities this week.";
+  if (/hands-on learning/i.test(t)) return "Hands-on learning that fits your goals.";
+  if (/recommended for your certification/i.test(t)) return "Recommended for your certification journey.";
+  if (/broad event relevance/i.test(t)) return "Popular at TechXchange this week.";
+
+  return t.endsWith(".") ? t : `${t}.`;
+}
+
+export function humanizeMatchReasons(reasons: string[]): string[] {
+  return reasons.map(humanizeScoringReason).filter(Boolean);
+}
+
+/** Best available WHY line for a scored session. */
+export function resolveSessionWhyLine(
+  session: SessionLike & { compass_score?: number },
+  certLabel?: string | null,
+): string {
+  const line =
+    sessionRecommendationLine(session, certLabel)
+    ?? humanizeScoringReason(session.compass_reasons?.[0] ?? "");
+  return line || DEFAULT_RECOMMENDATION_REASON;
+}
+
 /** One-line journey-focused copy for session cards. */
 export function sessionRecommendationLine(
   session: SessionLike,
@@ -80,8 +133,7 @@ export function sessionRecommendationLine(
     return `Recommended because it aligns to: ${topics.slice(0, 2).join(" + ")}`;
   }
   if (reasons[0]) {
-    const line = reasons[0].trim();
-    return line.endsWith(".") ? line : `${line}.`;
+    return humanizeScoringReason(reasons[0]);
   }
   return null;
 }

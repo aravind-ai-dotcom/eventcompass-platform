@@ -5,6 +5,11 @@
 // Pure TypeScript matching. Firestore knowledge loaded into cache before use.
 // =============================================================================
 
+import {
+  DEFAULT_RECOMMENDATION_REASON,
+  humanizeScoringReason,
+  resolveSessionWhyLine,
+} from "@/lib/sessionRecommendationLine";
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
 import {
@@ -726,20 +731,14 @@ export function buildVoiceResponse(
     case "why_recommended": {
       const session = sessionForContext(ctx);
       const nbm = ctx.nextBestMove;
-      if (nbm?.reason) {
-        return {
-          spoken:  `Compass recommended this because ${nbm.reason}.`,
-          display: nbm.reason,
-        };
-      }
-      if (session?.compass_reasons?.length) {
-        const reasons = session.compass_reasons.slice(0, 2).join(". ");
-        return { spoken: `Here's why: ${reasons}.`, display: reasons };
-      }
+      const whyLine = session
+        ? resolveSessionWhyLine(session, null)
+        : nbm?.reason
+          ? humanizeScoringReason(nbm.reason)
+          : DEFAULT_RECOMMENDATION_REASON;
       return {
-        spoken:  "Open My Experience to see match reasons on your session and people cards.",
-        display: "See scoring reasons on My Experience.",
-        action:  "navigate_experience",
+        spoken: `Compass picked this because ${whyLine.replace(/\.$/, "")}.`,
+        display: whyLine,
       };
     }
 
@@ -752,8 +751,8 @@ export function buildVoiceResponse(
 
     case "mark_attended":
       return {
-        spoken:  "Noted. Attendance tracking is coming in a future Compass update.",
-        display: "Marked for a future attendance feature.",
+        spoken:  "Got it — I'll weigh that when suggesting what comes next.",
+        display: "Noted. Compass will adjust what it suggests next.",
         action:  "mark_attended",
       };
 

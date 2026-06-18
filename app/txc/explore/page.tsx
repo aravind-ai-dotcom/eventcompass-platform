@@ -1,6 +1,6 @@
 "use client";
 // =============================================================================
-// EventCompass — Explore  /explore
+// EventCompass — Explore  /txc/explore
 // How Compass helps you succeed — milestone pathways with photography.
 // =============================================================================
 import Image from "next/image";
@@ -14,8 +14,7 @@ interface Journey {
   image: string;
   flow: string[];
   accent: string;
-  summary?: string | string[];
-  closing?: string;
+  summary: string;
   href?: string;
   accessLabel?: string;
 }
@@ -23,55 +22,65 @@ interface Journey {
 const JOURNEYS: Journey[] = [
   {
     id: "learning",
-    title: "Learning",
-    goal: "Learn new technology",
+    title: "Learn New Technology",
+    goal: "I want to learn something new.",
     image: "/event/ibm_txc_banner_1.jpg",
-    flow: ["Set a goal", "Learn", "Practice", "Connect", "Apply"],
+    flow: ["Discover", "Learn", "Practice", "Connect", "Apply"],
     accent: "#0f62fe",
+    summary:
+      "Compass helps prioritize the sessions, labs, experts, and communities that can accelerate your learning.",
   },
   {
     id: "certification",
-    title: "Certification journey",
-    goal: "Deepen skills and achieve certification",
+    title: "Earn a Certification",
+    goal: "I want to earn a certification.",
     image: "/event/ibm_txc_banner_4.jpg",
-    flow: ["Choose", "Learn", "Practice", "Connect", "Achieve"],
+    flow: ["Choose", "Prepare", "Practice", "Mentor", "Achieve"],
     accent: "#a56eff",
+    summary:
+      "Compass connects certifications to sessions, labs, experts, study groups, and community support.",
   },
   {
     id: "networking",
-    title: "Networking",
-    goal: "Find your people",
+    title: "Find Your People",
+    goal: "I want to meet the right people.",
     image: "/event/ibm_txc_banner_5.jpg",
     flow: ["Discover", "Connect", "Meet", "Share", "Grow"],
     accent: "#005d5d",
+    summary:
+      "Compass introduces experts, peers, champions, speakers, and communities aligned to your interests.",
   },
   {
     id: "community",
-    title: "Community",
-    goal: "Build community",
+    title: "Grow Community",
+    goal: "I want to engage with a community.",
     image: "/event/community-v2.jpg",
     flow: ["Explore", "Join", "Participate", "Contribute", "Belong"],
     accent: "#b45309",
-  },
-  {
-    id: "champions",
-    title: "Champions",
-    goal: "",
-    image: "/event/ibm-champion-journey.png",
-    flow: ["Learn", "Connect", "Contribute", "Inspire"],
-    accent: "#0f62fe",
-    closing:
-      "Your experience is more than a schedule. It is the opportunity to leave the community stronger than you found it.",
-    href: "/champions",
-    accessLabel: "Meet Champions",
+    summary:
+      "Compass helps uncover user groups, meetups, discussions, and community experiences.",
   },
   {
     id: "problem-solving",
-    title: "Problem solving",
-    goal: "Solve a challenge",
+    title: "Solve a Challenge",
+    goal: "I need answers and ideas.",
     image: "/event/expo.jpg",
     flow: ["Define", "Learn", "Discuss", "Refine", "Deliver"],
     accent: "#da1e28",
+    summary:
+      "Compass helps connect relevant content, experts, peer conversations, and practical solutions.",
+  },
+  {
+    id: "champions",
+    title: "Champion Others",
+    goal: "I want to share what I know.",
+    image: "/event/ibm-champion-journey.png",
+    flow: ["Meet", "Guide", "Inspire", "Support", "Amplify"],
+    accent: "#0f62fe",
+    summary:
+      "Compass helps champions connect with attendees, share expertise, and strengthen the community.",
+    href: "/txc/champions",
+    accessLabel: "Meet Champions",
   },
 ];
 
@@ -80,12 +89,12 @@ export default function ExplorePage() {
 
   return (
     <>
-      <section className="story-hero story-hero--strong story-hero--spacious">
-        <div className="section-kicker">How Compass works</div>
+      <section className="story-hero story-hero--strong story-hero--spacious explore-hero">
+        <div className="section-kicker">Explore · Compass</div>
         <h1>How Compass helps you succeed.</h1>
-        <p>
-          Six paths through TechXchange — each mapped to sessions, people, and
-          outcomes aligned to what you came to achieve.
+        <p className="explore-hero-lead">
+          Choose what you want to accomplish. Compass helps connect the sessions,
+          people, communities, certifications, and live opportunities that move you forward.
         </p>
       </section>
 
@@ -99,41 +108,40 @@ export default function ExplorePage() {
             <div className="explore-journey-image">
               <Image
                 src={journey.image}
-                alt={journey.id === "champions" ? "IBM Champions connecting at TechXchange" : ""}
+                alt={journey.title}
                 fill
                 sizes="(max-width: 768px) 100vw, 480px"
                 style={{ objectFit: "cover" }}
               />
             </div>
             <div className="explore-journey-body">
-              <span className="narrative-kicker" style={{ color: journey.accent }}>
+              <h2 id={`journey-${journey.id}`} className="explore-journey-title">
                 {journey.title}
-              </span>
-              {journey.goal ? (
-                <h2 id={`journey-${journey.id}`} className="explore-journey-goal">
-                  {journey.goal}
-                </h2>
-              ) : (
-                <h2 id={`journey-${journey.id}`} className="sr-only">{journey.title}</h2>
-              )}
-              {journey.summary && (
-                <div className="explore-journey-narrative">
-                  {(Array.isArray(journey.summary) ? journey.summary : [journey.summary]).map((paragraph) => (
-                    <p key={paragraph} className="explore-journey-summary">{paragraph}</p>
-                  ))}
-                </div>
-              )}
-              <ol className="explore-milestone-path" aria-label={`${journey.title} pathway`}>
+              </h2>
+              <p className="explore-journey-goal">{journey.goal}</p>
+              <p className="explore-journey-summary">{journey.summary}</p>
+              <p className="explore-journey-path-kicker">Your journey</p>
+              <ol
+                className="explore-milestone-path explore-journey-milestones"
+                aria-label={`${journey.title} journey`}
+              >
                 {journey.flow.map((step, stepIndex) => (
                   <li key={step} className="explore-milestone-step">
                     <div className="explore-milestone-node">
                       <span
                         className="explore-milestone-dot"
-                        style={{ borderColor: journey.accent, background: stepIndex === 0 ? journey.accent : "var(--surface)" }}
+                        style={{
+                          borderColor: journey.accent,
+                          background: stepIndex === 0 ? journey.accent : "var(--surface)",
+                        }}
                         aria-hidden="true"
                       />
                       {stepIndex < journey.flow.length - 1 && (
-                        <span className="explore-milestone-line" style={{ background: journey.accent }} aria-hidden="true" />
+                        <span
+                          className="explore-milestone-line"
+                          style={{ background: journey.accent }}
+                          aria-hidden="true"
+                        />
                       )}
                     </div>
                     <span className="explore-milestone-label">{step}</span>
@@ -145,9 +153,6 @@ export default function ExplorePage() {
                   <Link href={journey.href} className="explore-journey-access">
                     {journey.accessLabel} →
                   </Link>
-                  {journey.closing && (
-                    <p className="explore-journey-footnote">{journey.closing}</p>
-                  )}
                 </div>
               )}
             </div>
@@ -164,15 +169,15 @@ export default function ExplorePage() {
             </>
           ) : (
             <>
-              <h2>Start your journey.</h2>
-              <p>Tell Compass what you came to achieve and build your TechXchange experience.</p>
+              <h2>Start with what you want to accomplish.</h2>
+              <p>Tell Compass your goals and build a TechXchange experience that moves you forward.</p>
             </>
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
         ) : (
-          <Link href="/enroll" className="btn-primary">Build My Compass →</Link>
+          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
         )}
       </section>
     </>

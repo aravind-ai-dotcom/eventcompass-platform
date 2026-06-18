@@ -218,18 +218,13 @@ export default function NextBestMove({
               flexWrap: "wrap",
             }}
           >
-            <ActionButton
-              label="View Details"
-              variant="primary"
-              onClick={onViewDetails}
-            />
-            <ActionButton label="Done" variant="secondary" onClick={onDone} />
-            <ActionButton
-              label="Skip"
-              variant="secondary"
-              onClick={onSkip}
-              muted
-            />
+            {onViewDetails && (
+              <ActionButton label="View Details" variant="primary" onClick={onViewDetails} />
+            )}
+            {onDone && <ActionButton label="Done" variant="secondary" onClick={onDone} />}
+            {onSkip && (
+              <ActionButton label="Skip" variant="secondary" onClick={onSkip} muted />
+            )}
           </div>
         </div>
 
