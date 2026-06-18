@@ -168,3 +168,24 @@ export function participantNetworkingIdentity(
 ): Record<string, boolean> {
   return (raw.networking_identity as Record<string, boolean>) ?? {};
 }
+
+function incTrendingTopic(map: Record<string, number>, label: unknown): void {
+  const k = String(label ?? "").trim();
+  if (!k || isSuppressedOrgLabel(k)) return;
+  inc(map, k);
+}
+
+/** Goals, tracks, career interests, and connection intent from enrollment. */
+export function accumulateParticipantTrendingTopics(
+  map: Record<string, number>,
+  participant: Record<string, unknown>,
+): void {
+  if (isInternalParticipant(participant)) return;
+  const esp = (participant.event_signal_profile as Record<string, unknown>) ?? {};
+  for (const goal of (esp.goals as string[] | undefined) ?? []) incTrendingTopic(map, goal);
+  for (const track of (esp.tech_tracks as string[] | undefined) ?? []) incTrendingTopic(map, track);
+  for (const openTo of (esp.open_to as string[] | undefined) ?? []) incTrendingTopic(map, openTo);
+  for (const interest of (participant.career_interests as string[] | undefined) ?? []) {
+    incTrendingTopic(map, interest);
+  }
+}

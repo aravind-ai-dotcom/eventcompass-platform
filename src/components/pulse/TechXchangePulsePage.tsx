@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   accumulateEducation,
   accumulatePastEmployers,
+  accumulateParticipantTrendingTopics,
   countryFlag,
   incPublicCommunity,
   incPublicSignal,
@@ -25,6 +26,7 @@ type RawDoc = Record<string, unknown>;
 
 interface PulseData {
   audienceTotal: number;
+  trendingTopics: Record<string, number>;
   topCountries: Record<string, number>;
   topUniversities: Record<string, number>;
   topPastEmployers: Record<string, number>;
@@ -95,6 +97,7 @@ export default function TechXchangePulsePage() {
     getDocs(collection(db, `${BASE}/participants`))
       .then(snap => {
         let audienceTotal = 0;
+        const trendingTopics: Record<string, number> = {};
         const topCountries: Record<string, number> = {};
         const topUniversities: Record<string, number> = {};
         const topPastEmployers: Record<string, number> = {};
@@ -107,6 +110,7 @@ export default function TechXchangePulsePage() {
         for (const d of snap.docs) {
           const p = d.data() as RawDoc;
           if (!isInternalParticipant(p)) audienceTotal++;
+          accumulateParticipantTrendingTopics(trendingTopics, p);
           incPublicSignal(topCountries, String(p.country ?? ""));
           accumulateEducation(topUniversities, p.education);
           accumulatePastEmployers(topPastEmployers, p.past_employers);
@@ -120,6 +124,7 @@ export default function TechXchangePulsePage() {
 
         setData({
           audienceTotal,
+          trendingTopics,
           topCountries,
           topUniversities,
           topPastEmployers,
@@ -141,6 +146,7 @@ export default function TechXchangePulsePage() {
         { label: "Open to career conversations", val: data.openToCareer, tone: "var(--accent-3)" },
         { label: "Open to mentoring", val: data.openToMentoring, tone: "var(--accent-4)" },
       ].filter(item => item.val > 0)
+        .map(item => ({ ...item, pct: pct(item.val, total) }))
     : [];
 
   return (
@@ -163,8 +169,16 @@ export default function TechXchangePulsePage() {
         <>
           <section className="story-section">
             <span className="narrative-kicker">Audience snapshot</span>
-            <p className="pulse-total">{total} participants shaping the room</p>
+            <p className="pulse-snapshot-lead">
+              What attendees are here for — drawn from goals, learning tracks, career interests, and connection intent.
+            </p>
             <div className="nostalgia-grid">
+              <NostalgiaBox
+                title="Trending topics"
+                rows={top(data.trendingTopics, 6)}
+                total={total}
+                withBars
+              />
               <NostalgiaBox
                 title="Where people are joining from"
                 rows={top(data.topCountries, 6)}
@@ -191,7 +205,7 @@ export default function TechXchangePulsePage() {
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (
               <article key={item.label} className="pulse-intent-card" style={{ borderTopColor: item.tone }}>
-                <p className="pulse-intent-card-count">{item.val}</p>
+                <p className="pulse-intent-card-count">{item.pct}%</p>
                 <p className="pulse-intent-card-label">{item.label}</p>
               </article>
             ))}

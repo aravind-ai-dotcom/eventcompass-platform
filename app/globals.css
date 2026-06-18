@@ -2193,6 +2193,13 @@ img { max-width: 100%; display: block; }
   display: block;
   margin-bottom: 12px;
 }
+.pulse-snapshot-lead {
+  color: var(--muted);
+  max-width: 640px;
+  margin: 0 0 20px;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
 .narrative-title {
   font-size: clamp(1.75rem, 3vw, 2.65rem);
   line-height: 1.1;
