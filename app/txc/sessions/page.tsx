@@ -807,6 +807,7 @@ function SessionsPageContent() {
     saved_schedule?: string[];
     saved_sessions?: string[];
     certification_goals?: string[];
+    active_certification_id?: string | null;
     removed_sessions?: string[];
     do_not_suggest_sessions?: string[];
     reserved_seats?: string[];
@@ -821,10 +822,13 @@ function SessionsPageContent() {
 
   const handleSaveCertification = useCallback((id: string) => {
     if (!isLoggedIn) return;
-    const next = certificationGoals.includes(id) ? certificationGoals : [...certificationGoals, id];
+    const session = allScored.find(s => s.id === id);
+    const raw = session as unknown as { certification_id?: string; certification_path?: { certification_id?: string } } | undefined;
+    const goalId = String(raw?.certification_id ?? raw?.certification_path?.certification_id ?? id);
+    const next = certificationGoals.includes(goalId) ? certificationGoals : [...certificationGoals, goalId];
     setCertificationGoals(next);
-    persist({ certification_goals: next });
-  }, [certificationGoals, persist, isLoggedIn]);
+    persist({ certification_goals: next, active_certification_id: goalId });
+  }, [certificationGoals, persist, isLoggedIn, allScored]);
 
   const handleRemoveCertification = useCallback((id: string) => {
     if (!isLoggedIn) return;

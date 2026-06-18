@@ -21,7 +21,7 @@ const TYPE_META: Record<
   { label: string; symbol: string }
 > = {
   session: { label: "Session", symbol: "▶" },
-  champion: { label: "Champion", symbol: "◈" },
+  champion: { label: "People", symbol: "◈" },
   community: { label: "Community", symbol: "◉" },
   break: { label: "Break", symbol: "◌" },
   explore: { label: "Explore", symbol: "◎" },

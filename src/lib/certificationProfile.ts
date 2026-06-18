@@ -31,9 +31,15 @@ export const CERTIFICATION_JOURNEY_COPY = {
   studyGroups: "Study groups",
   achieveLabel: "Certification opportunity selected",
   achieveNote: "Available on demand at certification testing areas — no fixed time required.",
-  exploreCertifications: "Explore certifications",
+  exploreCertifications: "Browse certification catalog",
+  addCertification: "Add a certification",
   viewAllSessions: "View all sessions",
-  emptyStage: "Save certification opportunities or related sessions to populate this stage.",
+  emptyStage: "Add sessions or resources to build this stage.",
+  emptyJourney: "Choose a certification to track your learning path, knowledge, and resources in one place.",
+  knowledgeLabel: "Knowledge & preparation",
+  resourcesLabel: "Your resources",
+  addResource: "Add resource",
+  addLink: "Add link",
   pathsSupporting:
     "Join thousands of attendees using TechXchange to deepen skills, prepare for certifications, and learn alongside a global community.",
 } as const;
@@ -129,6 +135,8 @@ export interface SelectedCertificationGoal {
   track?: string;
   topics?: string[];
   products?: string[];
+  /** Catalog journey session id (Achieve milestone). */
+  sessionId?: string;
 }
 
 type CertSessionLike = {
@@ -156,23 +164,58 @@ export function gatherCertificationGoalIds(
   return [...new Set([...explicit, ...fromSaved])];
 }
 
+/** Resolve a single saved goal id (certification_id or legacy session id). */
+export function resolveCertificationGoal(
+  id: string,
+  allSessions: CertSessionLike[],
+): SelectedCertificationGoal | null {
+  const enrichment =
+    getCertificationEnrichment(id) ??
+    getCertificationEnrichment(String(allSessions.find(s => s.id === id)?.certification_id ?? ""));
+
+  if (enrichment) {
+    return {
+      id: enrichment.certification_id,
+      title: enrichment.title,
+      certification_code: enrichment.certification_code,
+      track: enrichment.track,
+      topics: enrichment.topics,
+      products: enrichment.products,
+      sessionId: enrichment.session_id,
+    };
+  }
+
+  const s = allSessions.find(x => x.id === id);
+  if (!s) return null;
+
+  if (isCertificationActivityType(s)) {
+    const certId = String(s.certification_id ?? s.id);
+    const fromCatalog = getCertificationEnrichment(certId);
+    return {
+      id: fromCatalog?.certification_id ?? certId,
+      title: s.title,
+      certification_code: s.certification_code ?? fromCatalog?.certification_code,
+      track: s.tracks?.primary_track ?? fromCatalog?.track,
+      topics: (s.tracks?.topics ?? fromCatalog?.topics ?? []).slice(0, 4),
+      products: (s.tracks?.products ?? fromCatalog?.products ?? []).slice(0, 3),
+      sessionId: fromCatalog?.session_id ?? s.id,
+    };
+  }
+
+  return null;
+}
+
 export function resolveSelectedCertificationGoals(
   allSessions: CertSessionLike[],
   ids: string[],
 ): SelectedCertificationGoal[] {
   const goals: SelectedCertificationGoal[] = [];
+  const seen = new Set<string>();
   for (const id of ids) {
-    const s = allSessions.find(x => x.id === id);
-    const enrichment = getCertificationEnrichment(String(s?.certification_id ?? id));
-    if (!s && !enrichment) continue;
-    goals.push({
-      id,
-      title: s?.title ?? enrichment?.title ?? id,
-      certification_code: s?.certification_code ?? enrichment?.certification_code,
-      track: s?.tracks?.primary_track ?? enrichment?.track,
-      topics: (s?.tracks?.topics ?? enrichment?.topics ?? []).slice(0, 4),
-      products: (s?.tracks?.products ?? enrichment?.products ?? []).slice(0, 3),
-    });
+    const goal = resolveCertificationGoal(id, allSessions);
+    if (!goal || seen.has(goal.id)) continue;
+    seen.add(goal.id);
+    goals.push(goal);
   }
   return goals;
 }

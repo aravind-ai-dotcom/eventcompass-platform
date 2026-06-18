@@ -44,6 +44,7 @@ import { applyTtsPronunciation } from "@/services/voice/voicePronunciation";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 import { localeFromSpeechLang, type UiLocale } from "@/services/i18n/voiceLocale";
 import { formatSessionIntelligenceSummary } from "@/lib/sessionIntelligence";
+import { classifySessionFormat } from "@/lib/recommendationBalancing";
 import { primaryMatchReason } from "@/lib/personCardHelpers";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
@@ -92,6 +93,7 @@ const DEMO_ACTIVITIES: ActivityItem[] = [
 interface VoiceCompassButtonProps {
   variant?: "inline" | "companion";
   nextBestMove?:           NextBestMove | null;
+  balancedMoves?:          NextBestMove[];
   topSession?:             ScoredSession | null;
   topChampion?:            ScoredChampion | null;
   rankedSessions?:         ScoredSession[];
@@ -342,6 +344,7 @@ function VoiceTonePicker({
 export default function VoiceCompassButton({
   variant = "inline",
   nextBestMove,
+  balancedMoves,
   topSession,
   topChampion,
   rankedSessions,
@@ -374,6 +377,7 @@ export default function VoiceCompassButton({
   const synthRef       = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef       = useRef<HTMLAudioElement | null>(null);
   const recentRecsRef  = useRef<string[]>([]);
+  const recentFormatsRef = useRef<import("@/lib/recommendationBalancing").SessionFormat[]>([]);
   const speechLangRef  = useRef("en-US");
 
   // Preload Firestore governance cache for voice matching
@@ -560,9 +564,17 @@ export default function VoiceCompassButton({
     const pool = rankedSessions?.length
       ? rankedSessions
       : topSession ? [topSession] : [];
-    const picked = pickSessionRecommendation(pool, recentRecsRef.current);
+    const picked = pickSessionRecommendation(
+      pool,
+      recentRecsRef.current,
+      recentFormatsRef.current,
+    );
     if (picked) {
       recentRecsRef.current = [...recentRecsRef.current, picked.id].slice(-5);
+      recentFormatsRef.current = [
+        ...recentFormatsRef.current,
+        classifySessionFormat(picked),
+      ].slice(-5);
       setActiveSession(picked);
     }
     const rankedHuddles = rankLiveHuddles(
@@ -572,6 +584,7 @@ export default function VoiceCompassButton({
     );
     const voiceResp  = buildVoiceResponse(classified, {
       nextBestMove:      nextBestMove      ?? null,
+      balancedMoves:     balancedMoves     ?? [],
       topSession:        topSession        ?? null,
       activeSession:     picked            ?? topSession ?? null,
       rankedSessions:    rankedSessions    ?? [],
@@ -599,7 +612,7 @@ export default function VoiceCompassButton({
     if (voiceResp.action === "mark_attended"       && onMarkAttended)        onMarkAttended();
     if (voiceResp.action === "show_day"            && onNavigateExperience)  onNavigateExperience();
   }, [
-    nextBestMove, topSession, topChampion, rankedSessions,
+    nextBestMove, balancedMoves, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
     speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience, isEnrolled,
     voiceExperience, voiceLocale, certLabel, certificationJourney,

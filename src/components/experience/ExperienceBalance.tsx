@@ -1,32 +1,34 @@
+"use client";
+
 // =============================================================================
 // EventCompass — Experience Balance
 // src/components/experience/ExperienceBalance.tsx
 //
-// Phase 8: Shows attendees whether they are experiencing the event holistically.
-// Derived from recommendations + schedule composition.
-// Three pillars: Community | Learning | Fun
+// Shows whether attendees are experiencing the event holistically.
+// Four pillars: People · Learning · Community · Fun
 // =============================================================================
 
 interface PillarCount {
-  community: number;
+  people:    number;
   learning:  number;
+  community: number;
   fun:       number;
 }
 
 interface Props {
-  sessionCounts: PillarCount;   // scored sessions per pillar
-  attendedCounts?: PillarCount; // optional: sessions actually attended
+  sessionCounts: PillarCount;
+  attendedCounts?: PillarCount;
 }
 
 const PILLAR_CONFIG = [
-  { key: "learning"  as const, label: "Learning",  color: "var(--accent)",  desc: "Labs, workshops, and technical sessions" },
-  { key: "community" as const, label: "Community", color: "#0D9488",        desc: "Champions, experts, and peer connections" },
+  { key: "people"    as const, label: "People",    color: "#8a3ffc",        desc: "Champions, experts, and connections worth making" },
+  { key: "learning"  as const, label: "Learning",  color: "var(--accent)", desc: "Breakouts, labs, and technical sessions" },
+  { key: "community" as const, label: "Community", color: "#0D9488",        desc: "Peer roundtables, meetups, and huddles" },
   { key: "fun"       as const, label: "Fun",        color: "#D97706",        desc: "Keynotes, receptions, and social moments" },
 ];
 
 function BalanceBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  const filled = Math.round(pct / 10);
 
   return (
     <div
@@ -53,24 +55,29 @@ function BalanceBar({ value, max, color }: { value: number; max: number; color: 
 }
 
 function getBalanceInsight(counts: PillarCount): string {
-  const total = counts.learning + counts.community + counts.fun;
+  const total = counts.people + counts.learning + counts.community + counts.fun;
   if (total === 0) return "Complete your Compass profile to see your experience balance.";
 
   const pct = {
-    learning:  counts.learning  / total,
+    people:    counts.people / total,
+    learning:  counts.learning / total,
     community: counts.community / total,
-    fun:       counts.fun       / total,
+    fun:       counts.fun / total,
   };
 
-  if (pct.learning > 0.7)  return "Your plan is heavily Learning-focused. Consider adding community and social moments.";
-  if (pct.fun > 0.5)       return "Your plan leans toward social experiences. Great for energy — balance with focused learning.";
-  if (pct.community < 0.1) return "Your plan has very little Community time. Champions and peer conversations often create the most value.";
-  if (pct.learning > 0.5 && pct.community > 0.25) return "Well balanced. Learning is your priority with strong community time.";
-  return "Good mix across all three pillars. Compass will keep nudging you toward the right experience.";
+  if (pct.learning > 0.55) return "Your plan is heavily Learning-focused. Compass will also nudge people, community, and fun moments.";
+  if (pct.people < 0.08 && counts.people === 0) return "Add people connections — champions and peer conversations often create the most value.";
+  if (pct.fun > 0.45) return "Your plan leans social. Great for energy — Compass keeps learning and people in the mix too.";
+  if (pct.community < 0.1) return "Your plan has limited Community time. Live huddles and meetups round out the week.";
+  return "Good mix across people, learning, community, and fun. Compass keeps your recommendations intentionally balanced.";
 }
 
 export default function ExperienceBalance({ sessionCounts, attendedCounts }: Props) {
-  const total  = sessionCounts.learning + sessionCounts.community + sessionCounts.fun;
+  const total =
+    sessionCounts.people +
+    sessionCounts.learning +
+    sessionCounts.community +
+    sessionCounts.fun;
   const insight = getBalanceInsight(sessionCounts);
 
   return (
@@ -87,12 +94,12 @@ export default function ExperienceBalance({ sessionCounts, attendedCounts }: Pro
             Experience balance
           </p>
           <p style={{ color: "var(--text)", fontSize: "1.05rem", fontWeight: 560, margin: 0, letterSpacing: "-0.02em" }}>
-            {total > 0 ? `${total} matched sessions` : "Building your profile…"}
+            {total > 0 ? `${total} balanced recommendations` : "Building your profile…"}
           </p>
         </div>
         {attendedCounts && (
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
-            Attended: {attendedCounts.learning + attendedCounts.community + attendedCounts.fun} sessions
+            Engaged: {attendedCounts.people + attendedCounts.learning + attendedCounts.community + attendedCounts.fun} picks
           </p>
         )}
       </div>
@@ -108,7 +115,7 @@ export default function ExperienceBalance({ sessionCounts, attendedCounts }: Pro
                   {pillar.label}
                 </span>
                 <span style={{ color: "var(--muted)", fontSize: "0.82rem" }}>
-                  {count} sessions{attended !== undefined ? ` · ${attended} attended` : ""}
+                  {count} matched{attended !== undefined ? ` · ${attended} engaged` : ""}
                 </span>
               </div>
               <BalanceBar value={count} max={total} color={pillar.color} />
@@ -120,7 +127,6 @@ export default function ExperienceBalance({ sessionCounts, attendedCounts }: Pro
         })}
       </div>
 
-      {/* Compass insight */}
       <div style={{ borderTop: "1px solid var(--line)", paddingTop: "14px" }}>
         <p style={{ color: "var(--muted)", fontSize: "0.84rem", lineHeight: 1.55, margin: 0 }}>
           <span style={{ color: "var(--accent)", fontWeight: 650 }}>Compass: </span>

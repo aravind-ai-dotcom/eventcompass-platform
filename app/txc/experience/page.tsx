@@ -35,8 +35,7 @@ import CommunityVoices    from "@/components/experience/CommunityVoices";
 import { useAuth } from "@/context/AuthContext";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import RecommendedConnectionsSection from "@/components/people/RecommendedConnectionsSection";
-import PeopleTrackingSection from "@/components/people/PeopleTrackingSection";
-import PeopleInterestedSection from "@/components/people/PeopleInterestedSection";
+import PeopleFollowUpSplit from "@/components/people/PeopleFollowUpSplit";
 import type { RecommendedPerson } from "@/components/people/RecommendedConnectionCard";
 import CertificationJourney from "@/components/experience/CertificationJourney";
 import {
@@ -51,7 +50,14 @@ import {
 import {
   buildCertificationJourneyPlan,
   resolveActiveCertification,
+  type JourneyLinkItem,
 } from "@/lib/certificationJourneyIntelligence";
+import type { CertificationJourneyRecord } from "@/types/certificationSession";
+import {
+  emptyCertPins,
+  type CertificationResourcesMap,
+  type CertificationStage,
+} from "@/types/certificationTracker";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
@@ -60,6 +66,13 @@ import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
+import {
+  buildBalancedMoveSet,
+  COMPASS_BALANCE_EXPLANATION,
+  pickBalancedNextBestMove,
+  selectBalancedSessions,
+  type BalancedRecommendationInput,
+} from "@/lib/recommendationBalancing";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
@@ -454,23 +467,27 @@ function ScoreBadge({ score, size = "md" }: { score: number; size?: "sm" | "md" 
 }
 
 // Energy + balance — single compact "Your week in balance" card
-function WeekInBalance({ learning, community, fun }: {
-  learning: number; community: number; fun: number;
+function WeekInBalance({ people, learning, community, fun }: {
+  people: number; learning: number; community: number; fun: number;
 }) {
-  const total = learning + community + fun;
+  const sessionTotal = learning + community + fun;
+  const total = people + sessionTotal;
   const BASE = 80;
+  const peopleW = total > 0 ? Math.round((people / total) * BASE) : 0;
   const learnW = total > 0 ? Math.round((learning  / total) * BASE) : 0;
   const commW  = total > 0 ? Math.round((community / total) * BASE) : 0;
   const funW   = total > 0 ? Math.round((fun       / total) * BASE) : 0;
-  const openW  = 100 - learnW - commW - funW;
+  const openW  = Math.max(0, 100 - peopleW - learnW - commW - funW);
 
   const segments = [
+    { label: "People",    w: peopleW, color: "#8a3ffc", count: people },
     { label: "Learning",  w: learnW, color: "#0f62fe", count: learning },
     { label: "Community", w: commW,  color: "var(--purple-soft)", count: community },
     { label: "Fun",       w: funW,   color: "#009d9a", count: fun },
     { label: "Open",      w: openW,  color: "var(--line-strong)", count: 0 },
   ].filter(s => s.w > 0);
 
+  const peoplePct = total > 0 ? Math.round((people / total) * 100) : 0;
   const learnPct = total > 0 ? Math.round((learning / total) * 100) : 0;
   const commPct  = total > 0 ? Math.round((community / total) * 100) : 0;
   const funPct   = total > 0 ? Math.round((fun / total) * 100) : 0;
@@ -479,7 +496,7 @@ function WeekInBalance({ learning, community, fun }: {
     <div className="week-balance-card">
       <p className="week-balance-kicker">Your week in balance</p>
       <p className="week-balance-sub">
-        Community {commPct}% · Learning {learnPct}% · Fun {funPct}%
+        People {peoplePct}% · Learning {learnPct}% · Community {commPct}% · Fun {funPct}%
       </p>
       <div className="week-balance-bar">
         {total === 0 ? (
@@ -492,6 +509,7 @@ function WeekInBalance({ learning, community, fun }: {
       </div>
       <div className="week-balance-legend">
         {[
+          { label: "People", count: people, color: "#8a3ffc" },
           { label: "Learning", count: learning, color: "#0f62fe" },
           { label: "Community", count: community, color: "var(--purple-soft)" },
           { label: "Fun", count: fun, color: "#009d9a" },
@@ -1184,7 +1202,6 @@ export default function ExperiencePage() {
   const [learningList, setLearningList] = useState<ScoredSession[]>([]);
   const [communityList,setCommunityList]= useState<ScoredSession[]>([]);
   const [funList,      setFunList]      = useState<ScoredSession[]>([]);
-  const [nextBestMove, setNextBestMove] = useState<ScoredSession | null>(null);
   const [allSessions,  setAllSessions]  = useState<ScoredSession[]>([]);
   const [champions,      setChampions]      = useState<ScoredChampion[]>([]);
   const [allChampions,   setAllChampions]   = useState<ScoredChampion[]>([]);
@@ -1192,6 +1209,8 @@ export default function ExperiencePage() {
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
   const [savedSchedule,  setSavedSchedule]  = useState<string[]>([]);
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
+  const [activeCertificationId, setActiveCertificationId] = useState<string | null>(null);
+  const [certificationResources, setCertificationResources] = useState<CertificationResourcesMap>({});
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
   const [savedPeople,    setSavedPeople]    = useState<string[]>([]);
   const [meetPeople,     setMeetPeople]     = useState<string[]>([]);
@@ -1228,15 +1247,21 @@ export default function ExperiencePage() {
   const handleSaveSession = useCallback((id: string) => {
     const session = allSessions.find(s => s.id === id);
     if (session && isCertificationActivityType(session)) {
-      const nextGoals = certificationGoals.includes(id) ? certificationGoals : [...certificationGoals, id];
+      const raw = session as unknown as { certification_id?: string; certification_path?: { certification_id?: string } };
+      const goalId = String(raw.certification_id ?? raw.certification_path?.certification_id ?? id);
+      const nextGoals = certificationGoals.includes(goalId) ? certificationGoals : [...certificationGoals, goalId];
       setCertificationGoals(nextGoals);
-      persistPrefs({ certification_goals: nextGoals });
+      setActiveCertificationId(prev => prev ?? goalId);
+      persistPrefs({
+        certification_goals: nextGoals,
+        active_certification_id: activeCertificationId ?? goalId,
+      });
       return;
     }
     const next = savedSessions.includes(id) ? savedSessions : [...savedSessions, id];
     setSavedSessions(next);
     persistPrefs({ saved_sessions: next });
-  }, [allSessions, certificationGoals, savedSessions, persistPrefs]);
+  }, [allSessions, certificationGoals, savedSessions, persistPrefs, activeCertificationId]);
 
   const handleRemoveSession = useCallback((id: string) => {
     const next = savedSessions.filter(x => x !== id);
@@ -1248,15 +1273,75 @@ export default function ExperiencePage() {
     const nextGoals = certificationGoals.filter(x => x !== id);
     const nextSaved = savedSessions.filter(x => x !== id);
     const nextSchedule = savedSchedule.filter(x => x !== id);
+    const nextResources = { ...certificationResources };
+    delete nextResources[id];
+    const nextActive = activeCertificationId === id ? (nextGoals[0] ?? null) : activeCertificationId;
     setCertificationGoals(nextGoals);
     setSavedSessions(nextSaved);
     setSavedSchedule(nextSchedule);
+    setCertificationResources(nextResources);
+    setActiveCertificationId(nextActive);
     persistPrefs({
       certification_goals: nextGoals,
       saved_sessions: nextSaved,
       saved_schedule: nextSchedule,
+      certification_resources: nextResources,
+      active_certification_id: nextActive,
     });
-  }, [certificationGoals, savedSessions, savedSchedule, persistPrefs]);
+  }, [certificationGoals, savedSessions, savedSchedule, certificationResources, activeCertificationId, persistPrefs]);
+
+  const handleAddCertification = useCallback((cert: CertificationJourneyRecord) => {
+    const certId = cert.certification_id;
+    const nextGoals = certificationGoals.includes(certId) ? certificationGoals : [...certificationGoals, certId];
+    setCertificationGoals(nextGoals);
+    setActiveCertificationId(certId);
+    persistPrefs({ certification_goals: nextGoals, active_certification_id: certId });
+  }, [certificationGoals, persistPrefs]);
+
+  const handleSelectCertification = useCallback((certId: string) => {
+    setActiveCertificationId(certId);
+    persistPrefs({ active_certification_id: certId });
+  }, [persistPrefs]);
+
+  const handlePinToStage = useCallback((stage: CertificationStage, item: JourneyLinkItem) => {
+    const certId = activeCertificationId ?? certificationGoals[0];
+    if (!certId) return;
+    const current = certificationResources[certId] ?? emptyCertPins();
+    const pinned = current[stage].includes(item.id) ? current[stage] : [...current[stage], item.id];
+    const next = {
+      ...certificationResources,
+      [certId]: { ...current, [stage]: pinned },
+    };
+    setCertificationResources(next);
+    persistPrefs({ certification_resources: next });
+  }, [activeCertificationId, certificationGoals, certificationResources, persistPrefs]);
+
+  const handleRemoveFromStage = useCallback((stage: CertificationStage, itemId: string) => {
+    const certId = activeCertificationId ?? certificationGoals[0];
+    if (!certId) return;
+    const current = certificationResources[certId] ?? emptyCertPins();
+    const nextCert = {
+      ...current,
+      [stage]: current[stage].filter(x => x !== itemId),
+      links: stage === "learn" ? current.links.filter(l => l.id !== itemId) : current.links,
+    };
+    const next = { ...certificationResources, [certId]: nextCert };
+    setCertificationResources(next);
+    persistPrefs({ certification_resources: next });
+  }, [activeCertificationId, certificationGoals, certificationResources, persistPrefs]);
+
+  const handleAddCustomLink = useCallback((link: { title: string; url: string }) => {
+    const certId = activeCertificationId ?? certificationGoals[0];
+    if (!certId) return;
+    const current = certificationResources[certId] ?? emptyCertPins();
+    const entry = { id: `link-${Date.now()}`, title: link.title, url: link.url };
+    const next = {
+      ...certificationResources,
+      [certId]: { ...current, links: [...current.links, entry] },
+    };
+    setCertificationResources(next);
+    persistPrefs({ certification_resources: next });
+  }, [activeCertificationId, certificationGoals, certificationResources, persistPrefs]);
 
   const handleHideSession = useCallback((id: string) => {
     const next = hiddenSessions.includes(id) ? hiddenSessions : [...hiddenSessions, id];
@@ -1340,11 +1425,16 @@ export default function ExperiencePage() {
     ? getCertificationJourneyTitle(participant, selectedCertifications)
     : null;
   const activeCertification = useMemo(
-    () => resolveActiveCertification(selectedCertifications, certLabel),
-    [selectedCertifications, certLabel],
+    () => resolveActiveCertification(selectedCertifications, certLabel, activeCertificationId),
+    [selectedCertifications, certLabel, activeCertificationId],
   );
+  const activeCertPins = useMemo(() => {
+    const id = activeCertification?.goal.id;
+    if (!id || id === "inferred-journey") return emptyCertPins();
+    return certificationResources[id] ?? emptyCertPins();
+  }, [activeCertification, certificationResources]);
   const certificationJourneyPlan = useMemo(() => {
-    if (!activeCertification) return null;
+    if (!activeCertification || certificationGoals.length === 0) return null;
     const huddles = rankLiveHuddles(
       SAMPLE_LIVE_HUDDLES,
       ((participant?.event_signal_profile as RawDoc)?.tech_tracks as string[]) ?? [],
@@ -1355,8 +1445,72 @@ export default function ExperiencePage() {
       allSessions,
       allChampions,
       huddles,
+      activeCertPins,
     );
-  }, [activeCertification, allSessions, allChampions, participant]);
+  }, [activeCertification, allSessions, allChampions, participant, certificationGoals.length, activeCertPins]);
+
+  const showCertJourney = useMemo(
+    () => (participant ? shouldShowCertificationJourney(participant, certGoalIds) : false),
+    [participant, certGoalIds],
+  );
+
+  const pGoalsForBalance = ((participant?.event_signal_profile as RawDoc)?.goals as string[]) ?? [];
+  const pTracksForBalance = ((participant?.event_signal_profile as RawDoc)?.tech_tracks as string[]) ?? [];
+
+  const rankedHuddlesForBalance = useMemo(
+    () => rankLiveHuddles(SAMPLE_LIVE_HUDDLES, pTracksForBalance, pGoalsForBalance),
+    [pGoalsForBalance, pTracksForBalance],
+  );
+
+  const balancedInput = useMemo((): BalancedRecommendationInput => ({
+    learningSessions: learningList,
+    communitySessions: communityList,
+    funSessions: funList,
+    champions: champions.filter(c => !hiddenPeople.includes(c.id)),
+    liveHuddles: rankedHuddlesForBalance,
+    hiddenSessionIds: hiddenSessions,
+    hiddenPeopleIds: hiddenPeople,
+    rotationSeed: new Date().getDay(),
+    hasCertIntent: showCertJourney,
+    sessionMeta: (s) => sessionMeta(s as ScoredSession),
+    sessionType: (s) => sessionTypeLabel(s as ScoredSession),
+    sessionReason: (s) => resolveSessionWhyLine(s as ScoredSession, certLabel),
+  }), [
+    learningList, communityList, funList, champions, hiddenPeople, hiddenSessions,
+    rankedHuddlesForBalance, showCertJourney, certLabel,
+  ]);
+
+  const balancedNextBestMove = useMemo(
+    () => pickBalancedNextBestMove(balancedInput),
+    [balancedInput],
+  );
+
+  const balancedMoveSet = useMemo(
+    () => buildBalancedMoveSet(balancedInput),
+    [balancedInput],
+  );
+
+  const balancedRecommendedSessions = useMemo(
+    () => selectBalancedSessions(
+      [...learningList, ...communityList, ...funList].filter(s => s.compass_score > 0),
+      { limit: 4, maxCertSessions: showCertJourney ? 1 : 0 },
+    ),
+    [learningList, communityList, funList, showCertJourney],
+  );
+
+  const recommendedSessions = useMemo(() => {
+    const byId = new Map(
+      [...learningList, ...communityList, ...funList].map(s => [s.id, s]),
+    );
+    return balancedRecommendedSessions
+      .map(s => byId.get(s.id))
+      .filter((s): s is ScoredSession => !!s);
+  }, [balancedRecommendedSessions, learningList, communityList, funList]);
+
+  const nbmSession = useMemo(() => {
+    if (balancedNextBestMove?.type !== "session" || !balancedNextBestMove.entityId) return null;
+    return allSessions.find(s => s.id === balancedNextBestMove.entityId) ?? null;
+  }, [balancedNextBestMove, allSessions]);
 
   useEffect(() => {
     async function load() {
@@ -1405,17 +1559,11 @@ export default function ExperiencePage() {
           .sort((a, b) => b.compass_score - a.compass_score);
         const scoredChampions = allScoredChampions.slice(0, 5);
 
-        const topCandidates = scored.filter(s => s.compass_score > 0 && !isCertificationActivityType(s)).slice(0, 30);
-        const best = (topCandidates.length > 0
-          ? [...topCandidates].sort(sortByEventTimeThenFit)[0]
-          : scored[0]) ?? null;
-
         setParticipant(pData);
         setAllSessions(scored);
         setLearningList(learning);
         setCommunityList(community);
         setFunList(fun);
-        setNextBestMove(best);
         setChampions(scoredChampions);
         setAllChampions(allScoredChampions);
         setCounts({ participants: partSnap.size, sessions: sessSnap.size, champions: champSnap.size });
@@ -1424,6 +1572,8 @@ export default function ExperiencePage() {
         setSavedSessions( (pData.saved_sessions  as string[]) ?? []);
         setSavedSchedule( (pData.saved_schedule  as string[]) ?? []);
         setCertificationGoals((pData.certification_goals as string[]) ?? []);
+        setActiveCertificationId((pData.active_certification_id as string) ?? null);
+        setCertificationResources((pData.certification_resources as CertificationResourcesMap) ?? {});
         setHiddenSessions((pData.hidden_sessions as string[]) ?? []);
         setSavedPeople(   (pData.saved_people    as string[]) ?? []);
         setMeetPeople(    (pData.meet_people     as string[]) ?? []);
@@ -1516,7 +1666,6 @@ export default function ExperiencePage() {
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
   const trustSignals = buildCompassTrustSignals(participant, sig);
-  const showCertJourney = shouldShowCertificationJourney(participant, certGoalIds);
 
   // My Schedule — timed sessions only (certifications are learning goals, not calendar blocks)
   const myScheduleSessions = savedSessions
@@ -1524,7 +1673,6 @@ export default function ExperiencePage() {
     .filter((s): s is ScoredSession => !!s && !isCertificationActivityType(s));
 
   const sharedMomentItems = isMobile ? HIGHLIGHT_DATA.slice(0, 1) : HIGHLIGHT_DATA;
-  const recommendedSessions = learningList.slice(0, 3);
   const profileSignals = [...pTracks, ...pGoals];
 
   const viewerUniversities = ((participant.education as Array<{ institution?: string }> | undefined) ?? [])
@@ -1583,6 +1731,9 @@ export default function ExperiencePage() {
         <div className="experience-hero-copy">
           <h1 className="experience-hero-title">{displayName}</h1>
           <p className="experience-hero-tagline">Your personalized event.</p>
+          <p className="compass-module-note" style={{ marginTop: "10px", maxWidth: "42rem" }}>
+            {COMPASS_BALANCE_EXPLANATION}
+          </p>
           {(jobTitle || company) && (
             <p className="experience-hero-role">
               {[jobTitle, company].filter(Boolean).join(" · ")}
@@ -1615,19 +1766,9 @@ export default function ExperiencePage() {
             <div className="compass-module-block">
               <VoiceCompassButton
                 variant="companion"
-                nextBestMove={
-                  nextBestMove
-                    ? {
-                        type: "session",
-                        headline: nextBestMove.title,
-                        subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-                        reason: resolveSessionWhyLine(nextBestMove, certLabel),
-                        score: nextBestMove.compass_score,
-                        entityId: nextBestMove.id,
-                      }
-                    : null
-                }
-                topSession={nextBestMove ?? rankedSessionsForVoice[0] ?? null}
+                nextBestMove={balancedNextBestMove}
+                balancedMoves={balancedMoveSet}
+                topSession={nbmSession ?? rankedSessionsForVoice[0] ?? null}
                 topChampion={champions[0] ?? null}
                 rankedSessions={rankedSessionsForVoice}
                 participantGoals={pGoals}
@@ -1643,24 +1784,17 @@ export default function ExperiencePage() {
             </div>
           )}
 
-          {isModuleVisible("next_best_move") && nextBestMove && (
+          {isModuleVisible("next_best_move") && balancedNextBestMove && (
             <div className="compass-module-block intelligence-surface intelligence-surface--prominent">
               <div className="section-head narrow">
                 <div>
                   <div className="section-kicker">Next best move</div>
-                  <h2>The one session to act on now.</h2>
+                  <h2>One balanced pick for right now.</h2>
                 </div>
               </div>
               <NextBestMoveCard
-                nextBestMove={{
-                  type: "session",
-                  headline: nextBestMove.title,
-                  subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-                  reason: resolveSessionWhyLine(nextBestMove, certLabel),
-                  score: nextBestMove.compass_score,
-                  entityId: nextBestMove.id,
-                }}
-                intelSession={nextBestMove}
+                nextBestMove={balancedNextBestMove}
+                intelSession={nbmSession}
                 certLabel={certLabel}
               />
             </div>
@@ -1699,20 +1833,24 @@ export default function ExperiencePage() {
         </CompassSection>
 
         {/* MY GOALS — certifications and credential paths */}
-        {isModuleVisible("certification_journey") && showCertJourney && (
+        {isModuleVisible("certification_journey") && (
         <CompassSection
           id="goals"
           expanded={hydrated && isSectionExpanded("goals")}
           onToggle={() => toggleSection("goals")}
         >
             <CertificationJourney
-              visible={showCertJourney}
+              visible
               plan={certificationJourneyPlan}
-              onRemoveAchieve={
-                selectedCertifications[0]
-                  ? () => handleRemoveCertificationGoal(selectedCertifications[0].id)
-                  : undefined
-              }
+              trackedCerts={selectedCertifications}
+              activeCertId={activeCertificationId}
+              hasExplicitGoals={certificationGoals.length > 0}
+              onAddCertification={handleAddCertification}
+              onSelectCertification={handleSelectCertification}
+              onRemoveCertification={handleRemoveCertificationGoal}
+              onPinToStage={handlePinToStage}
+              onRemoveFromStage={handleRemoveFromStage}
+              onAddCustomLink={handleAddCustomLink}
               embedded
             />
         </CompassSection>
@@ -1740,7 +1878,7 @@ export default function ExperiencePage() {
               <div className="section-head narrow">
                 <div>
                   <div className="section-kicker">Recommended</div>
-                  <h2>Sessions matched to your goals.</h2>
+                  <h2>A balanced mix matched to your goals.</h2>
                 </div>
               </div>
               <div className="opportunity-grid compass-single-column">
@@ -1810,21 +1948,15 @@ export default function ExperiencePage() {
             />
           )}
 
-          {isModuleVisible("people_tracking") && (
-            <PeopleTrackingSection
-              tracked={trackedConnections}
+          {(isModuleVisible("people_tracking") || isModuleVisible("people_interested_in_me")) && (
+            <PeopleFollowUpSplit
+              tracked={isModuleVisible("people_tracking") ? trackedConnections : []}
+              inboundSignals={isModuleVisible("people_interested_in_me") ? SAMPLE_INBOUND_SIGNALS : []}
+              savedChampionRefs={savedChampionRefs}
               profileSignals={profileSignals}
               savedPeople={savedPeople}
               onSave={handleSavePerson}
               onShowDetails={handleDetailsPerson}
-              embedded
-            />
-          )}
-
-          {isModuleVisible("people_interested_in_me") && (
-            <PeopleInterestedSection
-              inboundSignals={SAMPLE_INBOUND_SIGNALS}
-              savedChampionRefs={savedChampionRefs}
               embedded
             />
           )}
@@ -1840,6 +1972,7 @@ export default function ExperiencePage() {
             <div className="compass-profile-summary">
               {isModuleVisible("week_balance") && (
                 <WeekInBalance
+                  people={champions.filter(c => c.compass_score > 0).length}
                   learning={learningList.length}
                   community={communityList.length}
                   fun={funList.length}

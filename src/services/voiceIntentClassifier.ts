@@ -39,6 +39,11 @@ import {
 import { logKnowledgeAnalytics } from "@/services/knowledge/knowledgeMatchingService";
 import { experienceToEventId } from "@/lib/compassEventPaths";
 import {
+  formatBalancedVoiceAlternates,
+  formatWhyRecommendedWithBalance,
+  pickBalancedSessionRecommendation,
+} from "@/lib/recommendationBalancing";
+import {
   getDefaultFallbackResponse,
   getVoiceKnowledgeRecord,
   matchVoiceKnowledge,
@@ -95,6 +100,7 @@ export interface VoiceResponse {
 
 export interface VoiceResponseContext {
   nextBestMove:        NextBestMove | null;
+  balancedMoves?:      NextBestMove[];
   topSession:          ScoredSession | null;
   topChampion:         ScoredChampion | null;
   participantGoals?:   string[];
@@ -156,6 +162,8 @@ const KEYWORD_BUCKETS: Record<
   next_best_move: [
     "what should i do", "what do i do", "next best move", "help me decide",
     "recommend something", "guide me", "what now", "prioritize",
+    "what else should i do", "what else can i do", "anything else",
+    "other recommendations", "what else",
   ],
 };
 
@@ -490,7 +498,11 @@ function parseTimeMinutes(t: string): number | null {
 export function pickSessionRecommendation(
   sessions: ScoredSession[],
   recentIds: string[] = [],
+  recentFormats: import("@/lib/recommendationBalancing").SessionFormat[] = [],
 ): ScoredSession | null {
+  const balanced = pickBalancedSessionRecommendation(sessions, recentIds, recentFormats);
+  if (balanced) return balanced;
+
   if (sessions.length === 0) return null;
 
   const ranked = [...sessions].sort((a, b) => (b.compass_score ?? 0) - (a.compass_score ?? 0));
@@ -837,10 +849,48 @@ export function buildVoiceResponse(
     }
 
     case "next_best_move": {
-      const session = sessionForContext(ctx);
-      const nbm = ctx.nextBestMove;
+      const balanced = ctx.balancedMoves ?? [];
+      const primary = ctx.nextBestMove;
       const goal = topGoal(ctx);
       const huddle = huddleHint(ctx, norm);
+
+      if (balanced.length > 0 || primary) {
+        const lead = primary ?? balanced[0];
+        if (lead) {
+          const title = lead.headline;
+          const when = lead.subline || "soon";
+          const alternates = formatBalancedVoiceAlternates(
+            balanced.filter(m => m.entityId !== lead.entityId || m.type !== lead.type),
+            2,
+          );
+          const templates = [
+            "Your next best move is {title} — {when}. It fits {goal}.{huddle}",
+            "I'd start with {title}. {when}. That keeps your week balanced around {goal}.{huddle}",
+          ];
+          const spoken = fill(pickTemplate(templates, seed), {
+            title,
+            when,
+            goal,
+            huddle,
+          });
+          const balanceNote =
+            alternates && !alternates.startsWith("Open My")
+              ? ` ${alternates}`
+              : " Compass balances learning, people, community, and fun across your plan.";
+          return {
+            spoken: `${spoken}${balanceNote}`,
+            display: balanced.map(m => m.headline).slice(0, 4).join(" · "),
+            action: lead.type === "champion"
+              ? "show_champions"
+              : lead.type === "session"
+                ? "show_sessions"
+                : "navigate_experience",
+          };
+        }
+      }
+
+      const session = sessionForContext(ctx);
+      const nbm = ctx.nextBestMove;
 
       if (!session && !nbm) {
         return {
@@ -1029,8 +1079,10 @@ export function buildVoiceResponse(
     case "why_recommended": {
       const session = sessionForContext(ctx);
       const nbm = ctx.nextBestMove;
+      const balanced = ctx.balancedMoves ?? [];
       if (session) {
-        const spoken = formatSessionIntelligenceVoice(session, ctx.certLabel ?? null);
+        const primary = formatSessionIntelligenceVoice(session, ctx.certLabel ?? null);
+        const spoken = formatWhyRecommendedWithBalance(primary, balanced);
         const display = buildSessionRecommendationReasons(session, ctx.certLabel ?? null)
           .slice(0, 4)
           .map(r => `✓ ${r}`)
@@ -1040,10 +1092,14 @@ export function buildVoiceResponse(
       const whyLine = nbm?.reason
         ? humanizeScoringReason(nbm.reason)
         : COMPASS_CONVERSATION.why_generic;
-      return {
-        spoken: nbm
+      const spoken = formatWhyRecommendedWithBalance(
+        nbm
           ? `Compass picked this because ${whyLine.replace(/\.$/, "")}.`
           : COMPASS_CONVERSATION.why_generic,
+        balanced,
+      );
+      return {
+        spoken,
         display: whyLine,
       };
     }
