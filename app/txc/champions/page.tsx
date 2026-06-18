@@ -152,10 +152,11 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
   const initial   = c.display_name[0]?.toUpperCase() ?? "C";
   const org       = c.organization ?? c.company ?? "";
   const loc       = c.geo ?? c.country ?? "";
-  const profileExtra = c.profile as { domains?: string[]; community_interests?: string[] } | undefined;
+  const profileExtra = c.profile as { domains?: string[]; products?: string[]; community_interests?: string[] } | undefined;
   const domains   = [...(profileExtra?.domains ?? []), ...(c.domains ?? [])].slice(0, 4);
+  const products  = (profileExtra?.products ?? []).slice(0, 4);
   const communities = profileExtra?.community_interests ?? [];
-  const tags      = [...domains, ...communities].slice(0, 4);
+  const tags      = [...new Set([...domains, ...products, ...communities])].slice(0, 5);
   const isRemoved = pState.removedPeople.includes(c.id);
   const shownName = anonymous ? displayFirstName(c.display_name) : c.display_name;
   const matchReasons = deriveMatchReasons(c, profileSignals);
@@ -195,6 +196,9 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
 
       {tags.length > 0 && (
         <div className="champion-person-tags">
+          {anonymous && (
+            <p className="connection-card-skills-kicker champion-person-skills-kicker">Skills &amp; domains</p>
+          )}
           {tags.map((d) => (
             <span key={d} className="champion-person-tag">{d}</span>
           ))}

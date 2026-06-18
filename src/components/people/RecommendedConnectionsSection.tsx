@@ -14,6 +14,7 @@ interface RecommendedConnectionsSectionProps {
   badgeContext?: Omit<ConnectionBadgeContext, "isChampion">;
   actions?: PersonActionState;
   embedded?: boolean;
+  anonymous?: boolean;
 }
 
 export default function RecommendedConnectionsSection({
@@ -23,6 +24,7 @@ export default function RecommendedConnectionsSection({
   badgeContext,
   actions,
   embedded = false,
+  anonymous = false,
 }: RecommendedConnectionsSectionProps) {
   if (people.length === 0 && experts.length === 0) return null;
 
@@ -38,6 +40,7 @@ export default function RecommendedConnectionsSection({
       }}
       primaryReason={person.compass_reasons?.[0] ?? null}
       actions={actions}
+      anonymous={anonymous}
     />
   );
 

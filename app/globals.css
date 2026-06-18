@@ -2998,6 +2998,23 @@ img { max-width: 100%; display: block; }
   color: var(--muted);
   line-height: 1.35;
 }
+.connection-card-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.connection-card-skills-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.champion-person-skills-kicker {
+  width: 100%;
+  flex-basis: 100%;
+}
 .connection-card-reason-kicker {
   margin: 0 0 4px;
   font-size: 0.68rem;
@@ -3122,6 +3139,7 @@ img { max-width: 100%; display: block; }
   padding: 22px 24px 24px;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 18px;
 }
 
@@ -3186,6 +3204,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: 100%;
+  min-width: 0;
 }
 
 .people-follow-up-split__cards .connection-card {
@@ -3262,10 +3282,21 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--line);
   background: var(--panel);
   padding: 18px 20px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .connection-vault-card__head {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   margin-bottom: 14px;
+}
+
+.connection-vault-card__identity {
+  min-width: 0;
 }
 
 .connection-vault-card__name {
@@ -3467,11 +3498,37 @@ img { max-width: 100%; display: block; }
   color: var(--text);
 }
 
+.session-speaker-intel__copy {
+  min-width: 0;
+  flex: 1;
+}
+
 .session-speaker-intel__meta {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--soft);
+}
+
+.session-speaker-intel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.session-speaker-intel__chip {
+  font-size: 0.72rem;
+  font-weight: 560;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.session-speaker-intel__chip--muted {
+  color: var(--soft);
+  border-style: dashed;
 }
 
 .session-speaker-intel__action {
@@ -3631,6 +3688,46 @@ img { max-width: 100%; display: block; }
 .balanced-move-section__note {
   margin: 0 0 14px;
   max-width: 52ch;
+}
+
+.balanced-move-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 720px) {
+  .balanced-move-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.balanced-move-group {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.balanced-move-group__head {
+  margin: 0;
+}
+
+.balanced-move-group__title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.balanced-move-group__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .balanced-move-grid {

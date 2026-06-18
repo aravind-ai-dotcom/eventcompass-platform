@@ -4,6 +4,7 @@ import {
   SPEAKER_AVAILABLE_FOR_LABELS,
   type ScoredSpeaker,
 } from "@/types/speaker";
+import { displayFirstName } from "@/lib/personCardHelpers";
 import type { SessionSpeakerSource } from "@/lib/speakerIntelligence";
 
 interface SessionSpeakerPanelProps {
@@ -11,6 +12,7 @@ interface SessionSpeakerPanelProps {
   currentSessionId?: string;
   allSessions?: SessionSpeakerSource[];
   onViewProfile?: (speakerId: string) => void;
+  anonymous?: boolean;
 }
 
 export default function SessionSpeakerPanel({
@@ -18,17 +20,19 @@ export default function SessionSpeakerPanel({
   currentSessionId,
   allSessions = [],
   onViewProfile,
+  anonymous = false,
 }: SessionSpeakerPanelProps) {
   const otherSessions = allSessions.filter(
     s => s.id !== currentSessionId && speaker.sessionIds.includes(s.id),
   );
+  const shownName = anonymous ? displayFirstName(speaker.displayName) : speaker.displayName;
 
   return (
     <section className="session-speaker-panel">
       <header className="session-speaker-panel__head">
         <p className="session-speaker-panel__kicker">About the speaker</p>
-        <h3 className="session-speaker-panel__name">{speaker.displayName}</h3>
-        {(speaker.title || speaker.organization) && (
+        <h3 className="session-speaker-panel__name">{shownName}</h3>
+        {!anonymous && (speaker.title || speaker.organization) && (
           <p className="session-speaker-panel__role">
             {[speaker.title, speaker.organization].filter(Boolean).join(" · ")}
           </p>
@@ -38,7 +42,7 @@ export default function SessionSpeakerPanel({
         )}
       </header>
 
-      {speaker.whyMeet.length > 0 && (
+      {!anonymous && speaker.whyMeet.length > 0 && (
         <div className="session-speaker-panel__block">
           <p className="session-speaker-panel__block-kicker">Why meet this speaker</p>
           <ul className="session-speaker-panel__reasons">
@@ -105,7 +109,7 @@ export default function SessionSpeakerPanel({
         </div>
       )}
 
-      {onViewProfile && speaker.championId && (
+      {onViewProfile && speaker.championId && !anonymous && (
         <button
           type="button"
           className="session-speaker-intel__action session-speaker-panel__cta"

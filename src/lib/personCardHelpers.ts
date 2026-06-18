@@ -14,6 +14,15 @@ export function displayFirstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
+/** Domains and product skills safe to show when identity is camouflaged. */
+export function personSkillDomainTags(
+  person: PersonLike & { profile?: { community_interests?: string[] } },
+): string[] {
+  const domains = person.profile?.domains ?? [];
+  const products = person.profile?.products ?? [];
+  return [...new Set([...domains, ...products])].slice(0, 6);
+}
+
 export function deriveIntentSnapshot(person: PersonLike): string[] {
   const items: string[] = [];
   if (person.attendance?.available_for_1x1) {

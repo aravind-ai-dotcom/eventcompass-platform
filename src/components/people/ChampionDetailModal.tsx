@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { displayFirstName, personSkillDomainTags } from "@/lib/personCardHelpers";
 
 export interface ChampionDetail {
   id: string;
@@ -24,7 +25,7 @@ interface ChampionDetailModalProps {
 }
 
 function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? name;
+  return displayFirstName(name);
 }
 
 export default function ChampionDetailModal({
@@ -34,11 +35,13 @@ export default function ChampionDetailModal({
 }: ChampionDetailModalProps) {
   const org = champion.organization ?? champion.company ?? "";
   const loc = champion.geo ?? champion.country ?? "";
+  const skillTags = personSkillDomainTags(champion);
   const domains = [
     ...(champion.profile?.domains ?? []),
     ...(champion.domains ?? []),
   ].slice(0, 6);
   const shownName = anonymous ? firstName(champion.display_name) : champion.display_name;
+  const visibleTags = anonymous ? skillTags : domains;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -70,9 +73,14 @@ export default function ChampionDetailModal({
         {!anonymous && loc && (
           <p className="session-modal-meta">{loc}</p>
         )}
-        {domains.length > 0 && (
+        {visibleTags.length > 0 && (
           <div className="champion-person-tags" style={{ marginTop: "12px" }}>
-            {domains.map(d => (
+            {anonymous && (
+              <p className="connection-card-skills-kicker" style={{ width: "100%", marginBottom: "8px" }}>
+                Skills &amp; domains
+              </p>
+            )}
+            {visibleTags.map(d => (
               <span key={d} className="champion-person-tag">{d}</span>
             ))}
           </div>

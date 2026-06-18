@@ -6,7 +6,12 @@ import {
   formatRecommendedBecause,
   type ConnectionBadgeContext,
 } from "@/lib/connectionBadges";
-import { primaryMatchReason } from "@/lib/personCardHelpers";
+import {
+  deriveMatchReasons,
+  displayFirstName,
+  personSkillDomainTags,
+  primaryMatchReason,
+} from "@/lib/personCardHelpers";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
 
 export interface RecommendedPerson {
@@ -45,6 +50,8 @@ interface RecommendedConnectionCardProps {
   mutual?: boolean;
   actions?: PersonActionState;
   compact?: boolean;
+  /** Hide last name, title, and organization; show skills and domains only. */
+  anonymous?: boolean;
 }
 
 function PersonAvatar({ name, photoUrl }: { name: string; photoUrl?: string }) {
@@ -87,13 +94,18 @@ export default function RecommendedConnectionCard({
   mutual = false,
   actions,
   compact = false,
+  anonymous = false,
 }: RecommendedConnectionCardProps) {
   const org = person.organization ?? person.company ?? "";
+  const shownName = anonymous ? displayFirstName(person.display_name) : person.display_name;
+  const skillTags = personSkillDomainTags(person);
   const resolvedBadges = badges ?? deriveConnectionBadges(person, badgeContext);
-  const reasonText = formatRecommendedBecause(
-    primaryReason ?? primaryMatchReason(person, profileSignals),
-    resolvedBadges,
-  );
+  const reasonText = anonymous
+    ? deriveMatchReasons(person, profileSignals)[0] ?? null
+    : formatRecommendedBecause(
+        primaryReason ?? primaryMatchReason(person, profileSignals),
+        resolvedBadges,
+      );
   const isSaved = actions?.savedPeople.includes(person.id) ?? false;
   const isHidden = actions?.hiddenPeople.includes(person.id) ?? false;
 
@@ -102,13 +114,24 @@ export default function RecommendedConnectionCard({
   return (
     <article className={`connection-card${compact ? " connection-card--compact" : ""}`}>
       <div className="connection-card-head">
-        <PersonAvatar name={person.display_name} photoUrl={person.photo_url} />
+        <PersonAvatar name={shownName} photoUrl={anonymous ? undefined : person.photo_url} />
         <div className="connection-card-copy">
-          <h3 className="connection-card-name">{person.display_name}</h3>
-          {person.title && <p className="connection-card-role">{person.title}</p>}
-          {org && <p className="connection-card-org">{org}</p>}
+          <h3 className="connection-card-name">{shownName}</h3>
+          {!anonymous && person.title && <p className="connection-card-role">{person.title}</p>}
+          {!anonymous && org && <p className="connection-card-org">{org}</p>}
         </div>
       </div>
+
+      {anonymous && skillTags.length > 0 && (
+        <div className="connection-card-skills">
+          <p className="connection-card-skills-kicker">Skills &amp; domains</p>
+          <div className="champion-person-tags">
+            {skillTags.map(tag => (
+              <span key={tag} className="champion-person-tag">{tag}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {reasonText && (
         <div className="connection-card-reason">
@@ -123,7 +146,7 @@ export default function RecommendedConnectionCard({
         <p className="connection-card-mutual">Mutual interest — good moment to connect</p>
       )}
 
-      {actions && (
+      {actions && !anonymous && (
         <div className="connection-card-actions">
           {actions.onDetails && (
             <button type="button" className="connection-card-action" onClick={() => actions.onDetails!(person.id)}>

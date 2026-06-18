@@ -239,6 +239,7 @@ function SessionDetailModal({
   speakerCatalog,
   speakerCtx,
   onViewSpeaker,
+  anonymous = false,
   onClose,
 }: {
   session: ScoredSession;
@@ -246,6 +247,7 @@ function SessionDetailModal({
   speakerCatalog: SpeakerProfile[];
   speakerCtx: SpeakerParticipantContext;
   onViewSpeaker?: (speakerId: string) => void;
+  anonymous?: boolean;
   onClose: () => void;
 }) {
   const type = sessionType(session);
@@ -319,6 +321,7 @@ function SessionDetailModal({
                 currentSessionId={session.id}
                 allSessions={allSessions.map(sessionFromScored)}
                 onViewProfile={onViewSpeaker}
+                anonymous={anonymous}
               />
             )}
           </>
@@ -604,6 +607,7 @@ function RecommendedCard({
   speakerCatalog,
   speakerCtx,
   onViewSpeaker,
+  anonymous = false,
 }: {
   session: ScoredSession;
   sched?: ScheduleState;
@@ -611,6 +615,7 @@ function RecommendedCard({
   speakerCatalog: SpeakerProfile[];
   speakerCtx: SpeakerParticipantContext;
   onViewSpeaker?: (speakerId: string) => void;
+  anonymous?: boolean;
 }) {
   const type = sessionType(session);
   const track = primaryTrack(session);
@@ -634,6 +639,7 @@ function RecommendedCard({
           speakers={sessionSpeakers}
           onViewSpeaker={onViewSpeaker}
           compact
+          anonymous={anonymous}
         />
       )}
       {sched && (
@@ -691,7 +697,7 @@ function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sch
 // IntelligenceBand — presentation slice of scored sessions (no scoring change)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel, speakerCatalog, speakerCtx, onViewSpeaker }: {
+function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel, speakerCatalog, speakerCtx, onViewSpeaker, anonymous = false }: {
   kicker: string;
   title: string;
   desc: string;
@@ -701,6 +707,7 @@ function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel, spe
   speakerCatalog: SpeakerProfile[];
   speakerCtx: SpeakerParticipantContext;
   onViewSpeaker?: (speakerId: string) => void;
+  anonymous?: boolean;
 }) {
   if (sessions.length === 0) return null;
   return (
@@ -722,6 +729,7 @@ function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel, spe
             speakerCatalog={speakerCatalog}
             speakerCtx={speakerCtx}
             onViewSpeaker={onViewSpeaker}
+            anonymous={anonymous}
           />
         ))}
       </div>
@@ -1185,6 +1193,7 @@ function SessionsPageContent() {
             speakerCatalog={speakerCatalog}
             speakerCtx={speakerCtx}
             onViewSpeaker={handleViewSpeaker}
+            anonymous={!isLoggedIn}
           />
           <IntelligenceBand
             kicker="Trending"
@@ -1196,6 +1205,7 @@ function SessionsPageContent() {
             speakerCatalog={speakerCatalog}
             speakerCtx={speakerCtx}
             onViewSpeaker={handleViewSpeaker}
+            anonymous={!isLoggedIn}
           />
         </>
       )}
@@ -1211,6 +1221,7 @@ function SessionsPageContent() {
           speakerCatalog={speakerCatalog}
           speakerCtx={speakerCtx}
           onViewSpeaker={handleViewSpeaker}
+          anonymous={!isLoggedIn}
         />
       )}
 
@@ -1282,6 +1293,7 @@ function SessionsPageContent() {
           speakerCatalog={speakerCatalog}
           speakerCtx={speakerCtx}
           onViewSpeaker={handleViewSpeaker}
+          anonymous={!isLoggedIn}
           onClose={() => setDetailSession(null)}
         />
       )}
