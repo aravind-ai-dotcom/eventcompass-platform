@@ -16,6 +16,8 @@ import {
 import { buildSessionRecommendationReasons } from "@/lib/sessionIntelligence";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import CertificationSessionDetail from "@/components/sessions/CertificationSessionDetail";
+import { selectBalancedSessionBand } from "@/lib/recommendationBalancing";
+import { hasCertificationIntent } from "@/lib/certificationProfile";
 
 const BASE = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -933,10 +935,16 @@ function SessionsPageContent() {
     return (isFiltered ? filtered : allScored).filter(s => !doNotSuggest.includes(s.id));
   }, [isFiltered, filtered, allScored, doNotSuggest]);
 
-  const recommended = useMemo(
-    () => [...baseList].sort((a, b) => b.compass_score - a.compass_score).slice(0, 6),
-    [baseList],
-  );
+  const recommended = useMemo(() => {
+    const hasCertIntent =
+      hasCertificationIntent(participantData) ||
+      certificationGoals.length > 0;
+    const balancedIds = selectBalancedSessionBand(baseList, 6, hasCertIntent).map(s => s.id);
+    const byId = new Map(baseList.map(s => [s.id, s]));
+    return balancedIds
+      .map(id => byId.get(id))
+      .filter((s): s is ScoredSession => !!s);
+  }, [baseList, participantData, certificationGoals]);
 
   const recommendedIds = useMemo(() => new Set(recommended.map(s => s.id)), [recommended]);
 

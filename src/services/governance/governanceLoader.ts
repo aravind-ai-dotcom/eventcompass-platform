@@ -8,6 +8,7 @@ import { loadSkoKnowledgeRecords } from "@/services/knowledge/skoKnowledgeServic
 import { loadGovernanceSummaries } from "@/services/summaries/summaryService";
 import { loadTranslationMemoryRecords } from "@/services/translations/translationMemoryService";
 import { loadVoiceKnowledgeRecords } from "@/services/voice/voiceKnowledgeService";
+import { loadRecommendationBalanceConfig, invalidateRecommendationBalanceCache } from "@/services/recommendationBalanceConfig";
 import { loadVoiceDictionaryRecords } from "@/services/voice/voiceDictionaryService";
 import { loadSttNormalizationRecords } from "@/services/voice/sttNormalizationService";
 
@@ -31,6 +32,7 @@ export async function ensureGovernanceLoaded(
     await Promise.all([
       loadKnowledgeRecords(eventId),
       loadVoiceKnowledgeRecords(eventId),
+      loadRecommendationBalanceConfig(eventId),
       loadVoiceDictionaryRecords(eventId),
       loadSttNormalizationRecords(eventId),
     ]);
@@ -40,5 +42,7 @@ export async function ensureGovernanceLoaded(
 }
 
 export function invalidateGovernanceCache(experience: "techxchange" | "sko" = "techxchange"): void {
-  loaded.delete(experienceToEventId(experience));
+  const eventId = experienceToEventId(experience);
+  loaded.delete(eventId);
+  invalidateRecommendationBalanceCache(eventId);
 }

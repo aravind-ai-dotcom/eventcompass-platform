@@ -1,6 +1,7 @@
 "use client";
 
 import RecommendedConnectionCard, {
+  type PersonActionState,
   type RecommendedPerson,
 } from "@/components/people/RecommendedConnectionCard";
 import ChampionMatchCarousel from "@/components/experience/ChampionMatchCarousel";
@@ -10,13 +11,7 @@ interface RecommendedConnectionsSectionProps {
   people: RecommendedPerson[];
   profileSignals?: string[];
   badgeContext?: Omit<ConnectionBadgeContext, "isChampion">;
-  actions?: {
-    savedPeople: string[];
-    hiddenPeople: string[];
-    onSave: (id: string) => void;
-    onHide: (id: string) => void;
-    onDetails?: (id: string) => void;
-  };
+  actions?: PersonActionState;
   embedded?: boolean;
 }
 

@@ -16,7 +16,9 @@ export interface RecommendedPerson {
   organization?: string;
   company?: string;
   photo_url?: string;
-  profile?: { domains?: string[]; products?: string[] };
+  linkedin_url?: string;
+  consent?: { show_linkedin?: boolean; show_email?: boolean };
+  profile?: { domains?: string[]; products?: string[]; community_interests?: string[] };
   attendance?: { available_for_1x1?: boolean };
   compass_reasons?: string[];
   roles?: string[];
@@ -24,10 +26,12 @@ export interface RecommendedPerson {
   education?: Array<{ institution?: string } | string>;
 }
 
-interface PersonActionState {
+export interface PersonActionState {
   savedPeople: string[];
   hiddenPeople: string[];
   onSave: (id: string) => void;
+  /** Opens save-reason modal when adding; omit for legacy toggle-only save. */
+  onRequestSave?: (person: RecommendedPerson) => void;
   onHide: (id: string) => void;
   onDetails?: (id: string) => void;
 }
@@ -128,11 +132,19 @@ export default function RecommendedConnectionCard({
           )}
           {isSaved ? (
             <button type="button" className="connection-card-action connection-card-action--active" onClick={() => actions.onSave(person.id)}>
-              ✓ Tracking
+              ✓ Saved
             </button>
           ) : (
-            <button type="button" className="connection-card-action" onClick={() => actions.onSave(person.id)}>
-              Track
+            <button
+              type="button"
+              className="connection-card-action"
+              onClick={() =>
+                actions.onRequestSave
+                  ? actions.onRequestSave(person)
+                  : actions.onSave(person.id)
+              }
+            >
+              Save
             </button>
           )}
           {!isHidden && (

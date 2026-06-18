@@ -19,6 +19,7 @@ import {
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
 import { VoiceIntelligenceAdminView } from "@/components/admin/VoiceIntelligenceAdminView";
+import { RecommendationBalanceAdminView } from "@/components/admin/RecommendationBalanceAdminView";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -37,7 +38,7 @@ function hasSession()     { return typeof window !== "undefined" && sessionStora
 type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
-  | "credits"   | "voice"       | "voice-intelligence" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
+  | "credits"   | "voice"       | "voice-intelligence" | "recommendation-balance" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
   | "participants" | "sessions-table" | "quality"
   | "health" | "command" | "champion-intel" | "consent-intel"
   | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
@@ -75,6 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "content", label: "Content"       },
       { id: "voice",   label: "Voice"         },
       { id: "voice-intelligence", label: "Voice Intelligence" },
+      { id: "recommendation-balance", label: "Recommendation Balance" },
       { id: "credits", label: "Credits"       },
       { id: "access",  label: "Admin Access"  },
     ],
@@ -4329,6 +4331,7 @@ export default function AdminPage() {
     content:          <ContentView />,
     voice:            <VoiceAdminView />,
     "voice-intelligence": <VoiceIntelligenceAdminView />,
+    "recommendation-balance": <RecommendationBalanceAdminView />,
     credits:          <CreditsView />,
     access:           <AccessAdminView />,
     signals:          <SignalsAdminView data={data} />,

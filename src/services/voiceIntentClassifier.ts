@@ -40,7 +40,9 @@ import { logKnowledgeAnalytics } from "@/services/knowledge/knowledgeMatchingSer
 import { experienceToEventId } from "@/lib/compassEventPaths";
 import {
   formatBalancedVoiceAlternates,
+  formatDiverseRecommendationVoice,
   formatWhyRecommendedWithBalance,
+  isDiverseRecommendationQuery,
   pickBalancedSessionRecommendation,
 } from "@/lib/recommendationBalancing";
 import {
@@ -74,6 +76,7 @@ export type CoreVoiceIntent =
   | "certification_help"
   | "explain_my_day"
   | "explain_my_week"
+  | "diverse_recommendations"
   | "general_concierge"
   | "scope_clarify"
   | "fallback"
@@ -142,6 +145,7 @@ const KEYWORD_BUCKETS: Record<
     | "persona_guidance"
     | "general_concierge"
     | "scope_clarify"
+    | "diverse_recommendations"
   >,
   string[]
 > = {
@@ -173,8 +177,6 @@ const KEYWORD_BUCKETS: Record<
   next_best_move: [
     "what should i do", "what do i do", "next best move", "help me decide",
     "recommend something", "guide me", "what now", "prioritize",
-    "what else should i do", "what else can i do", "anything else",
-    "other recommendations", "what else",
   ],
 };
 
@@ -339,6 +341,7 @@ const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "persona_guidance",
   "general_concierge",
   "scope_clarify",
+  "diverse_recommendations",
   "dismiss",
   "mark_attended",
 ]);
@@ -461,6 +464,10 @@ export function classifyVoiceIntent(
 
   if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
     return { intent: "compass_conversation", transcript, confidence: "high" };
+  }
+
+  if (isDiverseRecommendationQuery(norm)) {
+    return { intent: "diverse_recommendations", transcript, confidence: "high" };
   }
 
   const eventId = experienceToEventId(experience);
@@ -940,6 +947,16 @@ export function buildVoiceResponse(
 
     case "scope_clarify":
       return buildScopeClarifyResponse(experience);
+
+    case "diverse_recommendations": {
+      const moves = ctx.balancedMoves ?? [];
+      const diverse = formatDiverseRecommendationVoice(moves);
+      return {
+        spoken: diverse.spoken,
+        display: diverse.display,
+        action: "navigate_experience",
+      };
+    }
 
     case "next_best_move": {
       const balanced = ctx.balancedMoves ?? [];

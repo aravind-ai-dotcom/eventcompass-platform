@@ -21,7 +21,7 @@ export const COMPASS_MODULE_IDS = [
   "recommended_sessions",
   "my_schedule",
   "recommended_connections",
-  "people_tracking",
+  "my_connections",
   "people_interested_in_me",
   "compass_signal",
   "profile_signals",
@@ -61,7 +61,7 @@ export const COMPASS_MODULE_LABELS: Record<CompassModuleId, string> = {
   recommended_sessions: "Recommended sessions",
   my_schedule: "Saved schedule",
   recommended_connections: "Recommended connections",
-  people_tracking: "People I'm tracking",
+  my_connections: "My Connections",
   people_interested_in_me: "People interested in me",
   compass_signal: "Compass Signal",
   profile_signals: "Profile signals",
@@ -142,12 +142,15 @@ export function readCompassUiPreferences(isMobile = false): CompassUiPreferences
         modules.recommended_connections = legacy.champion_matches;
       }
       if (legacy.connection_signals !== undefined) {
-        if (legacy.people_tracking === undefined) {
-          modules.people_tracking = legacy.connection_signals;
+        if (legacy.my_connections === undefined && legacy.people_tracking === undefined) {
+          modules.my_connections = legacy.connection_signals;
         }
         if (legacy.people_interested_in_me === undefined) {
           modules.people_interested_in_me = legacy.connection_signals;
         }
+      }
+      if (legacy.people_tracking !== undefined && legacy.my_connections === undefined) {
+        modules.my_connections = legacy.people_tracking;
       }
     }
 

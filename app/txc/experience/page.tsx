@@ -28,6 +28,7 @@ import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
+import BalancedMoveGrid from "@/components/experience/BalancedMoveGrid";
 import LiveOpportunities from "@/components/experience/LiveOpportunities";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
@@ -35,7 +36,9 @@ import CommunityVoices    from "@/components/experience/CommunityVoices";
 import { useAuth } from "@/context/AuthContext";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import RecommendedConnectionsSection from "@/components/people/RecommendedConnectionsSection";
-import PeopleFollowUpSplit from "@/components/people/PeopleFollowUpSplit";
+import MyConnectionsSection from "@/components/people/MyConnectionsSection";
+import PeopleInterestedSection from "@/components/people/PeopleInterestedSection";
+import SaveConnectionModal from "@/components/people/SaveConnectionModal";
 import type { RecommendedPerson } from "@/components/people/RecommendedConnectionCard";
 import CertificationJourney from "@/components/experience/CertificationJourney";
 import {
@@ -65,15 +68,24 @@ import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
-import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import {
   buildBalancedMoveSet,
   COMPASS_BALANCE_EXPLANATION,
   pickBalancedNextBestMove,
-  selectBalancedSessions,
+  selectBalancedSessionBand,
   type BalancedRecommendationInput,
 } from "@/lib/recommendationBalancing";
+import { getCachedPillarWeights, loadRecommendationBalanceConfig } from "@/services/recommendationBalanceConfig";
+import type { PillarWeights } from "@/types/recommendationBalance";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
+import {
+  buildConnectionRecord,
+  migrateLegacySavedPeople,
+  removeVaultRecord,
+  sanitizeConnectionVaultForFirestore,
+  updateVaultRecordNote,
+} from "@/lib/connectionVault";
+import type { ConnectionVaultRecord, SaveReason } from "@/types/connectionVault";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
   const names = new Set<string>();
@@ -100,10 +112,13 @@ function toRecommendedPerson(
     display_name: champion.display_name,
     title: champion.title,
     organization: champion.organization,
+    company: champion.company,
     profile: champion.profile,
     attendance: champion.attendance,
     compass_reasons: champion.compass_reasons,
     is_speaker: speakerNames.has(champion.display_name.toLowerCase()),
+    linkedin_url: champion.linkedin_url,
+    consent: champion.consent,
   };
 }
 
@@ -167,6 +182,7 @@ interface ScoredChampion {
   display_name: string;
   title?: string;
   organization?: string;
+  company?: string;
   profile?: { domains?: string[]; products?: string[] };
   attendance?: { available_for_1x1?: boolean };
   linkedin_url?: string;
@@ -1211,8 +1227,10 @@ export default function ExperiencePage() {
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [activeCertificationId, setActiveCertificationId] = useState<string | null>(null);
   const [certificationResources, setCertificationResources] = useState<CertificationResourcesMap>({});
+  const [pillarWeights, setPillarWeights] = useState<PillarWeights>(() => getCachedPillarWeights());
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
-  const [savedPeople,    setSavedPeople]    = useState<string[]>([]);
+  const [connectionVault, setConnectionVault] = useState<ConnectionVaultRecord[]>([]);
+  const [saveModalPerson, setSaveModalPerson] = useState<RecommendedPerson | null>(null);
   const [meetPeople,     setMeetPeople]     = useState<string[]>([]);
   const [hiddenPeople,   setHiddenPeople]   = useState<string[]>([]);
   const [featuredChampions, setFeaturedChampions] = useState<FeaturedChampion[]>([]);
@@ -1351,11 +1369,70 @@ export default function ExperiencePage() {
 
   // ── Champion action handlers ────────────────────────────────────────────────
 
-  const handleSavePerson = useCallback((id: string) => {
-    const next = savedPeople.includes(id) ? savedPeople.filter(x => x !== id) : [...savedPeople, id];
-    setSavedPeople(next);
-    persistPrefs({ saved_people: next });
-  }, [savedPeople, persistPrefs]);
+  const savedPeople = useMemo(
+    () => connectionVault.map(r => r.personId),
+    [connectionVault],
+  );
+
+  const persistVault = useCallback(
+    (next: ConnectionVaultRecord[]) => {
+      const sanitized = sanitizeConnectionVaultForFirestore(next);
+      setConnectionVault(sanitized);
+      persistPrefs({
+        connection_vault: sanitized,
+        saved_people: sanitized.map(r => r.personId),
+      });
+    },
+    [persistPrefs],
+  );
+
+  const resolvePersonForVault = useCallback(
+    (person: RecommendedPerson) => {
+      const champ = allChampions.find(c => c.id === person.id);
+      if (!champ) return person;
+      return {
+        ...person,
+        linkedin_url: champ.linkedin_url ?? person.linkedin_url,
+        consent: champ.consent ?? person.consent,
+        profile: person.profile ?? champ.profile,
+      };
+    },
+    [allChampions],
+  );
+
+  const handleRemoveConnection = useCallback(
+    (id: string) => {
+      persistVault(removeVaultRecord(connectionVault, id));
+    },
+    [connectionVault, persistVault],
+  );
+
+  const handleRequestSavePerson = useCallback(
+    (person: RecommendedPerson) => {
+      if (connectionVault.some(r => r.personId === person.id)) {
+        handleRemoveConnection(person.id);
+        return;
+      }
+      setSaveModalPerson(person);
+    },
+    [connectionVault, handleRemoveConnection],
+  );
+
+  const handleSavePerson = useCallback(
+    (id: string) => {
+      const champ = allChampions.find(c => c.id === id);
+      if (!champ) return;
+      handleRequestSavePerson(toRecommendedPerson(champ, sessionSpeakerNames));
+    },
+    [allChampions, sessionSpeakerNames, handleRequestSavePerson],
+  );
+
+  const handleUpdateConnectionNote = useCallback(
+    (personId: string, notes: string) => {
+      persistVault(updateVaultRecordNote(connectionVault, personId, notes));
+    },
+    [connectionVault, persistVault],
+  );
 
   const handleMeetPerson = useCallback((id: string) => {
     const next = meetPeople.includes(id) ? meetPeople.filter(x => x !== id) : [...meetPeople, id];
@@ -1381,22 +1458,6 @@ export default function ExperiencePage() {
     onSave: handleSaveSession, onRemove: handleRemoveSession, onHide: handleHideSession,
   }), [savedSessions, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession]);
 
-  const savedPersonSignals = useMemo(() => {
-    return savedPeople
-      .map(id => allChampions.find(c => c.id === id))
-      .filter((c): c is ScoredChampion => !!c)
-      .map(c => ({
-        id: c.id,
-        displayName: c.display_name,
-        title: c.title,
-        organization: c.organization,
-        domains: (c.profile?.domains ?? []).slice(0, 3),
-        matchReasons: c.compass_reasons?.length ? deriveMatchReasons(c).slice(0, 3) : deriveMatchReasons(c),
-        intentSnapshot: deriveIntentSnapshot(c),
-        mutual: isMutualWithInbound(c.display_name, c.id, savedPeople, SAMPLE_INBOUND_SIGNALS),
-      }));
-  }, [savedPeople, allChampions]);
-
   const rankedSessionsForVoice = useMemo(
     () => [...learningList, ...communityList, ...funList]
       .sort((a, b) => b.compass_score - a.compass_score),
@@ -1421,6 +1482,48 @@ export default function ExperiencePage() {
     () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
     [allSessions, certGoalIds],
   );
+
+  const handleConfirmSavePerson = useCallback(
+    (reason: SaveReason) => {
+      if (!saveModalPerson || !participant) return;
+      const enriched = resolvePersonForVault(saveModalPerson);
+      const sig = (participant.event_signal_profile as RawDoc) ?? {};
+      const profileSignals = [
+        ...((sig.tech_tracks as string[]) ?? []),
+        ...((sig.goals as string[]) ?? []),
+      ];
+      const viewerUniversities = ((participant.education as Array<{ institution?: string }> | undefined) ?? [])
+        .map(e => e.institution?.trim().toLowerCase())
+        .filter((u): u is string => !!u);
+      const certLabels = selectedCertifications.map(c => c.title).filter(Boolean);
+      const record = buildConnectionRecord({
+        person: enriched,
+        saveReason: reason,
+        badgeContext: { viewerUniversities, isChampion: true },
+        profileSignals,
+        certificationGoalLabels: certLabels,
+        mutual: isMutualWithInbound(
+          enriched.display_name,
+          enriched.id,
+          savedPeople,
+          SAMPLE_INBOUND_SIGNALS,
+        ),
+      });
+      const next = [...connectionVault.filter(r => r.personId !== record.personId), record];
+      persistVault(next);
+      setSaveModalPerson(null);
+    },
+    [
+      saveModalPerson,
+      participant,
+      resolvePersonForVault,
+      selectedCertifications,
+      savedPeople,
+      connectionVault,
+      persistVault,
+    ],
+  );
+
   const certLabel = participant
     ? getCertificationJourneyTitle(participant, selectedCertifications)
     : null;
@@ -1472,12 +1575,13 @@ export default function ExperiencePage() {
     hiddenPeopleIds: hiddenPeople,
     rotationSeed: new Date().getDay(),
     hasCertIntent: showCertJourney,
+    pillarWeights,
     sessionMeta: (s) => sessionMeta(s as ScoredSession),
     sessionType: (s) => sessionTypeLabel(s as ScoredSession),
     sessionReason: (s) => resolveSessionWhyLine(s as ScoredSession, certLabel),
   }), [
     learningList, communityList, funList, champions, hiddenPeople, hiddenSessions,
-    rankedHuddlesForBalance, showCertJourney, certLabel,
+    rankedHuddlesForBalance, showCertJourney, certLabel, pillarWeights,
   ]);
 
   const balancedNextBestMove = useMemo(
@@ -1491,9 +1595,10 @@ export default function ExperiencePage() {
   );
 
   const balancedRecommendedSessions = useMemo(
-    () => selectBalancedSessions(
+    () => selectBalancedSessionBand(
       [...learningList, ...communityList, ...funList].filter(s => s.compass_score > 0),
-      { limit: 4, maxCertSessions: showCertJourney ? 1 : 0 },
+      6,
+      showCertJourney,
     ),
     [learningList, communityList, funList, showCertJourney],
   );
@@ -1575,11 +1680,35 @@ export default function ExperiencePage() {
         setActiveCertificationId((pData.active_certification_id as string) ?? null);
         setCertificationResources((pData.certification_resources as CertificationResourcesMap) ?? {});
         setHiddenSessions((pData.hidden_sessions as string[]) ?? []);
-        setSavedPeople(   (pData.saved_people    as string[]) ?? []);
+        const speakerNames = extractSessionSpeakerNames(rawSessions);
+        let vault = (pData.connection_vault as ConnectionVaultRecord[]) ?? [];
+        const legacySaved = (pData.saved_people as string[]) ?? [];
+        if (vault.length === 0 && legacySaved.length > 0) {
+          const sig = (pData.event_signal_profile as RawDoc) ?? {};
+          const profileSignals = [
+            ...((sig.tech_tracks as string[]) ?? []),
+            ...((sig.goals as string[]) ?? []),
+          ];
+          vault = sanitizeConnectionVaultForFirestore(
+            migrateLegacySavedPeople(
+              legacySaved,
+              allScoredChampions.map(c => toRecommendedPerson(c, speakerNames)),
+              { badgeContext: { isChampion: true }, profileSignals },
+            ),
+          );
+          void setDoc(
+            doc(db, BASE + "/participants/" + participantId),
+            { connection_vault: vault, saved_people: vault.map(r => r.personId) },
+            { merge: true },
+          ).catch(e => console.error("[ExperienceAction] vault migrate:", e));
+        }
+        setConnectionVault(vault);
         setMeetPeople(    (pData.meet_people     as string[]) ?? []);
         setHiddenPeople(  (pData.hidden_people   as string[]) ?? []);
 
         setStatus("ready");
+
+        void loadRecommendationBalanceConfig().then(setPillarWeights);
 
         try {
           const featured = await getFeaturedChampions();
@@ -1685,30 +1814,29 @@ export default function ExperiencePage() {
     .filter(c => !hiddenPeople.includes(c.id))
     .map(c => toRecommendedPerson(c, sessionSpeakerNames));
 
-  const trackedConnections = savedPersonSignals.map(p => {
-    const champ = allChampions.find(c => c.id === p.id);
-    return {
-      person: champ
-        ? toRecommendedPerson(champ, sessionSpeakerNames)
-        : {
-            id: p.id,
-            display_name: p.displayName,
-            title: p.title,
-            organization: p.organization,
-            profile: p.domains?.length ? { domains: p.domains } : undefined,
-            compass_reasons: p.matchReasons,
-          },
-      mutual: p.mutual,
-    };
-  });
-
   const savedChampionRefs = savedPeople
     .map(id => allChampions.find(c => c.id === id))
     .filter((c): c is ScoredChampion => !!c)
     .map(c => ({ id: c.id, display_name: c.display_name }));
 
+  const sortedConnectionVault = useMemo(
+    () =>
+      [...connectionVault].sort(
+        (a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime(),
+      ),
+    [connectionVault],
+  );
+
   return (
     <>
+      {saveModalPerson && (
+        <SaveConnectionModal
+          person={saveModalPerson}
+          onConfirm={handleConfirmSavePerson}
+          onClose={() => setSaveModalPerson(null)}
+        />
+      )}
+
       <CustomizeCompassPanel
         open={customizeOpen}
         prefs={prefs}
@@ -1797,6 +1925,14 @@ export default function ExperiencePage() {
                 intelSession={nbmSession}
                 certLabel={certLabel}
               />
+              {balancedMoveSet.length > 1 && (
+                <div className="balanced-move-section">
+                  <p className="compass-module-note balanced-move-section__note">
+                    {COMPASS_BALANCE_EXPLANATION}
+                  </p>
+                  <BalancedMoveGrid moves={balancedMoveSet} />
+                </div>
+              )}
             </div>
           )}
 
@@ -1878,9 +2014,12 @@ export default function ExperiencePage() {
               <div className="section-head narrow">
                 <div>
                   <div className="section-kicker">Recommended</div>
-                  <h2>A balanced mix matched to your goals.</h2>
+                  <h2>A curated mix across learning, community, and fun.</h2>
                 </div>
               </div>
+              <p className="compass-module-note" style={{ marginBottom: "14px" }}>
+                {COMPASS_BALANCE_EXPLANATION}
+              </p>
               <div className="opportunity-grid compass-single-column">
                 {recommendedSessions.map(s => (
                   <SessionCard key={s.id} session={s} sched={schedState} certLabel={certLabel} />
@@ -1942,21 +2081,32 @@ export default function ExperiencePage() {
                 savedPeople,
                 hiddenPeople,
                 onSave: handleSavePerson,
+                onRequestSave: handleRequestSavePerson,
                 onHide: handleHidePerson,
                 onDetails: handleDetailsPerson,
               }}
             />
           )}
 
-          {(isModuleVisible("people_tracking") || isModuleVisible("people_interested_in_me")) && (
-            <PeopleFollowUpSplit
-              tracked={isModuleVisible("people_tracking") ? trackedConnections : []}
-              inboundSignals={isModuleVisible("people_interested_in_me") ? SAMPLE_INBOUND_SIGNALS : []}
+          {isModuleVisible("my_connections") && (
+            <MyConnectionsSection
+              records={sortedConnectionVault}
+              onViewProfile={handleDetailsPerson}
+              onRemove={handleRemoveConnection}
+              onUpdateNote={handleUpdateConnectionNote}
+              embedded
+            />
+          )}
+
+          {isModuleVisible("people_interested_in_me") && (
+            <PeopleInterestedSection
+              inboundSignals={SAMPLE_INBOUND_SIGNALS}
               savedChampionRefs={savedChampionRefs}
-              profileSignals={profileSignals}
               savedPeople={savedPeople}
+              onRequestSave={handleRequestSavePerson}
               onSave={handleSavePerson}
               onShowDetails={handleDetailsPerson}
+              profileSignals={profileSignals}
               embedded
             />
           )}
