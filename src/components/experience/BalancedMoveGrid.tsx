@@ -58,6 +58,12 @@ export default function BalancedMoveGrid({ moves }: BalancedMoveGridProps) {
                 className="balanced-move-card"
                 role="listitem"
               >
+                <p
+                  className="balanced-move-card__pillar"
+                  style={{ color: PILLAR_COLORS[pillar] }}
+                >
+                  {PILLAR_LABELS[pillar]}
+                </p>
                 <h4 className="balanced-move-card__title">{move.headline}</h4>
                 {move.subline && <p className="balanced-move-card__meta">{move.subline}</p>}
                 {move.reason && <p className="balanced-move-card__reason">{move.reason}</p>}

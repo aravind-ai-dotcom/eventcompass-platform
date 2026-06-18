@@ -84,7 +84,7 @@ export default function PeopleInterestedSection({
       </header>
 
       {inboundSignals.length > 0 ? (
-        <div className="people-follow-up-split__cards">
+        <div className="people-follow-up-split__cards connection-cards-grid">
           {inboundSignals.map(signal => {
           const mutual = inboundShowsMutual(signal, savedChampionRefs);
           const badges = inferInboundBadges(signal);

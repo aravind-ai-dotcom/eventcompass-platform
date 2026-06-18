@@ -32,7 +32,7 @@ export default function MyConnectionsSection({
       </header>
 
       {records.length > 0 ? (
-        <div className="people-follow-up-split__cards">
+        <div className="people-follow-up-split__cards connection-cards-grid">
           {records.map(record => (
             <ConnectionVaultCard
               key={record.id}

@@ -3208,12 +3208,13 @@ img { max-width: 100%; display: block; }
   min-width: 0;
 }
 
-.people-follow-up-split__cards .connection-card {
-  width: 100%;
-  align-self: stretch;
+.people-follow-up-split__cards.connection-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.people-follow-up-split__cards .connection-vault-card {
+.people-follow-up-split__cards .connection-card {
   width: 100%;
   align-self: stretch;
 }
@@ -3691,24 +3692,15 @@ img { max-width: 100%; display: block; }
 }
 
 .balanced-move-groups {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-}
-
-@media (min-width: 720px) {
-  .balanced-move-groups {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .balanced-move-group {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 
@@ -3725,9 +3717,9 @@ img { max-width: 100%; display: block; }
 }
 
 .balanced-move-group__cards {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
 }
 
 .balanced-move-grid {
@@ -3750,12 +3742,12 @@ img { max-width: 100%; display: block; }
 
 .balanced-move-card {
   border: 1px solid var(--line);
-  background: var(--surface);
-  padding: 14px 16px;
+  background: var(--panel);
+  padding: 16px 18px;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .balanced-move-card__pillar {

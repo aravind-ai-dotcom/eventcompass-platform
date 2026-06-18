@@ -18,6 +18,15 @@ interface ConnectionVaultCardProps {
   onUpdateNote?: (personId: string, notes: string) => void;
 }
 
+function PersonAvatar({ name }: { name: string }) {
+  const initial = name.trim()[0]?.toUpperCase() ?? "?";
+  return (
+    <div className="connection-card-avatar" aria-hidden="true">
+      {initial}
+    </div>
+  );
+}
+
 export default function ConnectionVaultCard({
   record,
   onViewProfile,
@@ -29,6 +38,11 @@ export default function ConnectionVaultCard({
   const [editingNote, setEditingNote] = useState(false);
 
   const addedLabel = formatConnectionDateAdded(record.dateAdded);
+  const contextParts = [
+    record.sharedInterests.length > 0 ? record.sharedInterests.join(", ") : null,
+    record.sharedCommunities.length > 0 ? record.sharedCommunities.join(", ") : null,
+    record.sharedCertifications.length > 0 ? record.sharedCertifications.join(", ") : null,
+  ].filter(Boolean);
 
   function handleSaveNote() {
     onUpdateNote?.(record.personId, draftNote);
@@ -37,59 +51,45 @@ export default function ConnectionVaultCard({
   }
 
   return (
-    <article className="connection-vault-card">
-      <header className="connection-vault-card__head">
-        <div className="connection-vault-card__identity">
-          <h3 className="connection-vault-card__name">{record.displayName}</h3>
-          {record.title && <p className="connection-vault-card__role">{record.title}</p>}
+    <article className="connection-card">
+      <div className="connection-card-head">
+        <PersonAvatar name={record.displayName} />
+        <div className="connection-card-copy">
+          <h3 className="connection-card-name">{record.displayName}</h3>
+          {record.title && <p className="connection-card-role">{record.title}</p>}
           {record.organization && (
-            <p className="connection-vault-card__org">{record.organization}</p>
+            <p className="connection-card-org">{record.organization}</p>
           )}
         </div>
-        {record.badges.length > 0 && (
-          <div className="connection-badge-row">
-            {record.badges.map(id => (
-              <span key={id} className={`connection-badge connection-badge--${id}`}>
-                {CONNECTION_BADGE_LABELS[id]}
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
+      </div>
 
-      <dl className="connection-vault-card__meta">
-        <div className="connection-vault-card__meta-row">
-          <dt>Saved For:</dt>
-          <dd>{SAVE_REASON_LABELS[record.saveReason]}</dd>
+      <div className="connection-card-reason">
+        <p className="connection-card-reason-kicker">Saved for:</p>
+        <p className="connection-card-reason-text">{SAVE_REASON_LABELS[record.saveReason]}</p>
+      </div>
+
+      {contextParts.length > 0 && (
+        <p className="connection-card-reason-text">{contextParts.join(" · ")}</p>
+      )}
+
+      {record.badges.length > 0 && (
+        <div className="connection-badge-row">
+          {record.badges.map(id => (
+            <span key={id} className={`connection-badge connection-badge--${id}`}>
+              {CONNECTION_BADGE_LABELS[id]}
+            </span>
+          ))}
         </div>
-        {record.sharedInterests.length > 0 && (
-          <div className="connection-vault-card__meta-row">
-            <dt>Shared Interests:</dt>
-            <dd>{record.sharedInterests.join(", ")}</dd>
-          </div>
-        )}
-        {record.sharedCommunities.length > 0 && (
-          <div className="connection-vault-card__meta-row">
-            <dt>Shared Communities:</dt>
-            <dd>{record.sharedCommunities.join(", ")}</dd>
-          </div>
-        )}
-        {record.sharedCertifications.length > 0 && (
-          <div className="connection-vault-card__meta-row">
-            <dt>Shared Certifications:</dt>
-            <dd>{record.sharedCertifications.join(", ")}</dd>
-          </div>
-        )}
-        {addedLabel && (
-          <div className="connection-vault-card__meta-row">
-            <dt>Added:</dt>
-            <dd>{addedLabel}</dd>
-          </div>
-        )}
-      </dl>
+      )}
 
       {record.mutual && (
         <p className="connection-card-mutual">Mutual interest — good moment to connect</p>
+      )}
+
+      {addedLabel && (
+        <p className="connection-card-reason-text" style={{ margin: 0, fontSize: "0.8125rem" }}>
+          Added {addedLabel}
+        </p>
       )}
 
       {(record.notes || notesOpen) && (
@@ -121,7 +121,7 @@ export default function ConnectionVaultCard({
           <div className="connection-vault-card__note-editor-actions">
             <button
               type="button"
-              className="connection-vault-action"
+              className="connection-card-action"
               onClick={() => {
                 setDraftNote(record.notes);
                 setEditingNote(false);
@@ -131,7 +131,7 @@ export default function ConnectionVaultCard({
             </button>
             <button
               type="button"
-              className="connection-vault-action connection-vault-action--primary"
+              className="connection-card-action connection-card-action--active"
               onClick={handleSaveNote}
             >
               Save note
@@ -140,49 +140,49 @@ export default function ConnectionVaultCard({
         </div>
       )}
 
-      <div className="connection-vault-card__actions">
+      <div className="connection-card-actions">
         {record.linkedinUrl && (
           <a
             href={record.linkedinUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="connection-vault-action"
+            className="connection-card-action"
           >
             LinkedIn
           </a>
         )}
         <button
           type="button"
-          className="connection-vault-action"
+          className="connection-card-action"
           onClick={() => downloadConnectionVCard(record)}
         >
-          Download vCard
+          vCard
         </button>
         {onUpdateNote && (
           <button
             type="button"
-            className="connection-vault-action"
+            className="connection-card-action"
             onClick={() => {
               setEditingNote(true);
               setNotesOpen(true);
             }}
           >
-            Add Note
+            Add note
           </button>
         )}
         {onViewProfile && (
           <button
             type="button"
-            className="connection-vault-action"
+            className="connection-card-action"
             onClick={() => onViewProfile(record.personId)}
           >
-            View Profile
+            Details
           </button>
         )}
         {onRemove && (
           <button
             type="button"
-            className="connection-vault-action connection-vault-action--muted"
+            className="connection-card-action connection-card-action--muted"
             onClick={() => onRemove(record.personId)}
           >
             Remove
