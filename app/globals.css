@@ -3087,6 +3087,144 @@ img { max-width: 100%; display: block; }
   padding-top: 8px;
 }
 
+/* ── Session intelligence panel ───────────────────────────────────────────── */
+
+.session-intelligence-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.session-intelligence-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.session-intelligence-head-copy {
+  min-width: 0;
+  flex: 1;
+  padding-top: 2px;
+}
+.session-intelligence-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.session-intelligence-score-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--soft);
+}
+.session-intelligence-reasons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.session-intelligence-reasons li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--soft);
+}
+.session-intelligence-check {
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.session-intelligence-expand {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 560;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.session-intelligence-signals-kicker {
+  margin: 0 0 6px;
+  font-size: 0.65rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.session-intelligence-signal-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.session-intelligence-signal {
+  font-size: 0.68rem;
+  font-weight: 560;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--chip);
+  letter-spacing: 0.03em;
+}
+.session-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+.session-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 0.66rem;
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--chip);
+  white-space: nowrap;
+}
+.session-badge--hands-on {
+  border-color: rgba(15, 98, 254, 0.35);
+  color: var(--accent);
+}
+.session-badge--certification {
+  border-color: rgba(165, 110, 255, 0.35);
+  color: var(--purple);
+}
+.session-badge--popular,
+.session-badge--community-favorite {
+  border-color: rgba(0, 157, 154, 0.35);
+  color: #009d9a;
+}
+.session-badge--limited-capacity {
+  border-color: rgba(180, 83, 9, 0.4);
+  color: #b45309;
+}
+.session-badge--executive {
+  border-color: rgba(105, 41, 196, 0.35);
+  color: var(--purple-soft);
+}
+.session-card-meta {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
 /* ── Connection Signals ───────────────────────────────────────────────────── */
 
 .connection-signals-section {

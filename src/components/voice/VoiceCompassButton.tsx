@@ -43,7 +43,7 @@ import { ensureGovernanceLoaded } from "@/services/governance/governanceLoader";
 import { applyTtsPronunciation } from "@/services/voice/voicePronunciation";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 import { localeFromSpeechLang, type UiLocale } from "@/services/i18n/voiceLocale";
-import { resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
+import { formatSessionIntelligenceSummary } from "@/lib/sessionIntelligence";
 import { primaryMatchReason } from "@/lib/personCardHelpers";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
@@ -96,6 +96,7 @@ interface VoiceCompassButtonProps {
   rankedSessions?:         ScoredSession[];
   participantGoals?:       string[];
   participantTracks?:      string[];
+  certLabel?:              string | null;
   isEnrolled?:             boolean;
   voiceExperience?:        VoiceExperience;
   voiceLocale?:            UiLocale;
@@ -344,6 +345,7 @@ export default function VoiceCompassButton({
   rankedSessions,
   participantGoals,
   participantTracks,
+  certLabel,
   isEnrolled,
   voiceExperience = "techxchange",
   voiceLocale,
@@ -575,6 +577,7 @@ export default function VoiceCompassButton({
       participantTracks: participantTracks ?? [],
       liveHuddles:       rankedHuddles,
       isEnrolled:        isEnrolled ?? true,
+      certLabel:         certLabel ?? null,
       experience:        voiceExperience,
       locale,
     });
@@ -595,7 +598,7 @@ export default function VoiceCompassButton({
     nextBestMove, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
     speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience, isEnrolled,
-    voiceExperience, voiceLocale,
+    voiceExperience, voiceLocale, certLabel,
   ]);
 
   // ── Start listening ─────────────────────────────────────────────────────────
@@ -772,7 +775,7 @@ export default function VoiceCompassButton({
 
   const profileSignals = [...(participantTracks ?? []), ...(participantGoals ?? [])];
   const sessionWhy = displaySession
-    ? resolveSessionWhyLine(displaySession as ScoredSession, null)
+    ? formatSessionIntelligenceSummary(displaySession as ScoredSession, certLabel ?? null, 2)
     : undefined;
   const champWhy = topChampion
     ? primaryMatchReason(topChampion as ScoredChampion, profileSignals) ?? undefined

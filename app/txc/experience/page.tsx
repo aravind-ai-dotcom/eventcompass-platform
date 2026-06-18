@@ -52,6 +52,7 @@ import CompassSection from "@/components/experience/CompassSection";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
+import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 
@@ -504,24 +505,14 @@ function SessionCard({ session, sched, certLabel }: { session: ScoredSession; sc
   const type  = sessionTypeLabel(session);
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
-  const tags  = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
-  const recommendation = sessionRecommendationLine(session, certLabel);
   return (
     <article className="opportunity-card">
       <div className="card-meta">
         <span>{type}{track ? " · " + track : ""}</span>
-        <ScoreBadge score={session.compass_score} size="sm" />
       </div>
       <h3>{session.title}</h3>
-      {recommendation && (
-        <p className="session-recommendation-line">{recommendation}</p>
-      )}
-      {meta && <p>{meta}</p>}
-      {tags.length > 0 && (
-        <div className="chip-row" style={{ marginTop: 0, marginBottom: "12px" }}>
-          {tags.map((tag) => <span key={tag} className="chip">{tag}</span>)}
-        </div>
-      )}
+      {meta && <p className="session-card-meta">{meta}</p>}
+      <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" />
       {sched && <ExpSessionActionBar id={session.id} sched={sched} />}
     </article>
   );
@@ -1615,6 +1606,7 @@ export default function ExperiencePage() {
                 rankedSessions={rankedSessionsForVoice}
                 participantGoals={pGoals}
                 participantTracks={pTracks}
+                certLabel={certLabel}
                 isEnrolled
                 onAddToSchedule={handleSaveSession}
                 onDoNotSuggestSession={handleHideSession}
@@ -1641,6 +1633,8 @@ export default function ExperiencePage() {
                   score: nextBestMove.compass_score,
                   entityId: nextBestMove.id,
                 }}
+                intelSession={nextBestMove}
+                certLabel={certLabel}
               />
             </div>
           )}

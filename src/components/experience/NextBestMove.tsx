@@ -3,12 +3,14 @@
 // src/components/experience/NextBestMove.tsx
 // =============================================================================
 
-import type {
-  NextBestMove as NextBestMoveData,
-} from "@/types";
+import type { NextBestMove as NextBestMoveData } from "@/types";
+import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
+import type { SessionIntelInput } from "@/lib/sessionIntelligence";
 
 interface NextBestMoveProps {
   nextBestMove:        NextBestMoveData;
+  intelSession?:       SessionIntelInput | null;
+  certLabel?:          string | null;
   onSkip?: () => void;
   onDone?: () => void;
   onViewDetails?: () => void;
@@ -105,12 +107,15 @@ function ActionButton({
 
 export default function NextBestMove({
   nextBestMove,
+  intelSession,
+  certLabel,
   onSkip,
   onDone,
   onViewDetails,
 }: NextBestMoveProps) {
   const hasScore =
     typeof nextBestMove.score === "number" && nextBestMove.score > 0;
+  const showSideScore = hasScore && !(nextBestMove.type === "session" && intelSession);
 
   return (
     <section
@@ -123,7 +128,7 @@ export default function NextBestMove({
         style={{
           padding: "30px 30px 28px",
           display: "grid",
-          gridTemplateColumns: hasScore
+          gridTemplateColumns: showSideScore
             ? "minmax(0, 1fr) 92px"
             : "minmax(0, 1fr)",
           gap: "28px",
@@ -175,7 +180,16 @@ export default function NextBestMove({
             </p>
           )}
 
-          {nextBestMove.reason && (
+          {nextBestMove.type === "session" && intelSession ? (
+            <div style={{ marginBottom: "22px" }}>
+              <SessionIntelligencePanel
+                session={intelSession}
+                certLabel={certLabel}
+                scoreSize="md"
+                showKeySignals
+              />
+            </div>
+          ) : nextBestMove.reason ? (
             <div
               style={{
                 display: "grid",
@@ -209,7 +223,7 @@ export default function NextBestMove({
                 {nextBestMove.reason}
               </p>
             </div>
-          )}
+          ) : null}
 
           <div
             style={{
@@ -228,7 +242,7 @@ export default function NextBestMove({
           </div>
         </div>
 
-        {hasScore && <ScoreBadge score={nextBestMove.score as number} />}
+        {showSideScore && <ScoreBadge score={nextBestMove.score as number} />}
       </div>
     </section>
   );

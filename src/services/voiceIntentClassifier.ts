@@ -6,6 +6,11 @@
 // =============================================================================
 
 import {
+  buildSessionRecommendationReasons,
+  formatSessionIntelligenceSummary,
+  formatSessionIntelligenceVoice,
+} from "@/lib/sessionIntelligence";
+import {
   DEFAULT_RECOMMENDATION_REASON,
   humanizeScoringReason,
   resolveSessionWhyLine,
@@ -83,6 +88,7 @@ export interface VoiceResponseContext {
   isEnrolled?:         boolean;
   experience?:         VoiceExperience;
   locale?:             VoiceLocale;
+  certLabel?:          string | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,7 +149,8 @@ const ACTION_PATTERNS: Array<[CoreVoiceIntent, string[]]> = [
   ]],
   ["why_recommended", [
     "why was this recommended", "why did compass recommend", "why this session",
-    "explain this recommendation", "why did you pick",
+    "explain this recommendation", "why did you pick", "why did you recommend this session",
+    "why is this a strong match", "what makes this relevant", "why is this relevant to me",
   ]],
   ["add_to_agenda", [
     "add to my agenda", "add to agenda", "save this session", "schedule this",
@@ -731,11 +738,17 @@ export function buildVoiceResponse(
     case "why_recommended": {
       const session = sessionForContext(ctx);
       const nbm = ctx.nextBestMove;
-      const whyLine = session
-        ? resolveSessionWhyLine(session, null)
-        : nbm?.reason
-          ? humanizeScoringReason(nbm.reason)
-          : DEFAULT_RECOMMENDATION_REASON;
+      if (session) {
+        const spoken = formatSessionIntelligenceVoice(session, ctx.certLabel ?? null);
+        const display = buildSessionRecommendationReasons(session, ctx.certLabel ?? null)
+          .slice(0, 4)
+          .map(r => `✓ ${r}`)
+          .join("\n");
+        return { spoken, display, action: "show_sessions" };
+      }
+      const whyLine = nbm?.reason
+        ? humanizeScoringReason(nbm.reason)
+        : DEFAULT_RECOMMENDATION_REASON;
       return {
         spoken: `Compass picked this because ${whyLine.replace(/\.$/, "")}.`,
         display: whyLine,

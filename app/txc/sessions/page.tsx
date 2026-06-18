@@ -13,7 +13,8 @@ import {
   isCertificationActivityType,
   listCertificationJourneys,
 } from "@/lib/certificationProfile";
-import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
+import { buildSessionRecommendationReasons } from "@/lib/sessionIntelligence";
+import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import CertificationSessionDetail from "@/components/sessions/CertificationSessionDetail";
 
 const BASE = "organizations/ibm/events/txc2026";
@@ -566,25 +567,15 @@ function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession
   const type = sessionType(session);
   const track = primaryTrack(session);
   const meta = sessionMeta(session);
-  const tags = [...(session.tracks?.topics ?? []), ...(session.tracks?.products ?? [])].slice(0, 4);
-  const recommendation = sessionRecommendationLine(session, certLabel);
 
   return (
     <article className="opportunity-card" style={{ display: "flex", flexDirection: "column" }}>
       <div className="card-meta">
         <span>{type}{track ? ` · ${track}` : ""}</span>
-        <ScoreBadge score={session.compass_score} />
       </div>
       <h3>{session.title}</h3>
-      {recommendation && (
-        <p className="session-recommendation-line">{recommendation}</p>
-      )}
-      {meta && <p>{meta}</p>}
-      {tags.length > 0 && (
-        <div className="chip-row" style={{ marginTop: 0, marginBottom: "12px" }}>
-          {tags.map((tag) => <span key={tag} className="chip">{tag}</span>)}
-        </div>
-      )}
+      {meta && <p className="session-card-meta">{meta}</p>}
+      <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" />
       {sched && (
         <div style={{ marginTop: "auto" }}>
           <SessionActionBar session={session} sched={sched} />
@@ -598,7 +589,7 @@ function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession
 // CatalogRow — list row with compact inline actions
 // ─────────────────────────────────────────────────────────────────────────────
 
-function CatalogRow({ session, sched }: { session: ScoredSession; sched?: ScheduleState }) {
+function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sched?: ScheduleState; certLabel?: string | null }) {
   const type = sessionType(session);
   const track = primaryTrack(session);
   const isCert = isCertificationActivityType(session);
@@ -608,6 +599,7 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
   const capacity = session.capacity?.available_slots ?? 0;
   const status = session.capacity?.status ?? "";
   const isDns = sched ? sched.doNotSuggest.includes(session.id) : false;
+  const topReason = buildSessionRecommendationReasons(session, certLabel)[0];
 
   return (
     <article style={isDns ? { opacity: 0.5 } : undefined}>
@@ -621,7 +613,7 @@ function CatalogRow({ session, sched }: { session: ScoredSession; sched?: Schedu
           {session.compass_score > 0 && (
             <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>{session.compass_score}% match</span></>
           )}
-          {session.compass_reasons[0] && <> · {session.compass_reasons[0]}</>}
+          {topReason && <> · {topReason}</>}
         </p>
         {sched && (
           <SessionActionBar session={session} sched={sched} compact={true} />
@@ -1137,7 +1129,9 @@ function SessionsPageContent() {
           </div>
         ) : (
           <div className="catalog-list">
-            {catalogSessions.map((s) => <CatalogRow key={s.id} session={s} sched={schedState} />)}
+            {catalogSessions.map((s) => (
+              <CatalogRow key={s.id} session={s} sched={schedState} certLabel={certLabel} />
+            ))}
           </div>
         )}
       </section>
