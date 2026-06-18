@@ -130,3 +130,41 @@ export function topCommunities(map: Record<string, number>, n = 5) {
     .sort(([, a], [, b]) => b - a)
     .slice(0, n);
 }
+
+/** Education entries may be strings or { institution } objects from enrollment. */
+export function accumulateEducation(
+  map: Record<string, number>,
+  education: unknown,
+): void {
+  if (!Array.isArray(education)) return;
+  for (const item of education) {
+    if (typeof item === "string") {
+      incPublicSignal(map, item);
+    } else if (item && typeof item === "object") {
+      const institution = (item as { institution?: string }).institution;
+      if (institution) incPublicSignal(map, institution);
+    }
+  }
+}
+
+/** Past employers may be strings or { company } objects from enrollment. */
+export function accumulatePastEmployers(
+  map: Record<string, number>,
+  employers: unknown,
+): void {
+  if (!Array.isArray(employers)) return;
+  for (const item of employers) {
+    if (typeof item === "string") {
+      incPublicSignal(map, item);
+    } else if (item && typeof item === "object") {
+      const company = (item as { company?: string }).company;
+      if (company) incPublicSignal(map, company);
+    }
+  }
+}
+
+export function participantNetworkingIdentity(
+  raw: Record<string, unknown>,
+): Record<string, boolean> {
+  return (raw.networking_identity as Record<string, boolean>) ?? {};
+}

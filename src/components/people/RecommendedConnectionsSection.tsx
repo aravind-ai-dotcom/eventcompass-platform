@@ -51,7 +51,7 @@ export default function RecommendedConnectionsSection({
         </p>
       </div>
 
-      <div className="recommended-connections-stack recommended-connections-stack--desktop">
+      <div className="champion-grid three-champions champion-grid--desktop-only connection-cards-grid">
         {cards}
       </div>
 

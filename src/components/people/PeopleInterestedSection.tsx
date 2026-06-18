@@ -47,7 +47,7 @@ export default function PeopleInterestedSection({
         </p>
       </div>
 
-      <div className="recommended-connections-stack">
+      <div className="champion-grid three-champions connection-cards-grid">
         {inboundSignals.map(signal => {
           const mutual = inboundShowsMutual(signal, savedChampionRefs);
           const badges = inferInboundBadges(signal);

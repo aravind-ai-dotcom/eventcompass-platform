@@ -2928,14 +2928,6 @@ img { max-width: 100%; display: block; }
   flex-direction: column;
   gap: 14px;
 }
-.recommended-connections-stack--desktop {
-  display: flex;
-}
-@media (max-width: 768px) {
-  .recommended-connections-stack--desktop {
-    display: none;
-  }
-}
 .connection-card {
   border: 1px solid var(--line);
   background: var(--panel);
@@ -2943,6 +2935,11 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   gap: 12px;
+  height: 100%;
+  min-width: 0;
+}
+.connection-cards-grid .connection-card {
+  align-self: stretch;
 }
 .connection-card--compact {
   padding: 16px;
@@ -3007,6 +3004,10 @@ img { max-width: 100%; display: block; }
   font-size: 0.88rem;
   line-height: 1.45;
   color: var(--soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .connection-card-mutual {
   margin: 0;

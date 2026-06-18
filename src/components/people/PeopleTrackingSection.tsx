@@ -40,7 +40,7 @@ export default function PeopleTrackingSection({
         </p>
       </div>
 
-      <div className="recommended-connections-stack">
+      <div className="champion-grid three-champions connection-cards-grid">
         {tracked.map(({ person, mutual }) => (
           <RecommendedConnectionCard
             key={person.id}

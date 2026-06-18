@@ -7,7 +7,17 @@ import { db } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { countryFlag, inc, incPublicCommunity, incPublicSignal, isInternalParticipant, top, topCommunities } from "@/lib/roomSignals";
+import {
+  accumulateEducation,
+  accumulatePastEmployers,
+  countryFlag,
+  incPublicCommunity,
+  incPublicSignal,
+  isInternalParticipant,
+  participantNetworkingIdentity,
+  top,
+  topCommunities,
+} from "@/lib/roomSignals";
 import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 
 const BASE = "organizations/ibm/events/txc2026";
@@ -98,12 +108,13 @@ export default function TechXchangePulsePage() {
           const p = d.data() as RawDoc;
           if (!isInternalParticipant(p)) audienceTotal++;
           incPublicSignal(topCountries, String(p.country ?? ""));
-          for (const u of (p.education as string[] | undefined) ?? []) incPublicSignal(topUniversities, u);
-          for (const e of (p.past_employers as string[] | undefined) ?? []) incPublicSignal(topPastEmployers, e);
+          accumulateEducation(topUniversities, p.education);
+          accumulatePastEmployers(topPastEmployers, p.past_employers);
           for (const c of (p.community as string[] | undefined) ?? []) incPublicCommunity(communities, c);
-          if (isOpenToAlumniConnections(p)) openToAlumni++;
-          if (p.open_to_colleague) openToColleague++;
-          if (p.open_to_career) openToCareer++;
+          const ni = participantNetworkingIdentity(p);
+          if (isOpenToAlumniConnections(ni)) openToAlumni++;
+          if (ni.open_to_past_colleague_connections) openToColleague++;
+          if (ni.open_to_career_conversations) openToCareer++;
           if (isOpenToMentoringConversations(p)) openToMentoring++;
         }
 
