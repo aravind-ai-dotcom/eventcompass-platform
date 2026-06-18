@@ -46,6 +46,12 @@ import {
   pickBalancedSessionRecommendation,
 } from "@/lib/recommendationBalancing";
 import {
+  findSpeakersForQuery,
+  formatSpeakerIntelligenceVoice,
+  type SpeakerParticipantContext,
+} from "@/lib/speakerIntelligence";
+import type { ScoredSpeaker, SpeakerProfile } from "@/types/speaker";
+import {
   getDefaultFallbackResponse,
   getVoiceKnowledgeRecord,
   matchVoiceKnowledge,
@@ -125,6 +131,10 @@ export interface VoiceResponseContext {
   locale?:             VoiceLocale;
   certLabel?:          string | null;
   certificationJourney?: CertificationJourneyPlan | null;
+  rankedSpeakers?:     ScoredSpeaker[];
+  topSpeaker?:         ScoredSpeaker | null;
+  speakerCatalog?:     SpeakerProfile[];
+  speakerCtx?:         SpeakerParticipantContext;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -155,7 +165,9 @@ const KEYWORD_BUCKETS: Record<
   ],
   find_people: [
     "who should i meet", "who can i meet", "who to meet", "who should i talk",
-    "champion", "expert", "mentor", "people", "connect with", "introduce me",
+    "champion", "expert", "experts in", "mentor", "people", "connect with", "introduce me",
+    "speaker", "presenter", "who should i meet for", "any experts in", "who can help with certification",
+    "governance", "openshift",
   ],
   find_huddles: [
     "conversation", "huddle", "meetup", "alumni", "coffee", "roundtable",
@@ -1054,9 +1066,38 @@ export function buildVoiceResponse(
     }
 
     case "find_people": {
-      const champion = ctx.topChampion;
       const track = topTrack(ctx);
       const huddle = huddleHint(ctx, norm);
+
+      if (ctx.speakerCatalog?.length && /speaker|expert|presenter|governance|openshift|certification|who should i meet for|any experts|who can help with/.test(norm)) {
+        const expertMatch = findSpeakersForQuery(
+          classified.transcript,
+          ctx.speakerCatalog,
+          ctx.speakerCtx ?? {},
+          1,
+        )[0];
+        if (expertMatch) {
+          const spoken = `${formatSpeakerIntelligenceVoice(expertMatch)}${huddle}`;
+          const reason = expertMatch.whyMeet[0] ?? expertMatch.expertiseLabel ?? track;
+          return {
+            spoken,
+            display: `${expertMatch.displayName} · ${reason}`,
+            action: "show_champions",
+          };
+        }
+      }
+
+      const speaker = ctx.topSpeaker;
+      if (speaker && /speaker|expert|presenter/.test(norm)) {
+        const spoken = `${formatSpeakerIntelligenceVoice(speaker)}${huddle}`;
+        return {
+          spoken,
+          display: `${speaker.displayName} · ${speaker.whyMeet[0] ?? speaker.expertiseLabel ?? "Expert"}`,
+          action: "show_champions",
+        };
+      }
+
+      const champion = ctx.topChampion;
 
       if (!champion) {
         return {

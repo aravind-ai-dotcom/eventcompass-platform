@@ -9,6 +9,8 @@ interface MyConnectionsSectionProps {
   onRemove?: (personId: string) => void;
   onUpdateNote?: (personId: string, notes: string) => void;
   embedded?: boolean;
+  /** Renders as a column inside people-follow-up-split__layout */
+  splitColumn?: boolean;
 }
 
 export default function MyConnectionsSection({
@@ -17,23 +19,20 @@ export default function MyConnectionsSection({
   onRemove,
   onUpdateNote,
   embedded = false,
+  splitColumn = false,
 }: MyConnectionsSectionProps) {
-  const outerClass = embedded
-    ? "compass-module-block connection-vault"
-    : "section connection-vault";
-
-  return (
-    <section className={outerClass}>
-      <header className="connection-vault__header">
-        <p className="connection-vault__kicker">My Connections</p>
-        <h2 className="connection-vault__title">People you want to remember and follow up with.</h2>
-        <p className="connection-vault__note">
+  const content = (
+    <>
+      <header className="people-follow-up-split__header">
+        <p className="people-follow-up-split__kicker">My Connections</p>
+        <h2 className="people-follow-up-split__title">People you want to remember and follow up with.</h2>
+        <p className="people-follow-up-split__note">
           Your relationship vault — context, notes, and quick actions for after TechXchange.
         </p>
       </header>
 
       {records.length > 0 ? (
-        <div className="connection-vault__stack">
+        <div className="people-follow-up-split__cards">
           {records.map(record => (
             <ConnectionVaultCard
               key={record.id}
@@ -45,10 +44,20 @@ export default function MyConnectionsSection({
           ))}
         </div>
       ) : (
-        <p className="connection-vault__empty">
+        <p className="people-follow-up-split__empty">
           Save people from Recommended Connections — we&apos;ll ask why so you remember the context later.
         </p>
       )}
-    </section>
+    </>
   );
+
+  if (splitColumn) {
+    return <div className="people-follow-up-split__column">{content}</div>;
+  }
+
+  const outerClass = embedded
+    ? "compass-module-block connection-vault"
+    : "section connection-vault";
+
+  return <section className={outerClass}>{content}</section>;
 }

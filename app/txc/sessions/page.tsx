@@ -15,9 +15,19 @@ import {
 } from "@/lib/certificationProfile";
 import { buildSessionRecommendationReasons } from "@/lib/sessionIntelligence";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
+import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
+import SessionSpeakerPanel from "@/components/sessions/SessionSpeakerPanel";
 import CertificationSessionDetail from "@/components/sessions/CertificationSessionDetail";
 import { selectBalancedSessionBand } from "@/lib/recommendationBalancing";
 import { hasCertificationIntent } from "@/lib/certificationProfile";
+import {
+  buildSpeakerCatalog,
+  championFromRaw,
+  resolveSpeakersForSession,
+  sessionFromScored,
+  type SpeakerParticipantContext,
+} from "@/lib/speakerIntelligence";
+import type { SpeakerProfile } from "@/types/speaker";
 
 const BASE = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -67,6 +77,7 @@ interface ScoredSession {
   related_champion_ids?: string[];
   related_huddle_ids?: string[];
   related_community_ids?: string[];
+  speakers?: unknown;
   difficulty?: string;
 }
 
@@ -225,10 +236,16 @@ function sortSessionsChronological(a: ScoredSession, b: ScoredSession): number {
 function SessionDetailModal({
   session,
   allSessions,
+  speakerCatalog,
+  speakerCtx,
+  onViewSpeaker,
   onClose,
 }: {
   session: ScoredSession;
   allSessions: ScoredSession[];
+  speakerCatalog: SpeakerProfile[];
+  speakerCtx: SpeakerParticipantContext;
+  onViewSpeaker?: (speakerId: string) => void;
   onClose: () => void;
 }) {
   const type = sessionType(session);
@@ -240,6 +257,12 @@ function SessionDetailModal({
     ...(session.tracks?.secondary_tracks ?? []),
   ].filter(Boolean);
   const isCertJourney = isCertificationActivityType(session);
+  const sessionSpeakers = resolveSpeakersForSession(
+    sessionFromScored(session),
+    speakerCatalog,
+    speakerCtx,
+  );
+  const primarySpeaker = sessionSpeakers[0];
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -289,6 +312,14 @@ function SessionDetailModal({
                   {session.compass_reasons.map(r => <li key={r}>{r}</li>)}
                 </ul>
               </>
+            )}
+            {primarySpeaker && (
+              <SessionSpeakerPanel
+                speaker={primarySpeaker}
+                currentSessionId={session.id}
+                allSessions={allSessions.map(sessionFromScored)}
+                onViewProfile={onViewSpeaker}
+              />
             )}
           </>
         )}
@@ -370,6 +401,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
     related_champion_ids: raw.related_champion_ids as string[] | undefined,
     related_huddle_ids: raw.related_huddle_ids as string[] | undefined,
     related_community_ids: raw.related_community_ids as string[] | undefined,
+    speakers: raw.speakers,
     difficulty: raw.difficulty as string | undefined,
     compass_score: boosted.score,
     compass_reasons: boosted.reasons,
@@ -565,10 +597,29 @@ function ScoreBadge({ score }: { score: number }) {
 // RecommendedCard — grid card with action bar
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession; sched?: ScheduleState; certLabel?: string | null }) {
+function RecommendedCard({
+  session,
+  sched,
+  certLabel,
+  speakerCatalog,
+  speakerCtx,
+  onViewSpeaker,
+}: {
+  session: ScoredSession;
+  sched?: ScheduleState;
+  certLabel?: string | null;
+  speakerCatalog: SpeakerProfile[];
+  speakerCtx: SpeakerParticipantContext;
+  onViewSpeaker?: (speakerId: string) => void;
+}) {
   const type = sessionType(session);
   const track = primaryTrack(session);
   const meta = sessionMeta(session);
+  const sessionSpeakers = resolveSpeakersForSession(
+    sessionFromScored(session),
+    speakerCatalog,
+    speakerCtx,
+  );
 
   return (
     <article className="opportunity-card" style={{ display: "flex", flexDirection: "column" }}>
@@ -578,6 +629,13 @@ function RecommendedCard({ session, sched, certLabel }: { session: ScoredSession
       <h3>{session.title}</h3>
       {meta && <p className="session-card-meta">{meta}</p>}
       <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" />
+      {sessionSpeakers.length > 0 && (
+        <SessionSpeakerIntel
+          speakers={sessionSpeakers}
+          onViewSpeaker={onViewSpeaker}
+          compact
+        />
+      )}
       {sched && (
         <div style={{ marginTop: "auto" }}>
           <SessionActionBar session={session} sched={sched} />
@@ -633,13 +691,16 @@ function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sch
 // IntelligenceBand — presentation slice of scored sessions (no scoring change)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel }: {
+function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel, speakerCatalog, speakerCtx, onViewSpeaker }: {
   kicker: string;
   title: string;
   desc: string;
   sessions: ScoredSession[];
   sched: ScheduleState;
   certLabel?: string | null;
+  speakerCatalog: SpeakerProfile[];
+  speakerCtx: SpeakerParticipantContext;
+  onViewSpeaker?: (speakerId: string) => void;
 }) {
   if (sessions.length === 0) return null;
   return (
@@ -652,7 +713,17 @@ function IntelligenceBand({ kicker, title, desc, sessions, sched, certLabel }: {
         <p>{desc}</p>
       </div>
       <div className="intelligence-row">
-        {sessions.map(s => <RecommendedCard key={s.id} session={s} sched={sched} certLabel={certLabel} />)}
+        {sessions.map(s => (
+          <RecommendedCard
+            key={s.id}
+            session={s}
+            sched={sched}
+            certLabel={certLabel}
+            speakerCatalog={speakerCatalog}
+            speakerCtx={speakerCtx}
+            onViewSpeaker={onViewSpeaker}
+          />
+        ))}
       </div>
     </section>
   );
@@ -722,6 +793,7 @@ function SessionsPageContent() {
   const [doNotSuggest,  setDoNotSuggest]  = useState<string[]>([]);
   const [reservedSeats, setReservedSeats] = useState<string[]>([]);
   const [detailSession, setDetailSession] = useState<ScoredSession | null>(null);
+  const [championSources, setChampionSources] = useState<ReturnType<typeof championFromRaw>[]>([]);
 
   // Filter state
   const [search,      setSearch]      = useState("");
@@ -746,16 +818,41 @@ function SessionsPageContent() {
     typeFilter !== "All" && typeFilter.toLowerCase().includes("certification")
   );
 
+  const speakerCatalog = useMemo(
+    () => buildSpeakerCatalog(championSources, allScored.map(sessionFromScored)),
+    [championSources, allScored],
+  );
+
+  const speakerCtx = useMemo((): SpeakerParticipantContext => {
+    const sig = (participantData.event_signal_profile as RawDoc) ?? {};
+    const intel = (participantData.compass_intelligence as RawDoc) ?? {};
+    return {
+      tracks: (sig.tech_tracks as string[]) ?? [],
+      goals: (sig.goals as string[]) ?? [],
+      keywords: (intel.matching_keywords as string[]) ?? [],
+      hasCertIntent: hasCertificationIntent(participantData),
+    };
+  }, [participantData]);
+
+  const handleViewSpeaker = useCallback((speakerId: string) => {
+    const session = allScored.find(s =>
+      resolveSpeakersForSession(sessionFromScored(s), speakerCatalog, speakerCtx)
+        .some(sp => (sp.championId ?? sp.id) === speakerId),
+    );
+    if (session) setDetailSession(session);
+  }, [allScored, speakerCatalog, speakerCtx]);
+
   useEffect(() => {
     if (authLoading) return;
 
     async function load() {
       try {
-        const [pSnap, sessSnap] = await Promise.all([
+        const [pSnap, sessSnap, champSnap] = await Promise.all([
           isLoggedIn
             ? getDoc(doc(db, `${BASE}/participants/${participantId}`))
             : Promise.resolve(null),
           getDocs(collection(db, `${BASE}/sessions`)),
+          getDocs(collection(db, `${BASE}/champions`)),
         ]);
 
         const pData = pSnap?.exists() ? (pSnap.data() as RawDoc) : {};
@@ -775,6 +872,7 @@ function SessionsPageContent() {
           .sort(sortSessionsChronological);
 
         setAllScored(scored);
+        setChampionSources(champSnap.docs.map(d => championFromRaw({ id: d.id, ...d.data() } as RawDoc)));
         setTotalCount(scored.length);
         setStatus("ready");
       } catch (err: unknown) {
@@ -1084,6 +1182,9 @@ function SessionsPageContent() {
             sessions={recommended}
             sched={schedState}
             certLabel={certLabel}
+            speakerCatalog={speakerCatalog}
+            speakerCtx={speakerCtx}
+            onViewSpeaker={handleViewSpeaker}
           />
           <IntelligenceBand
             kicker="Trending"
@@ -1092,6 +1193,9 @@ function SessionsPageContent() {
             sessions={trending}
             sched={schedState}
             certLabel={certLabel}
+            speakerCatalog={speakerCatalog}
+            speakerCtx={speakerCtx}
+            onViewSpeaker={handleViewSpeaker}
           />
         </>
       )}
@@ -1104,6 +1208,9 @@ function SessionsPageContent() {
           sessions={recommended}
           sched={schedState}
           certLabel={certLabel}
+          speakerCatalog={speakerCatalog}
+          speakerCtx={speakerCtx}
+          onViewSpeaker={handleViewSpeaker}
         />
       )}
 
@@ -1172,6 +1279,9 @@ function SessionsPageContent() {
         <SessionDetailModal
           session={detailSession}
           allSessions={allScored}
+          speakerCatalog={speakerCatalog}
+          speakerCtx={speakerCtx}
+          onViewSpeaker={handleViewSpeaker}
           onClose={() => setDetailSession(null)}
         />
       )}

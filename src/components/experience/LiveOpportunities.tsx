@@ -26,12 +26,15 @@ import {
 } from "@/lib/huddleStorage";
 import { getHuddleParticipant } from "@/lib/huddleParticipants";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
+import { enrichHuddleWithSpeakerIntel } from "@/lib/speakerIntelligence";
+import type { SpeakerProfile } from "@/types/speaker";
 import HuddleParticipantMiniCard from "@/components/experience/HuddleParticipantMiniCard";
 import StartConversationModal from "@/components/experience/StartConversationModal";
 
 interface LiveOpportunitiesProps {
   participantTracks?: string[];
   participantGoals?: string[];
+  speakerCatalog?: SpeakerProfile[];
   userDisplayName?: string;
   userFirstName?: string;
   visibleLimit?: number;
@@ -48,6 +51,7 @@ function isVisibleHuddle(
 export default function LiveOpportunities({
   participantTracks = [],
   participantGoals = [],
+  speakerCatalog = [],
   userDisplayName = "You",
   userFirstName = "You",
   visibleLimit = 4,
@@ -75,15 +79,16 @@ export default function LiveOpportunities({
   }, [refresh]);
 
   const visibleAll = useMemo(() => {
-    const ranked = rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals);
-    const merged = [...pending, ...ranked];
+    const ranked = rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals)
+      .map(h => (speakerCatalog.length > 0 ? enrichHuddleWithSpeakerIntel(h, speakerCatalog) : h));
+    const merged = [...pending.map(h => speakerCatalog.length > 0 ? enrichHuddleWithSpeakerIntel(h, speakerCatalog) : h), ...ranked];
     const seen = new Set<string>();
     return merged.filter(h => {
       if (seen.has(h.id)) return false;
       seen.add(h.id);
       return isVisibleHuddle(h, ended, now);
     });
-  }, [participantTracks, participantGoals, pending, ended, now]);
+  }, [participantTracks, participantGoals, pending, ended, now, speakerCatalog]);
 
   const visible = showAll ? visibleAll : visibleAll.slice(0, visibleLimit);
   const liveCount = visibleAll.filter(h => isHuddleLiveNow(h, now)).length;
@@ -153,6 +158,8 @@ export default function LiveOpportunities({
                     {count} heading there
                     {opp.location ? ` · ${opp.location}` : ""}
                     {hostLabel ? ` · Host ${hostLabel}` : ""}
+                    {opp.speakerRole === "hosting" && " · Speaker Hosting"}
+                    {opp.speakerRole === "attending" && opp.speakerAttendeeName && ` · Speaker Attending (${opp.speakerAttendeeName})`}
                   </p>
                   <p className="huddle-row-match">{whyLine}</p>
 

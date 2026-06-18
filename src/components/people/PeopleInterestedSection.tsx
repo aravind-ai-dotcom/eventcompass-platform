@@ -17,6 +17,8 @@ interface PeopleInterestedSectionProps {
   onShowDetails?: (personId: string) => void;
   profileSignals?: string[];
   embedded?: boolean;
+  /** Renders as a column inside people-follow-up-split__layout */
+  splitColumn?: boolean;
 }
 
 function inferInboundBadges(signal: InboundConnectionSignal): ConnectionBadgeId[] {
@@ -55,8 +57,9 @@ export default function PeopleInterestedSection({
   onShowDetails,
   profileSignals = [],
   embedded = false,
+  splitColumn = false,
 }: PeopleInterestedSectionProps) {
-  if (inboundSignals.length === 0) return null;
+  if (inboundSignals.length === 0 && !splitColumn) return null;
 
   const cardActions =
     onSave || onRequestSave
@@ -70,8 +73,8 @@ export default function PeopleInterestedSection({
         }
       : undefined;
 
-  return (
-    <section className={embedded ? "compass-module-block people-interested-section" : "section people-interested-section"}>
+  const content = (
+    <>
       <header className="people-follow-up-split__header">
         <p className="people-follow-up-split__kicker">Interested in you</p>
         <h2 className="people-follow-up-split__title">People interested in you.</h2>
@@ -80,8 +83,9 @@ export default function PeopleInterestedSection({
         </p>
       </header>
 
-      <div className="connection-vault__stack">
-        {inboundSignals.map(signal => {
+      {inboundSignals.length > 0 ? (
+        <div className="people-follow-up-split__cards">
+          {inboundSignals.map(signal => {
           const mutual = inboundShowsMutual(signal, savedChampionRefs);
           const badges = inferInboundBadges(signal);
           const person = inboundToRecommendedPerson(signal);
@@ -134,7 +138,24 @@ export default function PeopleInterestedSection({
             </article>
           );
         })}
-      </div>
+        </div>
+      ) : (
+        <p className="people-follow-up-split__empty">
+          When someone signals interest in connecting, they will appear here.
+        </p>
+      )}
+    </>
+  );
+
+  if (splitColumn) {
+    return <div className="people-follow-up-split__column">{content}</div>;
+  }
+
+  if (inboundSignals.length === 0) return null;
+
+  return (
+    <section className={embedded ? "compass-module-block people-interested-section" : "section people-interested-section"}>
+      {content}
     </section>
   );
 }

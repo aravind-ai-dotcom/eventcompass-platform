@@ -49,6 +49,8 @@ import { primaryMatchReason } from "@/lib/personCardHelpers";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
 import type { CertificationJourneyPlan } from "@/lib/certificationJourneyIntelligence";
+import type { ScoredSpeaker, SpeakerProfile } from "@/types/speaker";
+import type { SpeakerParticipantContext } from "@/lib/speakerIntelligence";
 import {
   VOICE_TONE_OPTIONS,
   VOICE_TONE_STORAGE_KEY,
@@ -112,6 +114,10 @@ interface VoiceCompassButtonProps {
   onDoNotSuggestSession?:  (sessionId: string) => void;
   onSavePerson?:           (championId: string) => void;
   onDoNotSuggestPerson?:   (championId: string) => void;
+  topSpeaker?:             ScoredSpeaker | null;
+  rankedSpeakers?:         ScoredSpeaker[];
+  speakerCatalog?:         SpeakerProfile[];
+  speakerCtx?:             SpeakerParticipantContext;
 }
 
 
@@ -362,6 +368,10 @@ export default function VoiceCompassButton({
   onDoNotSuggestSession,
   onSavePerson,
   onDoNotSuggestPerson,
+  topSpeaker,
+  rankedSpeakers,
+  speakerCatalog,
+  speakerCtx,
 }: VoiceCompassButtonProps) {
 
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
@@ -595,6 +605,10 @@ export default function VoiceCompassButton({
       isEnrolled:        isEnrolled ?? true,
       certLabel:         certLabel ?? null,
       certificationJourney: certificationJourney ?? null,
+      topSpeaker:          topSpeaker          ?? null,
+      rankedSpeakers:      rankedSpeakers      ?? [],
+      speakerCatalog:      speakerCatalog      ?? [],
+      speakerCtx:          speakerCtx          ?? {},
       experience:        voiceExperience,
       locale,
     });

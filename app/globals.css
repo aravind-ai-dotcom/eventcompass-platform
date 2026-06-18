@@ -3193,6 +3193,11 @@ img { max-width: 100%; display: block; }
   align-self: stretch;
 }
 
+.people-follow-up-split__cards .connection-vault-card {
+  width: 100%;
+  align-self: stretch;
+}
+
 .people-follow-up-split__empty {
   margin: 0;
   padding: 16px;
@@ -3424,6 +3429,195 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* ── Speaker intelligence ───────────────────────────────────────────────────── */
+
+.session-speaker-intel {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.session-speaker-intel--compact {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.session-speaker-intel__kicker {
+  margin: 0 0 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.session-speaker-intel__body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.session-speaker-intel__name {
+  margin: 0 0 2px;
+  font-size: 0.9375rem;
+  font-weight: 560;
+  color: var(--text);
+}
+
+.session-speaker-intel__meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--soft);
+}
+
+.session-speaker-intel__action {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: #0f62fe;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.session-speaker-panel {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.session-speaker-panel__kicker {
+  margin: 0 0 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78a9ff;
+}
+
+.session-speaker-panel__name {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 520;
+  letter-spacing: -0.02em;
+}
+
+.session-speaker-panel__role {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.session-speaker-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(15, 98, 254, 0.25);
+  background: rgba(15, 98, 254, 0.06);
+  color: #0f62fe;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.session-speaker-panel__block {
+  margin-bottom: 14px;
+}
+
+.session-speaker-panel__block-kicker {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.session-speaker-panel__reasons {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.session-speaker-panel__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.session-speaker-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.8125rem;
+  color: var(--text);
+}
+
+.session-speaker-panel__chip--muted {
+  color: var(--soft);
+}
+
+.session-speaker-panel__list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.session-speaker-panel__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.session-speaker-panel__cta {
+  margin-top: 4px;
+}
+
+.recommended-experts-block {
+  margin-bottom: 18px;
+}
+
+.recommended-experts-block__head {
+  margin-bottom: 14px;
+}
+
+.recommended-experts-block__head--secondary {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.recommended-experts-block__kicker {
+  margin: 0 0 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78a9ff;
+}
+
+.recommended-experts-block__note {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 /* ── Balanced move grid (four-pillar recommendations) ─────────────────────── */

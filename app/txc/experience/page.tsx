@@ -85,6 +85,17 @@ import {
   sanitizeConnectionVaultForFirestore,
   updateVaultRecordNote,
 } from "@/lib/connectionVault";
+import {
+  buildSpeakerCatalog,
+  championFromRaw,
+  rankRecommendedExperts,
+  sessionFromScored,
+  speakerToRecommendedPerson,
+  type SpeakerParticipantContext,
+} from "@/lib/speakerIntelligence";
+import { SpeakerIntelligenceProvider, useSpeakerIntelligence } from "@/context/SpeakerIntelligenceContext";
+import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
+import type { ScoredSpeaker } from "@/types/speaker";
 import type { ConnectionVaultRecord, SaveReason } from "@/types/connectionVault";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
@@ -542,9 +553,13 @@ function WeekInBalance({ people, learning, community, fun }: {
 }
 
 function SessionCard({ session, sched, certLabel }: { session: ScoredSession; sched?: ExpScheduleState; certLabel?: string | null }) {
+  const speakerIntel = useSpeakerIntelligence();
   const type  = sessionTypeLabel(session);
   const track = session.tracks?.primary_track ?? "";
   const meta  = sessionMeta(session);
+  const sessionSpeakers = speakerIntel
+    ? speakerIntel.resolveSessionSpeakers(sessionFromScored(session))
+    : [];
   return (
     <article className="opportunity-card">
       <div className="card-meta">
@@ -553,6 +568,13 @@ function SessionCard({ session, sched, certLabel }: { session: ScoredSession; sc
       <h3>{session.title}</h3>
       {meta && <p className="session-card-meta">{meta}</p>}
       <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" />
+      {sessionSpeakers.length > 0 && (
+        <SessionSpeakerIntel
+          speakers={sessionSpeakers}
+          onViewSpeaker={speakerIntel?.onViewSpeaker}
+          compact
+        />
+      )}
       {sched && <ExpSessionActionBar id={session.id} sched={sched} />}
     </article>
   );
@@ -1233,6 +1255,7 @@ export default function ExperiencePage() {
   const [saveModalPerson, setSaveModalPerson] = useState<RecommendedPerson | null>(null);
   const [meetPeople,     setMeetPeople]     = useState<string[]>([]);
   const [hiddenPeople,   setHiddenPeople]   = useState<string[]>([]);
+  const [championSources, setChampionSources] = useState<ReturnType<typeof championFromRaw>[]>([]);
   const [featuredChampions, setFeaturedChampions] = useState<FeaturedChampion[]>([]);
   const [sessionSpeakerNames, setSessionSpeakerNames] = useState<Set<string>>(() => new Set());
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
@@ -1617,6 +1640,36 @@ export default function ExperiencePage() {
     return allSessions.find(s => s.id === balancedNextBestMove.entityId) ?? null;
   }, [balancedNextBestMove, allSessions]);
 
+  const speakerCatalog = useMemo(
+    () => buildSpeakerCatalog(championSources, allSessions.map(sessionFromScored)),
+    [championSources, allSessions],
+  );
+
+  const speakerCtx = useMemo((): SpeakerParticipantContext => {
+    if (!participant) return {};
+    const sig = (participant.event_signal_profile as RawDoc) ?? {};
+    const intel = (participant.compass_intelligence as RawDoc) ?? {};
+    return {
+      tracks: (sig.tech_tracks as string[]) ?? [],
+      goals: (sig.goals as string[]) ?? [],
+      keywords: (intel.matching_keywords as string[]) ?? [],
+      certificationGoalLabels: selectedCertifications.map(c => c.title),
+      hasCertIntent: showCertJourney,
+    };
+  }, [participant, selectedCertifications, showCertJourney]);
+
+  const rankedExperts = useMemo(
+    () => rankRecommendedExperts(speakerCatalog, speakerCtx, 4),
+    [speakerCatalog, speakerCtx],
+  );
+
+  const recommendedExpertPeople = useMemo(
+    () => rankedExperts.map(speakerToRecommendedPerson),
+    [rankedExperts],
+  );
+
+  const topSpeaker = rankedExperts[0] ?? null;
+
   useEffect(() => {
     async function load() {
       try {
@@ -1671,6 +1724,7 @@ export default function ExperiencePage() {
         setFunList(fun);
         setChampions(scoredChampions);
         setAllChampions(allScoredChampions);
+        setChampionSources(rawChampions.map(c => championFromRaw(c)));
         setCounts({ participants: partSnap.size, sessions: sessSnap.size, champions: champSnap.size });
 
         // Load persisted action state
@@ -1731,6 +1785,14 @@ export default function ExperiencePage() {
       setErrorMsg("Sign in to view your personalized Compass experience.");
     }
   }, [authLoading, participantId]);
+
+  const sortedConnectionVault = useMemo(
+    () =>
+      [...connectionVault].sort(
+        (a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime(),
+      ),
+    [connectionVault],
+  );
 
   if (status === "loading") {
     return (
@@ -1819,14 +1881,6 @@ export default function ExperiencePage() {
     .filter((c): c is ScoredChampion => !!c)
     .map(c => ({ id: c.id, display_name: c.display_name }));
 
-  const sortedConnectionVault = useMemo(
-    () =>
-      [...connectionVault].sort(
-        (a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime(),
-      ),
-    [connectionVault],
-  );
-
   return (
     <>
       {saveModalPerson && (
@@ -1883,6 +1937,11 @@ export default function ExperiencePage() {
         </div>
       </section>
 
+      <SpeakerIntelligenceProvider
+        catalog={speakerCatalog}
+        ctx={speakerCtx}
+        onViewSpeaker={handleDetailsPerson}
+      >
       <div className="compass-sections-stack">
         {/* TODAY */}
         <CompassSection
@@ -1898,6 +1957,10 @@ export default function ExperiencePage() {
                 balancedMoves={balancedMoveSet}
                 topSession={nbmSession ?? rankedSessionsForVoice[0] ?? null}
                 topChampion={champions[0] ?? null}
+                topSpeaker={topSpeaker}
+                rankedSpeakers={rankedExperts}
+                speakerCatalog={speakerCatalog}
+                speakerCtx={speakerCtx}
                 rankedSessions={rankedSessionsForVoice}
                 participantGoals={pGoals}
                 participantTracks={pTracks}
@@ -1941,6 +2004,7 @@ export default function ExperiencePage() {
               <LiveOpportunities
                 participantGoals={pGoals}
                 participantTracks={pTracks}
+                speakerCatalog={speakerCatalog}
                 userDisplayName={displayName}
                 userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
                 visibleLimit={4}
@@ -2074,6 +2138,7 @@ export default function ExperiencePage() {
           {isModuleVisible("recommended_connections") && (
             <RecommendedConnectionsSection
               people={recommendedPeople}
+              experts={recommendedExpertPeople}
               profileSignals={profileSignals}
               badgeContext={peopleBadgeContext}
               embedded
@@ -2088,28 +2153,38 @@ export default function ExperiencePage() {
             />
           )}
 
-          {isModuleVisible("my_connections") && (
-            <MyConnectionsSection
-              records={sortedConnectionVault}
-              onViewProfile={handleDetailsPerson}
-              onRemove={handleRemoveConnection}
-              onUpdateNote={handleUpdateConnectionNote}
-              embedded
-            />
-          )}
+          {isModuleVisible("my_connections") || isModuleVisible("people_interested_in_me") ? (
+            <section className="compass-module-block people-follow-up-split">
+              <div className="people-follow-up-split__layout">
+                {isModuleVisible("my_connections") && (
+                  <MyConnectionsSection
+                    records={sortedConnectionVault}
+                    onViewProfile={handleDetailsPerson}
+                    onRemove={handleRemoveConnection}
+                    onUpdateNote={handleUpdateConnectionNote}
+                    splitColumn
+                  />
+                )}
 
-          {isModuleVisible("people_interested_in_me") && (
-            <PeopleInterestedSection
-              inboundSignals={SAMPLE_INBOUND_SIGNALS}
-              savedChampionRefs={savedChampionRefs}
-              savedPeople={savedPeople}
-              onRequestSave={handleRequestSavePerson}
-              onSave={handleSavePerson}
-              onShowDetails={handleDetailsPerson}
-              profileSignals={profileSignals}
-              embedded
-            />
-          )}
+                {isModuleVisible("my_connections") && isModuleVisible("people_interested_in_me") && (
+                  <div className="people-follow-up-split__divider" role="separator" aria-orientation="vertical" />
+                )}
+
+                {isModuleVisible("people_interested_in_me") && (
+                  <PeopleInterestedSection
+                    inboundSignals={SAMPLE_INBOUND_SIGNALS}
+                    savedChampionRefs={savedChampionRefs}
+                    savedPeople={savedPeople}
+                    onRequestSave={handleRequestSavePerson}
+                    onSave={handleSavePerson}
+                    onShowDetails={handleDetailsPerson}
+                    profileSignals={profileSignals}
+                    splitColumn
+                  />
+                )}
+              </div>
+            </section>
+          ) : null}
         </CompassSection>
 
         {/* MY PROFILE */}
@@ -2186,6 +2261,7 @@ export default function ExperiencePage() {
         </div>
         <a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
       </section>
+      </SpeakerIntelligenceProvider>
 
       {detailChampion && (
         <ChampionDetailModal

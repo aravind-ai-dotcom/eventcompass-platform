@@ -32,4 +32,8 @@ export interface LiveOpportunity {
   hostName?: string;
   /** Host first name for avatar initial */
   hostFirstName?: string;
+  /** Host is a known session speaker / expert */
+  speakerRole?: "hosting" | "attending";
+  /** Matched speaker display name for badge copy */
+  speakerAttendeeName?: string;
 }
