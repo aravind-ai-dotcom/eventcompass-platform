@@ -18,6 +18,7 @@ import {
   getVoiceNameForTone,
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
+import { VoiceIntelligenceAdminView } from "@/components/admin/VoiceIntelligenceAdminView";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -36,7 +37,7 @@ function hasSession()     { return typeof window !== "undefined" && sessionStora
 type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
-  | "credits"   | "voice"       | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
+  | "credits"   | "voice"       | "voice-intelligence" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
   | "participants" | "sessions-table" | "quality"
   | "health" | "command" | "champion-intel" | "consent-intel"
   | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
@@ -73,6 +74,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "content", label: "Content"       },
       { id: "voice",   label: "Voice"         },
+      { id: "voice-intelligence", label: "Voice Intelligence" },
       { id: "credits", label: "Credits"       },
       { id: "access",  label: "Admin Access"  },
     ],
@@ -4326,6 +4328,7 @@ export default function AdminPage() {
     activity:         <ActivityView />,
     content:          <ContentView />,
     voice:            <VoiceAdminView />,
+    "voice-intelligence": <VoiceIntelligenceAdminView />,
     credits:          <CreditsView />,
     access:           <AccessAdminView />,
     signals:          <SignalsAdminView data={data} />,

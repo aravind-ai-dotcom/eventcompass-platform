@@ -7,6 +7,7 @@ import { loadKnowledgeRecords } from "@/services/knowledge/knowledgeService";
 import { loadSkoKnowledgeRecords } from "@/services/knowledge/skoKnowledgeService";
 import { loadGovernanceSummaries } from "@/services/summaries/summaryService";
 import { loadTranslationMemoryRecords } from "@/services/translations/translationMemoryService";
+import { loadVoiceKnowledgeRecords } from "@/services/voice/voiceKnowledgeService";
 import { loadVoiceDictionaryRecords } from "@/services/voice/voiceDictionaryService";
 import { loadSttNormalizationRecords } from "@/services/voice/sttNormalizationService";
 
@@ -29,6 +30,7 @@ export async function ensureGovernanceLoaded(
   } else {
     await Promise.all([
       loadKnowledgeRecords(eventId),
+      loadVoiceKnowledgeRecords(eventId),
       loadVoiceDictionaryRecords(eventId),
       loadSttNormalizationRecords(eventId),
     ]);

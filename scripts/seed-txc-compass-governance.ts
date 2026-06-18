@@ -9,6 +9,7 @@ import {
   TXC_STT_NORMALIZATION_SEED,
   TXC_VOICE_DICTIONARY_SEED,
 } from "../src/data/seeds/txcGovernanceSeed";
+import { TXC_VOICE_KNOWLEDGE_SEED } from "../src/data/seeds/txcVoiceKnowledgeSeed";
 
 const BASE = "organizations/ibm/events/txc2026";
 
@@ -37,6 +38,7 @@ async function main() {
   }
 
   await seedCollection("knowledgeBase", TXC_KNOWLEDGE_SEED);
+  await seedCollection("voice_knowledge", TXC_VOICE_KNOWLEDGE_SEED);
   await seedCollection("voiceDictionary", TXC_VOICE_DICTIONARY_SEED);
   await seedCollection("sttNormalization", TXC_STT_NORMALIZATION_SEED);
   console.log("Done.");

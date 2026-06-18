@@ -29,6 +29,7 @@ import {
   resolveCompassConversationTopic,
   type EventKnowledgeKey,
   type PersonaKey,
+  type CompassConversationKey,
 } from "@/data/eventKnowledge";
 import {
   getKnowledgeResponse,
@@ -37,6 +38,14 @@ import {
 } from "@/services/knowledge/knowledgeResolver";
 import { logKnowledgeAnalytics } from "@/services/knowledge/knowledgeMatchingService";
 import { experienceToEventId } from "@/lib/compassEventPaths";
+import {
+  getDefaultFallbackResponse,
+  getVoiceKnowledgeRecord,
+  matchVoiceKnowledge,
+  resolveCompassPersonalityText,
+  resolveEventKnowledgeText,
+  resolvePersonaGuidanceText,
+} from "@/services/voice/voiceKnowledgeResolver";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 
 export type { VoiceLocale };
@@ -67,6 +76,7 @@ export interface ClassifiedIntent {
   transcript: string;
   confidence: "high" | "low";
   topic?:     string;
+  voiceKnowledgeId?: string;
 }
 
 export type VoiceResponseAction =
@@ -350,6 +360,27 @@ function matchPhraseList(norm: string, phrases: string[]): boolean {
   return phrases.some(phrase => norm.includes(phrase));
 }
 
+function categoryToIntentFromRecord(
+  category: import("@/types/voiceKnowledge").VoiceKnowledgeCategory,
+): CoreVoiceIntent {
+  switch (category) {
+    case "Event Knowledge":
+      return "event_knowledge";
+    case "Persona Guidance":
+      return "persona_guidance";
+    case "Fun & Social":
+      return "fun_discovery";
+    case "Certifications":
+      return "certification_help";
+    case "Compass Personality":
+      return "compass_conversation";
+    case "Fallback Responses":
+      return "fallback";
+    default:
+      return "fallback";
+  }
+}
+
 export function classifyVoiceIntent(
   transcript: string,
   experience: VoiceExperience = "techxchange",
@@ -366,6 +397,18 @@ export function classifyVoiceIntent(
 
   if (CERT_CODE.test(transcript)) {
     return { intent: "certification_help", transcript, confidence: "high" };
+  }
+
+  const voiceKnowledgeMatch = matchVoiceKnowledge(transcript);
+  if (voiceKnowledgeMatch) {
+    const { record } = voiceKnowledgeMatch;
+    return {
+      intent: categoryToIntentFromRecord(record.category),
+      transcript,
+      confidence: "high",
+      topic: record.topic_key,
+      voiceKnowledgeId: record.id,
+    };
   }
 
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
@@ -516,6 +559,7 @@ function huddleHint(ctx: VoiceResponseContext, norm: string): string {
 function buildFunDiscoveryResponse(
   ctx: VoiceResponseContext,
   norm: string,
+  baseOverride?: string,
 ): VoiceResponse {
   const knowledge = knowledgeVoiceResponse("FUN_RECOMMENDATION", ctx, norm);
   const evening = /tonight|evening|after session|after sessions/.test(norm);
@@ -523,8 +567,10 @@ function buildFunDiscoveryResponse(
   const networking = /network|gather|meetup|meet up|people gathering/.test(norm);
   const activities = pickFunActivities({ evening, social, networking, limit: 4 });
   const huddle = topHuddle(ctx, norm);
-  const spoken = formatFunDiscoverySpoken(activities, huddle?.title);
-  const display = formatFunDiscoveryDisplay(activities, huddle?.title);
+  const spokenBody = formatFunDiscoverySpoken(activities, huddle?.title);
+  const displayBody = formatFunDiscoveryDisplay(activities, huddle?.title);
+  const spoken = baseOverride ? `${baseOverride} ${spokenBody}` : spokenBody;
+  const display = baseOverride ? `${baseOverride} · ${displayBody}` : displayBody;
 
   if (knowledge && !knowledge.spoken.toLowerCase().includes("check your agenda")) {
     return {
@@ -538,10 +584,15 @@ function buildFunDiscoveryResponse(
 }
 
 function buildPersonaResponse(
-  persona: PersonaKey,
+  persona: PersonaKey | string,
   ctx: VoiceResponseContext,
+  overrideBase?: string,
 ): VoiceResponse {
-  const base = PERSONA_GUIDANCE[persona] ?? PERSONA_GUIDANCE.developer;
+  const base =
+    overrideBase ??
+    resolvePersonaGuidanceText(persona) ??
+    PERSONA_GUIDANCE[persona as PersonaKey] ??
+    PERSONA_GUIDANCE.developer;
   const track = topTrack(ctx);
   const hasProfile = (ctx.participantTracks?.length ?? 0) > 0 || (ctx.participantGoals?.length ?? 0) > 0;
   const spoken = hasProfile
@@ -550,14 +601,38 @@ function buildPersonaResponse(
   return { spoken, display: `${persona.replace(/_/g, " ")} · ${base}` };
 }
 
-function buildCompassConversationResponse(norm: string): VoiceResponse {
-  const topic = resolveCompassConversationTopic(norm);
-  const spoken = COMPASS_CONVERSATION[topic];
-  const display =
-    topic === "too_much" || topic === "focus"
-      ? EVENT_KNOWLEDGE.compass_biggest_concern
-      : spoken;
-  return { spoken, display };
+function buildCompassConversationResponse(norm: string, topicOverride?: string): VoiceResponse {
+  const topic = (topicOverride ?? resolveCompassConversationTopic(norm)) as CompassConversationKey;
+  const spoken =
+    resolveCompassPersonalityText(topic) ??
+    COMPASS_CONVERSATION[topic] ??
+    COMPASS_CONVERSATION.role;
+  return { spoken, display: spoken };
+}
+
+function buildVoiceKnowledgeResponse(
+  record: NonNullable<ReturnType<typeof getVoiceKnowledgeRecord>>,
+  ctx: VoiceResponseContext,
+  norm: string,
+): VoiceResponse {
+  switch (record.category) {
+    case "Fun & Social":
+      return buildFunDiscoveryResponse(ctx, norm, record.response);
+    case "Persona Guidance":
+      return buildPersonaResponse(record.topic_key ?? "developer", ctx, record.response);
+    case "Compass Personality":
+      return buildCompassConversationResponse(norm, record.topic_key);
+    case "Certifications":
+      return {
+        spoken: record.response,
+        display: record.title,
+        action: "show_sessions",
+      };
+    case "Fallback Responses":
+      return { spoken: record.response, display: record.response };
+    default:
+      return { spoken: record.response, display: record.response };
+  }
 }
 
 function tryConciergeRecovery(
@@ -565,9 +640,16 @@ function tryConciergeRecovery(
   ctx: VoiceResponseContext,
   seed: string,
 ): VoiceResponse | null {
+  const vkMatch = matchVoiceKnowledge(norm);
+  if (vkMatch) {
+    return buildVoiceKnowledgeResponse(vkMatch.record, ctx, norm);
+  }
+
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
   if (eventTopic) {
-    const answer = EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];
+    const answer =
+      resolveEventKnowledgeText(eventTopic) ??
+      EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];
     return { spoken: answer, display: answer };
   }
 
@@ -715,6 +797,13 @@ export function buildVoiceResponse(
     }
   }
 
+  if (classified.voiceKnowledgeId) {
+    const record = getVoiceKnowledgeRecord(classified.voiceKnowledgeId);
+    if (record?.enabled) {
+      return buildVoiceKnowledgeResponse(record, ctx, norm);
+    }
+  }
+
   if (isFirestoreKnowledgeIntent(intent, experience)) {
     const action = intent === "CHAMPION_MATCH" ? "show_champions" as const : undefined;
     return knowledgeVoiceResponse(intent, ctx, transcript, action) ?? {
@@ -727,7 +816,10 @@ export function buildVoiceResponse(
 
     case "event_knowledge": {
       const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;
-      const answer = EVENT_KNOWLEDGE[key] ?? EVENT_KNOWLEDGE.event_overview;
+      const answer =
+        resolveEventKnowledgeText(key) ??
+        EVENT_KNOWLEDGE[key] ??
+        EVENT_KNOWLEDGE.event_overview;
       return { spoken: answer, display: answer };
     }
 
@@ -990,13 +1082,15 @@ export function buildVoiceResponse(
 
       const session = sessionForContext(ctx);
       if (session) {
+        const fallback = getDefaultFallbackResponse();
         return {
-          spoken:  `Try asking about ${session.title}, who to meet, live huddles, or your week plan.`,
+          spoken: fallback,
           display: "Try: What should I do now? · Who should I meet? · Anything fun tonight? · What is Community Day?",
         };
       }
+      const fallback = getDefaultFallbackResponse();
       return {
-        spoken:  "Ask about TechXchange, what Compass does, sessions, people to meet, live huddles, certification, or something fun tonight.",
+        spoken: fallback,
         display: "Try: What is TechXchange? · How can you help me? · I'm a champion · Anything fun tonight?",
       };
     }

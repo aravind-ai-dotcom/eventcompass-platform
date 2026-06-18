@@ -27,6 +27,10 @@ export function knowledgeAnalyticsCollection(eventId: CompassEventId | string): 
   return `${eventBasePath(eventId)}/knowledgeAnalytics`;
 }
 
+export function voiceKnowledgeCollection(eventId: CompassEventId | string): string {
+  return `${eventBasePath(eventId)}/voice_knowledge`;
+}
+
 export function translationMemoryCollection(eventId: CompassEventId | string): string {
   return `${eventBasePath(eventId)}/translationMemory`;
 }
