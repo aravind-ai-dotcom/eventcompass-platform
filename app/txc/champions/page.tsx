@@ -80,8 +80,15 @@ function PersonAvatar({ initial }: { initial: string }) {
 // PeopleActionBar
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeopleActionBar({ id, pState }: {
+function canShowLinkedIn(c: { linkedin_url?: string; consent?: { show_linkedin?: boolean } }, isLoggedIn: boolean): boolean {
+  if (!isLoggedIn || !c.linkedin_url?.trim()) return false;
+  return c.consent?.show_linkedin !== false;
+}
+
+function PeopleActionBar({ id, linkedinUrl, showLinkedIn, pState }: {
   id: string;
+  linkedinUrl?: string;
+  showLinkedIn?: boolean;
   pState: PeopleState;
 }) {
   const isSaved = pState.savedPeople.includes(id);
@@ -111,6 +118,12 @@ function PeopleActionBar({ id, pState }: {
       display: "flex", flexWrap: "wrap" as const, gap: "5px", alignItems: "center",
     }}>
       <button type="button" onClick={() => pState.onDetails(id)} style={base}>Details</button>
+
+      {showLinkedIn && linkedinUrl && (
+        <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={base}>
+          LinkedIn ↗
+        </a>
+      )}
 
       {pState.isLoggedIn && (
         isSaved
@@ -207,7 +220,12 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
 
       {!anonymous && (
         <div style={{ marginTop: "auto" }}>
-          <PeopleActionBar id={c.id} pState={pState} />
+          <PeopleActionBar
+            id={c.id}
+            linkedinUrl={c.linkedin_url}
+            showLinkedIn={canShowLinkedIn(c, pState.isLoggedIn)}
+            pState={pState}
+          />
         </div>
       )}
     </article>

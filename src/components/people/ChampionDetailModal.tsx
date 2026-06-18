@@ -13,6 +13,7 @@ export interface ChampionDetail {
   profile?: { domains?: string[]; products?: string[]; community_interests?: string[] };
   domains?: string[];
   linkedin_url?: string;
+  consent?: { show_linkedin?: boolean };
   attendance?: { available_for_1x1?: boolean };
 }
 
@@ -48,9 +49,9 @@ export default function ChampionDetailModal({
   }, [onClose]);
 
   return (
-    <div className="session-modal-overlay" onClick={onClose} role="presentation">
+    <div className="session-modal-backdrop" onClick={onClose} role="presentation">
       <div
-        className="session-modal-panel champion-detail-modal"
+        className="session-modal champion-detail-modal"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -59,8 +60,8 @@ export default function ChampionDetailModal({
         <button type="button" className="session-modal-close" onClick={onClose} aria-label="Close">
           ×
         </button>
-        <p className="session-modal-kicker">People intelligence</p>
-        <h2 id="champion-detail-title" className="session-modal-title">{shownName}</h2>
+        <p className="section-kicker" style={{ marginBottom: "8px" }}>People intelligence</p>
+        <h2 id="champion-detail-title">{shownName}</h2>
         {!anonymous && (champion.title || org) && (
           <p className="session-modal-meta">
             {[champion.title, org].filter(Boolean).join(" · ")}
@@ -81,7 +82,7 @@ export default function ChampionDetailModal({
             Open to technical conversations
           </p>
         )}
-        {!anonymous && champion.linkedin_url && (
+        {!anonymous && champion.linkedin_url && champion.consent?.show_linkedin !== false && (
           <a
             href={champion.linkedin_url}
             target="_blank"
