@@ -141,8 +141,14 @@ function classifyReason(raw: string, certLabel?: string | null): { signal: Sessi
     return { signal: "popular", line: "Popular among attendees with similar goals" };
   }
 
-  if (/supports your certification|certification journey|exam readiness|pursuing this certification|frequently completed|study with peers|learn alongside/i.test(t)) {
-    return { signal: "certification_match", line: "Supports your certification goal" };
+  if (/supports your certification|supports certification journey|certification journey|exam readiness|pursuing this certification|frequently completed|study with peers|learn alongside|recommended preparation|popular among certification/i.test(t)) {
+    if (/popular among certification|pursuing this certification/i.test(t)) {
+      return { signal: "certification_match", line: "Popular among certification candidates" };
+    }
+    if (/recommended preparation|exam readiness|frequently completed/i.test(t)) {
+      return { signal: "certification_match", line: "Recommended preparation" };
+    }
+    return { signal: "certification_match", line: "Supports certification journey" };
   }
 
   if (/community|study with peers|learn alongside|network|peer|alumni/i.test(t)) {
@@ -284,6 +290,17 @@ export function buildSessionRecommendationReasons(
   return lines.slice(0, 6);
 }
 
+function uniqueSessionSignals(ids: SessionSignalId[]): SessionSignalId[] {
+  const seen = new Set<SessionSignalId>();
+  const out: SessionSignalId[] = [];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out.slice(0, 5);
+}
+
 export function buildSessionIntelligence(
   session: SessionIntelInput,
   certLabel?: string | null,
@@ -296,10 +313,14 @@ export function buildSessionIntelligence(
     if (parsed) signals.push(parsed.signal);
   }
 
+  const resolvedSignals = signals.length > 0
+    ? uniqueSessionSignals(signals)
+    : uniqueSessionSignals(inferSignalsFromBadges(deriveSessionBadges(session)));
+
   return {
     score: session.compass_score ?? 0,
     reasons,
-    signals: signals.length > 0 ? signals : inferSignalsFromBadges(deriveSessionBadges(session)),
+    signals: resolvedSignals,
     badges: deriveSessionBadges(session),
   };
 }

@@ -46,7 +46,13 @@ import {
   hasCertificationIntent,
   isCertificationActivityType,
   resolveSelectedCertificationGoals,
+  shouldShowCertificationJourney,
 } from "@/lib/certificationProfile";
+import {
+  buildCertificationJourneyPlan,
+  resolveActiveCertification,
+} from "@/lib/certificationJourneyIntelligence";
+import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
@@ -1330,6 +1336,27 @@ export default function ExperiencePage() {
     () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
     [allSessions, certGoalIds],
   );
+  const certLabel = participant
+    ? getCertificationJourneyTitle(participant, selectedCertifications)
+    : null;
+  const activeCertification = useMemo(
+    () => resolveActiveCertification(selectedCertifications, certLabel),
+    [selectedCertifications, certLabel],
+  );
+  const certificationJourneyPlan = useMemo(() => {
+    if (!activeCertification) return null;
+    const huddles = rankLiveHuddles(
+      SAMPLE_LIVE_HUDDLES,
+      ((participant?.event_signal_profile as RawDoc)?.tech_tracks as string[]) ?? [],
+      ((participant?.event_signal_profile as RawDoc)?.goals as string[]) ?? [],
+    );
+    return buildCertificationJourneyPlan(
+      activeCertification,
+      allSessions,
+      allChampions,
+      huddles,
+    );
+  }, [activeCertification, allSessions, allChampions, participant]);
 
   useEffect(() => {
     async function load() {
@@ -1488,9 +1515,8 @@ export default function ExperiencePage() {
 
   const pGoals  = (sig.goals       as string[]) ?? [];
   const pTracks = (sig.tech_tracks as string[]) ?? [];
-  const certLabel = getCertificationJourneyTitle(participant);
   const trustSignals = buildCompassTrustSignals(participant, sig);
-  const showCertJourney = hasCertificationIntent(participant) || certGoalIds.length > 0;
+  const showCertJourney = shouldShowCertificationJourney(participant, certGoalIds);
 
   // My Schedule — timed sessions only (certifications are learning goals, not calendar blocks)
   const myScheduleSessions = savedSessions
@@ -1607,6 +1633,7 @@ export default function ExperiencePage() {
                 participantGoals={pGoals}
                 participantTracks={pTracks}
                 certLabel={certLabel}
+                certificationJourney={certificationJourneyPlan}
                 isEnrolled
                 onAddToSchedule={handleSaveSession}
                 onDoNotSuggestSession={handleHideSession}
@@ -1672,20 +1699,24 @@ export default function ExperiencePage() {
         </CompassSection>
 
         {/* MY GOALS — certifications and credential paths */}
+        {isModuleVisible("certification_journey") && showCertJourney && (
         <CompassSection
           id="goals"
           expanded={hydrated && isSectionExpanded("goals")}
           onToggle={() => toggleSection("goals")}
         >
-          {isModuleVisible("certification_journey") && (
             <CertificationJourney
               visible={showCertJourney}
-              certifications={selectedCertifications}
-              onRemove={handleRemoveCertificationGoal}
+              plan={certificationJourneyPlan}
+              onRemoveAchieve={
+                selectedCertifications[0]
+                  ? () => handleRemoveCertificationGoal(selectedCertifications[0].id)
+                  : undefined
+              }
               embedded
             />
-          )}
         </CompassSection>
+        )}
 
         {/* MY LEARNING — sessions, week plan, saved schedule */}
         <CompassSection

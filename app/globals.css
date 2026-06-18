@@ -3936,6 +3936,180 @@ img { max-width: 100%; display: block; }
   line-height: 1.55;
   margin: 0 0 18px;
 }
+.cert-journey-hero {
+  margin-bottom: 18px;
+}
+.cert-journey-kicker {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.cert-journey-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+}
+.cert-journey-meta dt {
+  color: var(--muted);
+  font-weight: 560;
+  margin: 0;
+}
+.cert-journey-meta dd {
+  margin: 0;
+  color: var(--soft);
+}
+.cert-journey-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 22px;
+}
+@media (min-width: 640px) {
+  .cert-journey-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.cert-journey-stat {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cert-journey-stat b {
+  font-size: 1.35rem;
+  font-weight: 520;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+}
+.cert-journey-stat span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.cert-journey-path {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cert-journey-stage {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 14px;
+  padding-bottom: 18px;
+}
+.cert-journey-stage-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+}
+.cert-journey-stage-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  flex-shrink: 0;
+  z-index: 1;
+}
+.cert-journey-stage-dot--outline {
+  background: var(--surface);
+}
+.cert-journey-stage-line {
+  width: 2px;
+  flex: 1;
+  min-height: 12px;
+  margin-top: 4px;
+  opacity: 0.55;
+}
+.cert-journey-stage-label {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.cert-journey-anchor-copy,
+.cert-journey-stage-empty {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--soft);
+}
+.cert-journey-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.cert-journey-item-link {
+  display: block;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.cert-journey-item-link:hover {
+  background: var(--hover);
+}
+.cert-journey-item-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 560;
+  line-height: 1.35;
+  color: var(--text);
+}
+.cert-journey-item-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.cert-journey-achieve-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.cert-journey-achieve-kicker {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.cert-journey-achieve-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 560;
+  line-height: 1.35;
+}
+.cert-journey-achieve-note {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.cert-journey-footer-actions {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
 .certification-view-personal {
   margin: 14px 0 0;
   font-size: 0.9rem;

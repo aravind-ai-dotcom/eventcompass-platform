@@ -47,7 +47,15 @@ export function humanizeScoringReason(reason: string): string {
   if (/available for 1:1/i.test(t)) return "Available for a 1:1 conversation.";
   if (/executive relevant/i.test(t)) return "Relevant for executive priorities this week.";
   if (/hands-on learning/i.test(t)) return "Hands-on learning that fits your goals.";
-  if (/recommended for your certification/i.test(t)) return "Recommended for your certification journey.";
+  if (/recommended for your certification|supports certification journey|supports your certification/i.test(t)) {
+    return "Supports certification journey.";
+  }
+  if (/popular among certification|pursuing this certification/i.test(t)) {
+    return "Popular among certification candidates.";
+  }
+  if (/recommended preparation|exam readiness/i.test(t)) {
+    return "Recommended preparation.";
+  }
   if (/broad event relevance/i.test(t)) return "Popular at TechXchange this week.";
 
   return t.endsWith(".") ? t : `${t}.`;

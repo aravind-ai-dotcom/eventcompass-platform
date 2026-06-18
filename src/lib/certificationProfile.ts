@@ -11,32 +11,31 @@ function intel(participant: ProfileDoc): ProfileDoc {
   return (participant.compass_intelligence as ProfileDoc) ?? {};
 }
 
-/** Journey milestones — same visual language as Explore. */
+/** Journey milestones — vertical progression on My Compass. */
 export const CERTIFICATION_MILESTONES = [
-  "Choose",
+  "Certification",
   "Learn",
   "Practice",
   "Connect",
+  "Community",
   "Achieve",
 ] as const;
 
 export const CERTIFICATION_JOURNEY_COPY = {
   sectionKicker: "Certification journey",
-  workingToward: "Working toward:",
-  supporting:
-    "Compass helps connect the sessions, labs, experts, study groups, and community moments that can support your certification journey.",
-  community: [
-    "Study with peers.",
-    "Learn alongside experts.",
-    "Connect with others pursuing similar goals.",
-    "Celebrate achievements together.",
-  ],
-  pathsHeadline: "Certification journeys available",
+  workingToward: "Working toward",
+  progressSummary: "Progress summary",
+  recommendedSessions: "Recommended sessions",
+  labs: "Labs",
+  experts: "Experts",
+  studyGroups: "Study groups",
+  achieveLabel: "Certification opportunity selected",
+  achieveNote: "Available on demand at certification testing areas — no fixed time required.",
+  exploreCertifications: "Explore certifications",
+  viewAllSessions: "View all sessions",
+  emptyStage: "Save certification opportunities or related sessions to populate this stage.",
   pathsSupporting:
     "Join thousands of attendees using TechXchange to deepen skills, prepare for certifications, and learn alongside a global community.",
-  exploreCertifications: "Explore Certifications",
-  viewSupporting: "View sessions for your journey",
-  onDemandNote: "Available on demand at certification testing areas — no fixed time required.",
 } as const;
 
 const DEMO_CERTIFICATIONS: CertificationJourneyRecord[] =
@@ -57,8 +56,25 @@ export function hasCertificationIntent(participant: ProfileDoc): boolean {
   return keywords.some(k => /certif|certified|qiskit|exam prep|learning path/i.test(k));
 }
 
+/** Show Certification Journey when attendee has cert intent or saved certification goals. */
+export function shouldShowCertificationJourney(
+  participant: ProfileDoc,
+  certGoalIds: string[],
+): boolean {
+  return hasCertificationIntent(participant) || certGoalIds.length > 0;
+}
+
 /** Shorter journey title for UI (learning journey, not exam card). */
-export function getCertificationJourneyTitle(participant: ProfileDoc): string | null {
+export function getCertificationJourneyTitle(
+  participant: ProfileDoc,
+  selectedGoals: SelectedCertificationGoal[] = [],
+): string | null {
+  if (selectedGoals.length > 0) {
+    const title = selectedGoals[0].title;
+    const dash = title.split(/–|—/);
+    return dash.length > 1 ? dash[dash.length - 1].trim() : title.replace(/^IBM Certified\s+/i, "").trim();
+  }
+
   if (!hasCertificationIntent(participant)) return null;
 
   const intent = (sig(participant).intent as ProfileDoc) ?? {};
@@ -173,11 +189,6 @@ export function listCertificationJourneys(): CertificationJourneyRecord[] {
   return DEMO_CERTIFICATIONS;
 }
 
-function journeyShortLabel(certLabel: string | null): string {
-  if (!certLabel) return "your certification";
-  return certLabel.length > 48 ? `${certLabel.slice(0, 45)}…` : certLabel;
-}
-
 /** Boost session score when attendee has an active certification journey. */
 export function applyCertificationSessionBoost(
   score: number,
@@ -198,28 +209,27 @@ export function applyCertificationSessionBoost(
     ...((sCI.intent_tags as string[]) ?? []),
     ...((sCI.matching_keywords as string[]) ?? []),
   ].join(" ").toLowerCase();
-  const short = journeyShortLabel(certLabel);
   const supports = raw.supports_certification === true;
   const certId = String(raw.certification_id ?? "");
 
   if (isCertificationActivityType(raw)) {
     boosted += 20;
-    if (!next.some(r => /certification journey|pursuing this certification/i.test(r))) {
-      next.unshift(`Popular among attendees pursuing ${short}.`);
+    if (!next.some(r => /certification journey|pursuing this certification|certification candidates/i.test(r))) {
+      next.unshift("Popular among certification candidates.");
     }
   } else if (supports || raw.recommended_reason) {
     boosted += 14;
-    if (!next.some(r => /supports your certification journey/i.test(r))) {
-      next.unshift("Supports your certification journey.");
+    if (!next.some(r => /supports certification journey|supports your certification/i.test(r))) {
+      next.unshift("Supports certification journey.");
     }
   }
 
   if (type.includes("lab") || type.includes("workshop") || type.includes("instructor-led lab")) {
     boosted += 12;
-    if (certId && !next.some(r => /exam readiness|deepen skills/i.test(r))) {
-      next.push("Recommended for exam readiness.");
-    } else if (!next.some(r => /exam readiness|deepen skills/i.test(r))) {
-      next.push("Recommended to deepen skills for your journey.");
+    if (certId && !next.some(r => /recommended preparation|exam readiness|deepen skills/i.test(r))) {
+      next.push("Recommended preparation.");
+    } else if (!next.some(r => /recommended preparation|exam readiness|deepen skills/i.test(r))) {
+      next.push("Recommended preparation.");
     }
   } else if (type.includes("huddle") || type.includes("study group")) {
     boosted += 10;
@@ -238,8 +248,8 @@ export function applyCertificationSessionBoost(
     }
   } else if (/certif|exam prep|qiskit|watsonx|agentic/.test(tags)) {
     boosted += 10;
-    if (!next.some(r => /certification journey/i.test(r))) {
-      next.unshift("Supports your certification journey.");
+    if (!next.some(r => /supports certification journey|supports your certification/i.test(r))) {
+      next.unshift("Supports certification journey.");
     }
   }
 

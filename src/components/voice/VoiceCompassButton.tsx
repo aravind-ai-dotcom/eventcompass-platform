@@ -47,6 +47,7 @@ import { formatSessionIntelligenceSummary } from "@/lib/sessionIntelligence";
 import { primaryMatchReason } from "@/lib/personCardHelpers";
 import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import { compassLiveSignalText } from "@/lib/compassLiveSignal";
+import type { CertificationJourneyPlan } from "@/lib/certificationJourneyIntelligence";
 import {
   VOICE_TONE_OPTIONS,
   VOICE_TONE_STORAGE_KEY,
@@ -97,6 +98,7 @@ interface VoiceCompassButtonProps {
   participantGoals?:       string[];
   participantTracks?:      string[];
   certLabel?:              string | null;
+  certificationJourney?:   CertificationJourneyPlan | null;
   isEnrolled?:             boolean;
   voiceExperience?:        VoiceExperience;
   voiceLocale?:            UiLocale;
@@ -346,6 +348,7 @@ export default function VoiceCompassButton({
   participantGoals,
   participantTracks,
   certLabel,
+  certificationJourney,
   isEnrolled,
   voiceExperience = "techxchange",
   voiceLocale,
@@ -578,6 +581,7 @@ export default function VoiceCompassButton({
       liveHuddles:       rankedHuddles,
       isEnrolled:        isEnrolled ?? true,
       certLabel:         certLabel ?? null,
+      certificationJourney: certificationJourney ?? null,
       experience:        voiceExperience,
       locale,
     });
@@ -598,7 +602,7 @@ export default function VoiceCompassButton({
     nextBestMove, topSession, topChampion, rankedSessions,
     participantGoals, participantTracks,
     speakCloudVoice, onDismiss, onMarkAttended, onNavigateExperience, isEnrolled,
-    voiceExperience, voiceLocale, certLabel,
+    voiceExperience, voiceLocale, certLabel, certificationJourney,
   ]);
 
   // ── Start listening ─────────────────────────────────────────────────────────

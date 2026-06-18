@@ -5,21 +5,28 @@
 // Pure TypeScript matching. Firestore knowledge loaded into cache before use.
 // =============================================================================
 
+import type { CertificationJourneyPlan } from "@/lib/certificationJourneyIntelligence";
+import {
+  formatCertificationJourneyVoice,
+  matchCertificationJourneyQuestion,
+} from "@/lib/certificationJourneyIntelligence";
 import {
   buildSessionRecommendationReasons,
-  formatSessionIntelligenceSummary,
   formatSessionIntelligenceVoice,
 } from "@/lib/sessionIntelligence";
 import {
-  DEFAULT_RECOMMENDATION_REASON,
   humanizeScoringReason,
-  resolveSessionWhyLine,
 } from "@/lib/sessionRecommendationLine";
 import type { NextBestMove, ScoredSession, ScoredChampion } from "@/types";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
 import {
+  COMPASS_CONVERSATION,
   EVENT_KNOWLEDGE,
   PERSONA_GUIDANCE,
+  formatFunDiscoveryDisplay,
+  formatFunDiscoverySpoken,
+  pickFunActivities,
+  resolveCompassConversationTopic,
   type EventKnowledgeKey,
   type PersonaKey,
 } from "@/data/eventKnowledge";
@@ -89,6 +96,7 @@ export interface VoiceResponseContext {
   experience?:         VoiceExperience;
   locale?:             VoiceLocale;
   certLabel?:          string | null;
+  certificationJourney?: CertificationJourneyPlan | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -123,8 +131,9 @@ const KEYWORD_BUCKETS: Record<
     "live opportunit", "forming nearby", "any alumni", "peer discussion",
   ],
   certification_help: [
-    "certification", "certified", "cert exam", "exam prep", "exam", "test", "pass my cert",
-    "study group", "qiskit cert",
+    "certification", "certified", "cert exam", "exam prep", "exam", "pass my cert",
+    "study group", "qiskit cert", "how do i prepare", "prepare for cert",
+    "sessions for cert", "certification journey",
   ],
   explain_my_day: [
     "today", "right now", "what now", "this afternoon", "tonight", "happening now",
@@ -160,54 +169,138 @@ const ACTION_PATTERNS: Array<[CoreVoiceIntent, string[]]> = [
 const CERT_CODE = /\bc\d{3,5}\b/i;
 
 const EVENT_KNOWLEDGE_PATTERNS: Array<[EventKnowledgeKey, string[]]> = [
-  ["event_dates", ["when is techxchange", "when is the event", "what dates is techxchange", "when does techxchange"]],
-  ["event_location", ["where is the event", "where is techxchange", "where is it located", "event location"]],
-  ["tracks", ["what tracks are there", "what tracks", "technical tracks", "event tracks"]],
-  ["community_day", ["what is community day"]],
-  ["partner_day", ["what is partner day"]],
-  ["sandbox_block_party", ["what is sandbox block party", "what is the sandbox block party"]],
-  ["certification_program", ["what certifications are available", "certifications available", "certification opportunities"]],
-  ["champions_program", ["what are ibm champions", "who are ibm champions", "what is the champions program", "ibm champions program"]],
-  ["event_purpose", ["what is the event about", "purpose of the event", "why techxchange"]],
-  ["event_overview", ["what is this event", "what is techxchange", "tell me about techxchange", "what is the event"]],
+  ["event_dates", [
+    "when is techxchange", "when is the event", "what dates is techxchange", "when does techxchange",
+    "what day is techxchange", "dates for techxchange", "when does it start",
+  ]],
+  ["event_location", [
+    "where is the event", "where is techxchange", "where is it located", "event location",
+    "where is it", "what city is techxchange",
+  ]],
+  ["tracks", [
+    "what tracks are there", "what tracks", "technical tracks", "event tracks", "learning tracks at the event",
+  ]],
+  ["community_day", [
+    "what is community day", "tell me about community day", "community day about",
+  ]],
+  ["partner_day", [
+    "what is partner day", "tell me about partner day", "partner day about",
+  ]],
+  ["data_technical_summit", [
+    "what is data technical summit", "data technical summit", "what is the data summit", "data summit",
+  ]],
+  ["student_day", [
+    "what is student day", "student dev day", "what is student dev day", "student day about",
+  ]],
+  ["sandbox_block_party", [
+    "what is sandbox block party", "what is the sandbox block party", "sandbox block party",
+    "sandbox party", "block party tonight", "what is the block party",
+  ]],
+  ["certifications_available", [
+    "what certifications are available", "certifications available", "which certifications",
+    "what certs are available", "cert exams available",
+  ]],
+  ["certification_program", [
+    "certification opportunities", "certification at techxchange", "certification program",
+    "how do certifications work", "certification help at the event",
+  ]],
+  ["champions_program", [
+    "what are ibm champions", "who are ibm champions", "what is the champions program",
+    "ibm champions program", "what is an ibm champion", "what is a champion at techxchange",
+  ]],
+  ["event_purpose", [
+    "what is the event about", "purpose of the event", "why techxchange", "why attend techxchange",
+  ]],
+  ["compass_about", [
+    "what is compass", "what is voice compass", "who is compass",
+  ]],
+  ["event_overview", [
+    "what is this event", "what is techxchange", "tell me about techxchange", "what is the event",
+    "describe techxchange", "about techxchange",
+  ]],
 ];
 
 const COMPASS_CONVERSATION_PATTERNS = [
   "what do you do",
+  "what can you do",
   "how can you help me",
   "how can you help",
+  "how do you help",
   "what is the biggest concern",
   "biggest concern you have",
   "what should i focus on",
   "am i trying to do too much",
   "trying to do too much",
   "too much on my plate",
+  "how do recommendations work",
+  "how do your recommendations work",
+  "why do you recommend",
 ];
 
 const PERSONA_PATTERNS: Array<[PersonaKey, string[]]> = [
-  ["champion", ["i am a champion", "i'm a champion", "im a champion", "i am an ibm champion", "i'm an ibm champion"]],
-  ["student", ["i am a student", "i'm a student", "im a student"]],
-  ["executive", ["i am an executive", "i'm an executive", "im an executive", "i am a executive", "i'm a executive"]],
-  ["finops", ["i'm in finops", "i am in finops", "im in finops", "financial operations", "in fin ops", "i'm in financial operations"]],
-  ["developer", ["i am a developer", "i'm a developer", "im a developer"]],
-  ["architect", ["i am an architect", "i'm an architect", "im an architect", "i am a architect", "i'm a architect"]],
+  ["partner", [
+    "i am a partner", "i'm a partner", "im a partner", "what should a partner do",
+    "what should partners do", "partner guidance", "i work for a partner", "business partner",
+  ]],
+  ["champion", [
+    "i am a champion", "i'm a champion", "im a champion", "i am an ibm champion", "i'm an ibm champion",
+    "what should a champion do", "what should champions do", "champion guidance",
+  ]],
+  ["student", [
+    "i am a student", "i'm a student", "im a student", "what should a student do",
+  ]],
+  ["executive", [
+    "i am an executive", "i'm an executive", "im an executive", "i am a executive", "i'm a executive",
+    "what should an executive do",
+  ]],
+  ["finops", [
+    "i'm in finops", "i am in finops", "im in finops", "financial operations",
+    "in fin ops", "i'm in financial operations",
+  ]],
+  ["banking", [
+    "i'm in banking", "i am in banking", "in banking", "financial services industry", "banking industry",
+  ]],
+  ["healthcare", [
+    "i'm in healthcare", "i am in healthcare", "in healthcare", "health care industry", "healthcare industry",
+  ]],
+  ["developer", [
+    "i am a developer", "i'm a developer", "im a developer", "what should a developer do",
+  ]],
+  ["architect", [
+    "i am an architect", "i'm an architect", "im an architect", "i am a architect", "i'm a architect",
+    "what should an architect do",
+  ]],
 ];
 
 const FUN_DISCOVERY_PATTERNS = [
   "anything fun",
   "something fun today",
   "something fun",
+  "anything social",
+  "something social",
   "social fun",
   "block party",
   "sandbox party",
   "celebration",
   "after hours",
+  "after sessions",
+  "what can i do after sessions",
   "where are people gathering",
+  "where is everyone gathering",
   "what is happening tonight",
   "what's happening tonight",
   "happening tonight",
   "fun tonight",
   "fun thing",
+  "networking events",
+  "any networking events",
+  "any meetups",
+  "any meet up",
+  "networking tonight",
+  "social events",
+  "fun activities",
+  "things to do tonight",
+  "what should i do tonight",
 ];
 
 const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
@@ -275,18 +368,9 @@ export function classifyVoiceIntent(
     return { intent: "certification_help", transcript, confidence: "high" };
   }
 
-  const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
-  if (knowledgeIntent) {
-    return { intent: knowledgeIntent, transcript, confidence: "high" };
-  }
-
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
   if (eventTopic) {
     return { intent: "event_knowledge", transcript, confidence: "high", topic: eventTopic };
-  }
-
-  if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
-    return { intent: "compass_conversation", transcript, confidence: "high" };
   }
 
   const personaTopic = matchTopic(norm, PERSONA_PATTERNS);
@@ -296,6 +380,15 @@ export function classifyVoiceIntent(
 
   if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
     return { intent: "fun_discovery", transcript, confidence: "high" };
+  }
+
+  if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
+    return { intent: "compass_conversation", transcript, confidence: "high" };
+  }
+
+  const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
+  if (knowledgeIntent) {
+    return { intent: knowledgeIntent, transcript, confidence: "high" };
   }
 
   let best: CoreVoiceIntent = "fallback";
@@ -417,7 +510,131 @@ function topHuddle(ctx: VoiceResponseContext, norm: string): LiveOpportunity | n
 function huddleHint(ctx: VoiceResponseContext, norm: string): string {
   const h = topHuddle(ctx, norm);
   if (!h) return "";
-  return ` I also see ${h.title} forming nearby in Live Opportunities.`;
+  return ` I also see ${h.title} forming nearby in Live Huddles.`;
+}
+
+function buildFunDiscoveryResponse(
+  ctx: VoiceResponseContext,
+  norm: string,
+): VoiceResponse {
+  const knowledge = knowledgeVoiceResponse("FUN_RECOMMENDATION", ctx, norm);
+  const evening = /tonight|evening|after session|after sessions/.test(norm);
+  const social = /social|fun|party|celebration/.test(norm);
+  const networking = /network|gather|meetup|meet up|people gathering/.test(norm);
+  const activities = pickFunActivities({ evening, social, networking, limit: 4 });
+  const huddle = topHuddle(ctx, norm);
+  const spoken = formatFunDiscoverySpoken(activities, huddle?.title);
+  const display = formatFunDiscoveryDisplay(activities, huddle?.title);
+
+  if (knowledge && !knowledge.spoken.toLowerCase().includes("check your agenda")) {
+    return {
+      spoken: `${knowledge.spoken} ${spoken}`,
+      display: `${knowledge.display} · ${display}`,
+      action: "navigate_experience",
+    };
+  }
+
+  return { spoken, display, action: "navigate_experience" };
+}
+
+function buildPersonaResponse(
+  persona: PersonaKey,
+  ctx: VoiceResponseContext,
+): VoiceResponse {
+  const base = PERSONA_GUIDANCE[persona] ?? PERSONA_GUIDANCE.developer;
+  const track = topTrack(ctx);
+  const hasProfile = (ctx.participantTracks?.length ?? 0) > 0 || (ctx.participantGoals?.length ?? 0) > 0;
+  const spoken = hasProfile
+    ? `${base} On My Compass, your ${track} profile can sharpen session and people matches further.`
+    : base;
+  return { spoken, display: `${persona.replace(/_/g, " ")} · ${base}` };
+}
+
+function buildCompassConversationResponse(norm: string): VoiceResponse {
+  const topic = resolveCompassConversationTopic(norm);
+  const spoken = COMPASS_CONVERSATION[topic];
+  const display =
+    topic === "too_much" || topic === "focus"
+      ? EVENT_KNOWLEDGE.compass_biggest_concern
+      : spoken;
+  return { spoken, display };
+}
+
+function tryConciergeRecovery(
+  norm: string,
+  ctx: VoiceResponseContext,
+  seed: string,
+): VoiceResponse | null {
+  const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
+  if (eventTopic) {
+    const answer = EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];
+    return { spoken: answer, display: answer };
+  }
+
+  const personaTopic = matchTopic(norm, PERSONA_PATTERNS);
+  if (personaTopic) {
+    return buildPersonaResponse(personaTopic as PersonaKey, ctx);
+  }
+
+  if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
+    return buildFunDiscoveryResponse(ctx, norm);
+  }
+
+  if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
+    return buildCompassConversationResponse(norm);
+  }
+
+  const session = sessionForContext(ctx) ?? ctx.rankedSessions?.[0] ?? null;
+  if (session && /session|attend|breakout|lab|workshop|what to attend/.test(norm)) {
+    const track = session.tracks?.primary_track ?? topTrack(ctx);
+    const spoken = fill(pickTemplate([
+      "Consider {title} at {when}. It fits {track}.",
+      "A strong session pick is {title} at {when}, matched to {track}.",
+    ], seed), {
+      title: session.title,
+      when: sessionWhen(session),
+      track,
+    });
+    return {
+      spoken,
+      display: `${session.title} · ${sessionWhen(session)}`,
+      action: "show_sessions",
+    };
+  }
+
+  const champion = ctx.topChampion;
+  if (champion && /meet|people|champion|expert|mentor|connect|talk to/.test(norm)) {
+    const name = championFirstName(champion);
+    const keywords = champion.shared_keywords?.slice(0, 2).join(" and ") ?? topTrack(ctx);
+    const spoken = fill(pickTemplate([
+      "I found {name} because their expertise overlaps with {match}.",
+      "{name} is a strong match on {match}. Check Champions for details.",
+    ], seed), { name, match: keywords });
+    const org = champion.organization ?? champion.company ?? "";
+    return {
+      spoken,
+      display: `Meet ${champion.display_name}${org ? ` · ${org}` : ""}`,
+      action: "show_champions",
+    };
+  }
+
+  const nbm = ctx.nextBestMove;
+  if ((session || nbm) && /what should i do|next|recommend|guide me|prioritize|what now/.test(norm)) {
+    const title = session?.title ?? nbm!.headline;
+    const when = session ? sessionWhen(session) : nbm!.subline ?? "soon";
+    const goal = topGoal(ctx);
+    const spoken = fill(pickTemplate([
+      "Your next best move is {title} at {when}. It matches your goals around {goal}.",
+      "I'd start with {title} at {when} — it aligns with {goal}.",
+    ], seed), { title, when, goal });
+    return {
+      spoken,
+      display: nbm ? `${nbm.headline} · ${nbm.subline}` : `${title} · ${when}`,
+      action: "navigate_experience",
+    };
+  }
+
+  return null;
 }
 
 function isEnrolled(ctx: VoiceResponseContext): boolean {
@@ -490,6 +707,14 @@ export function buildVoiceResponse(
     return notEnrolledResponse(locale);
   }
 
+  if (ctx.certificationJourney) {
+    const journeyTopic = matchCertificationJourneyQuestion(norm);
+    if (journeyTopic) {
+      const journey = formatCertificationJourneyVoice(journeyTopic, ctx.certificationJourney);
+      return { ...journey, action: "navigate_experience" };
+    }
+  }
+
   if (isFirestoreKnowledgeIntent(intent, experience)) {
     const action = intent === "CHAMPION_MATCH" ? "show_champions" as const : undefined;
     return knowledgeVoiceResponse(intent, ctx, transcript, action) ?? {
@@ -507,42 +732,16 @@ export function buildVoiceResponse(
     }
 
     case "compass_conversation": {
-      if (
-        norm.includes("biggest concern") ||
-        norm.includes("focus on") ||
-        norm.includes("too much")
-      ) {
-        const spoken =
-          "The biggest challenge is focus. TechXchange has many sessions, people, certifications, and conversations. My job is to help you decide what matters most for your goals.";
-        return { spoken, display: EVENT_KNOWLEDGE.compass_biggest_concern };
-      }
-      const spoken = EVENT_KNOWLEDGE.compass_about;
-      return { spoken, display: spoken };
+      return buildCompassConversationResponse(norm);
     }
 
     case "fun_discovery": {
-      const knowledge = knowledgeVoiceResponse("FUN_RECOMMENDATION", ctx, transcript);
-      if (knowledge) {
-        const huddle = huddleHint(ctx, norm);
-        return {
-          spoken: knowledge.spoken + (huddle ? huddle : ""),
-          display: knowledge.display,
-        };
-      }
-      const huddle = huddleHint(ctx, norm);
-      const spoken =
-        "Yes. If you are looking for something social, start with Sandbox Block Party and the live conversations forming around your interests." +
-        (huddle ? huddle : " Networking and Entertainment in the evening is another good place to gather.");
-      return {
-        spoken,
-        display: "Sandbox Block Party · live conversations · evening networking",
-      };
+      return buildFunDiscoveryResponse(ctx, norm);
     }
 
     case "persona_guidance": {
       const persona = (classified.topic ?? "developer") as PersonaKey;
-      const spoken = PERSONA_GUIDANCE[persona] ?? PERSONA_GUIDANCE.developer;
-      return { spoken, display: spoken };
+      return buildPersonaResponse(persona, ctx);
     }
 
     case "next_best_move": {
@@ -748,9 +947,11 @@ export function buildVoiceResponse(
       }
       const whyLine = nbm?.reason
         ? humanizeScoringReason(nbm.reason)
-        : DEFAULT_RECOMMENDATION_REASON;
+        : COMPASS_CONVERSATION.why_generic;
       return {
-        spoken: `Compass picked this because ${whyLine.replace(/\.$/, "")}.`,
+        spoken: nbm
+          ? `Compass picked this because ${whyLine.replace(/\.$/, "")}.`
+          : COMPASS_CONVERSATION.why_generic,
         display: whyLine,
       };
     }
@@ -778,40 +979,25 @@ export function buildVoiceResponse(
 
     case "fallback":
     default: {
+      const concierge = tryConciergeRecovery(norm, ctx, seed);
+      if (concierge) return concierge;
+
       const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
       if (knowledgeIntent) {
         const knowledge = knowledgeVoiceResponse(knowledgeIntent, ctx, transcript);
         if (knowledge) return knowledge;
       }
-      const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
-      if (eventTopic) {
-        const answer = EVENT_KNOWLEDGE[eventTopic as EventKnowledgeKey];
-        return { spoken: answer, display: answer };
-      }
-      if (matchPhraseList(norm, COMPASS_CONVERSATION_PATTERNS)) {
-        const spoken = EVENT_KNOWLEDGE.compass_about;
-        return { spoken, display: spoken };
-      }
-      const personaTopic = matchTopic(norm, PERSONA_PATTERNS);
-      if (personaTopic) {
-        const spoken = PERSONA_GUIDANCE[personaTopic as PersonaKey];
-        return { spoken, display: spoken };
-      }
-      if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
-        const spoken =
-          "Yes. If you are looking for something social, start with Sandbox Block Party and the live conversations forming around your interests.";
-        return { spoken, display: "Sandbox Block Party · live conversations" };
-      }
+
       const session = sessionForContext(ctx);
       if (session) {
         return {
           spoken:  `Try asking about ${session.title}, who to meet, live huddles, or your week plan.`,
-          display: "Try: What should I do now? · Who should I meet? · Any alumni here? · Show my week.",
+          display: "Try: What should I do now? · Who should I meet? · Anything fun tonight? · What is Community Day?",
         };
       }
       return {
         spoken:  "Ask about TechXchange, what Compass does, sessions, people to meet, live huddles, certification, or something fun tonight.",
-        display: "Try: What is TechXchange? · What is Compass? · Who should I meet? · Anything fun tonight?",
+        display: "Try: What is TechXchange? · How can you help me? · I'm a champion · Anything fun tonight?",
       };
     }
   }

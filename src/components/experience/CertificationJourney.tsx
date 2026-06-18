@@ -2,118 +2,185 @@ import Link from "next/link";
 import {
   CERTIFICATION_JOURNEY_COPY,
   CERTIFICATION_MILESTONES,
-  type SelectedCertificationGoal,
 } from "@/lib/certificationProfile";
+import type {
+  CertificationJourneyPlan,
+  JourneyLinkItem,
+} from "@/lib/certificationJourneyIntelligence";
 
 interface CertificationJourneyProps {
   visible: boolean;
-  certifications: SelectedCertificationGoal[];
-  onRemove?: (id: string) => void;
+  plan: CertificationJourneyPlan | null;
+  onRemoveAchieve?: () => void;
   accent?: string;
   embedded?: boolean;
 }
 
+function JourneyStage({
+  label,
+  items,
+  emptyCopy,
+  accent,
+  isLast = false,
+}: {
+  label: string;
+  items: JourneyLinkItem[];
+  emptyCopy?: string;
+  accent: string;
+  isLast?: boolean;
+}) {
+  return (
+    <li className="cert-journey-stage">
+      <div className="cert-journey-stage-rail" aria-hidden="true">
+        <span className="cert-journey-stage-dot" style={{ borderColor: accent, background: accent }} />
+        {!isLast && <span className="cert-journey-stage-line" style={{ background: accent }} />}
+      </div>
+      <div className="cert-journey-stage-body">
+        <h3 className="cert-journey-stage-label">{label}</h3>
+        {items.length > 0 ? (
+          <ul className="cert-journey-item-list">
+            {items.map(item => (
+              <li key={item.id}>
+                <Link href={item.href} className="cert-journey-item-link">
+                  <span className="cert-journey-item-title">{item.title}</span>
+                  {item.meta && <span className="cert-journey-item-meta">{item.meta}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : emptyCopy ? (
+          <p className="cert-journey-stage-empty">{emptyCopy}</p>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
 export default function CertificationJourney({
   visible,
-  certifications,
-  onRemove,
+  plan,
+  onRemoveAchieve,
   accent = "#a56eff",
   embedded = false,
 }: CertificationJourneyProps) {
-  if (!visible) return null;
+  if (!visible || !plan) return null;
 
   const outerClass = embedded
     ? "compass-module-block certification-journey-section"
     : "section no-top-border certification-journey-section";
 
+  const stages: Array<{ key: string; label: string; items: JourneyLinkItem[]; empty?: string }> = [
+    { key: "learn", label: "Learn", items: plan.learn, empty: CERTIFICATION_JOURNEY_COPY.emptyStage },
+    { key: "practice", label: "Practice", items: plan.practice, empty: CERTIFICATION_JOURNEY_COPY.emptyStage },
+    { key: "connect", label: "Connect", items: plan.connect, empty: "Champions and experts appear here as Compass matches your journey." },
+    { key: "community", label: "Community", items: plan.community, empty: "Study groups and meetups surface here from Live Huddles and community sessions." },
+  ];
+
   return (
     <section className={outerClass}>
       <div className="certification-journey-card">
         <div className="section-kicker">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</div>
-        <h2 className="certification-journey-title">
-          {CERTIFICATION_JOURNEY_COPY.workingToward} earn a certification
-        </h2>
-        <p className="certification-journey-copy">{CERTIFICATION_JOURNEY_COPY.supporting}</p>
 
-        {certifications.length > 0 ? (
-          <ul className="certification-goal-list" aria-label="Selected certification goals">
-            {certifications.map(cert => (
-              <li key={cert.id} className="certification-goal-item">
-                <div className="certification-goal-body">
-                  <p className="certification-goal-title">{cert.title}</p>
-                  {cert.certification_code && (
-                    <p className="certification-goal-code">{cert.certification_code}</p>
-                  )}
-                  <dl className="certification-goal-meta">
-                    {cert.products?.[0] && (
-                      <>
-                        <dt>Product</dt>
-                        <dd>{cert.products.join(", ")}</dd>
-                      </>
-                    )}
-                    {cert.track && (
-                      <>
-                        <dt>Track</dt>
-                        <dd>{cert.track}</dd>
-                      </>
-                    )}
-                    {cert.topics?.[0] && (
-                      <>
-                        <dt>Topic</dt>
-                        <dd>{cert.topics.join(", ")}</dd>
-                      </>
-                    )}
-                  </dl>
-                  <p className="certification-goal-note">{CERTIFICATION_JOURNEY_COPY.onDemandNote}</p>
-                </div>
-                {onRemove && (
-                  <button
-                    type="button"
-                    className="action-chip"
-                    onClick={() => onRemove(cert.id)}
-                  >
-                    Remove
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="certification-journey-empty">
-            Save certification opportunities from the session catalog to track your learning journey here.
-          </p>
-        )}
+        <div className="cert-journey-hero">
+          <p className="cert-journey-kicker">{CERTIFICATION_JOURNEY_COPY.workingToward}</p>
+          <h2 className="certification-journey-title">{plan.shortTitle}</h2>
+          <dl className="cert-journey-meta">
+            {plan.track && (
+              <>
+                <dt>Track</dt>
+                <dd>{plan.track}</dd>
+              </>
+            )}
+            {plan.product && (
+              <>
+                <dt>Product</dt>
+                <dd>{plan.product}</dd>
+              </>
+            )}
+            {plan.certificationCode && (
+              <>
+                <dt>Code</dt>
+                <dd>{plan.certificationCode}</dd>
+              </>
+            )}
+          </dl>
+        </div>
 
-        <ol className="explore-milestone-path certification-milestone-path" aria-label="Certification journey">
-          {CERTIFICATION_MILESTONES.map((step, stepIndex) => (
-            <li key={step} className="explore-milestone-step">
-              <div className="explore-milestone-node">
-                <span
-                  className="explore-milestone-dot"
-                  style={{
-                    borderColor: accent,
-                    background: stepIndex === 0 ? accent : "var(--surface)",
-                  }}
-                  aria-hidden="true"
-                />
-                {stepIndex < CERTIFICATION_MILESTONES.length - 1 && (
-                  <span className="explore-milestone-line" style={{ background: accent }} aria-hidden="true" />
-                )}
-              </div>
-              <span className="explore-milestone-label">{step}</span>
-            </li>
+        <div className="cert-journey-summary" aria-label={CERTIFICATION_JOURNEY_COPY.progressSummary}>
+          <div className="cert-journey-stat">
+            <b>{plan.summary.recommendedSessions}</b>
+            <span>{CERTIFICATION_JOURNEY_COPY.recommendedSessions}</span>
+          </div>
+          <div className="cert-journey-stat">
+            <b>{plan.summary.labs}</b>
+            <span>{CERTIFICATION_JOURNEY_COPY.labs}</span>
+          </div>
+          <div className="cert-journey-stat">
+            <b>{plan.summary.experts}</b>
+            <span>{CERTIFICATION_JOURNEY_COPY.experts}</span>
+          </div>
+          <div className="cert-journey-stat">
+            <b>{plan.summary.studyGroups}</b>
+            <span>{CERTIFICATION_JOURNEY_COPY.studyGroups}</span>
+          </div>
+        </div>
+
+        <ol className="cert-journey-path" aria-label="Certification journey progression">
+          <li className="cert-journey-stage cert-journey-stage--anchor">
+            <div className="cert-journey-stage-rail" aria-hidden="true">
+              <span className="cert-journey-stage-dot cert-journey-stage-dot--outline" style={{ borderColor: accent }} />
+              <span className="cert-journey-stage-line" style={{ background: accent }} />
+            </div>
+            <div className="cert-journey-stage-body">
+              <h3 className="cert-journey-stage-label">{CERTIFICATION_MILESTONES[0]}</h3>
+              <p className="cert-journey-anchor-copy">{plan.certificationTitle}</p>
+            </div>
+          </li>
+
+          {stages.map(stage => (
+            <JourneyStage
+              key={stage.key}
+              label={stage.label}
+              items={stage.items}
+              emptyCopy={stage.empty}
+              accent={accent}
+              isLast={false}
+            />
           ))}
+
+          <li className="cert-journey-stage cert-journey-stage--achieve">
+            <div className="cert-journey-stage-rail" aria-hidden="true">
+              <span className="cert-journey-stage-dot" style={{ borderColor: accent, background: "var(--surface)" }} />
+            </div>
+            <div className="cert-journey-stage-body">
+              <h3 className="cert-journey-stage-label">{CERTIFICATION_MILESTONES[5]}</h3>
+              {plan.achieve && (
+                <article className="cert-journey-achieve-card">
+                  <p className="cert-journey-achieve-kicker">{CERTIFICATION_JOURNEY_COPY.achieveLabel}</p>
+                  <p className="cert-journey-achieve-title">{plan.achieve.title}</p>
+                  <p className="cert-journey-achieve-note">{CERTIFICATION_JOURNEY_COPY.achieveNote}</p>
+                  <div className="certification-journey-actions">
+                    <Link href={plan.achieve.href} className="action-chip">
+                      View opportunity
+                    </Link>
+                    {onRemoveAchieve && (
+                      <button type="button" className="action-chip" onClick={onRemoveAchieve}>
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </article>
+              )}
+            </div>
+          </li>
         </ol>
 
-        <ul className="certification-journey-community" aria-label="Community along your journey">
-          {CERTIFICATION_JOURNEY_COPY.community.map(line => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-
-        <div className="certification-journey-actions">
+        <div className="certification-journey-actions cert-journey-footer-actions">
           <Link href="/txc/sessions?type=certification" className="action-chip">
             {CERTIFICATION_JOURNEY_COPY.exploreCertifications}
+          </Link>
+          <Link href="/txc/sessions" className="action-chip">
+            {CERTIFICATION_JOURNEY_COPY.viewAllSessions}
           </Link>
         </div>
       </div>
