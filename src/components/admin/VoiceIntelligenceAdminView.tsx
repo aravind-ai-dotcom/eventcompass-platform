@@ -11,6 +11,8 @@ import {
   seedVoiceKnowledgeIfEmpty,
 } from "@/services/voice/voiceKnowledgeService";
 import { testVoiceKnowledgeMatch } from "@/services/voice/voiceKnowledgeResolver";
+import { classifyEventScope } from "@/lib/eventScopeClassifier";
+import { classifyVoiceIntent } from "@/services/voiceIntentClassifier";
 import {
   VOICE_KNOWLEDGE_CATEGORIES,
   type VoiceKnowledgeCategory,
@@ -162,6 +164,9 @@ export function VoiceIntelligenceAdminView() {
     setTestResult(testVoiceKnowledgeMatch(testInput, TXC_EVENT_ID));
   }
 
+  const scopePreview = testInput.trim() ? classifyEventScope(testInput, TXC_EVENT_ID) : null;
+  const intentPreview = testInput.trim() ? classifyVoiceIntent(testInput) : null;
+
   return (
     <div>
       <SectionHead
@@ -241,6 +246,18 @@ export function VoiceIntelligenceAdminView() {
           </button>
           {testResult && (
             <div style={{ marginTop: "20px", fontSize: "0.88rem", color: S.soft, lineHeight: 1.6 }}>
+              {scopePreview && (
+                <p style={{ margin: "0 0 8px" }}>
+                  <strong style={{ color: S.text }}>Event scope:</strong>{" "}
+                  {scopePreview.scope} ({scopePreview.confidence} confidence · general {scopePreview.generalScore} · event {scopePreview.eventScore})
+                </p>
+              )}
+              {intentPreview && (
+                <p style={{ margin: "0 0 8px" }}>
+                  <strong style={{ color: S.text }}>Voice intent:</strong>{" "}
+                  {intentPreview.intent} ({intentPreview.confidence})
+                </p>
+              )}
               <p style={{ margin: "0 0 8px" }}>
                 <strong style={{ color: S.text }}>Matched intent:</strong>{" "}
                 {testResult.matchedIntent}
@@ -258,6 +275,13 @@ export function VoiceIntelligenceAdminView() {
         </Panel>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "16px", alignItems: "start" }}>
+          {tab === "Event Scope" && (
+            <p style={{ gridColumn: "1 / -1", color: S.muted, fontSize: "0.84rem", margin: "0 0 4px", lineHeight: 1.55 }}>
+              Tune event vs local routing. Use topic key <code style={{ color: S.accent }}>general_concierge</code> for food, transport, weather phrases;
+              {" "}<code style={{ color: S.accent }}>event_related</code> for sessions, champions, certifications;
+              {" "}<code style={{ color: S.accent }}>concierge_response</code> or <code style={{ color: S.accent }}>scope_clarify</code> for reply templates.
+            </p>
+          )}
           <Panel>
             {loading ? (
               <p style={{ color: S.muted, margin: 0 }}>Loading from Firestore…</p>

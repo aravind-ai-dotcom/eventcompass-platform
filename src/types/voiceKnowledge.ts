@@ -8,6 +8,7 @@ export type VoiceKnowledgeCategory =
   | "Fun & Social"
   | "Certifications"
   | "Compass Personality"
+  | "Event Scope"
   | "Fallback Responses";
 
 export const VOICE_KNOWLEDGE_CATEGORIES: VoiceKnowledgeCategory[] = [
@@ -16,6 +17,7 @@ export const VOICE_KNOWLEDGE_CATEGORIES: VoiceKnowledgeCategory[] = [
   "Fun & Social",
   "Certifications",
   "Compass Personality",
+  "Event Scope",
   "Fallback Responses",
 ];
 

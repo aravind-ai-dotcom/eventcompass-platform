@@ -555,6 +555,142 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "focus",
   ),
 
+  // ── Event Scope (concierge vs event routing — tunable in Voice Intelligence Admin) ──
+  vk(
+    "scope_general_food",
+    "Event Scope",
+    "General — Food & groceries",
+    [
+      "grocery",
+      "groceries",
+      "buy groceries",
+      "where can i buy groceries",
+      "supermarket",
+      "convenience store",
+      "restaurant",
+      "where to eat",
+      "food court",
+    ],
+    "",
+    "general_concierge",
+  ),
+  vk(
+    "scope_general_coffee",
+    "Event Scope",
+    "General — Coffee",
+    [
+      "starbucks",
+      "coffee shop",
+      "where is starbucks",
+      "nearest coffee",
+      "get coffee",
+    ],
+    "",
+    "general_concierge",
+  ),
+  vk(
+    "scope_general_transport",
+    "Event Scope",
+    "General — Transport & parking",
+    [
+      "airport",
+      "get to the airport",
+      "uber",
+      "lyft",
+      "taxi",
+      "parking",
+      "where to park",
+      "directions to",
+      "how do i get to",
+    ],
+    "",
+    "general_concierge",
+  ),
+  vk(
+    "scope_general_local",
+    "Event Scope",
+    "General — Local services",
+    [
+      "weather",
+      "forecast",
+      "pharmacy",
+      "atm",
+      "bank",
+      "hotel",
+      "nearest",
+      "local services",
+    ],
+    "",
+    "general_concierge",
+  ),
+  vk(
+    "scope_event_sessions",
+    "Event Scope",
+    "Event — Sessions & learning",
+    [
+      "session",
+      "breakout",
+      "lab",
+      "workshop",
+      "what to attend",
+      "recommended session",
+    ],
+    "",
+    "event_related",
+  ),
+  vk(
+    "scope_event_people",
+    "Event Scope",
+    "Event — People & networking",
+    [
+      "champion",
+      "who should i meet",
+      "networking",
+      "huddle",
+      "meetup",
+    ],
+    "",
+    "event_related",
+  ),
+  vk(
+    "scope_event_cert",
+    "Event Scope",
+    "Event — Certifications",
+    [
+      "certification",
+      "certified",
+      "cert exam",
+      "study group",
+    ],
+    "",
+    "event_related",
+  ),
+  vk(
+    "scope_concierge_response",
+    "Event Scope",
+    "General concierge response",
+    [],
+    `That sounds like a logistics or local question rather than an event question.
+
+I can help with:
+• Sessions
+• Certifications
+• People
+• Communities
+• Event activities
+
+For local services, use venue resources or nearby maps.`,
+    "concierge_response",
+  ),
+  vk(
+    "scope_clarify_response",
+    "Event Scope",
+    "Low-confidence scope clarify",
+    [],
+    "Are you asking about TechXchange activities or local services nearby? I can help with sessions, certifications, people, communities, and event activities — or point you to venue maps for logistics.",
+    "scope_clarify",
+  ),
+
   // ── Fallback Responses ────────────────────────────────────────────────────
   vk(
     "fallback_default",

@@ -37,6 +37,8 @@ export function categoryToIntent(category: VoiceKnowledgeCategory): VoiceKnowled
       return "certification_help";
     case "Compass Personality":
       return "compass_conversation";
+    case "Event Scope":
+      return "fallback";
     case "Fallback Responses":
       return "fallback";
     default:
@@ -57,6 +59,7 @@ export function matchVoiceKnowledge(
 
   for (const record of getEnabledVoiceKnowledgeRecords(eventId)) {
     if (record.category === "Fallback Responses" && !includeFallback) continue;
+    if (record.category === "Event Scope") continue;
 
     for (const phrase of record.trigger_phrases) {
       const p = normalise(phrase);

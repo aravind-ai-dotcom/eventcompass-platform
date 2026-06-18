@@ -52,6 +52,13 @@ import {
   resolvePersonaGuidanceText,
 } from "@/services/voice/voiceKnowledgeResolver";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
+import {
+  blocksEventRecommendations,
+  classifyEventScope,
+  needsScopeClarification,
+  resolveConciergeResponse,
+  resolveScopeClarifyResponse,
+} from "@/lib/eventScopeClassifier";
 
 export type { VoiceLocale };
 
@@ -67,6 +74,8 @@ export type CoreVoiceIntent =
   | "certification_help"
   | "explain_my_day"
   | "explain_my_week"
+  | "general_concierge"
+  | "scope_clarify"
   | "fallback"
   | "dismiss"
   | "mark_attended"
@@ -131,6 +140,8 @@ const KEYWORD_BUCKETS: Record<
     | "compass_conversation"
     | "fun_discovery"
     | "persona_guidance"
+    | "general_concierge"
+    | "scope_clarify"
   >,
   string[]
 > = {
@@ -326,8 +337,21 @@ const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "compass_conversation",
   "fun_discovery",
   "persona_guidance",
+  "general_concierge",
+  "scope_clarify",
   "dismiss",
   "mark_attended",
+]);
+
+const RECOMMENDATION_INTENTS = new Set<CoreVoiceIntent>([
+  "next_best_move",
+  "find_sessions",
+  "find_people",
+  "find_huddles",
+  "certification_help",
+  "explain_my_day",
+  "explain_my_week",
+  "why_recommended",
 ]);
 
 function isPublicIntent(intent: VoiceIntent, experience: VoiceExperience): boolean {
@@ -382,6 +406,8 @@ function categoryToIntentFromRecord(
       return "certification_help";
     case "Compass Personality":
       return "compass_conversation";
+    case "Event Scope":
+      return "fallback";
     case "Fallback Responses":
       return "fallback";
     default:
@@ -437,6 +463,15 @@ export function classifyVoiceIntent(
     return { intent: "compass_conversation", transcript, confidence: "high" };
   }
 
+  const eventId = experienceToEventId(experience);
+  const eventScope = classifyEventScope(transcript, eventId);
+  if (needsScopeClarification(eventScope)) {
+    return { intent: "scope_clarify", transcript, confidence: "low" };
+  }
+  if (blocksEventRecommendations(eventScope)) {
+    return { intent: "general_concierge", transcript, confidence: eventScope.confidence };
+  }
+
   const knowledgeIntent = matchKnowledgeIntent(transcript, experience);
   if (knowledgeIntent) {
     return { intent: knowledgeIntent, transcript, confidence: "high" };
@@ -457,6 +492,16 @@ export function classifyVoiceIntent(
 
   if (bestScore === 0) {
     return { intent: "fallback", transcript, confidence: "low" };
+  }
+
+  if (RECOMMENDATION_INTENTS.has(best)) {
+    const scopeRecheck = classifyEventScope(transcript, eventId);
+    if (needsScopeClarification(scopeRecheck)) {
+      return { intent: "scope_clarify", transcript, confidence: "low" };
+    }
+    if (blocksEventRecommendations(scopeRecheck)) {
+      return { intent: "general_concierge", transcript, confidence: scopeRecheck.confidence };
+    }
   }
 
   return { intent: best, transcript, confidence: bestScore >= 2 ? "high" : "low" };
@@ -647,11 +692,32 @@ function buildVoiceKnowledgeResponse(
   }
 }
 
+function buildGeneralConciergeResponse(experience: VoiceExperience = "techxchange"): VoiceResponse {
+  const text = resolveConciergeResponse(experienceToEventId(experience));
+  const displayLine = text.split("\n").map(l => l.trim()).find(Boolean) ?? text;
+  return { spoken: text, display: displayLine };
+}
+
+function buildScopeClarifyResponse(experience: VoiceExperience = "techxchange"): VoiceResponse {
+  const text = resolveScopeClarifyResponse(experienceToEventId(experience));
+  return { spoken: text, display: text };
+}
+
 function tryConciergeRecovery(
   norm: string,
   ctx: VoiceResponseContext,
   seed: string,
 ): VoiceResponse | null {
+  const experience = ctx.experience ?? "techxchange";
+  const eventId = experienceToEventId(experience);
+  const scope = classifyEventScope(norm, eventId);
+  if (needsScopeClarification(scope)) {
+    return buildScopeClarifyResponse(experience);
+  }
+  if (blocksEventRecommendations(scope)) {
+    return buildGeneralConciergeResponse(experience);
+  }
+
   const vkMatch = matchVoiceKnowledge(norm);
   if (vkMatch) {
     return buildVoiceKnowledgeResponse(vkMatch.record, ctx, norm);
@@ -801,6 +867,27 @@ export function buildVoiceResponse(
     return notEnrolledResponse(locale);
   }
 
+  const eventId = experienceToEventId(experience);
+  const scopeGate = classifyEventScope(transcript, eventId);
+  if (intent !== "general_concierge" && intent !== "scope_clarify") {
+    if (needsScopeClarification(scopeGate)) {
+      return buildScopeClarifyResponse(experience);
+    }
+    if (blocksEventRecommendations(scopeGate)) {
+      return buildGeneralConciergeResponse(experience);
+    }
+  }
+
+  if (RECOMMENDATION_INTENTS.has(intent as CoreVoiceIntent)) {
+    const scopeRecheck = classifyEventScope(transcript, eventId);
+    if (needsScopeClarification(scopeRecheck)) {
+      return buildScopeClarifyResponse(experience);
+    }
+    if (blocksEventRecommendations(scopeRecheck)) {
+      return buildGeneralConciergeResponse(experience);
+    }
+  }
+
   if (ctx.certificationJourney) {
     const journeyTopic = matchCertificationJourneyQuestion(norm);
     if (journeyTopic) {
@@ -847,6 +934,12 @@ export function buildVoiceResponse(
       const persona = (classified.topic ?? "developer") as PersonaKey;
       return buildPersonaResponse(persona, ctx);
     }
+
+    case "general_concierge":
+      return buildGeneralConciergeResponse(experience);
+
+    case "scope_clarify":
+      return buildScopeClarifyResponse(experience);
 
     case "next_best_move": {
       const balanced = ctx.balancedMoves ?? [];
