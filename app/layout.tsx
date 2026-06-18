@@ -1,5 +1,5 @@
 // =============================================================================
-// Compass SKO — Root Layout (product-neutral shell)
+// EventCompass — Root Layout (product-neutral shell)
 // SKO vs TechXchange chrome is selected in RouteChrome by pathname.
 // =============================================================================
 
@@ -23,9 +23,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Compass SKO | IBM Sales Enablement",
-  description:
-    "SKO2H 2026 seller briefing — personalized geo, market, and persona intelligence for IBM Sales Enablement.",
+  title: "EventCompass",
+  description: "IBM event intelligence — TechXchange and sales enablement.",
 };
 
 export default function RootLayout({

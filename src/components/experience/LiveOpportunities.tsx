@@ -32,6 +32,8 @@ interface LiveOpportunitiesProps {
   participantGoals?: string[];
   userDisplayName?: string;
   userFirstName?: string;
+  /** Max huddles shown before "View more" (default 4). */
+  visibleLimit?: number;
 }
 
 function isVisibleHuddle(
@@ -47,6 +49,7 @@ export default function LiveOpportunities({
   participantGoals = [],
   userDisplayName = "You",
   userFirstName = "You",
+  visibleLimit = 4,
 }: LiveOpportunitiesProps) {
   const [pending, setPending] = useState<LiveOpportunity[]>([]);
   const [onMyWay, setOnMyWay] = useState<Set<string>>(new Set());
@@ -54,6 +57,7 @@ export default function LiveOpportunities({
   const [now, setNow] = useState(() => Date.now());
   const [showStart, setShowStart] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const refresh = useCallback(() => {
     setPending(loadPendingHuddles().map(normalizeHuddleSchedule));
@@ -68,7 +72,7 @@ export default function LiveOpportunities({
     return () => window.clearInterval(timer);
   }, [refresh]);
 
-  const visible = useMemo(() => {
+  const visibleAll = useMemo(() => {
     const ranked = rankLiveHuddles(SAMPLE_LIVE_HUDDLES, participantTracks, participantGoals);
     const merged = [...pending, ...ranked];
     const seen = new Set<string>();
@@ -76,8 +80,10 @@ export default function LiveOpportunities({
       if (seen.has(h.id)) return false;
       seen.add(h.id);
       return isVisibleHuddle(h, ended, now);
-    }).slice(0, 4);
+    });
   }, [participantTracks, participantGoals, pending, ended, now]);
+
+  const visible = showAll ? visibleAll : visibleAll.slice(0, visibleLimit);
 
   const handleOnMyWay = useCallback((huddleId: string) => {
     setOnMyWay(toggleOnMyWay(huddleId));
@@ -223,6 +229,16 @@ export default function LiveOpportunities({
           );
         })}
       </ul>
+
+      {visibleAll.length > visibleLimit && !showAll && (
+        <button
+          type="button"
+          className="action-chip compass-view-more"
+          onClick={() => setShowAll(true)}
+        >
+          View more ({visibleAll.length - visibleLimit} more)
+        </button>
+      )}
 
       {showStart && (
         <StartConversationModal

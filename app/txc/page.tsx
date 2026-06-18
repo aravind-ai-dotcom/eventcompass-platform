@@ -20,12 +20,8 @@ export default function HomePage() {
             prepare, meet, experience, and continue your momentum.
           </p>
           <div className="hero-actions">
-            <Link href="/enroll" className="btn-primary">Build My Compass</Link>
-            <Link href="/explore" className="btn-secondary">How Compass works</Link>
-          </div>
-          <div className="hero-actions hero-actions--secondary">
-            <Link href="/sko" className="btn-secondary">Compass SKO →</Link>
-            <Link href="/sko/login" className="btn-secondary">SKO seller sign in</Link>
+            <Link href="/txc/enroll" className="btn-primary">Build My Compass</Link>
+            <Link href="/txc/explore" className="btn-secondary">How Compass works</Link>
           </div>
         </div>
       </section>
@@ -39,7 +35,7 @@ export default function HomePage() {
           <h2>Start before you arrive.</h2>
           <p>Tell Compass what matters and walk into TechXchange with a plan.</p>
         </div>
-        <Link href="/enroll" className="btn-primary">Build My Compass →</Link>
+        <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
       </section>
     </>
   );

@@ -8,6 +8,7 @@ interface ConnectionSignalsProps {
   inboundSignals?: InboundConnectionSignal[];
   isLoggedIn: boolean;
   onShowDetails?: (personId: string) => void;
+  embedded?: boolean;
 }
 
 export default function ConnectionSignals({
@@ -15,6 +16,7 @@ export default function ConnectionSignals({
   inboundSignals = SAMPLE_INBOUND_SIGNALS,
   isLoggedIn,
   onShowDetails,
+  embedded = false,
 }: ConnectionSignalsProps) {
   if (!isLoggedIn) return null;
 
@@ -24,7 +26,7 @@ export default function ConnectionSignals({
   }));
 
   return (
-    <section className="section connection-signals-section">
+    <section className={embedded ? "compass-module-block connection-signals-section" : "section connection-signals-section"}>
       <div className="section-head narrow">
         <div>
           <div className="section-kicker">Connection signals</div>

@@ -10,6 +10,7 @@ interface CertificationJourneyProps {
   certifications: SelectedCertificationGoal[];
   onRemove?: (id: string) => void;
   accent?: string;
+  embedded?: boolean;
 }
 
 export default function CertificationJourney({
@@ -17,11 +18,16 @@ export default function CertificationJourney({
   certifications,
   onRemove,
   accent = "#a56eff",
+  embedded = false,
 }: CertificationJourneyProps) {
   if (!visible) return null;
 
+  const outerClass = embedded
+    ? "compass-module-block certification-journey-section"
+    : "section no-top-border certification-journey-section";
+
   return (
-    <section className="section no-top-border certification-journey-section">
+    <section className={outerClass}>
       <div className="certification-journey-card">
         <div className="section-kicker">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</div>
         <h2 className="certification-journey-title">
@@ -106,7 +112,7 @@ export default function CertificationJourney({
         </ul>
 
         <div className="certification-journey-actions">
-          <Link href="/sessions?type=certification" className="action-chip">
+          <Link href="/txc/sessions?type=certification" className="action-chip">
             {CERTIFICATION_JOURNEY_COPY.exploreCertifications}
           </Link>
         </div>

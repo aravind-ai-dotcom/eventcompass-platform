@@ -15,8 +15,10 @@ const NAV_ITEMS = [
   { href: "/txc/explore", label: "Explore" },
   { href: "/txc/sessions", label: "Sessions" },
   { href: "/txc/champions", label: "Champions" },
-  { href: "/txc/experience", label: "My Compass" },
+  { href: "/pulse", label: "Pulse" },
 ];
+
+const DRAWER_TAIL = { href: "/txc/experience", label: "My Compass" };
 
 function SunIcon() {
   return (
@@ -82,8 +84,9 @@ export default function CompassHeader() {
   }
 
   const drawerLinks = [
-    { href: "/txc", label: "TechXchange" },
+    { href: "/txc", label: "Compass" },
     ...NAV_ITEMS,
+    DRAWER_TAIL,
   ];
 
   return (

@@ -30,11 +30,8 @@ import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
 import LiveOpportunities from "@/components/experience/LiveOpportunities";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
-import EventHighlights    from "@/components/experience/EventHighlights";
-import TechXchangeBanner  from "@/components/experience/TechXchangeBanner";
-import CommunityVoices    from "@/components/experience/CommunityVoices";
-import PrintExport        from "@/components/experience/PrintExport";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
+import CommunityVoices    from "@/components/experience/CommunityVoices";
 import { useAuth } from "@/context/AuthContext";
 import ConnectionSignals from "@/components/people/ConnectionSignals";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
@@ -48,6 +45,10 @@ import {
   resolveSelectedCertificationGoals,
 } from "@/lib/certificationProfile";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
+import CompassSection from "@/components/experience/CompassSection";
+import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
+import ChampionMatchCarousel from "@/components/experience/ChampionMatchCarousel";
+import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine } from "@/lib/sessionRecommendationLine";
 import { deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
@@ -995,7 +996,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
   const complete = pct === 100;
 
   return (
-    <a href="/enroll?mode=edit" className={`compass-signal-card compass-signal-card--clickable${complete ? " compass-signal-card--complete" : ""}`}>
+    <a href="/txc/enroll?mode=edit" className={`compass-signal-card compass-signal-card--clickable${complete ? " compass-signal-card--complete" : ""}`}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "12px", marginBottom: "7px" }}>
         <p className="compass-signal-kicker">Compass Signal</p>
         <span className={`compass-signal-pct${complete ? " compass-signal-pct--complete" : ""}`}>
@@ -1036,7 +1037,7 @@ function CompassSignalCompact({ participant }: { participant: RawDoc }) {
 // "What You Told Compass" — full profile summary card (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
+function WhatYouToldCompass({ participant, embedded = false }: { participant: RawDoc; embedded?: boolean }) {
   const sig    = (participant.event_signal_profile as RawDoc) ?? {};
   const intent = (sig.intent as RawDoc) ?? {};
   const ni     = (participant.networking_identity as Record<string, boolean>) ?? {};
@@ -1078,7 +1079,7 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
   if (!hasContent) return null;
 
   return (
-    <section className="section">
+    <section className={embedded ? "compass-module-block" : "section"}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
         <div>
           <div className="section-kicker">What you told Compass</div>
@@ -1089,7 +1090,7 @@ function WhatYouToldCompass({ participant }: { participant: RawDoc }) {
             Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities.
           </p>
         </div>
-        <a href="/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
+        <a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
       </div>
 
       {identityItems.length > 0 && (
@@ -1153,15 +1154,27 @@ function DayTabExperience({
   funList,
   sched,
   certLabel,
+  embedded = false,
 }: {
   learningList:  ScoredSession[];
   communityList: ScoredSession[];
   funList:       ScoredSession[];
   sched?: ExpScheduleState;
   certLabel?: string | null;
+  embedded?: boolean;
 }) {
   const [activeDay, setActiveDay] = useState<EventDay>("Monday");
   const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
+  const [mobileDays, setMobileDays] = useState(false);
+  const [expandedDay, setExpandedDay] = useState<EventDay | null>("Monday");
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const apply = () => setMobileDays(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   const dayLearning  = getSessionsForDay(learningList,  activeDay, planMode).slice(0, 3);
   const dayCommunity = getSessionsForDay(communityList, activeDay, planMode).slice(0, 3);
@@ -1169,8 +1182,10 @@ function DayTabExperience({
 
   const hasContent = dayLearning.length > 0 || dayCommunity.length > 0 || dayFun.length > 0;
 
+  const sectionClass = embedded ? "compass-module-block" : "section";
+
   return (
-    <section className="section">
+    <section className={sectionClass}>
       <div className="section-head">
         <div>
           <div className="section-kicker">Your AI-powered week</div>
@@ -1200,7 +1215,7 @@ function DayTabExperience({
         ))}
       </div>
 
-      <div role="tablist" aria-label="Event days" className="day-tab-list">
+      <div role="tablist" aria-label="Event days" className={`day-tab-list${mobileDays ? " day-tab-list--mobile-hidden" : ""}`}>
         {EVENT_DAYS.map(function(day) { return (
           <button
             key={day}
@@ -1214,25 +1229,82 @@ function DayTabExperience({
         ); })}
       </div>
 
-      {!hasContent ? (
-        <p style={{ color: "var(--muted)", padding: "24px 0" }}>
-          No sessions scheduled for {activeDay} yet. Check back as the catalog updates.
-        </p>
-      ) : (
-        <div style={{ display: "grid", gap: "36px" }}>
-          {dayLearning.length > 0 && (
-            <PillarSection pillar="Learning" sessions={dayLearning} limit={3} sched={sched} certLabel={certLabel} />
-          )}
-          {dayCommunity.length > 0 && (
-            <PillarSection pillar="Community" sessions={dayCommunity} limit={3} sched={sched} certLabel={certLabel} />
-          )}
-          {dayFun.length > 0 && (
-            <PillarSection pillar="Fun" sessions={dayFun} limit={3} sched={sched} certLabel={certLabel} />
-          )}
+      {mobileDays && (
+        <div className="day-accordion" aria-label="Event days">
+          {EVENT_DAYS.map(day => {
+            const dayHas =
+              getSessionsForDay(learningList, day, planMode).length > 0 ||
+              getSessionsForDay(communityList, day, planMode).length > 0 ||
+              getSessionsForDay(funList, day, planMode).length > 0;
+            const isOpen = expandedDay === day;
+            return (
+              <div key={day} className="day-accordion-item">
+                <button
+                  type="button"
+                  className="day-accordion-trigger"
+                  aria-expanded={isOpen}
+                  onClick={() => {
+                    setExpandedDay(prev => (prev === day ? null : day));
+                    setActiveDay(day);
+                  }}
+                >
+                  <span>{isOpen ? "▼" : "▶"}</span>
+                  {day}
+                  {!dayHas && <span className="day-accordion-muted">No sessions yet</span>}
+                </button>
+                {isOpen && (
+                  <div className="day-accordion-panel">
+                    {renderDayContent(day)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {!mobileDays && (
+        !hasContent ? (
+          <p style={{ color: "var(--muted)", padding: "24px 0" }}>
+            No sessions scheduled for {activeDay} yet. Check back as the catalog updates.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gap: "36px" }}>
+            {dayLearning.length > 0 && (
+              <PillarSection pillar="Learning" sessions={dayLearning} limit={3} sched={sched} certLabel={certLabel} />
+            )}
+            {dayCommunity.length > 0 && (
+              <PillarSection pillar="Community" sessions={dayCommunity} limit={3} sched={sched} certLabel={certLabel} />
+            )}
+            {dayFun.length > 0 && (
+              <PillarSection pillar="Fun" sessions={dayFun} limit={3} sched={sched} certLabel={certLabel} />
+            )}
+          </div>
+        )
       )}
     </section>
   );
+
+  function renderDayContent(day: EventDay) {
+    const learn = getSessionsForDay(learningList, day, planMode).slice(0, 3);
+    const comm = getSessionsForDay(communityList, day, planMode).slice(0, 3);
+    const fun = getSessionsForDay(funList, day, planMode).slice(0, 3);
+    const empty = learn.length === 0 && comm.length === 0 && fun.length === 0;
+    if (empty) {
+      return (
+        <p style={{ color: "var(--muted)", padding: "12px 0" }}>
+          No sessions scheduled for {day} yet.
+        </p>
+      );
+    }
+    return (
+      <div style={{ display: "grid", gap: "24px" }}>
+        {learn.length > 0 && <PillarSection pillar="Learning" sessions={learn} limit={3} sched={sched} certLabel={certLabel} />}
+        {comm.length > 0 && <PillarSection pillar="Community" sessions={comm} limit={3} sched={sched} certLabel={certLabel} />}
+        {fun.length > 0 && <PillarSection pillar="Fun" sessions={fun} limit={3} sched={sched} certLabel={certLabel} />}
+      </div>
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1262,6 +1334,17 @@ export default function ExperiencePage() {
   const [errorMsg,     setErrorMsg]     = useState("");
   const { user, loading: authLoading } = useAuth();
   const participantId = user?.uid ?? "";
+  const {
+    prefs,
+    hydrated,
+    isMobile,
+    customizeOpen,
+    setCustomizeOpen,
+    toggleSection,
+    setModuleVisible,
+    isModuleVisible,
+    isSectionExpanded,
+  } = useCompassUiPreferences();
 
   // ── Persist helper ─────────────────────────────────────────────────────────
 
@@ -1556,273 +1639,327 @@ export default function ExperiencePage() {
     .map(id => allSessions.find(s => s.id === id))
     .filter((s): s is ScoredSession => !!s && !isCertificationActivityType(s));
 
+  const sharedMomentItems = isMobile ? HIGHLIGHT_DATA.slice(0, 1) : HIGHLIGHT_DATA;
+  const recommendedSessions = learningList.slice(0, 3);
+
   return (
     <>
-      {/* ── Hero: profile + sidebar (balance + signal) ─────────────────── */}
-      <section className="section no-top-border">
-        <div className="section-kicker">My Compass</div>
-        <div className="experience-hero-title-row">
-          <div className="experience-hero-copy">
-            <h1 className="experience-hero-title">{displayName}</h1>
-            <p className="experience-hero-tagline">Your personalized event.</p>
-            {(jobTitle || company) && (
-              <p style={{ color: "var(--muted)", margin: "0 0 20px", fontSize: "1.05rem" }}>
-                {[jobTitle, company].filter(Boolean).join(" · ")}
-              </p>
-            )}
-            {(tracks.length > 0 || goals.length > 0) && (() => {
-              const all  = [...tracks, ...goals];
-              const show = all.slice(0, 8);
-              const rest = all.length - show.length;
-              return (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "720px" }}>
-                  {show.map((item) => (
-                    <span
-                      key={item}
-                      style={{
-                        display: "inline-flex", alignItems: "center",
-                        height: "24px", padding: "0 9px",
-                        border: "1px solid var(--line)", background: "var(--panel)",
-                        color: "var(--muted)", fontSize: "0.74rem",
-                        fontWeight: 500, lineHeight: 1, whiteSpace: "nowrap",
-                      }}
-                    >
-                      {item}
-                    </span>
-                  ))}
-                  {rest > 0 && (
-                    <span style={{
-                      display: "inline-flex", alignItems: "center",
-                      height: "24px", padding: "0 9px",
-                      color: "var(--muted)", fontSize: "0.74rem",
-                      fontWeight: 500, lineHeight: 1,
-                    }}>
-                      +{rest} more signals
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-          </div>
+      <CustomizeCompassPanel
+        open={customizeOpen}
+        prefs={prefs}
+        onClose={() => setCustomizeOpen(false)}
+        onModuleChange={setModuleVisible}
+      />
 
-          <aside className="experience-hero-sidebar" aria-label="Compass summary">
-            <WeekInBalance
-              learning={learningList.length}
-              community={communityList.length}
-              fun={funList.length}
-            />
-            <CompassSignalCompact participant={participant} />
-          </aside>
+      <section className="section no-top-border experience-hero-compact">
+        <div className="experience-hero-toolbar">
+          <div className="section-kicker">My Compass</div>
+          <button
+            type="button"
+            className="compass-customize-trigger"
+            onClick={() => setCustomizeOpen(true)}
+            aria-label="Customize My Compass"
+          >
+            ⚙ Customize
+          </button>
+        </div>
+        <div className="experience-hero-copy">
+          <h1 className="experience-hero-title">{displayName}</h1>
+          <p className="experience-hero-tagline">Your personalized event.</p>
+          {(jobTitle || company) && (
+            <p className="experience-hero-role">
+              {[jobTitle, company].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {(tracks.length > 0 || goals.length > 0) && (() => {
+            const all  = [...tracks, ...goals];
+            const show = all.slice(0, 6);
+            const rest = all.length - show.length;
+            return (
+              <div className="experience-hero-chips">
+                {show.map(item => (
+                  <span key={item} className="experience-hero-chip">{item}</span>
+                ))}
+                {rest > 0 && <span className="experience-hero-chip experience-hero-chip--muted">+{rest} more</span>}
+              </div>
+            );
+          })()}
         </div>
       </section>
 
-      {/* ── Voice Compass ──────────────────────────────────────────────── */}
-      <section className="section">
-        <VoiceCompassButton
-          variant="companion"
-          nextBestMove={
-            nextBestMove
-              ? {
-                  type:     "session",
-                  headline: nextBestMove.title,
-                  subline:  sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-                  reason:   nextBestMove.compass_reasons[0] ?? "Top Compass match",
-                  score:    nextBestMove.compass_score,
-                  entityId: nextBestMove.id,
+      <div className="compass-sections-stack">
+        {/* TODAY */}
+        <CompassSection
+          id="today"
+          expanded={hydrated && isSectionExpanded("today")}
+          onToggle={() => toggleSection("today")}
+        >
+          {isModuleVisible("ask_compass") && (
+            <div className="compass-module-block">
+              <VoiceCompassButton
+                variant="companion"
+                nextBestMove={
+                  nextBestMove
+                    ? {
+                        type: "session",
+                        headline: nextBestMove.title,
+                        subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
+                        reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
+                        score: nextBestMove.compass_score,
+                        entityId: nextBestMove.id,
+                      }
+                    : null
                 }
-              : null
-          }
-          topSession={nextBestMove ?? rankedSessionsForVoice[0] ?? null}
-          topChampion={champions[0] ?? null}
-          rankedSessions={rankedSessionsForVoice}
-          participantGoals={pGoals}
-          participantTracks={pTracks}
-          isEnrolled
-        />
-      </section>
-
-      {/* ── Live Opportunities ─────────────────────────────────────────── */}
-      <section className="section live-opportunities-section">
-        <LiveOpportunities
-          participantGoals={pGoals}
-          participantTracks={pTracks}
-          userDisplayName={displayName}
-          userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
-        />
-      </section>
-
-      <CertificationJourney
-        visible={showCertJourney}
-        certifications={selectedCertifications}
-        onRemove={handleRemoveCertificationGoal}
-      />
-
-      {/* ── Next Best Move — primary intelligence surface ──────────────── */}
-      {nextBestMove && (
-        <section className="section intelligence-surface intelligence-surface--prominent">
-          <div className="section-head narrow">
-            <div>
-              <div className="section-kicker">Next best move</div>
-              <h2>The one session to act on now.</h2>
+                topSession={nextBestMove ?? rankedSessionsForVoice[0] ?? null}
+                topChampion={champions[0] ?? null}
+                rankedSessions={rankedSessionsForVoice}
+                participantGoals={pGoals}
+                participantTracks={pTracks}
+                isEnrolled
+              />
             </div>
-            <p>
-              Compass picked your strongest remaining match — schedule it, then
-              explore Community, Learning, and Fun below.
-            </p>
-          </div>
-          <NextBestMoveCard
-            nextBestMove={{
-              type:     "session",
-              headline: nextBestMove.title,
-              subline:  sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
-              reason:   nextBestMove.compass_reasons[0] ?? "Top Compass match",
-              score:    nextBestMove.compass_score,
-              entityId: nextBestMove.id,
-            }}
-          />
-        </section>
-      )}
+          )}
 
-      <WhatYouToldCompass participant={participant} />
-
-      {/* ── AI-powered week plan ───────────────────────────────────────── */}
-      <DayTabExperience
-        learningList={learningList}
-        communityList={communityList}
-        funList={funList}
-        sched={schedState}
-        certLabel={certLabel}
-      />
-
-      {/* ── People Compass Recommends ──────────────────────────────────── */}
-      {champions.length > 0 && (
-        <section className="section intelligence-band">
-          <div className="section-head narrow">
-            <div>
-              <div className="section-kicker">People intelligence</div>
-              <h2>Champions matched to your profile.</h2>
-            </div>
-            <p>
-              Scored against your keywords, tracks, and goals — every match reason
-              is shown on the card.
-            </p>
-          </div>
-          <div className="champion-grid three-champions">
-            {champions.map(function(c) { return <ChampionCard key={c.id} champion={c} pState={expPeopleState} />; })}
-          </div>
-        </section>
-      )}
-
-      <ConnectionSignals
-        savedPeople={savedPersonSignals}
-        isLoggedIn={!!user}
-        onShowDetails={handleDetailsPerson}
-      />
-
-      {/* ── My Schedule ───────────────────────────────────────────────── */}
-      {myScheduleSessions.length > 0 && (
-        <section className="section">
-          <div className="section-head narrow">
-            <div>
-              <div className="section-kicker">My Schedule</div>
-              <h2>{myScheduleSessions.length} session{myScheduleSessions.length !== 1 ? "s" : ""} saved.</h2>
-            </div>
-            <p>Sessions you&apos;ve added to your schedule. Remove any time.</p>
-          </div>
-          <div style={{ display: "grid", gap: "1px", background: "var(--line)" }}>
-            {myScheduleSessions.map(s => {
-              const type  = sessionTypeLabel(s);
-              const track = s.tracks?.primary_track ?? "";
-              const meta  = sessionMeta(s);
-              return (
-                <div key={s.id} style={{
-                  background: "var(--panel)", padding: "14px 18px",
-                  display: "flex", alignItems: "flex-start",
-                  justifyContent: "space-between", gap: "16px",
-                }}>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <p style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 680,
-                      textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 3px" }}>
-                      {type}{track ? " · " + track : ""}
-                    </p>
-                    <p style={{ fontSize: "0.95rem", fontWeight: 550, color: "var(--text)",
-                      margin: "0 0 3px", lineHeight: 1.3 }}>
-                      {s.title}
-                    </p>
-                    {meta && (
-                      <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
-                        {meta}{s.compass_score > 0 ? " · Match " + s.compass_score : ""}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSession(s.id)}
-                    style={{
-                      display: "inline-flex", alignItems: "center",
-                      height: "24px", padding: "0 9px", flexShrink: 0,
-                      border: "1px solid var(--line)", background: "transparent",
-                      color: "var(--muted)", fontSize: "0.70rem", fontWeight: 500,
-                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-                    }}
-                  >
-                    Remove
-                  </button>
+          {isModuleVisible("next_best_move") && nextBestMove && (
+            <div className="compass-module-block intelligence-surface intelligence-surface--prominent">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">Next best move</div>
+                  <h2>The one session to act on now.</h2>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+              </div>
+              <NextBestMoveCard
+                nextBestMove={{
+                  type: "session",
+                  headline: nextBestMove.title,
+                  subline: sessionTypeLabel(nextBestMove) + " · " + sessionMeta(nextBestMove),
+                  reason: nextBestMove.compass_reasons[0] ?? "Top Compass match",
+                  score: nextBestMove.compass_score,
+                  entityId: nextBestMove.id,
+                }}
+              />
+            </div>
+          )}
 
-      {/* ── Event Highlights ─────────────────────────────────────────── */}
-      <section className="section">
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
-          <div>
-            <div className="section-kicker">Event highlights</div>
-            <h2 style={{ fontSize: "clamp(1.6rem,2.8vw,2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-              Shared moments not to miss.
-            </h2>
-          </div>
-          <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "360px", margin: 0, lineHeight: 1.5 }}>
-            Anchor experiences of TechXchange 2026 — separate from your personalized plan.
-          </p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
-          {HIGHLIGHT_DATA.map(function(h) { return <HighlightActionCard key={h.id} h={h} />; })}
-        </div>
-      </section>
+          {isModuleVisible("conversations") && (
+            <div className="compass-module-block live-opportunities-section">
+              <LiveOpportunities
+                participantGoals={pGoals}
+                participantTracks={pTracks}
+                userDisplayName={displayName}
+                userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
+                visibleLimit={4}
+              />
+            </div>
+          )}
 
-      {/* ── IBM TechXchange Advantage ──────────────────────────────────── */}
-      <section className="section">
-        <TechXchangeBanner />
-      </section>
+          {isModuleVisible("shared_moments") && (
+            <div className="compass-module-block">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">Shared moments</div>
+                  <h2>Not to miss.</h2>
+                </div>
+              </div>
+              <div className="compass-highlight-grid">
+                {sharedMomentItems.map(h => <HighlightActionCard key={h.id} h={h} />)}
+              </div>
+              {isMobile && HIGHLIGHT_DATA.length > 1 && (
+                <p className="compass-module-note">
+                  Expand Community below for more anchor moments.
+                </p>
+              )}
+            </div>
+          )}
+        </CompassSection>
 
-      {/* ── Export + TV ────────────────────────────────────────────────── */}
-      <section className="section">
-        <div className="experience-export-grid">
-          <ExportPanel participantId={participantId} sessions={allSessions} />
-          <TechXchangeTV />
-        </div>
-      </section>
+        {/* MY GOALS */}
+        <CompassSection
+          id="goals"
+          expanded={hydrated && isSectionExpanded("goals")}
+          onToggle={() => toggleSection("goals")}
+        >
+          {isModuleVisible("certification_journey") && (
+            <CertificationJourney
+              visible={showCertJourney}
+              certifications={selectedCertifications}
+              onRemove={handleRemoveCertificationGoal}
+              embedded
+            />
+          )}
 
-      <WhyCompassRecommendedWeek signals={trustSignals} />
+          {isModuleVisible("four_day_plan") && (
+            <DayTabExperience
+              learningList={learningList}
+              communityList={communityList}
+              funList={funList}
+              sched={schedState}
+              certLabel={certLabel}
+              embedded
+            />
+          )}
 
-      {/* ── Community Voices ───────────────────────────────────────────── */}
-      <section className="section">
-        <CommunityVoices champions={featuredChampions} />
-      </section>
+          {isModuleVisible("recommended_sessions") && recommendedSessions.length > 0 && (
+            <div className="compass-module-block">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">Recommended</div>
+                  <h2>Sessions matched to your goals.</h2>
+                </div>
+              </div>
+              <div className="opportunity-grid compass-single-column">
+                {recommendedSessions.map(s => (
+                  <SessionCard key={s.id} session={s} sched={schedState} certLabel={certLabel} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* ── Footer CTA ─────────────────────────────────────────────────── */}
+          {isModuleVisible("my_schedule") && myScheduleSessions.length > 0 && (
+            <div className="compass-module-block">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">My schedule</div>
+                  <h2>{myScheduleSessions.length} session{myScheduleSessions.length !== 1 ? "s" : ""} saved.</h2>
+                </div>
+              </div>
+              <div className="compass-schedule-list">
+                {myScheduleSessions.map(s => {
+                  const type = sessionTypeLabel(s);
+                  const track = s.tracks?.primary_track ?? "";
+                  const meta = sessionMeta(s);
+                  return (
+                    <div key={s.id} className="compass-schedule-row">
+                      <div>
+                        <p className="compass-schedule-type">{type}{track ? " · " + track : ""}</p>
+                        <p className="compass-schedule-title">{s.title}</p>
+                        {meta && <p className="compass-schedule-meta">{meta}</p>}
+                      </div>
+                      <button type="button" className="compass-schedule-remove" onClick={() => handleRemoveSession(s.id)}>
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isModuleVisible("export_panel") && (
+            <div className="compass-module-block">
+              <ExportPanel participantId={participantId} sessions={allSessions} />
+            </div>
+          )}
+        </CompassSection>
+
+        {/* MY PEOPLE */}
+        <CompassSection
+          id="people"
+          expanded={hydrated && isSectionExpanded("people")}
+          onToggle={() => toggleSection("people")}
+        >
+          {isModuleVisible("champion_matches") && champions.length > 0 && (
+            <div className="compass-module-block intelligence-band">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">Champion matches</div>
+                  <h2>People worth meeting.</h2>
+                </div>
+              </div>
+              <div className="champion-grid three-champions champion-grid--desktop-only">
+                {champions.map(c => <ChampionCard key={c.id} champion={c} pState={expPeopleState} />)}
+              </div>
+              <ChampionMatchCarousel count={champions.length}>
+                {champions.map(c => <ChampionCard key={c.id} champion={c} pState={expPeopleState} />)}
+              </ChampionMatchCarousel>
+            </div>
+          )}
+
+          {isModuleVisible("connection_signals") && (
+            <ConnectionSignals
+              savedPeople={savedPersonSignals}
+              isLoggedIn={!!user}
+              onShowDetails={handleDetailsPerson}
+              embedded
+            />
+          )}
+        </CompassSection>
+
+        {/* MY PROFILE */}
+        <CompassSection
+          id="profile"
+          expanded={hydrated && isSectionExpanded("profile")}
+          onToggle={() => toggleSection("profile")}
+        >
+          {isModuleVisible("week_balance") && (
+            <div className="compass-module-block">
+              <WeekInBalance
+                learning={learningList.length}
+                community={communityList.length}
+                fun={funList.length}
+              />
+            </div>
+          )}
+
+          {isModuleVisible("compass_signal") && (
+            <div className="compass-module-block">
+              <CompassSignalCompact participant={participant} />
+            </div>
+          )}
+
+          {isModuleVisible("profile_signals") && (
+            <WhatYouToldCompass participant={participant} embedded />
+          )}
+
+          {isModuleVisible("intent_summary") && (
+            <div className="compass-module-block">
+              <WhyCompassRecommendedWeek signals={trustSignals} />
+            </div>
+          )}
+        </CompassSection>
+
+        {/* COMMUNITY */}
+        <CompassSection
+          id="community"
+          expanded={hydrated && isSectionExpanded("community")}
+          onToggle={() => toggleSection("community")}
+        >
+          {isModuleVisible("community_activity") && (
+            <div className="compass-module-block">
+              <CommunityVoices champions={featuredChampions} />
+            </div>
+          )}
+
+          {isModuleVisible("techxchange_tv") && (
+            <div className="compass-module-block">
+              <TechXchangeTV />
+            </div>
+          )}
+
+          {isModuleVisible("live_highlights") && (
+            <div className="compass-module-block">
+              <div className="section-head narrow">
+                <div>
+                  <div className="section-kicker">Live highlights</div>
+                  <h2>Anchor moments this week.</h2>
+                </div>
+              </div>
+              <div className="compass-highlight-grid">
+                {HIGHLIGHT_DATA.map(h => <HighlightActionCard key={h.id} h={h} />)}
+              </div>
+            </div>
+          )}
+        </CompassSection>
+      </div>
+
       <section className="final-band">
         <div>
           <h2>Your Compass is live.</h2>
           <p>
-            Sessions, Champions, and moments are scored in real time.
-            Refine your profile to improve signal quality and sharpen every recommendation.
+            Refine your profile to sharpen every recommendation.
           </p>
         </div>
-        <a href="/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
+        <a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
       </section>
 
       {detailChampion && (
