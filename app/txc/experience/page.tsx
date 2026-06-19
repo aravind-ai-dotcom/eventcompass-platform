@@ -86,6 +86,11 @@ import {
   updateVaultRecordNote,
 } from "@/lib/connectionVault";
 import {
+  addSessionToBothLists,
+  mergeSavedSessionIds,
+  removeSessionFromBothLists,
+} from "@/lib/participantAgenda";
+import {
   buildSpeakerCatalog,
   championFromRaw,
   rankRecommendedExperts,
@@ -1314,16 +1319,18 @@ export default function ExperiencePage() {
       });
       return;
     }
-    const next = savedSessions.includes(id) ? savedSessions : [...savedSessions, id];
-    setSavedSessions(next);
-    persistPrefs({ saved_sessions: next });
-  }, [allSessions, certificationGoals, savedSessions, persistPrefs, activeCertificationId]);
+    const { saved_sessions, saved_schedule } = addSessionToBothLists(savedSessions, savedSchedule, id);
+    setSavedSessions(saved_sessions);
+    setSavedSchedule(saved_schedule);
+    persistPrefs({ saved_sessions, saved_schedule });
+  }, [allSessions, certificationGoals, savedSessions, savedSchedule, persistPrefs, activeCertificationId]);
 
   const handleRemoveSession = useCallback((id: string) => {
-    const next = savedSessions.filter(x => x !== id);
-    setSavedSessions(next);
-    persistPrefs({ saved_sessions: next });
-  }, [savedSessions, persistPrefs]);
+    const { saved_sessions, saved_schedule } = removeSessionFromBothLists(savedSessions, savedSchedule, id);
+    setSavedSessions(saved_sessions);
+    setSavedSchedule(saved_schedule);
+    persistPrefs({ saved_sessions, saved_schedule });
+  }, [savedSessions, savedSchedule, persistPrefs]);
 
   const handleRemoveCertificationGoal = useCallback((id: string) => {
     const nextGoals = certificationGoals.filter(x => x !== id);
@@ -1491,10 +1498,15 @@ export default function ExperiencePage() {
 
   // ── Derived state for action bars ──────────────────────────────────────────
 
+  const mergedSavedSessionIds = useMemo(
+    () => mergeSavedSessionIds(savedSessions, savedSchedule),
+    [savedSessions, savedSchedule],
+  );
+
   const schedState = useMemo<ExpScheduleState>(() => ({
-    savedSessions, hiddenSessions,
+    savedSessions: mergedSavedSessionIds, hiddenSessions,
     onSave: handleSaveSession, onRemove: handleRemoveSession, onHide: handleHideSession,
-  }), [savedSessions, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession]);
+  }), [mergedSavedSessionIds, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession]);
 
   const rankedSessionsForVoice = useMemo(
     () => [...learningList, ...communityList, ...funList]
@@ -1880,7 +1892,7 @@ export default function ExperiencePage() {
   const trustSignals = buildCompassTrustSignals(participant, sig);
 
   // My Schedule — timed sessions only (certifications are learning goals, not calendar blocks)
-  const myScheduleSessions = savedSessions
+  const myScheduleSessions = mergedSavedSessionIds
     .map(id => allSessions.find(s => s.id === id))
     .filter((s): s is ScoredSession => !!s && !isCertificationActivityType(s));
 

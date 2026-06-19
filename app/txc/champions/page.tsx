@@ -20,6 +20,14 @@ import { useAuth } from "@/context/AuthContext";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import { displayFirstName, deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
+import {
+  buildConnectionRecord,
+  mergeSavedPeopleIds,
+  removePersonFromVaultAndSaved,
+  upsertVaultRecord,
+  vaultPersistPayload,
+} from "@/lib/connectionVault";
+import type { ConnectionVaultRecord } from "@/types/connectionVault";
 
 const BASE     = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -327,6 +335,7 @@ export default function ChampionsPage() {
 
   // People action state
   const [savedPeople,        setSavedPeople]        = useState<string[]>([]);
+  const [connectionVault,    setConnectionVault]    = useState<ConnectionVaultRecord[]>([]);
   const [removedPeople,      setRemovedPeople]      = useState<string[]>([]);
   const [doNotSuggestPeople, setDoNotSuggestPeople] = useState<string[]>([]);
   const [pLoading,           setPLoading]           = useState(false);
@@ -379,7 +388,10 @@ export default function ChampionsPage() {
       .then((snap) => {
         if (!snap.exists()) return;
         const d = snap.data() as RawDoc;
-        setSavedPeople(        (d.saved_people         as string[]) ?? []);
+        const vault = (d.connection_vault as ConnectionVaultRecord[]) ?? [];
+        const legacySaved = (d.saved_people as string[]) ?? [];
+        setConnectionVault(vault);
+        setSavedPeople(mergeSavedPeopleIds(vault, legacySaved));
         setRemovedPeople(      (d.removed_people        as string[]) ?? []);
         setDoNotSuggestPeople( (d.do_not_suggest_people as string[]) ?? []);
         const sig = (d.event_signal_profile as RawDoc) ?? {};
@@ -408,20 +420,47 @@ export default function ChampionsPage() {
   // ── People action handlers ─────────────────────────────────────────────────
 
   const handleSave = useCallback((id: string) => {
-    const next = savedPeople.includes(id)
-      ? savedPeople.filter((x) => x !== id)
-      : [...savedPeople, id];
-    setSavedPeople(next);
-    persist({ saved_people: next });
-  }, [savedPeople, persist]);
+    if (savedPeople.includes(id)) {
+      const payload = removePersonFromVaultAndSaved(connectionVault, savedPeople, id);
+      setConnectionVault(payload.connection_vault);
+      setSavedPeople(payload.saved_people);
+      persist(payload);
+      return;
+    }
+    const champ = champions.find(c => c.id === id);
+    if (!champ) return;
+    const record = buildConnectionRecord({
+      person: {
+        id: champ.id,
+        display_name: champ.display_name,
+        title: champ.title,
+        organization: champ.organization,
+        company: champ.company,
+        profile: champ.profile,
+        linkedin_url: champ.linkedin_url,
+        consent: champ.consent,
+        compass_reasons: champ.compass_reasons,
+      },
+      saveReason: "networking",
+      badgeContext: { isChampion: true },
+      profileSignals,
+      mutual: isMutualWithInbound(champ.display_name, champ.id, savedPeople, SAMPLE_INBOUND_SIGNALS),
+    });
+    const nextVault = upsertVaultRecord(connectionVault, record);
+    const payload = vaultPersistPayload(nextVault);
+    setConnectionVault(payload.connection_vault);
+    setSavedPeople(payload.saved_people);
+    persist(payload);
+  }, [savedPeople, connectionVault, champions, profileSignals, persist]);
 
   const handleRemove = useCallback((id: string) => {
-    const nextSaved   = savedPeople.filter((x) => x !== id);
     const nextRemoved = removedPeople.includes(id) ? removedPeople : [...removedPeople, id];
-    setSavedPeople(nextSaved);
+    const payload = removePersonFromVaultAndSaved(connectionVault, savedPeople, id);
+    setConnectionVault(payload.connection_vault);
+    setSavedPeople(payload.saved_people);
     setRemovedPeople(nextRemoved);
-    persist({ saved_people: nextSaved, removed_people: nextRemoved });
-  }, [savedPeople, removedPeople, persist]);
+    persist({ ...payload, removed_people: nextRemoved });
+  }, [savedPeople, connectionVault, removedPeople, persist]);
 
   const handleDns = useCallback((id: string) => {
     const next = doNotSuggestPeople.includes(id) ? doNotSuggestPeople : [...doNotSuggestPeople, id];

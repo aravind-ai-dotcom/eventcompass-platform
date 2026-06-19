@@ -28,6 +28,11 @@ import {
   type SpeakerParticipantContext,
 } from "@/lib/speakerIntelligence";
 import type { SpeakerProfile } from "@/types/speaker";
+import {
+  addSessionToBothLists,
+  mergeSavedSessionIds,
+  removeSessionFromBothLists,
+} from "@/lib/participantAgenda";
 
 const BASE = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -801,6 +806,7 @@ function SessionsPageContent() {
 
   // Schedule state — loaded from Firestore, persisted on every action
   const [savedSchedule, setSavedSchedule] = useState<string[]>([]);
+  const [savedSessions, setSavedSessions] = useState<string[]>([]);
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [removedSessions, setRemovedSessions] = useState<string[]>([]);
   const [doNotSuggest,  setDoNotSuggest]  = useState<string[]>([]);
@@ -878,6 +884,7 @@ function SessionsPageContent() {
 
         if (isLoggedIn) {
           setSavedSchedule((pData.saved_schedule as string[]) ?? []);
+          setSavedSessions((pData.saved_sessions as string[]) ?? []);
           setCertificationGoals((pData.certification_goals as string[]) ?? []);
           setRemovedSessions((pData.removed_sessions as string[]) ?? []);
           setDoNotSuggest((pData.do_not_suggest_sessions as string[]) ?? []);
@@ -970,34 +977,35 @@ function SessionsPageContent() {
   const handleRemoveCertification = useCallback((id: string) => {
     if (!isLoggedIn) return;
     const nextGoals = certificationGoals.filter(x => x !== id);
-    const nextSaved = savedSchedule.filter(x => x !== id);
-    const prevSavedSessions = (participantData.saved_sessions as string[]) ?? [];
-    const nextSavedSessions = prevSavedSessions.filter(x => x !== id);
+    const { saved_sessions, saved_schedule } = removeSessionFromBothLists(savedSessions, savedSchedule, id);
     setCertificationGoals(nextGoals);
-    setSavedSchedule(nextSaved);
-    setParticipantData(prev => ({ ...prev, saved_sessions: nextSavedSessions }));
+    setSavedSessions(saved_sessions);
+    setSavedSchedule(saved_schedule);
+    setParticipantData(prev => ({ ...prev, saved_sessions, saved_schedule }));
     persist({
       certification_goals: nextGoals,
-      saved_schedule: nextSaved,
-      saved_sessions: nextSavedSessions,
+      saved_schedule,
+      saved_sessions,
     });
-  }, [certificationGoals, savedSchedule, participantData, persist, isLoggedIn]);
+  }, [certificationGoals, savedSessions, savedSchedule, persist, isLoggedIn]);
 
   const handleSave = useCallback((id: string) => {
     if (!isLoggedIn) return;
-    const next = savedSchedule.includes(id) ? savedSchedule : [...savedSchedule, id];
-    setSavedSchedule(next);
-    persist({ saved_schedule: next });
-  }, [savedSchedule, persist, isLoggedIn]);
+    const { saved_sessions, saved_schedule } = addSessionToBothLists(savedSessions, savedSchedule, id);
+    setSavedSessions(saved_sessions);
+    setSavedSchedule(saved_schedule);
+    persist({ saved_schedule, saved_sessions });
+  }, [savedSessions, savedSchedule, persist, isLoggedIn]);
 
   const handleRemove = useCallback((id: string) => {
     if (!isLoggedIn) return;
-    const nextSaved   = savedSchedule.filter((x) => x !== id);
+    const { saved_sessions, saved_schedule } = removeSessionFromBothLists(savedSessions, savedSchedule, id);
     const nextRemoved = removedSessions.includes(id) ? removedSessions : [...removedSessions, id];
-    setSavedSchedule(nextSaved);
+    setSavedSessions(saved_sessions);
+    setSavedSchedule(saved_schedule);
     setRemovedSessions(nextRemoved);
-    persist({ saved_schedule: nextSaved, removed_sessions: nextRemoved });
-  }, [savedSchedule, removedSessions, persist, isLoggedIn]);
+    persist({ saved_schedule, saved_sessions, removed_sessions: nextRemoved });
+  }, [savedSessions, savedSchedule, removedSessions, persist, isLoggedIn]);
 
   const handleDoNotSuggest = useCallback((id: string) => {
     if (!isLoggedIn) return;
@@ -1017,8 +1025,13 @@ function SessionsPageContent() {
     setDetailSession(session);
   }, []);
 
+  const mergedSavedSessionIds = useMemo(
+    () => mergeSavedSessionIds(savedSessions, savedSchedule),
+    [savedSessions, savedSchedule],
+  );
+
   const schedState: ScheduleState = useMemo(() => ({
-    savedSchedule,
+    savedSchedule: mergedSavedSessionIds,
     certificationGoals,
     doNotSuggest,
     reservedSeats,
@@ -1031,7 +1044,7 @@ function SessionsPageContent() {
     onDoNotSuggest: handleDoNotSuggest,
     onReserveSeat: handleReserveSeat,
     onShowInfo: handleShowInfo,
-  }), [savedSchedule, certificationGoals, doNotSuggest, reservedSeats, allScored, isLoggedIn, handleSave, handleRemove, handleSaveCertification, handleRemoveCertification, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
+  }), [mergedSavedSessionIds, certificationGoals, doNotSuggest, reservedSeats, allScored, isLoggedIn, handleSave, handleRemove, handleSaveCertification, handleRemoveCertification, handleDoNotSuggest, handleReserveSeat, handleShowInfo]);
 
   // Filter + derive sections
   const { tracks, types, days } = useMemo(() => {

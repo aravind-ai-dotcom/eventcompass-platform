@@ -216,3 +216,44 @@ export function removeVaultRecord(
 ): ConnectionVaultRecord[] {
   return vault.filter(r => r.personId !== personId);
 }
+
+export function mergeSavedPeopleIds(
+  vault: ConnectionVaultRecord[],
+  savedPeople: string[] = [],
+): string[] {
+  const seen = new Set<string>();
+  const merged: string[] = [];
+  for (const id of [...vault.map(r => r.personId), ...savedPeople]) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    merged.push(id);
+  }
+  return merged;
+}
+
+export function upsertVaultRecord(
+  vault: ConnectionVaultRecord[],
+  record: ConnectionVaultRecord,
+): ConnectionVaultRecord[] {
+  return [...vault.filter(r => r.personId !== record.personId), record];
+}
+
+export function vaultPersistPayload(
+  vault: ConnectionVaultRecord[],
+): { connection_vault: ConnectionVaultRecord[]; saved_people: string[] } {
+  const connection_vault = sanitizeConnectionVaultForFirestore(vault);
+  return { connection_vault, saved_people: connection_vault.map(r => r.personId) };
+}
+
+export function removePersonFromVaultAndSaved(
+  vault: ConnectionVaultRecord[],
+  savedPeople: string[],
+  personId: string,
+): { connection_vault: ConnectionVaultRecord[]; saved_people: string[] } {
+  const nextVault = removeVaultRecord(vault, personId);
+  const nextSaved = mergeSavedPeopleIds(nextVault, savedPeople).filter(id => id !== personId);
+  return {
+    connection_vault: sanitizeConnectionVaultForFirestore(nextVault),
+    saved_people: nextSaved,
+  };
+}
