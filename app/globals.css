@@ -6035,7 +6035,7 @@ img { max-width: 100%; display: block; }
   }
   .live-opportunities-start {
     margin-top: 0;
-    align-self: flex-start;
+    align-self: stretch;
   }
 }
 
@@ -6919,6 +6919,10 @@ img { max-width: 100%; display: block; }
     height: auto;
     justify-content: center;
   }
+  .huddle-row-actions .action-chip {
+    min-width: 0;
+    max-width: 100%;
+  }
   .live-opportunities-start {
     width: 100%;
     min-height: 44px;
@@ -7069,6 +7073,33 @@ img { max-width: 100%; display: block; }
     border-radius: 0;
     border-left: none;
     border-right: none;
+  }
+}
+
+/* Narrow mobile stabilization (≤374px, e.g. iPhone SE 320px) */
+@media (max-width: 374px) {
+  .huddle-row {
+    padding: 12px;
+  }
+  .huddle-row-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .huddle-row-actions .action-chip--primary,
+  .huddle-row-actions .action-chip:not(.action-chip--primary) {
+    flex: none;
+    width: 100%;
+  }
+  .start-conversation-modal {
+    padding: 16px 16px 0;
+  }
+  .start-conversation-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .start-conversation-actions .action-chip {
+    width: 100%;
+    justify-content: center;
   }
 }
 
