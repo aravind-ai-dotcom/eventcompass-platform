@@ -1172,7 +1172,20 @@ function DayTabExperience({
                     setActiveDay(day);
                   }}
                 >
-                  <span>{isOpen ? "▼" : "▶"}</span>
+                  <span
+                    className={`compass-section-chevron${isOpen ? " compass-section-chevron--open" : ""}`}
+                    aria-hidden="true"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M6 4.5 10 8l-4 3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.35"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                   {day}
                   {!dayHas && <span className="day-accordion-muted">No sessions yet</span>}
                 </button>

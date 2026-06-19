@@ -6471,13 +6471,28 @@ img { max-width: 100%; display: block; }
   text-align: left;
 }
 .compass-section-header:hover {
-  color: var(--accent);
+  color: var(--text);
 }
 .compass-section-chevron {
-  font-size: 0.7rem;
-  color: var(--muted);
-  width: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.compass-section-chevron svg {
+  display: block;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0.38, 0.9);
+  transform: rotate(0deg);
+}
+.compass-section-chevron--open svg {
+  transform: rotate(90deg);
+}
+.compass-section-header:hover .compass-section-chevron {
+  color: var(--text);
 }
 .compass-section-title {
   flex: 1;

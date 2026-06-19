@@ -14,8 +14,8 @@ Premium home-screen icon for **Add to Home Screen** (iOS Safari) and **Install a
 
 | Property | Value |
 |----------|--------|
-| Background | IBM Blue `#0f62fe` |
-| Mark | White compass, ~56% of canvas width |
+| Background | IBM Blue 70 `#002d9c` |
+| Mark | White compass, ~66% of canvas width |
 | Master | `icons/icon-1024-blue.png` |
 | Alternate | `icons/icon-1024-dark.png` (`#161616` background) |
 
@@ -47,7 +47,7 @@ python3 scripts/generate-app-icons.py
 - Manifest: `public/manifest.webmanifest`
 - `start_url`: `/txc`
 - Home screen title: **Compass**
-- `theme_color`: `#0f62fe`
+- `theme_color`: `#002d9c`
 
 ## Design principles (Carbon-aligned)
 

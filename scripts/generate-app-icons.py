@@ -7,8 +7,10 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "public"
 ICONS = ROOT / "icons"
-IBM_BLUE = (15, 98, 254)
+IBM_BLUE = (0, 45, 156)  # IBM Blue 70 — deeper, more premium than #0f62fe
 IBM_DARK = (22, 22, 22)
+MARK_SCALE = 0.66
+MASKABLE_SCALE = 0.48
 
 
 def mark_from_black_png(path: Path) -> Image.Image:
@@ -39,8 +41,8 @@ def main() -> None:
     ICONS.mkdir(exist_ok=True)
     mark = mark_from_black_png(ROOT / "compass-mark-black.png")
 
-    blue_master = compose_icon(mark, IBM_BLUE, 1024, 0.56)
-    dark_master = compose_icon(mark, IBM_DARK, 1024, 0.56)
+    blue_master = compose_icon(mark, IBM_BLUE, 1024, MARK_SCALE)
+    dark_master = compose_icon(mark, IBM_DARK, 1024, MARK_SCALE)
     blue_master.save(ICONS / "icon-1024-blue.png", optimize=True)
     dark_master.save(ICONS / "icon-1024-dark.png", optimize=True)
 
@@ -50,7 +52,7 @@ def main() -> None:
 
     primary.resize((180, 180), Image.Resampling.LANCZOS).save(ROOT / "apple-touch-icon.png", optimize=True)
     primary.resize((32, 32), Image.Resampling.LANCZOS).save(ROOT / "favicon.png", optimize=True)
-    compose_icon(mark, IBM_BLUE, 512, 0.42).save(ICONS / "icon-512-maskable.png", optimize=True)
+    compose_icon(mark, IBM_BLUE, 512, MASKABLE_SCALE).save(ICONS / "icon-512-maskable.png", optimize=True)
 
     print("Icons written to", ICONS)
 

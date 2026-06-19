@@ -27,8 +27,19 @@ export default function CompassSection({
         aria-expanded={expanded}
         aria-controls={`compass-section-${id}`}
       >
-        <span className="compass-section-chevron" aria-hidden="true">
-          {expanded ? "▼" : "▶"}
+        <span
+          className={`compass-section-chevron${expanded ? " compass-section-chevron--open" : ""}`}
+          aria-hidden="true"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M6 4.5 10 8l-4 3.5"
+              stroke="currentColor"
+              strokeWidth="1.35"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </span>
         <span className="compass-section-title">{label}</span>
       </button>
