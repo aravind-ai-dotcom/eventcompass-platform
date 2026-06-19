@@ -13,7 +13,7 @@
 // =============================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -314,6 +314,11 @@ export default function ChampionsPage() {
 
   // Load champions
   useEffect(() => {
+    const db = tryGetDb();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     getDocs(collection(db, BASE + "/champions"))
       .then((snap) => {
         const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Champion));
@@ -326,6 +331,8 @@ export default function ChampionsPage() {
   // Load people action state when user is logged in
   useEffect(() => {
     if (!user?.uid) return;
+    const db = tryGetDb();
+    if (!db) return;
     setPLoading(true);
     getDoc(doc(db, BASE + "/participants/" + user.uid))
       .then((snap) => {
@@ -351,7 +358,8 @@ export default function ChampionsPage() {
   // ── Persist helper ─────────────────────────────────────────────────────────
 
   const persist = useCallback(async (updates: Record<string, unknown>) => {
-    if (!user?.uid) return;
+    const db = tryGetDb();
+    if (!user?.uid || !db) return;
     try { await setDoc(doc(db, BASE + "/participants/" + user.uid), updates, { merge: true }); }
     catch (e) { console.error("[ChampionAction] persist failed:", e); }
   }, [user?.uid]);

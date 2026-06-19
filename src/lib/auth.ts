@@ -9,7 +9,6 @@ import {
   reauthenticateWithCredential,
   updateEmail,
   updatePassword,
-  type AuthError,
 } from "firebase/auth";
 
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -133,16 +132,18 @@ export async function ensureUserProfile(profile: UserProfile): Promise<UserProfi
 }
 
 export function friendlyAuthError(error: unknown): string {
-  const code =
-    typeof error === "string"
-      ? error
-      : (error as AuthError | { code?: string } | undefined)?.code ?? "";
+  const code = extractAuthErrorCode(error);
+  const message =
+    error && typeof error === "object" && typeof (error as { message?: string }).message === "string"
+      ? (error as { message: string }).message
+      : "";
 
   switch (code) {
     case "auth/invalid-email":
       return "Please enter a valid email address.";
     case "auth/user-not-found":
     case "auth/invalid-credential":
+    case "auth/invalid-login-credentials":
       return "Email or password is not correct.";
     case "auth/wrong-password":
       return "Password is not correct.";
@@ -156,10 +157,39 @@ export function friendlyAuthError(error: unknown): string {
       return "Sign-in was cancelled.";
     case "auth/operation-not-allowed":
       return "This sign-in method is not enabled yet.";
+    case "auth/network-request-failed":
+      return "Network error. Check your connection and try again.";
+    case "auth/invalid-api-key":
+    case "auth/config-not-found":
+      return "Firebase is not configured correctly. Check NEXT_PUBLIC_FIREBASE_* in .env.local.";
     default:
-      console.error("Firebase auth error:", error);
-      return `Auth error: ${code || "unknown"}`;
+      if (code) console.error("Firebase auth error:", code, message || error);
+      else console.error("Firebase auth error:", error);
+      return message.replace(/^Firebase:\s*/i, "").trim()
+        || (code ? `Auth error: ${code}` : "Sign-in failed. Please try again.");
   }
+}
+
+function extractAuthErrorCode(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object") return "";
+
+  const e = error as { code?: string; message?: string };
+  if (typeof e.code === "string" && e.code.length > 0) return e.code;
+
+  if (typeof e.message === "string") {
+    const match = e.message.match(/\((auth\/[^)]+)\)/);
+    if (match?.[1]) return match[1];
+  }
+
+  return "";
+}
+
+function requireAuth() {
+  if (!auth) {
+    throw Object.assign(new Error("Firebase Auth is not configured."), { code: "auth/config-not-found" });
+  }
+  return auth;
 }
 
 export async function signUpWithEmail(input: {
@@ -258,7 +288,7 @@ export async function sendPasswordReset(email: string): Promise<void> {
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  return signInWithEmailAndPassword(auth, email, password);
+  return signInWithEmailAndPassword(requireAuth(), email, password);
 }
 
 export async function logOut(): Promise<void> {

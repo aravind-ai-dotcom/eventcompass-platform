@@ -120,7 +120,7 @@ export default function SignupForm({ onSuccess, onSwitchToLogin }: Props) {
     persona,
 });      onSuccess();
     } catch (err: unknown) {
-      setGlobalError(friendlyAuthError((err as { code?: string }).code ?? ""));
+      setGlobalError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }

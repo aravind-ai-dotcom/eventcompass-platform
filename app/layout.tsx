@@ -34,14 +34,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var t=localStorage.getItem('compass_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();",
-          }}
-        />
-      </head>
       <body
         className={`${ibmPlexSans.variable} ${ibmPlexMono.variable}`}
         style={{

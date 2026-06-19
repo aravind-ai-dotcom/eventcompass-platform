@@ -1,9 +1,12 @@
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 
 const BASE = "organizations/ibm/events/txc2026";
 
 export async function getFeaturedChampions() {
+  const db = tryGetDb();
+  if (!db) return [];
+
   const championsRef = collection(db, `${BASE}/champions`);
   const q = query(championsRef, where("featured", "==", true));
   const snapshot = await getDocs(q);

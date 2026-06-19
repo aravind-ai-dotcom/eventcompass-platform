@@ -20,7 +20,7 @@ import {
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { doc, getDoc }                   from "firebase/firestore";
-import { auth, db }                      from "@/lib/firebase";
+import { auth, tryGetDb, firebaseConfigured } from "@/lib/firebase";
 import { getUserProfile, type UserProfile } from "@/lib/auth";
 
 const EVENT_BASE = "organizations/ibm/events/txc2026";
@@ -60,6 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profileLoading, setProfileLoading] = useState(false);
 
   async function loadProfile(u: User) {
+    const db = tryGetDb();
+    if (!db) {
+      setProfile(null);
+      setEnrolled(false);
+      setProfileLoading(false);
+      return;
+    }
     setProfileLoading(true);
     try {
       const [p, partSnap] = await Promise.all([
@@ -88,6 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (!firebaseConfigured) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {

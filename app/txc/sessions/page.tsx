@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -854,6 +854,12 @@ function SessionsPageContent() {
     if (authLoading) return;
 
     async function load() {
+      const db = tryGetDb();
+      if (!db) {
+        setErrorMsg("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local.");
+        setStatus("error");
+        return;
+      }
       try {
         const [pSnap, sessSnap, champSnap] = await Promise.all([
           isLoggedIn
@@ -921,6 +927,8 @@ function SessionsPageContent() {
     reserved_seats?: string[];
   }) => {
     if (!isLoggedIn || !participantId) return;
+    const db = tryGetDb();
+    if (!db) return;
     try {
       await setDoc(doc(db, `${BASE}/participants/${participantId}`), updates, { merge: true });
     } catch (e) {

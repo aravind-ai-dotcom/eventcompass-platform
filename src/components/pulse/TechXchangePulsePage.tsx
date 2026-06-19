@@ -3,7 +3,7 @@
 // SKO sellers use /pulse (SkoPulseView).
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -94,6 +94,11 @@ export default function TechXchangePulsePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const db = tryGetDb();
+    if (!db) {
+      setLoading(false);
+      return;
+    }
     getDocs(collection(db, `${BASE}/participants`))
       .then(snap => {
         let audienceTotal = 0;

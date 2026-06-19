@@ -22,7 +22,7 @@ import { useRouter }                    from "next/navigation";
 import Link                             from "next/link";
 import AuthPanel                        from "@/components/auth/AuthPanel";
 import { useAuth }                      from "@/context/AuthContext";
-import { db }                           from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
 
@@ -366,6 +366,11 @@ export default function EnrollPage() {
     prefillDone.current = true;
 
     async function prefill() {
+      const db = tryGetDb();
+      if (!db) {
+        setPrefilling(false);
+        return;
+      }
       setPrefilling(true);
       try {
         const [partSnap, userSnap] = await Promise.all([
@@ -518,6 +523,11 @@ export default function EnrollPage() {
   async function handleSave() {
     const uid = user?.uid;
     if (!uid || !canSubmit || saving) return;
+    const db = tryGetDb();
+    if (!db) {
+      setSaveErr("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local.");
+      return;
+    }
     setSaveErr(""); setSaving(true);
 
     try {

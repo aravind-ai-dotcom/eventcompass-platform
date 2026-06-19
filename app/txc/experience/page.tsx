@@ -23,7 +23,7 @@
 // =============================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
@@ -1279,6 +1279,8 @@ export default function ExperiencePage() {
 
   const persistPrefs = useCallback(async (updates: Record<string, unknown>) => {
     if (!participantId) return;
+    const db = tryGetDb();
+    if (!db) return;
     try { await setDoc(doc(db, BASE + "/participants/" + participantId), updates, { merge: true }); }
     catch (e) { console.error("[ExperienceAction] persist:", e); }
   }, [participantId]);
@@ -1672,6 +1674,12 @@ export default function ExperiencePage() {
 
   useEffect(() => {
     async function load() {
+      const db = tryGetDb();
+      if (!db) {
+        setErrorMsg("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local.");
+        setStatus("error");
+        return;
+      }
       try {
         const [pSnap, sessSnap, partSnap, champSnap] = await Promise.all([
           getDoc(doc(db, BASE + "/participants/" + participantId)),

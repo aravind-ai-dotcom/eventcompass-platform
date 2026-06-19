@@ -25,9 +25,7 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
       await signInWithIBM();
       onSuccess?.(false);
     } catch (err: unknown) {
-      const code = (err as { code?: string }).code ?? "";
-      const msg  = friendlyAuthError(code);
-      onError?.(msg);
+      onError?.(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }

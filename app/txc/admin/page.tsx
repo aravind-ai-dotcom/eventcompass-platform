@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, CSSProperties } from "react";
-import { db } from "@/lib/firebase";
+import { tryGetDb } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import {
@@ -19,6 +19,7 @@ import {
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
 import { VoiceIntelligenceAdminView } from "@/components/admin/VoiceIntelligenceAdminView";
+import { VoicePronunciationAdminView } from "@/components/admin/VoicePronunciationAdminView";
 import { RecommendationBalanceAdminView } from "@/components/admin/RecommendationBalanceAdminView";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ function hasSession()     { return typeof window !== "undefined" && sessionStora
 type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
-  | "credits"   | "voice"       | "voice-intelligence" | "recommendation-balance" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
+  | "credits"   | "voice"       | "voice-pronunciation" | "voice-intelligence" | "recommendation-balance" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
   | "participants" | "sessions-table" | "quality"
   | "health" | "command" | "champion-intel" | "consent-intel"
   | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
@@ -75,6 +76,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "content", label: "Content"       },
       { id: "voice",   label: "Voice"         },
+      { id: "voice-pronunciation", label: "Pronunciation" },
       { id: "voice-intelligence", label: "Voice Intelligence" },
       { id: "recommendation-balance", label: "Recommendation Balance" },
       { id: "credits", label: "Credits"       },
@@ -514,6 +516,25 @@ interface DataQuality {
   duplicateSessionTitles: number;
 }
 
+type AttendancePlan = "yes" | "deciding" | "no" | "unknown";
+
+interface AttendancePlanCounts {
+  yes: number;
+  deciding: number;
+  no: number;
+  unknown: number;
+}
+
+interface AttendancePlanTimeBucket {
+  weekLabel: string;
+  weekStart: number;
+  cumulative: AttendancePlanCounts;
+  pctYes: number;
+  pctDeciding: number;
+  pctNo: number;
+  brandEngagementOnlyPct: number;
+}
+
 interface AdminData {
   loading: boolean;
   error: string | null;
@@ -521,6 +542,8 @@ interface AdminData {
   // Participants
   totalParticipants: number;
   compassBuilt: number;
+  attendancePlanCounts: AttendancePlanCounts;
+  attendancePlanOverTime: AttendancePlanTimeBucket[];
   consentCounts: ConsentCounts;
   personaCounts: Record<string, number>;
   roleCounts: Record<string, number>;
@@ -589,12 +612,95 @@ function emptyData(): AdminData {
     championsByTrack: {},
     lowEngagementRows: [], highEngagementRows: [],
     topGoals: [], topNeeds: [], topCareerInterests: [],
+    attendancePlanCounts: { yes: 0, deciding: 0, no: 0, unknown: 0 },
+    attendancePlanOverTime: [],
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Firestore compute helpers
 // ─────────────────────────────────────────────────────────────────────────────
+
+function readAttendancePlan(d: Record<string, unknown>): AttendancePlan {
+  const reg = d.registration && typeof d.registration === "object"
+    ? d.registration as Record<string, unknown>
+    : undefined;
+  const planRaw = typeof reg?.attendance_plan === "string" ? reg.attendance_plan
+    : typeof d.attendance_plan === "string" ? d.attendance_plan
+    : "";
+  const plan = planRaw.trim().toLowerCase();
+  if (plan === "yes") return "yes";
+  if (plan === "no") return "no";
+  if (plan === "deciding" || plan === "maybe") return "deciding";
+  if (reg?.attending === true) return "yes";
+  if (reg?.attending === false) return "no";
+  return "unknown";
+}
+
+function readDocDate(d: Record<string, unknown>): Date | null {
+  for (const key of ["createdAt", "updatedAt"]) {
+    const v = d[key];
+    if (v && typeof v === "object" && "toDate" in v && typeof (v as { toDate: () => Date }).toDate === "function") {
+      return (v as { toDate: () => Date }).toDate();
+    }
+    if (typeof v === "string" || typeof v === "number") {
+      const dt = new Date(v);
+      if (!Number.isNaN(dt.getTime())) return dt;
+    }
+  }
+  return null;
+}
+
+function weekStartMonday(d: Date): Date {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+  dt.setDate(diff);
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+
+function buildAttendanceTimeSeries(
+  entries: { date: Date | null; plan: AttendancePlan }[]
+): AttendancePlanTimeBucket[] {
+  if (entries.length === 0) return [];
+
+  const dated = entries.filter(e => e.date).sort((a, b) => a.date!.getTime() - b.date!.getTime());
+  const undated = entries.filter(e => !e.date);
+  const cumulative: AttendancePlanCounts = { yes: 0, deciding: 0, no: 0, unknown: 0 };
+  const bucketMap = new Map<number, AttendancePlanCounts>();
+
+  for (const { date, plan } of dated) {
+    cumulative[plan]++;
+    bucketMap.set(weekStartMonday(date!).getTime(), { ...cumulative });
+  }
+
+  for (const { plan } of undated) cumulative[plan]++;
+
+  if (undated.length > 0 || bucketMap.size === 0) {
+    const lastKey = bucketMap.size > 0
+      ? Math.max(...bucketMap.keys())
+      : weekStartMonday(new Date()).getTime();
+    bucketMap.set(lastKey, { ...cumulative });
+  }
+
+  const pct = (n: number, total: number) => (total > 0 ? Math.round((n / total) * 100) : 0);
+
+  return [...bucketMap.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([weekStart, counts]) => {
+      const total = counts.yes + counts.deciding + counts.no + counts.unknown;
+      return {
+        weekLabel: new Date(weekStart).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        weekStart,
+        cumulative: counts,
+        pctYes: pct(counts.yes, total),
+        pctDeciding: pct(counts.deciding, total),
+        pctNo: pct(counts.no, total),
+        brandEngagementOnlyPct: pct(counts.deciding + counts.no, total),
+      };
+    });
+}
 
 function readBool(d: Record<string, unknown>, ...keys: string[]): boolean {
   for (const k of keys) {
@@ -639,9 +745,15 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   let participantWithGoals = 0;
   let participantWithTracks = 0;
   let participantWithNetworking = 0;
+  const attendancePlanCounts: AttendancePlanCounts = { yes: 0, deciding: 0, no: 0, unknown: 0 };
+  const attendancePlanEntries: { date: Date | null; plan: AttendancePlan }[] = [];
 
   for (const doc of parts) {
     const d = (doc.data() ?? {}) as Record<string, unknown>;
+
+    const attendancePlan = readAttendancePlan(d);
+    attendancePlanCounts[attendancePlan]++;
+    attendancePlanEntries.push({ date: readDocDate(d), plan: attendancePlan });
 
     // Profile built: has non-empty persona (set during enrollment)
     const persona = typeof d.persona === "string" ? d.persona.trim() : "";
@@ -920,6 +1032,7 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   const topGoals = Object.entries(participantGoals).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
   const topNeeds = Object.entries(participantNeeds).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
   const topCareerInterests = Object.entries(participantCareerInterests).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
+  const attendancePlanOverTime = buildAttendanceTimeSeries(attendancePlanEntries);
 
   return {
     loading: false, error: null, lastRefresh: new Date(),
@@ -939,6 +1052,7 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     healthScore, healthReasons, championsByTrack,
     lowEngagementRows, highEngagementRows,
     topGoals, topNeeds, topCareerInterests,
+    attendancePlanCounts, attendancePlanOverTime,
   };
 }
 
@@ -953,6 +1067,15 @@ function useAdminData(enabled: boolean) {
     if (!enabled) return;
     setData(d => ({ ...d, loading: true, error: null }));
     try {
+      const db = tryGetDb();
+      if (!db) {
+        setData(d => ({
+          ...d,
+          loading: false,
+          error: "Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local.",
+        }));
+        return;
+      }
       const [pSnap, sSnap, cSnap] = await Promise.all([
         getDocs(collection(db, BASE + "/participants")),
         getDocs(collection(db, BASE + "/sessions")),
@@ -4093,6 +4216,74 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
 // 7. Executive Snapshot
 // ─────────────────────────────────────────────────────────────────────────────
 
+function AttendanceTrendChart({ buckets }: { buckets: AttendancePlanTimeBucket[] }) {
+  if (buckets.length === 0) return <EmptyNote>No registration dates yet — trend appears as enrollments accumulate.</EmptyNote>;
+  if (buckets.length === 1) {
+    const b = buckets[0];
+    return (
+      <p style={{ color: S.soft, fontSize: "0.86rem", margin: 0, lineHeight: 1.6 }}>
+        Single period snapshot:{" "}
+        <strong style={{ color: IBM.green }}>{b.pctYes}% attending</strong>,{" "}
+        <strong style={{ color: IBM.yellow }}>{b.pctDeciding}% maybe</strong>,{" "}
+        <strong style={{ color: IBM.red }}>{b.pctNo}% not attending</strong>.{" "}
+        <strong style={{ color: IBM.cyan }}>{b.brandEngagementOnlyPct}%</strong> engaged with the brand but not confirmed for the event.
+      </p>
+    );
+  }
+
+  const W = 640;
+  const H = 200;
+  const pad = { top: 16, right: 16, bottom: 36, left: 40 };
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+  const xAt = (i: number) => pad.left + (i / Math.max(buckets.length - 1, 1)) * innerW;
+  const yAt = (pct: number) => pad.top + innerH - (pct / 100) * innerH;
+
+  const series = [
+    { key: "pctYes" as const, label: "Yes — attending", color: IBM.green },
+    { key: "pctDeciding" as const, label: "Maybe", color: IBM.yellow },
+    { key: "pctNo" as const, label: "No — not attending", color: IBM.red },
+    { key: "brandEngagementOnlyPct" as const, label: "Brand-only (Maybe + No)", color: IBM.cyan },
+  ];
+
+  return (
+    <div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block", maxHeight: "220px" }}>
+        {[0, 25, 50, 75, 100].map(tick => (
+          <g key={tick}>
+            <line x1={pad.left} y1={yAt(tick)} x2={W - pad.right} y2={yAt(tick)}
+              stroke={S.line} strokeWidth={1} />
+            <text x={pad.left - 8} y={yAt(tick) + 4} textAnchor="end"
+              fill={S.dim} fontSize={10}>{tick}%</text>
+          </g>
+        ))}
+        {series.map(s => {
+          const points = buckets.map((b, i) => `${xAt(i)},${yAt(b[s.key])}`).join(" ");
+          return (
+            <polyline key={s.key} fill="none" stroke={s.color} strokeWidth={2.5}
+              points={points} strokeLinejoin="round" strokeLinecap="round" />
+          );
+        })}
+        {buckets.map((b, i) => (
+          <text key={b.weekStart} x={xAt(i)} y={H - 8} textAnchor="middle"
+            fill={S.dim} fontSize={10}>{b.weekLabel}</text>
+        ))}
+      </svg>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", marginTop: "12px" }}>
+        {series.map(s => (
+          <div key={s.key} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: 18, height: 3, background: s.color, display: "inline-block" }} />
+            <span style={{ color: S.soft, fontSize: "0.76rem" }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+      <p style={{ color: S.dim, fontSize: "0.72rem", margin: "12px 0 0", lineHeight: 1.5 }}>
+        Cumulative % of registered participants by attendance intent, bucketed by registration week.
+      </p>
+    </div>
+  );
+}
+
 function ExecSnapshotView({ data }: { data: AdminData }) {
   if (data.loading) return <LoadingShimmer />;
 
@@ -4103,6 +4294,15 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
   const networkRate = Math.round((data.participantWithNetworking / base) * 100);
   const activeN     = data.participantRows.filter(p => p.signalStatus === "Active").length;
   const activeRate  = Math.round((activeN / base) * 100);
+
+  const ap = data.attendancePlanCounts;
+  const apTotal = Math.max(ap.yes + ap.deciding + ap.no + ap.unknown, 1);
+  const pctYes      = Math.round((ap.yes / apTotal) * 100);
+  const pctDeciding = Math.round((ap.deciding / apTotal) * 100);
+  const pctNo       = Math.round((ap.no / apTotal) * 100);
+  const pctUnknown  = Math.round((ap.unknown / apTotal) * 100);
+  const brandOnlyPct = pctDeciding + pctNo;
+  const latestTrend = data.attendancePlanOverTime[data.attendancePlanOverTime.length - 1];
 
   const kpis = [
     { label: "Total Participants",    value: data.totalParticipants.toLocaleString(), sub: "registered in Firestore",            color: IBM.blueLight },
@@ -4143,6 +4343,76 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
         ))}
       </div>
 
+      {/* Attendance intent — brand engagement vs event attendance */}
+      <Panel style={{ borderLeft: `3px solid ${IBM.cyan}` }}>
+        <PanelLabel>Registration &amp; Attendance Intent</PanelLabel>
+        <p style={{ color: S.soft, fontSize: "0.88rem", lineHeight: 1.65, margin: "0 0 18px" }}>
+          Of <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered</strong>,{" "}
+          <strong style={{ color: IBM.green }}>{pctYes}% plan to attend</strong>,{" "}
+          <strong style={{ color: IBM.yellow }}>{pctDeciding}% are still deciding</strong>, and{" "}
+          <strong style={{ color: IBM.red }}>{pctNo}% are not attending</strong>.
+          {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the TechXchange brand
+          but have not confirmed they will be at the event — a key signal for digital follow-up and nurture.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <Donut pct={pctYes} color={IBM.green} size={72} />
+            <div>
+              <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Yes — attending</p>
+              <p style={{ color: IBM.green, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.yes.toLocaleString()}</p>
+              <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctYes}% of registered</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <Donut pct={pctDeciding} color={IBM.yellow} size={72} />
+            <div>
+              <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Maybe — deciding</p>
+              <p style={{ color: IBM.yellow, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.deciding.toLocaleString()}</p>
+              <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctDeciding}% of registered</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <Donut pct={pctNo} color={IBM.red} size={72} />
+            <div>
+              <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>No — not attending</p>
+              <p style={{ color: IBM.red, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.no.toLocaleString()}</p>
+              <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctNo}% of registered</p>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <Donut pct={brandOnlyPct} color={IBM.cyan} size={72} />
+            <div>
+              <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Brand-only engagement</p>
+              <p style={{ color: IBM.cyan, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{(ap.deciding + ap.no).toLocaleString()}</p>
+              <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{brandOnlyPct}% (Maybe + No)</p>
+            </div>
+          </div>
+        </div>
+        {pctUnknown > 0 && (
+          <p style={{ color: S.dim, fontSize: "0.76rem", margin: "14px 0 0" }}>
+            {ap.unknown.toLocaleString()} participants ({pctUnknown}%) have not set attendance intent yet.
+          </p>
+        )}
+        <div style={{ marginTop: "22px", paddingTop: "18px", borderTop: `1px solid ${S.line}` }}>
+          <p style={{ color: S.muted, fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase",
+            letterSpacing: "0.1em", margin: "0 0 14px" }}>
+            Attendance intent ratio over time
+            {latestTrend && (
+              <span style={{ fontWeight: 500, textTransform: "none", letterSpacing: 0, color: S.dim }}>
+                {" "}· latest: {latestTrend.brandEngagementOnlyPct}% brand-only
+              </span>
+            )}
+          </p>
+          <AttendanceTrendChart buckets={data.attendancePlanOverTime} />
+        </div>
+        <div style={{ marginTop: "18px" }}>
+          <HBar label="Yes — attending" value={pctYes} maxVal={100} color={IBM.green} suffix="%" />
+          <HBar label="Maybe — still deciding" value={pctDeciding} maxVal={100} color={IBM.yellow} suffix="%" />
+          <HBar label="No — not attending" value={pctNo} maxVal={100} color={IBM.red} suffix="%" />
+          <HBar label="Brand engagement without confirmed attendance (Maybe + No)" value={brandOnlyPct} maxVal={100} color={IBM.cyan} suffix="%" />
+        </div>
+      </Panel>
+
       {/* Summary narrative */}
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
         <Panel>
@@ -4152,7 +4422,10 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
             <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered participants</strong>
             , of whom{" "}
             <strong style={{ color: IBM.green }}>{data.compassBuilt.toLocaleString()} ({profileRate}%)</strong>
-            {" "}have completed a Compass profile. The platform health score is{" "}
+            {" "}have completed a Compass profile and{" "}
+            <strong style={{ color: IBM.green }}>{pctYes}% plan to attend</strong>.
+            {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the brand without confirmed attendance.
+            The platform health score is{" "}
             <strong style={{ color: data.healthScore >= 70 ? IBM.green : IBM.yellow }}>{data.healthScore}/100</strong>.
             {" "}{activeN.toLocaleString()} attendees ({activeRate}%) are actively engaging with Compass.
           </p>
@@ -4219,6 +4492,10 @@ function RightNowView({ data }: { data: AdminData }) {
   const profileRate = Math.round((data.compassBuilt / base) * 100);
   const networkRate = Math.round((data.participantWithNetworking / base) * 100);
   const hs = data.healthScore;
+  const ap = data.attendancePlanCounts;
+  const apTotal = Math.max(ap.yes + ap.deciding + ap.no + ap.unknown, 1);
+  const pctYes = Math.round((ap.yes / apTotal) * 100);
+  const brandOnlyPct = Math.round(((ap.deciding + ap.no) / apTotal) * 100);
 
   // Brief narrative
   const topPersonaName = topPersonas[0]?.[0] ?? "—";
@@ -4226,6 +4503,7 @@ function RightNowView({ data }: { data: AdminData }) {
   const topDomainName  = topDomains[0]?.[0] ?? "—";
   const brief = data.totalParticipants > 0 ? [
     `TechXchange 2026 Compass has ${data.totalParticipants.toLocaleString()} registered participants with a ${profileRate}% profile completion rate.`,
+    `${pctYes}% plan to attend in person; ${brandOnlyPct}% are engaging with the brand but have not confirmed attendance (Maybe + No).`,
     `The event is ${hs >= 70 ? "healthy" : hs >= 40 ? "at risk" : "in critical health"} with a platform health score of ${hs}/100.`,
     `The dominant attendee persona is ${topPersonaName}. The most-requested topic area is ${topTrackName}.`,
     `${data.totalChampions} IBM Champions are in the network — ${data.championsAvailableMeet} available for 1:1 meetings. Top domain: ${topDomainName}.`,
@@ -4330,6 +4608,7 @@ export default function AdminPage() {
     activity:         <ActivityView />,
     content:          <ContentView />,
     voice:            <VoiceAdminView />,
+    "voice-pronunciation": <VoicePronunciationAdminView />,
     "voice-intelligence": <VoiceIntelligenceAdminView />,
     "recommendation-balance": <RecommendationBalanceAdminView />,
     credits:          <CreditsView />,

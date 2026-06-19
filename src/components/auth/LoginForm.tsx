@@ -54,7 +54,7 @@ export default function LoginForm({ onSuccess, onForgotPassword, onSwitchToSignu
       await signInWithEmail(email.trim(), password);
       onSuccess();
     } catch (err: unknown) {
-      setError(friendlyAuthError((err as { code?: string }).code ?? ""));
+      setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
     }

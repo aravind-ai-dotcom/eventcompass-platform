@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, firebaseConfigured } from "@/lib/firebase";
 import { getSkoUserProfile } from "@/lib/skoAuth";
 import { clearLastSkoFirestoreError } from "@/lib/skoFirestoreDebug";
 import type { SkoUserProfile } from "@/types/sko";
@@ -84,6 +84,10 @@ export function SkoAuthProvider({ children }: { children: ReactNode }) {
   }, [user, loadProfile]);
 
   useEffect(() => {
+    if (!firebaseConfigured) {
+      setLoading(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
