@@ -149,6 +149,7 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
   anonymous?: boolean;
   profileSignals?: string[];
 }) {
+  const [expanded, setExpanded] = useState(false);
   const initial   = c.display_name[0]?.toUpperCase() ?? "C";
   const org       = c.organization ?? c.company ?? "";
   const loc       = c.geo ?? c.country ?? "";
@@ -164,30 +165,24 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
   const isMutual = !anonymous && pState.isLoggedIn
     && pState.savedPeople.includes(c.id)
     && isMutualWithInbound(c.display_name, c.id, pState.savedPeople, SAMPLE_INBOUND_SIGNALS);
+  const hasExtra = tags.length > 2 || intentSnapshot.length > 0 || matchReasons.length > 0;
 
   return (
-    <article className={`champion-person-card${isRemoved ? " champion-person-card--dim" : ""}`}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+    <article className={`champion-person-card${isRemoved ? " champion-person-card--dim" : ""}${expanded ? " champion-person-card--expanded" : ""}`}>
+      <div className="champion-person-head">
         <PersonAvatar initial={initial} />
-        <div style={{ minWidth: 0, flex: 1 }}>
+        <div className="champion-person-head-copy">
           {!anonymous && loc && (
-            <p style={{ margin: "0 0 2px", fontSize: "0.73rem", fontWeight: 650, color: IBM_BLUE, letterSpacing: "0.02em" }}>
-              {loc}
-            </p>
+            <p className="champion-person-loc">{loc}</p>
           )}
-          <h3 style={{
-            margin: 0, fontSize: "0.97rem", fontWeight: 600,
-            color: "var(--text)", lineHeight: 1.3, letterSpacing: "-0.01em",
-          }}>
-            {shownName}
-          </h3>
+          <h3 className="champion-person-name">{shownName}</h3>
           {!anonymous && (c.title || org) && (
-            <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.35 }}>
+            <p className="champion-person-role">
               {[c.title, org].filter(Boolean).join(" · ")}
             </p>
           )}
           {isMutual && (
-            <span className="connection-signal-badge connection-signal-badge--mutual" style={{ marginTop: "6px", display: "inline-block" }}>
+            <span className="connection-signal-badge connection-signal-badge--mutual champion-person-mutual">
               Mutual interest
             </span>
           )}
@@ -199,26 +194,46 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
           {anonymous && (
             <p className="connection-card-skills-kicker champion-person-skills-kicker">Skills &amp; domains</p>
           )}
-          {tags.map((d) => (
-            <span key={d} className="champion-person-tag">{d}</span>
+          {tags.map((d, index) => (
+            <span
+              key={d}
+              className={`champion-person-tag${!expanded && index >= 2 ? " champion-person-tag--mobile-collapsed" : ""}`}
+            >
+              {d}
+            </span>
           ))}
         </div>
       )}
 
-      {!anonymous && intentSnapshot.length > 0 && (
-        <div className="champion-person-intent">
-          {intentSnapshot.map(item => (
-            <span key={item} className="champion-person-intent-tag">{item}</span>
-          ))}
-        </div>
+      {!anonymous && hasExtra && (
+        <button
+          type="button"
+          className="champion-person-more-toggle"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(open => !open)}
+        >
+          {expanded ? "Less" : "More"}
+        </button>
       )}
 
-      {!anonymous && matchReasons.length > 0 && (
-        <div className="champion-person-match">
-          <p className="champion-person-match-kicker">Why Compass matched this person</p>
-          <ul className="champion-person-match-list">
-            {matchReasons.slice(0, 3).map(r => <li key={r}>{r}</li>)}
-          </ul>
+      {!anonymous && (
+        <div className="champion-person-extra">
+          {intentSnapshot.length > 0 && (
+            <div className="champion-person-intent">
+              {intentSnapshot.map(item => (
+                <span key={item} className="champion-person-intent-tag">{item}</span>
+              ))}
+            </div>
+          )}
+
+          {matchReasons.length > 0 && (
+            <div className="champion-person-match">
+              <p className="champion-person-match-kicker">Why Compass matched this person</p>
+              <ul className="champion-person-match-list">
+                {matchReasons.slice(0, 3).map(r => <li key={r}>{r}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

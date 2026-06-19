@@ -200,7 +200,7 @@ export default function LiveOpportunities({
                 <div className="huddle-row-actions">
                   <button
                     type="button"
-                    className={`action-chip${isOnMyWay ? " action-chip--active" : ""}`}
+                    className={`action-chip action-chip--primary${isOnMyWay ? " action-chip--active" : ""}`}
                     aria-pressed={isOnMyWay}
                     onClick={() => handleOnMyWay(opp.id)}
                   >

@@ -85,14 +85,20 @@ export default function StartConversationModal({
     : "Time TBD";
 
   return (
-    <div className="huddle-mini-overlay" role="dialog" aria-modal="true" aria-label="Start a conversation">
+    <div className="huddle-mini-overlay huddle-mini-overlay--sheet-mobile" role="dialog" aria-modal="true" aria-label="Start a conversation">
       <button type="button" className="huddle-mini-backdrop" aria-label="Close" onClick={onClose} />
       <div className="start-conversation-modal">
         <div className="start-conversation-head">
-          <p className="live-opportunities-kicker">Start a conversation</p>
-          <h3 className="start-conversation-title">Step {step} of 6</h3>
+          <div className="start-conversation-head-copy">
+            <p className="live-opportunities-kicker">Start a conversation</p>
+            <h3 className="start-conversation-title">Step {step} of 6</h3>
+          </div>
+          <button type="button" className="start-conversation-close" aria-label="Close" onClick={onClose}>
+            ×
+          </button>
         </div>
 
+        <div className="start-conversation-body">
         {step === 1 && (
           <div>
             <p className="start-conversation-lead">Choose topic</p>
@@ -189,6 +195,7 @@ export default function StartConversationModal({
             <p className="start-conversation-note">{HUDDLE_COPY.proposeNote}</p>
           </div>
         )}
+        </div>
 
         <div className="start-conversation-actions">
           {step > 1 && (
