@@ -57,17 +57,10 @@ function TypeBadge({ type }: { type: NextBestMoveData["type"] }) {
 function ScoreBadge({ score }: { score: number }) {
   return (
     <div
-      className="compass-score-badge"
-      style={{
-        minWidth: "72px",
-        minHeight: "72px",
-        justifySelf: "end",
-      }}
+      className="compass-score-badge next-best-move-card__score"
       title={`Compass match score: ${score}`}
     >
-      <span className="score-number" style={{ fontSize: "1.9rem" }}>
-        {score}
-      </span>
+      <span className="score-number">{score}</span>
       <span className="score-label">match</span>
     </div>
   );
@@ -87,14 +80,12 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className={variant === "primary" ? "btn-primary" : "btn-secondary"}
+      className={[
+        variant === "primary" ? "btn-primary" : "btn-secondary",
+        "next-best-move-card__action",
+        variant === "secondary" && muted ? "next-best-move-card__action--muted" : "",
+      ].filter(Boolean).join(" ")}
       style={{
-        fontSize: "0.88rem",
-        minHeight: "38px",
-        padding: "0 18px",
-        color: variant === "secondary" && muted ? "var(--muted)" : undefined,
-        borderColor:
-          variant === "secondary" && muted ? "var(--line)" : undefined,
         cursor: onClick ? "pointer" : "default",
         opacity: onClick ? 1 : 0.55,
       }}
@@ -118,70 +109,30 @@ export default function NextBestMove({
   const showSideScore = hasScore && !(nextBestMove.type === "session" && intelSession);
 
   return (
-    <section
-      style={{
-        border: "1px solid var(--accent)",
-        background: "var(--panel)",
-      }}
-    >
+    <section className="next-best-move-card">
       <div
-        style={{
-          padding: "30px 30px 28px",
-          display: "grid",
-          gridTemplateColumns: showSideScore
-            ? "minmax(0, 1fr) 92px"
-            : "minmax(0, 1fr)",
-          gap: "28px",
-          alignItems: "start",
-        }}
+        className={`next-best-move-card__layout${showSideScore ? " next-best-move-card__layout--scored" : ""}`}
       >
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "18px",
-              flexWrap: "wrap",
-            }}
-          >
-            <span
-              className="next-best-move-label"
-              style={{ margin: 0, display: "block" }}
-            >
+        <div className="next-best-move-card__main">
+          <div className="next-best-move-card__head">
+            <span className="next-best-move-label" style={{ margin: 0, display: "block" }}>
               Your next best move
             </span>
             <TypeBadge type={nextBestMove.type} />
           </div>
 
-          <h2
-            style={{
-              fontSize: "clamp(1.75rem, 3.2vw, 2.65rem)",
-              lineHeight: 1,
-              letterSpacing: "-0.048em",
-              fontWeight: 520,
-              margin: "0 0 12px",
-              color: "var(--text)",
-            }}
-          >
+          <h2 className="next-best-move-card__headline">
             {nextBestMove.headline}
           </h2>
 
           {nextBestMove.subline && (
-            <p
-              style={{
-                color: "var(--soft)",
-                fontSize: "1rem",
-                lineHeight: 1.5,
-                margin: "0 0 18px",
-              }}
-            >
+            <p className="next-best-move-card__subline">
               {nextBestMove.subline}
             </p>
           )}
 
           {nextBestMove.type === "session" && intelSession ? (
-            <div style={{ marginBottom: "22px" }}>
+            <div className="next-best-move-card__intel">
               <SessionIntelligencePanel
                 session={intelSession}
                 certLabel={certLabel}
@@ -190,48 +141,17 @@ export default function NextBestMove({
               />
             </div>
           ) : nextBestMove.reason ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "44px minmax(0, 1fr)",
-                gap: "10px",
-                alignItems: "start",
-                marginBottom: "22px",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  color: "var(--accent)",
-                  fontSize: "0.68rem",
-                  fontWeight: 680,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  paddingTop: "3px",
-                }}
-              >
+            <div className="next-best-move-card__reason">
+              <span className="next-best-move-card__reason-label" aria-hidden="true">
                 Why
               </span>
-              <p
-                style={{
-                  color: "var(--muted)",
-                  fontSize: "0.95rem",
-                  lineHeight: 1.58,
-                  margin: 0,
-                }}
-              >
+              <p className="next-best-move-card__reason-copy">
                 {nextBestMove.reason}
               </p>
             </div>
           ) : null}
 
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="next-best-move-card__actions">
             {onViewDetails && (
               <ActionButton label="View Details" variant="primary" onClick={onViewDetails} />
             )}

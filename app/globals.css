@@ -830,6 +830,91 @@ img { max-width: 100%; display: block; }
 }
 .next-best-move p { color: var(--muted); line-height: 1.45; margin: 0; }
 
+.next-best-move-card {
+  border: 1px solid var(--accent);
+  background: var(--panel);
+}
+.next-best-move-card__layout {
+  padding: 30px 30px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.next-best-move-card__layout--scored {
+  grid-template-columns: minmax(0, 1fr) 92px;
+}
+.next-best-move-card__main {
+  min-width: 0;
+}
+.next-best-move-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.next-best-move-card__headline {
+  font-size: clamp(1.75rem, 3.2vw, 2.65rem);
+  line-height: 1;
+  letter-spacing: -0.048em;
+  font-weight: 520;
+  margin: 0 0 12px;
+  color: var(--text);
+}
+.next-best-move-card__subline {
+  color: var(--soft);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+.next-best-move-card__intel {
+  margin-bottom: 22px;
+}
+.next-best-move-card__reason {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  margin-bottom: 22px;
+}
+.next-best-move-card__reason-label {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-top: 3px;
+}
+.next-best-move-card__reason-copy {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.58;
+  margin: 0;
+}
+.next-best-move-card__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.next-best-move-card__action {
+  font-size: 0.88rem;
+  min-height: 38px;
+  padding: 0 18px;
+}
+.next-best-move-card__action--muted {
+  color: var(--muted);
+  border-color: var(--line);
+}
+.next-best-move-card__score.compass-score-badge {
+  min-width: 72px;
+  min-height: 72px;
+  justify-self: end;
+}
+.next-best-move-card__score .score-number {
+  font-size: 1.9rem;
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 
@@ -6648,11 +6733,6 @@ img { max-width: 100%; display: block; }
   .voice-assistant-grid {
     gap: 14px;
   }
-  .intelligence-surface--prominent section,
-  .intelligence-surface--prominent > div {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
-  }
   .compass-profile-summary {
     grid-template-columns: 1fr;
   }
@@ -6663,6 +6743,126 @@ img { max-width: 100%; display: block; }
     grid-template-columns: 1fr;
     gap: 16px;
     padding: 16px 18px;
+  }
+
+  /* Experience — mobile spacing & hierarchy */
+  .experience-hero-compact.section {
+    padding: 24px 0 12px;
+  }
+  .experience-hero-title {
+    font-size: clamp(1.75rem, 7vw, 2.35rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+  }
+  .experience-hero-tagline {
+    margin: 4px 0 10px;
+    font-size: 0.92rem;
+  }
+  .experience-hero-role {
+    margin-bottom: 12px;
+    font-size: 0.92rem;
+  }
+  .compass-sections-stack {
+    min-width: 0;
+    margin-bottom: 16px;
+  }
+  .compass-section-body {
+    padding-bottom: 20px;
+    gap: 14px;
+  }
+  .compass-section-body .section {
+    padding-bottom: 20px;
+  }
+  .compass-section-body .section-head,
+  .compass-section-body .section-head.narrow {
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+  .compass-section-body .section-head h2 {
+    font-size: clamp(1.35rem, 5vw, 1.85rem);
+    line-height: 1.12;
+  }
+  .compass-section-body .intelligence-surface {
+    padding: 16px;
+  }
+  .compass-section-body .live-opportunities-section {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  .compass-section-body .intelligence-surface--prominent > .section-head {
+    margin-bottom: 12px;
+  }
+  .next-best-move-card__layout,
+  .next-best-move-card__layout--scored {
+    padding: 18px 0 16px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .next-best-move-card__headline {
+    font-size: clamp(1.35rem, 5vw, 1.75rem);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .next-best-move-card__subline {
+    margin-bottom: 14px;
+    font-size: 0.92rem;
+  }
+  .next-best-move-card__head {
+    margin-bottom: 12px;
+  }
+  .next-best-move-card__intel,
+  .next-best-move-card__reason {
+    margin-bottom: 14px;
+  }
+  .next-best-move-card__score.compass-score-badge {
+    justify-self: start;
+    min-width: 56px;
+    min-height: 56px;
+  }
+  .next-best-move-card__score .score-number {
+    font-size: 1.4rem;
+  }
+  .next-best-move-card__action {
+    min-height: 44px;
+  }
+  .balanced-move-section {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .balanced-move-groups {
+    gap: 14px;
+  }
+  .balanced-move-group__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .balanced-move-card {
+    padding: 14px 16px;
+  }
+  .plan-mode-row {
+    margin-bottom: 14px;
+    gap: 6px;
+  }
+  .plan-mode-chip {
+    min-height: 44px;
+    height: auto;
+    padding: 8px 14px;
+  }
+  .day-accordion {
+    margin-top: 8px;
+  }
+  .day-accordion-panel {
+    padding: 8px 0 14px;
+  }
+  .connection-signals-grid {
+    gap: 14px;
+  }
+  .connection-signals-list {
+    gap: 8px;
+  }
+  .connection-signal-more-toggle {
+    min-height: 44px;
+    padding: 10px 0;
   }
 }
 .compass-module-note {
