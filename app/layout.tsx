@@ -3,7 +3,7 @@
 // SKO vs TechXchange chrome is selected in RouteChrome by pathname.
 // =============================================================================
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import RouteChrome from "@/components/layout/RouteChrome";
@@ -23,8 +23,29 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EventCompass",
-  description: "IBM event intelligence — TechXchange and sales enablement.",
+  title: {
+    default: "Compass",
+    template: "%s · Compass",
+  },
+  description: "Your TechXchange event companion — sessions, people, and your personalized plan.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Compass",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f62fe",
 };
 
 export default function RootLayout({
