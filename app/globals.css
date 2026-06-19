@@ -6194,6 +6194,35 @@ img { max-width: 100%; display: block; }
     font-size: clamp(1.35rem, 5vw, 1.85rem);
     line-height: 1.15;
   }
+  .story-section--compact {
+    padding: 24px 0;
+  }
+  .hero-shell--compact .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .hero-shell--compact .hero-actions .btn-primary,
+  .hero-shell--compact .hero-actions .btn-secondary {
+    width: 100%;
+    min-height: 44px;
+  }
+  .home-lifecycle-tab {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .home-lifecycle-nav-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .final-band .btn-primary {
+    width: 100%;
+    min-height: 44px;
+  }
   .ask-compass-trigger {
     max-width: none;
     width: 100%;
