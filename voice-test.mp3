@@ -1,0 +1,1 @@
+{"error":"3 INVALID_ARGUMENT: Requested language code 'en-US-Neural2-F' doesn't match the voice 'en-US-Chirp3-HD-Aoede''s language code 'en-us'. Either pick a different voice, or change the requested language code to en-us."}

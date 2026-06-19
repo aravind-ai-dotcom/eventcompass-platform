@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   COMPASS_MODULE_IDS,
   COMPASS_MODULE_LABELS,
@@ -20,10 +21,26 @@ export default function CustomizeCompassPanel({
   onClose,
   onModuleChange,
 }: CustomizeCompassPanelProps) {
+  const [savedNotice, setSavedNotice] = useState(false);
+
+  useEffect(() => {
+    if (!open) setSavedNotice(false);
+  }, [open]);
+
   if (!open) return null;
 
+  function handleModuleChange(moduleId: CompassModuleId, visible: boolean) {
+    onModuleChange(moduleId, visible);
+    setSavedNotice(true);
+  }
+
+  function handleSaveAndClose() {
+    setSavedNotice(true);
+    onClose();
+  }
+
   return (
-    <div className="compass-customize-backdrop" role="presentation" onClick={onClose}>
+    <div className="compass-customize-backdrop" role="presentation" onClick={handleSaveAndClose}>
       <div
         className="compass-customize-panel"
         role="dialog"
@@ -34,9 +51,6 @@ export default function CustomizeCompassPanel({
         <header className="compass-customize-head">
           <h2 id="compass-customize-title">Customize My Compass</h2>
           <p>Choose which modules appear. Nothing is deleted — only hidden.</p>
-          <button type="button" className="compass-customize-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
         </header>
 
         <ul className="compass-customize-list">
@@ -46,13 +60,24 @@ export default function CustomizeCompassPanel({
                 <input
                   type="checkbox"
                   checked={prefs.modules[moduleId]}
-                  onChange={e => onModuleChange(moduleId, e.target.checked)}
+                  onChange={e => handleModuleChange(moduleId, e.target.checked)}
                 />
                 <span>{COMPASS_MODULE_LABELS[moduleId]}</span>
               </label>
             </li>
           ))}
         </ul>
+
+        <footer className="compass-customize-foot">
+          {savedNotice && (
+            <p className="compass-customize-saved" role="status" aria-live="polite">
+              Preferences saved
+            </p>
+          )}
+          <button type="button" className="compass-customize-save" onClick={handleSaveAndClose}>
+            Save preferences
+          </button>
+        </footer>
       </div>
     </div>
   );

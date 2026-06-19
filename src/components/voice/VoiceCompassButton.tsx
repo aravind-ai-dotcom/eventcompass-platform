@@ -895,7 +895,7 @@ export default function VoiceCompassButton({
                         ))}
                       </span>
                     ) : (
-                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={44} />
+                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={48} />
                     )}
                     <span className="ask-compass-trigger-title">Ask Compass</span>
                     <span className="ask-compass-trigger-sub">

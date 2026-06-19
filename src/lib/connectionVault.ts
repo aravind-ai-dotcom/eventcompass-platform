@@ -161,12 +161,25 @@ function escapeVCard(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/\n/g, "\\n");
 }
 
+function splitDisplayName(displayName: string): { first: string; last: string } {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { first: "", last: "" };
+  if (parts.length === 1) return { first: parts[0], last: "" };
+  return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
 export function buildVCardContent(record: ConnectionVaultRecord): string {
+  const { first, last } = splitDisplayName(record.displayName);
   const lines = [
     "BEGIN:VCARD",
     "VERSION:3.0",
     `FN:${escapeVCard(record.displayName)}`,
   ];
+  if (last) {
+    lines.push(`N:${escapeVCard(last)};${escapeVCard(first)};;;`);
+  } else if (first) {
+    lines.push(`N:${escapeVCard(first)};;;;`);
+  }
   if (record.title) lines.push(`TITLE:${escapeVCard(record.title)}`);
   if (record.organization) lines.push(`ORG:${escapeVCard(record.organization)}`);
   if (record.linkedinUrl) lines.push(`URL:${escapeVCard(record.linkedinUrl)}`);
