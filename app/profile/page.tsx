@@ -1,7 +1,5 @@
-"use client";
-
-import SkoCompassView from "@/components/sko/SkoCompassView";
+import { redirect } from "next/navigation";
 
 export default function ProfilePage() {
-  return <SkoCompassView />;
+  redirect("/sko/compass");
 }

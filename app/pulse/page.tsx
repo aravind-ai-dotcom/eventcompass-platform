@@ -1,7 +1,5 @@
-"use client";
-
-import SkoPulseView from "@/components/sko/SkoPulseView";
+import { redirect } from "next/navigation";
 
 export default function PulsePage() {
-  return <SkoPulseView loginPath="/login" />;
+  redirect("/sko/pulse");
 }

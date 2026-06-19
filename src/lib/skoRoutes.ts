@@ -2,22 +2,21 @@
 // SKO route detection — keeps SKO and TechXchange chrome separate
 // =============================================================================
 
-const SKO_EXACT = new Set([
-  "/login",
-  "/enroll",
-  "/profile",
-  "/compass",
-  "/content",
-  "/pulse",
-  "/people",
-  "/setup",
-  "/routes",
-]);
-
 const SKO_PREFIXES = ["/sko", "/setup/sko"];
 
+/** Legacy root paths that still redirect to /sko/* — use SKO chrome during redirect. */
+const SKO_LEGACY_ROOT = new Set([
+  "/compass",
+  "/content",
+  "/enroll",
+  "/login",
+  "/people",
+  "/profile",
+  "/pulse",
+]);
+
 export function isSkoRoute(pathname: string): boolean {
-  if (SKO_EXACT.has(pathname)) return true;
+  if (SKO_LEGACY_ROOT.has(pathname)) return true;
   return SKO_PREFIXES.some(prefix => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 

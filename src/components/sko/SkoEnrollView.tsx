@@ -95,13 +95,13 @@ export default function SkoEnrollView() {
 
   useEffect(() => {
     if (!loading && user && profileComplete && !profileError) {
-      router.replace("/profile");
+      router.replace("/sko/compass");
     }
   }, [user, profileComplete, loading, profileError, router]);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/sko/login");
     }
   }, [loading, user, router]);
 
@@ -180,7 +180,7 @@ export default function SkoEnrollView() {
         partnerFocus: accessType === "partner",
       });
       await refreshProfile();
-      router.push("/profile");
+      router.push("/sko/compass");
     } catch {
       setError("Could not save your SKO profile. Check Firestore permissions and try again.");
     } finally {
@@ -206,7 +206,7 @@ export default function SkoEnrollView() {
       <section className="sko-section sko-enroll-gate">
         <h1>Build Your SKO Compass</h1>
         <p className="sko-lead">Sign in to personalize your SKO2H 2026 briefing.</p>
-        <Link href="/login" className="sko-btn sko-btn--primary">Sign in →</Link>
+        <Link href="/sko/login" className="sko-btn sko-btn--primary">Sign in →</Link>
       </section>
     );
   }

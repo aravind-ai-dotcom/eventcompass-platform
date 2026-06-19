@@ -38,14 +38,14 @@ export default function SkoCompassView() {
   // 1. Not signed in → /login
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/sko/login");
     }
   }, [loading, user, router]);
 
   // 2–3. Signed in but no / incomplete profile → /enroll (not an error)
   useEffect(() => {
     if (!loading && user && !profileError && !profileComplete) {
-      router.replace("/enroll");
+      router.replace("/sko/enroll");
     }
   }, [loading, user, profileComplete, profileError, router]);
 
@@ -94,7 +94,7 @@ export default function SkoCompassView() {
       <section className="sko-section">
         <SkoProfileDebugPanel />
         <p className="sko-muted">Redirecting to SKO enrollment…</p>
-        <Link href="/enroll" className="sko-link-btn">Continue to enrollment →</Link>
+        <Link href="/sko/enroll" className="sko-link-btn">Continue to enrollment →</Link>
       </section>
     );
   }
@@ -120,7 +120,7 @@ export default function SkoCompassView() {
         <p className="sko-lead">
           {profile.geoId} · {profile.marketId?.replace(/-/g, " ")} · Personalized SKO briefing
         </p>
-        <Link href="/enroll" className="sko-link-btn">Refine intent →</Link>
+        <Link href="/sko/enroll" className="sko-link-btn">Refine intent →</Link>
       </header>
 
       <SkoChineseBriefingBar

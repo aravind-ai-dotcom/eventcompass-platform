@@ -25,8 +25,8 @@ export default function SkoProfileErrorPanel({ message, onRetry }: Props) {
             Retry
           </button>
         )}
-        <Link href="/login" className="sko-btn sko-btn--secondary">Sign in again</Link>
-        <Link href="/enroll" className="sko-btn sko-btn--ghost">Go to enrollment</Link>
+        <Link href="/sko/login" className="sko-btn sko-btn--secondary">Sign in again</Link>
+        <Link href="/sko/enroll" className="sko-btn sko-btn--ghost">Go to enrollment</Link>
       </div>
     </section>
   );

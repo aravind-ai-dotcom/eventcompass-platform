@@ -88,7 +88,7 @@ export default function NetworkSignalBlock({ summary, compact = false }: Props) 
       )}
 
       <div style={{ borderTop: "1px solid var(--line)", paddingTop: "12px", marginTop: compact ? "0" : "4px" }}>
-        <a href="/profile" style={{ color: "var(--accent)", fontSize: "0.82rem", fontWeight: 650, textDecoration: "none" }}>
+        <a href="/txc/enroll" style={{ color: "var(--accent)", fontSize: "0.82rem", fontWeight: 650, textDecoration: "none" }}>
           Add your network signal →
         </a>
       </div>

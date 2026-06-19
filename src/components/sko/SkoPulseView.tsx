@@ -19,7 +19,7 @@ interface Props {
   loginPath?: string;
 }
 
-export default function SkoPulseView({ loginPath = "/login" }: Props) {
+export default function SkoPulseView({ loginPath = "/sko/login" }: Props) {
   const { user, profile, loading } = useSkoAuth();
   const router = useRouter();
   const [geos, setGeos] = useState<SkoGeo[]>([]);

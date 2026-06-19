@@ -6,9 +6,9 @@ import { useSkoAuth } from "@/context/SkoAuthContext";
 import { signOutSkoUser } from "@/lib/skoAuth";
 
 const NAV = [
-  { href: "/content", label: "Explore SKO" },
-  { href: "/pulse", label: "Pulse" },
-  { href: "/profile", label: "My Compass" },
+  { href: "/sko/content", label: "Explore SKO" },
+  { href: "/sko/pulse", label: "Pulse" },
+  { href: "/sko/compass", label: "My Compass" },
 ];
 
 export default function SkoHeader() {
@@ -18,7 +18,7 @@ export default function SkoHeader() {
   return (
     <header className="sko-header">
       <div className="sko-header-inner">
-        <Link href="/" className="sko-brand">
+        <Link href="/sko" className="sko-brand">
           <span className="sko-brand-kicker">IBM Sales Enablement</span>
           <span className="sko-brand-title">Compass SKO</span>
         </Link>
@@ -39,7 +39,7 @@ export default function SkoHeader() {
           {user ? (
             <>
               {!profileComplete && (
-                <Link href="/enroll" className="sko-btn sko-btn--primary">
+                <Link href="/sko/enroll" className="sko-btn sko-btn--primary">
                   Complete enrollment
                 </Link>
               )}
@@ -48,7 +48,7 @@ export default function SkoHeader() {
               </button>
             </>
           ) : (
-            <Link href="/login" className="sko-btn sko-btn--primary">
+            <Link href="/sko/login" className="sko-btn sko-btn--primary">
               Sign in
             </Link>
           )}

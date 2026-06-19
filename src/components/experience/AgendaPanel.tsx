@@ -186,7 +186,7 @@ export default function AgendaPanel({ participantId, selectedDay = "Monday" }: P
       {isDemo && (
         <div style={{ padding:"10px 14px", border:"1px solid var(--accent)", background:"var(--panel)" }}>
           <p style={{ color:"var(--accent)", fontSize:"0.78rem", margin:0 }}>
-            Demo agenda. <a href="/enroll" style={{ color:"var(--accent)", fontWeight:650 }}>Build your real Compass</a> to save a personal plan.
+            Demo agenda. <a href="/txc/enroll" style={{ color:"var(--accent)", fontWeight:650 }}>Build your real Compass</a> to save a personal plan.
           </p>
         </div>
       )}

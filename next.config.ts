@@ -3,12 +3,16 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      { source: "/compass", destination: "/profile", permanent: false },
-      { source: "/sko/content", destination: "/content", permanent: false },
-      { source: "/sko/login", destination: "/login", permanent: false },
-      { source: "/sko/enroll", destination: "/enroll", permanent: false },
-      { source: "/sko/compass", destination: "/profile", permanent: false },
-      { source: "/sko/pulse", destination: "/pulse", permanent: false },
+      // Root legacy SKO aliases → canonical /sko/*
+      { source: "/compass", destination: "/sko/compass", permanent: false },
+      { source: "/content", destination: "/sko/content", permanent: false },
+      { source: "/enroll", destination: "/sko/enroll", permanent: false },
+      { source: "/login", destination: "/sko/login", permanent: false },
+      { source: "/people", destination: "/sko/people", permanent: false },
+      { source: "/profile", destination: "/sko/compass", permanent: false },
+      { source: "/pulse", destination: "/sko/pulse", permanent: false },
+      { source: "/routes", destination: "/txc", permanent: false },
+      // Legacy flat TechXchange routes → /txc/*
       { source: "/experience", destination: "/txc/experience", permanent: false },
       { source: "/explore", destination: "/txc/explore", permanent: false },
       { source: "/sessions", destination: "/txc/sessions", permanent: false },

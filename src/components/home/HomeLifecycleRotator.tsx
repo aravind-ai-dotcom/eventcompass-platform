@@ -12,7 +12,7 @@ const LIFECYCLE = [
     body: "Tell Compass what matters — learning paths, certification targets, and connection intent.",
     image: "/event/learning-lab.jpg",
     objectPosition: "center top",
-    href: "/enroll",
+    href: "/txc/enroll",
     cta: "Build My Compass",
   },
   {
@@ -22,7 +22,7 @@ const LIFECYCLE = [
     body: "Experts, mentors, peers, and community leaders matched to your interests and experience.",
     image: "/event/people-v2.jpg",
     objectPosition: "center 55%",
-    href: "/champions",
+    href: "/txc/champions",
     cta: "Explore people",
   },
   {
@@ -32,7 +32,7 @@ const LIFECYCLE = [
     body: "An AI-powered week plan — sessions prioritized, conflicts resolved, every day intentional.",
     image: "/event/ibm_txc_banner_B.jpg",
     objectPosition: "center center",
-    href: "/experience",
+    href: "/txc/experience",
     cta: "Open My Compass",
   },
   {
@@ -42,7 +42,7 @@ const LIFECYCLE = [
     body: "Certification progress, connections, and learning paths that extend beyond the event.",
     image: "/event/ibm_txc_banner_A.jpg",
     objectPosition: "center top",
-    href: "/explore",
+    href: "/txc/explore",
     cta: "See how Compass works",
   },
 ] as const;

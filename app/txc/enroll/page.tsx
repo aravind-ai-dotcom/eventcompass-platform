@@ -1082,13 +1082,13 @@ export default function EnrollPage() {
                 : (isEditMode ? "Update My Compass →"    : "Build My Compass →")}
             </button>
             {isEditMode
-              ? <Link href="/profile" className="btn-secondary">Back to profile</Link>
+              ? <Link href="/txc/experience" className="btn-secondary">Back to My Compass</Link>
               : <Link href="/" className="btn-secondary">Back to home</Link>}
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px", lineHeight: 1.5 }}>
             Your Compass profile is saved to your account and used only to personalise
             your TechXchange experience. Update it any time from your{" "}
-            <a href="/profile" style={{ color: "var(--accent)" }}>profile</a>.
+            <a href="/txc/experience" style={{ color: "var(--accent)" }}>My Compass</a>.
           </p>
         </section>
 

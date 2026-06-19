@@ -48,17 +48,17 @@ export default function SkoHomeView() {
         <div className="sko-home-cta">
           {!user && (
             <>
-              <Link href="/login" className="sko-btn sko-btn--primary">Sign in to SKO Compass</Link>
-              <Link href="/content" className="sko-btn sko-btn--secondary">Explore SKO</Link>
+              <Link href="/sko/login" className="sko-btn sko-btn--primary">Sign in to SKO Compass</Link>
+              <Link href="/sko/content" className="sko-btn sko-btn--secondary">Explore SKO</Link>
             </>
           )}
           {user && !profileComplete && (
-            <Link href="/enroll" className="sko-btn sko-btn--primary">Build Your SKO Compass</Link>
+            <Link href="/sko/enroll" className="sko-btn sko-btn--primary">Build Your SKO Compass</Link>
           )}
           {user && profileComplete && (
             <>
-              <Link href="/profile" className="sko-btn sko-btn--primary">Open My Compass</Link>
-              <Link href="/content" className="sko-btn sko-btn--secondary">Explore SKO</Link>
+              <Link href="/sko/compass" className="sko-btn sko-btn--primary">Open My Compass</Link>
+              <Link href="/sko/content" className="sko-btn sko-btn--secondary">Explore SKO</Link>
             </>
           )}
         </div>
@@ -102,7 +102,7 @@ export default function SkoHomeView() {
               </li>
             ))}
           </ol>
-          <Link href="/content" className="sko-link-btn">Open full run of show →</Link>
+          <Link href="/sko/content" className="sko-link-btn">Open full run of show →</Link>
         </article>
 
         <article className="sko-panel">

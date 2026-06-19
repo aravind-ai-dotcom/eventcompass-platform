@@ -1290,7 +1290,7 @@ function SessionsPageContent() {
         </div>
         {user && enrolled
           ? <Link href="/experience" className="btn-primary">Open My Compass &#8594;</Link>
-          : <Link href="/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
+          : <Link href="/txc/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
         }
       </section>
 

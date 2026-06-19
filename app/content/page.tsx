@@ -1,5 +1,5 @@
-import SkoExploreView from "@/components/sko/SkoExploreView";
+import { redirect } from "next/navigation";
 
 export default function ContentPage() {
-  return <SkoExploreView />;
+  redirect("/sko/content");
 }

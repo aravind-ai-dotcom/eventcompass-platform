@@ -1,7 +1,5 @@
-"use client";
-
-import SkoEnrollView from "@/components/sko/SkoEnrollView";
+import { redirect } from "next/navigation";
 
 export default function EnrollPage() {
-  return <SkoEnrollView />;
+  redirect("/sko/enroll");
 }

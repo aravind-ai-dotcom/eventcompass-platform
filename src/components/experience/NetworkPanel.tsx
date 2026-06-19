@@ -222,7 +222,7 @@ export default function NetworkPanel({ participant, allParticipants }: Props) {
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 18px", lineHeight: 1.55, maxWidth: "480px", marginLeft: "auto", marginRight: "auto" }}>
             Add your school, past employers, and career interests to unlock alumni, past-colleague, and career-path connections at TechXchange.
           </p>
-          <a href="/profile" className="btn-secondary" style={{ fontSize: "0.88rem" }}>Update my profile</a>
+          <a href="/txc/enroll" className="btn-secondary" style={{ fontSize: "0.88rem" }}>Update my profile</a>
         </div>
       </section>
     );

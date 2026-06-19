@@ -1826,7 +1826,7 @@ export default function ExperiencePage() {
         <p style={{ color: "var(--muted)", maxWidth: "640px", lineHeight: 1.6 }}>{errorMsg}</p>
         {!participantId && (
           <p style={{ marginTop: "16px" }}>
-            <a href="/login" className="action-chip">Sign in →</a>
+            <a href="/txc/login" className="action-chip">Sign in →</a>
           </p>
         )}
         {participantId && (
