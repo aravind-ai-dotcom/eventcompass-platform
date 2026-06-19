@@ -27,7 +27,17 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
 
-    // TechXchange event data
+    // TechXchange public catalog — attendees can browse before sign-in
+    match /organizations/{org}/events/{event}/sessions/{doc} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    match /organizations/{org}/events/{event}/champions/{doc} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // TechXchange participant data + other event subcollections
     match /organizations/{org}/events/{event}/{subcollection}/{doc} {
       allow read, write: if isSignedIn();
     }

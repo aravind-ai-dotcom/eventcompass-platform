@@ -782,6 +782,11 @@ export default function SessionsPage() {
   );
 }
 
+function isFirestorePermissionError(err: unknown): boolean {
+  const code = (err as { code?: string })?.code ?? "";
+  return code === "permission-denied" || code === "PERMISSION_DENIED";
+}
+
 function SessionsPageContent() {
   const { user, enrolled, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
@@ -891,7 +896,18 @@ function SessionsPageContent() {
         setStatus("ready");
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string };
-        setErrorMsg(`${e.code ? `(${e.code}) ` : ""}${e.message ?? String(err)}`);
+        console.error("[SessionsPage] Firestore error:", err);
+        if (isFirestorePermissionError(err) && !isLoggedIn) {
+          setErrorMsg(
+            "Sign in to load the session catalog. On mobile, Safari may block saved login — try signing in again.",
+          );
+        } else if (isFirestorePermissionError(err)) {
+          setErrorMsg(
+            "Firestore denied access to the session catalog. Confirm security rules allow reads on organizations/ibm/events/txc2026/sessions.",
+          );
+        } else {
+          setErrorMsg(`${e.code ? `(${e.code}) ` : ""}${e.message ?? String(err)}`);
+        }
         setStatus("error");
       }
     }
@@ -1093,6 +1109,13 @@ function SessionsPageContent() {
         <div className="section-kicker" style={{ color: "var(--accent)" }}>Error</div>
         <h2>Could not load sessions</h2>
         <p style={{ color: "var(--muted)", maxWidth: "640px" }}>{errorMsg}</p>
+        {!isLoggedIn && (
+          <p style={{ marginTop: "16px" }}>
+            <Link href="/txc/login" className="btn-primary">Sign in</Link>
+            {" "}
+            <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>Build My Compass</Link>
+          </p>
+        )}
       </section>
     );
   }
