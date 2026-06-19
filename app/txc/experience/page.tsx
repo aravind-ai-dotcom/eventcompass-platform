@@ -2084,7 +2084,7 @@ export default function ExperiencePage() {
               <p className="compass-module-note" style={{ marginBottom: "14px" }}>
                 {COMPASS_BALANCE_EXPLANATION}
               </p>
-              <div className="opportunity-grid compass-single-column">
+              <div className="intelligence-row">
                 {recommendedSessions.map(s => (
                   <SessionCard key={s.id} session={s} sched={schedState} certLabel={certLabel} />
                 ))}
