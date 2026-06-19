@@ -78,16 +78,28 @@ export async function saveVoiceDictionaryRecord(
 ): Promise<void> {
   const db = requireDb();
   const now = new Date().toISOString();
+  const payload = voiceDictionaryToFirestore(record, now);
   await setDoc(
     doc(db, voiceDictionaryCollection(eventId), record.id),
-    {
-      ...record,
-      createdAt: record.createdAt || now,
-      updatedAt: now,
-    },
+    payload,
     { merge: true },
   );
   invalidateVoiceDictionaryCache(eventId);
+}
+
+function voiceDictionaryToFirestore(record: VoiceDictionaryRecord, now: string): DocumentData {
+  const payload: DocumentData = {
+    displayText: record.displayText.trim(),
+    spokenText: record.spokenText.trim(),
+    experience: record.experience,
+    language: record.language ?? "en-US",
+    active: record.active,
+    createdAt: record.createdAt || now,
+    updatedAt: now,
+  };
+  const notes = record.notes?.trim();
+  if (notes) payload.notes = notes;
+  return payload;
 }
 
 export async function createVoiceDictionaryRecord(
@@ -122,10 +134,11 @@ export async function createVoiceDictionaryRecord(
     experience: input.experience ?? "techxchange",
     language: "en-US",
     active: input.active ?? true,
-    notes: input.notes?.trim() || undefined,
     createdAt: now,
     updatedAt: now,
   };
+  const notes = input.notes?.trim();
+  if (notes) record.notes = notes;
 
   await saveVoiceDictionaryRecord(eventId, record);
   return record;
@@ -140,7 +153,7 @@ export async function seedVoiceDictionaryIfEmpty(
   if (!snap.empty) return 0;
 
   for (const record of TXC_VOICE_DICTIONARY_SEED) {
-    await setDoc(doc(col, record.id), record);
+    await setDoc(doc(col, record.id), voiceDictionaryToFirestore(record, record.updatedAt));
   }
   invalidateVoiceDictionaryCache(eventId);
   return TXC_VOICE_DICTIONARY_SEED.length;
