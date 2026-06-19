@@ -1,7 +1,5 @@
-"use client";
-
-import SkoHomeView from "@/components/sko/SkoHomeView";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <SkoHomeView />;
+  redirect("/txc");
 }
