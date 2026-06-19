@@ -866,12 +866,11 @@ function SessionsPageContent() {
         return;
       }
       try {
-        const [pSnap, sessSnap, champSnap] = await Promise.all([
+        const [pSnap, sessSnap] = await Promise.all([
           isLoggedIn
             ? getDoc(doc(db, `${BASE}/participants/${participantId}`))
             : Promise.resolve(null),
           getDocs(collection(db, `${BASE}/sessions`)),
-          getDocs(collection(db, `${BASE}/champions`)),
         ]);
 
         const pData = pSnap?.exists() ? (pSnap.data() as RawDoc) : {};
@@ -891,9 +890,15 @@ function SessionsPageContent() {
           .sort(sortSessionsChronological);
 
         setAllScored(scored);
-        setChampionSources(champSnap.docs.map(d => championFromRaw({ id: d.id, ...d.data() } as RawDoc)));
         setTotalCount(scored.length);
         setStatus("ready");
+
+        try {
+          const champSnap = await getDocs(collection(db, `${BASE}/champions`));
+          setChampionSources(champSnap.docs.map(d => championFromRaw({ id: d.id, ...d.data() } as RawDoc)));
+        } catch (champErr) {
+          console.warn("[SessionsPage] Champions catalog unavailable for speaker intel:", champErr);
+        }
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string };
         console.error("[SessionsPage] Firestore error:", err);
@@ -1071,21 +1076,35 @@ function SessionsPageContent() {
       certificationGoals.length > 0;
     const balancedIds = selectBalancedSessionBand(baseList, 6, hasCertIntent).map(s => s.id);
     const byId = new Map(baseList.map(s => [s.id, s]));
-    return balancedIds
+    const scored = balancedIds
       .map(id => byId.get(id))
       .filter((s): s is ScoredSession => !!s);
-  }, [baseList, participantData, certificationGoals]);
+    if (scored.length > 0) return scored;
+    if (!isLoggedIn) {
+      return baseList
+        .filter(s => !isCertificationActivityType(s))
+        .slice(0, 6);
+    }
+    return scored;
+  }, [baseList, participantData, certificationGoals, isLoggedIn]);
 
   const recommendedIds = useMemo(() => new Set(recommended.map(s => s.id)), [recommended]);
 
   const trending = useMemo(() => {
-    return baseList
+    const fromSignals = baseList
       .filter(s => !recommendedIds.has(s.id) && (
         s.recommendation_rules?.everyone_encouraged ||
         s.capacity?.status === "limited"
       ))
       .slice(0, 4);
-  }, [baseList, recommendedIds]);
+    if (fromSignals.length > 0) return fromSignals;
+    if (!isLoggedIn) {
+      return baseList
+        .filter(s => !recommendedIds.has(s.id) && !isCertificationActivityType(s))
+        .slice(0, 4);
+    }
+    return fromSignals;
+  }, [baseList, recommendedIds, isLoggedIn]);
 
   const catalogSessions = useMemo(() => {
     const list = isFiltered ? filtered : allScored;
@@ -1140,8 +1159,9 @@ function SessionsPageContent() {
             <div className="section-kicker">Session intelligence</div>
             <h1>Sessions that fit your week.</h1>
             <p>
-              Compass reads sessions against your profile and surfaces what to prioritize:
-              recommended matches, room momentum, and seats filling fast.
+              {isLoggedIn
+                ? "Compass reads sessions against your profile and surfaces what to prioritize: recommended matches, room momentum, and seats filling fast."
+                : "Browse the full TechXchange catalog below. Sign in or build your Compass to unlock personalized match scores."}
             </p>
           </>
         )}
@@ -1215,9 +1235,11 @@ function SessionsPageContent() {
       {!isFiltered && (
         <>
           <IntelligenceBand
-            kicker="Recommended"
-            title="Your strongest matches."
-            desc="Highest-scored sessions against your goals, tracks, role, and needs."
+            kicker={isLoggedIn ? "Recommended" : "Browse"}
+            title={isLoggedIn ? "Your strongest matches." : "Sessions to explore."}
+            desc={isLoggedIn
+              ? "Highest-scored sessions against your goals, tracks, role, and needs."
+              : "A sample of what is on the schedule — build your Compass for personalized recommendations."}
             sessions={recommended}
             sched={schedState}
             certLabel={certLabel}

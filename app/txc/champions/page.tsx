@@ -312,11 +312,17 @@ function PeopleIntelligenceBand({ kicker, desc, champions, pState, anonymous = f
 // Page
 // ─────────────────────────────────────────────────────────────────────────────
 
+function isFirestorePermissionError(err: unknown): boolean {
+  const code = (err as { code?: string })?.code ?? "";
+  return code === "permission-denied" || code === "PERMISSION_DENIED";
+}
+
 export default function ChampionsPage() {
-  const { user, enrolled } = useAuth();
+  const { user, enrolled, loading: authLoading } = useAuth();
 
   const [champions, setChampions] = useState<Champion[]>([]);
   const [loading,   setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search,    setSearch]    = useState("");
 
   // People action state
@@ -329,19 +335,39 @@ export default function ChampionsPage() {
 
   // Load champions
   useEffect(() => {
+    if (authLoading) return;
+
     const db = tryGetDb();
     if (!db) {
+      setLoadError("Firebase is not configured. Add NEXT_PUBLIC_FIREBASE_* to .env.local.");
       setLoading(false);
       return;
     }
+
+    setLoading(true);
+    setLoadError("");
     getDocs(collection(db, BASE + "/champions"))
       .then((snap) => {
         const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Champion));
         setChampions(data.sort((a, b) => a.display_name.localeCompare(b.display_name)));
       })
-      .catch(() => {})
+      .catch((err: unknown) => {
+        console.error("[ChampionsPage] Firestore error:", err);
+        const e = err as { code?: string; message?: string };
+        if (isFirestorePermissionError(err) && !user) {
+          setLoadError(
+            "Sign in to browse the Champion guide. Public catalog access may also require updated Firestore rules on the server.",
+          );
+        } else if (isFirestorePermissionError(err)) {
+          setLoadError(
+            "Firestore denied access to the Champion guide. Confirm security rules allow reads on organizations/ibm/events/txc2026/champions.",
+          );
+        } else {
+          setLoadError(`${e.code ? `(${e.code}) ` : ""}${e.message ?? String(err)}`);
+        }
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [authLoading, user]);
 
   // Load people action state when user is logged in
   useEffect(() => {
@@ -550,9 +576,22 @@ export default function ChampionsPage() {
         )}
       </section>
 
-      {loading ? (
+      {loading || authLoading ? (
         <section className="section">
           <p style={{ color: "var(--muted)" }}>Loading champions from Firestore…</p>
+        </section>
+      ) : loadError ? (
+        <section className="section no-top-border">
+          <div className="section-kicker" style={{ color: "var(--accent)" }}>Error</div>
+          <h2>Could not load champions</h2>
+          <p style={{ color: "var(--muted)", maxWidth: "640px" }}>{loadError}</p>
+          {!user && (
+            <p style={{ marginTop: "16px" }}>
+              <Link href="/txc/login" className="btn-primary">Sign in</Link>
+              {" "}
+              <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>Build My Compass</Link>
+            </p>
+          )}
         </section>
       ) : search ? (
         <section className="section">
@@ -631,11 +670,17 @@ export default function ChampionsPage() {
               <span className="narrative-kicker">Directory</span>
               <p className="champion-band-desc">Every expert in the guide.</p>
             </div>
-            <div className="champion-grid three-champions">
-              {visibleChampions.map((c) => (
-                <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} profileSignals={profileSignals} />
-              ))}
-            </div>
+            {visibleChampions.length === 0 ? (
+              <div style={{ padding: "48px 0", textAlign: "center" }}>
+                <p style={{ color: "var(--muted)", margin: 0 }}>No champions are available in the guide yet.</p>
+              </div>
+            ) : (
+              <div className="champion-grid three-champions">
+                {visibleChampions.map((c) => (
+                  <ChampionCard key={c.id} c={c} pState={pState} anonymous={!user} profileSignals={profileSignals} />
+                ))}
+              </div>
+            )}
           </section>
         </>
       )}
