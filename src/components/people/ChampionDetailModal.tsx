@@ -22,6 +22,11 @@ interface ChampionDetailModalProps {
   champion: ChampionDetail;
   anonymous?: boolean;
   onClose: () => void;
+  isLoggedIn?: boolean;
+  isSaved?: boolean;
+  matchReasons?: string[];
+  onToggleSave?: () => void;
+  onRemove?: () => void;
 }
 
 function firstName(name: string): string {
@@ -32,6 +37,11 @@ export default function ChampionDetailModal({
   champion,
   anonymous = false,
   onClose,
+  isLoggedIn = false,
+  isSaved = false,
+  matchReasons = [],
+  onToggleSave,
+  onRemove,
 }: ChampionDetailModalProps) {
   const org = champion.organization ?? champion.company ?? "";
   const loc = champion.geo ?? champion.country ?? "";
@@ -90,6 +100,16 @@ export default function ChampionDetailModal({
             Open to technical conversations
           </p>
         )}
+        {!anonymous && matchReasons.length > 0 && (
+          <>
+            <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "16px 0 8px" }}>
+              Why Compass matched this
+            </p>
+            <ul className="session-modal-reasons">
+              {matchReasons.slice(0, 4).map(r => <li key={r}>{r}</li>)}
+            </ul>
+          </>
+        )}
         {!anonymous && champion.linkedin_url && champion.consent?.show_linkedin !== false && (
           <a
             href={champion.linkedin_url}
@@ -105,6 +125,24 @@ export default function ChampionDetailModal({
           <p style={{ margin: "14px 0 0", color: "var(--muted)", fontSize: "0.88rem", lineHeight: 1.5 }}>
             Sign in to see full profile details and save this person to your list.
           </p>
+        )}
+        {isLoggedIn && (onToggleSave || onRemove) && (
+          <div className="champion-detail-modal-actions">
+            {onToggleSave && (
+              <button
+                type="button"
+                className={`action-chip${isSaved ? " action-chip--active" : ""}`}
+                onClick={onToggleSave}
+              >
+                {isSaved ? "✓ Saved" : "+ Save"}
+              </button>
+            )}
+            {onRemove && isSaved && (
+              <button type="button" className="action-chip" onClick={onRemove}>
+                Remove
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -68,6 +68,7 @@ import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
+import SessionDetailModal from "@/components/sessions/SessionDetailModal";
 import {
   buildBalancedMoveSet,
   COMPASS_BALANCE_EXPLANATION,
@@ -241,6 +242,7 @@ interface ExpScheduleState {
   onSave:   (id: string) => void;
   onRemove: (id: string) => void;
   onHide:   (id: string) => void;
+  onShowInfo: (id: string) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -610,7 +612,7 @@ function ExpSessionActionBar({ id, sched }: { id: string; sched: ExpScheduleStat
   return (
     <div style={{ borderTop: "1px solid var(--line)", paddingTop: "8px", marginTop: "10px",
       display: "flex", flexWrap: "wrap" as const, gap: "5px", alignItems: "center" }}>
-      <a href={"/sessions/" + id} style={base}>Info &#8599;</a>
+      <button type="button" onClick={() => sched.onShowInfo(id)} style={base}>Info</button>
       {isSaved
         ? <button type="button" onClick={() => sched.onRemove(id)} style={activeBtn}>&#10003; Added</button>
         : <button type="button" onClick={() => sched.onSave(id)}   style={base}>+ Add</button>
@@ -1262,6 +1264,7 @@ export default function ExperiencePage() {
   const [champions,      setChampions]      = useState<ScoredChampion[]>([]);
   const [allChampions,   setAllChampions]   = useState<ScoredChampion[]>([]);
   const [detailChampion, setDetailChampion] = useState<ScoredChampion | null>(null);
+  const [detailSession, setDetailSession] = useState<ScoredSession | null>(null);
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
   const [savedSchedule,  setSavedSchedule]  = useState<string[]>([]);
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
@@ -1503,10 +1506,16 @@ export default function ExperiencePage() {
     [savedSessions, savedSchedule],
   );
 
+  const handleShowSessionInfo = useCallback((id: string) => {
+    const found = allSessions.find(s => s.id === id);
+    if (found) setDetailSession(found);
+  }, [allSessions]);
+
   const schedState = useMemo<ExpScheduleState>(() => ({
     savedSessions: mergedSavedSessionIds, hiddenSessions,
     onSave: handleSaveSession, onRemove: handleRemoveSession, onHide: handleHideSession,
-  }), [mergedSavedSessionIds, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession]);
+    onShowInfo: handleShowSessionInfo,
+  }), [mergedSavedSessionIds, hiddenSessions, handleSaveSession, handleRemoveSession, handleHideSession, handleShowSessionInfo]);
 
   const rankedSessionsForVoice = useMemo(
     () => [...learningList, ...communityList, ...funList]
@@ -2299,7 +2308,28 @@ export default function ExperiencePage() {
       {detailChampion && (
         <ChampionDetailModal
           champion={detailChampion}
+          isLoggedIn
+          isSaved={savedPeople.includes(detailChampion.id)}
+          matchReasons={detailChampion.compass_reasons}
+          onToggleSave={() => {
+            if (savedPeople.includes(detailChampion.id)) {
+              handleRemoveConnection(detailChampion.id);
+            } else {
+              handleRequestSavePerson(toRecommendedPerson(detailChampion, sessionSpeakerNames));
+            }
+          }}
           onClose={() => setDetailChampion(null)}
+        />
+      )}
+
+      {detailSession && (
+        <SessionDetailModal
+          session={detailSession}
+          allSessions={allSessions}
+          speakerCatalog={speakerCatalog}
+          speakerCtx={speakerCtx}
+          onViewSpeaker={handleDetailsPerson}
+          onClose={() => setDetailSession(null)}
         />
       )}
     </>

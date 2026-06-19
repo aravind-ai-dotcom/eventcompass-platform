@@ -748,6 +748,11 @@ export default function ChampionsPage() {
         <ChampionDetailModal
           champion={detailChampion}
           anonymous={!user}
+          isLoggedIn={!!user && !pLoading}
+          isSaved={savedPeople.includes(detailChampion.id)}
+          matchReasons={deriveMatchReasons(detailChampion, profileSignals)}
+          onToggleSave={() => handleSave(detailChampion.id)}
+          onRemove={() => handleRemove(detailChampion.id)}
           onClose={() => setDetailChampion(null)}
         />
       )}

@@ -15,9 +15,8 @@ import {
 } from "@/lib/certificationProfile";
 import { buildSessionRecommendationReasons } from "@/lib/sessionIntelligence";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
+import SessionDetailModal from "@/components/sessions/SessionDetailModal";
 import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
-import SessionSpeakerPanel from "@/components/sessions/SessionSpeakerPanel";
-import CertificationSessionDetail from "@/components/sessions/CertificationSessionDetail";
 import { selectBalancedSessionBand } from "@/lib/recommendationBalancing";
 import { hasCertificationIntent } from "@/lib/certificationProfile";
 import {
@@ -232,108 +231,6 @@ function sortSessionsChronological(a: ScoredSession, b: ScoredSession): number {
   if (timeA === null && timeB !== null) return 1;
 
   return b.compass_score - a.compass_score;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Session detail modal — avoids dead /sessions/{id} routes
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SessionDetailModal({
-  session,
-  allSessions,
-  speakerCatalog,
-  speakerCtx,
-  onViewSpeaker,
-  anonymous = false,
-  onClose,
-}: {
-  session: ScoredSession;
-  allSessions: ScoredSession[];
-  speakerCatalog: SpeakerProfile[];
-  speakerCtx: SpeakerParticipantContext;
-  onViewSpeaker?: (speakerId: string) => void;
-  anonymous?: boolean;
-  onClose: () => void;
-}) {
-  const type = sessionType(session);
-  const track = primaryTrack(session);
-  const meta = sessionMeta(session);
-  const tags = [
-    ...(session.tracks?.topics ?? []),
-    ...(session.tracks?.products ?? []),
-    ...(session.tracks?.secondary_tracks ?? []),
-  ].filter(Boolean);
-  const isCertJourney = isCertificationActivityType(session);
-  const sessionSpeakers = resolveSpeakersForSession(
-    sessionFromScored(session),
-    speakerCatalog,
-    speakerCtx,
-  );
-  const primarySpeaker = sessionSpeakers[0];
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      className="session-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="session-modal-title"
-      onClick={onClose}
-    >
-      <div className={`session-modal${isCertJourney ? " session-modal--certification" : ""}`} onClick={e => e.stopPropagation()}>
-        <button type="button" className="session-modal-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
-        {isCertJourney ? (
-          <CertificationSessionDetail session={session} allSessions={allSessions} onClose={onClose} />
-        ) : (
-          <>
-            <p style={{ color: "var(--accent)", fontSize: "0.68rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 8px" }}>
-              {type}{track ? ` · ${track}` : ""}
-            </p>
-            <h2 id="session-modal-title">{session.title}</h2>
-            {meta && <p className="session-modal-meta">{meta}</p>}
-            {session.compass_score > 0 && (
-              <p style={{ fontSize: "0.88rem", color: "var(--text)", margin: "0 0 16px" }}>
-                Compass match: <strong>{session.compass_score}</strong>
-              </p>
-            )}
-            {tags.length > 0 && (
-              <div className="chip-row" style={{ marginBottom: "16px" }}>
-                {tags.slice(0, 8).map(tag => <span key={tag} className="chip">{tag}</span>)}
-              </div>
-            )}
-            {session.compass_reasons.length > 0 && (
-              <>
-                <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "0 0 8px" }}>
-                  Why Compass matched this
-                </p>
-                <ul className="session-modal-reasons">
-                  {session.compass_reasons.map(r => <li key={r}>{r}</li>)}
-                </ul>
-              </>
-            )}
-            {primarySpeaker && (
-              <SessionSpeakerPanel
-                speaker={primarySpeaker}
-                currentSessionId={session.id}
-                allSessions={allSessions.map(sessionFromScored)}
-                onViewProfile={onViewSpeaker}
-                anonymous={anonymous}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
