@@ -93,6 +93,7 @@ export default function CompassHeader() {
   ];
 
   return (
+    <>
     <header className="site-header">
       <Link href="/txc" className="brand" aria-label="TechXchange Compass home">
         <Image
@@ -152,25 +153,26 @@ export default function CompassHeader() {
           {menuOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
-
-      {menuOpen && (
-        <div className="mobile-drawer" role="dialog" aria-modal="true">
-          <nav className="mobile-drawer-nav">
-            {drawerLinks.map(item => (
-              <Link key={item.href} href={item.href} className="mobile-drawer-link">
-                {item.label}
-              </Link>
-            ))}
-            {user ? (
-              <button type="button" className="mobile-drawer-link" onClick={() => void logOut()}>
-                Sign out
-              </button>
-            ) : (
-              <Link href="/txc/login" className="mobile-drawer-link">Sign in</Link>
-            )}
-          </nav>
-        </div>
-      )}
     </header>
+
+    {menuOpen && (
+      <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+        <nav className="mobile-drawer-nav" aria-label="TechXchange navigation">
+          {drawerLinks.map(item => (
+            <Link key={item.href} href={item.href} className="mobile-drawer-link">
+              {item.label}
+            </Link>
+          ))}
+          {user ? (
+            <button type="button" className="mobile-drawer-link" onClick={() => void logOut()}>
+              Sign out
+            </button>
+          ) : (
+            <Link href="/txc/login" className="mobile-drawer-link">Sign in</Link>
+          )}
+        </nav>
+      </div>
+    )}
+    </>
   );
 }
