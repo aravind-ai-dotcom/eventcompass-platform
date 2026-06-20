@@ -1,6 +1,7 @@
 "use client";
 
 import ConnectionVaultCard from "@/components/people/ConnectionVaultCard";
+import CompassPanel from "@/components/experience/CompassPanel";
 import type { ConnectionVaultRecord } from "@/types/connectionVault";
 
 interface MyConnectionsSectionProps {
@@ -23,13 +24,15 @@ export default function MyConnectionsSection({
 }: MyConnectionsSectionProps) {
   const content = (
     <>
-      <header className="people-follow-up-split__header">
-        <p className="people-follow-up-split__kicker">My Connections</p>
-        <h2 className="people-follow-up-split__title">People you want to remember and follow up with.</h2>
-        <p className="people-follow-up-split__note">
-          Your relationship vault — context, notes, and quick actions for after TechXchange.
-        </p>
-      </header>
+      {!splitColumn && (
+        <header className="people-follow-up-split__header">
+          <p className="people-follow-up-split__kicker">My Connections</p>
+          <h2 className="people-follow-up-split__title">People you want to remember and follow up with.</h2>
+          <p className="people-follow-up-split__note">
+            Your relationship vault — context, notes, and quick actions for after TechXchange.
+          </p>
+        </header>
+      )}
 
       {records.length > 0 ? (
         <div className="people-follow-up-split__cards connection-cards-grid">
@@ -52,7 +55,17 @@ export default function MyConnectionsSection({
   );
 
   if (splitColumn) {
-    return <div className="people-follow-up-split__column">{content}</div>;
+    return (
+      <CompassPanel
+        icon="connections"
+        kicker="My Connections"
+        title="People you want to remember and follow up with."
+        description="Your relationship vault — context, notes, and quick actions for after TechXchange."
+        className="people-panel-box"
+      >
+        {content}
+      </CompassPanel>
+    );
   }
 
   const outerClass = embedded

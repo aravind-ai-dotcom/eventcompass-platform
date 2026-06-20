@@ -1591,6 +1591,85 @@ img { max-width: 100%; display: block; }
   padding: 20px 22px 18px;
   overflow: visible;
 }
+
+/* Shared Compass module panel — matches Ask Compass card */
+.compass-panel {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px 22px 18px;
+}
+.compass-panel--accent {
+  border-color: rgba(15, 98, 254, 0.28);
+  background: linear-gradient(180deg, rgba(15, 98, 254, 0.03) 0%, var(--panel) 100%);
+}
+.compass-panel__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.compass-panel__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--accent);
+}
+.compass-panel__copy {
+  min-width: 0;
+  flex: 1;
+}
+.compass-panel__kicker {
+  margin: 0 0 4px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.compass-panel__title {
+  margin: 0 0 4px;
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text);
+}
+.compass-panel__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 520px;
+}
+
+.people-dual-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+@media (min-width: 720px) {
+  .people-dual-panel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+.people-panel-box.compass-panel {
+  padding: 22px 24px 24px;
+}
+.people-panel-box .people-follow-up-split__cards {
+  margin-top: 4px;
+}
+
 .voice-companion-head {
   margin-bottom: 16px;
   max-width: 520px;
@@ -4415,8 +4494,8 @@ img { max-width: 100%; display: block; }
 /* ── Live opportunities / huddles ─────────────────────────────────────────── */
 
 .live-opportunities-section {
-  padding-top: 40px;
-  padding-bottom: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .live-opportunities {
@@ -4433,9 +4512,13 @@ img { max-width: 100%; display: block; }
   justify-content: space-between;
   gap: 16px;
 }
-.live-opportunities-start {
-  flex-shrink: 0;
-  margin-top: 18px;
+.live-opportunities-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: -4px 0 14px;
+}
+.live-opportunities-actions .live-opportunities-start {
+  margin-top: 0;
 }
 .live-opportunities-kicker {
   display: block;
@@ -4819,6 +4902,7 @@ img { max-width: 100%; display: block; }
 }
 
 .cert-panel__rail {
+  /* Carbon dashboard accent — visual progress rail for certification journey */
   background: linear-gradient(180deg, #0f62fe 0%, #4589ff 55%, #a56eff 100%);
 }
 
@@ -5744,12 +5828,19 @@ img { max-width: 100%; display: block; }
 }
 
 .live-opportunities-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.5;
   margin: 0;
-  padding: 24px 0;
+  padding: 8px 0 4px;
   grid-column: 1 / -1;
+}
+.live-opportunities-start--empty {
+  min-height: 44px;
 }
 
 /* ── Ask Compass trigger (IBM Ask pattern) ─────────────────────────────────── */
@@ -6899,6 +6990,9 @@ img { max-width: 100%; display: block; }
     font-size: clamp(1.35rem, 5vw, 1.85rem);
     line-height: 1.12;
   }
+  .compass-section-body .compass-panel {
+    padding: 16px 18px;
+  }
   .compass-section-body .intelligence-surface {
     padding: 16px;
   }
@@ -7143,11 +7237,12 @@ img { max-width: 100%; display: block; }
 }
 .compass-schedule-list {
   display: grid;
-  gap: 1px;
+  gap: 0;
+  border: 1px solid var(--line);
   background: var(--line);
 }
 .compass-schedule-row {
-  background: var(--panel);
+  background: var(--surface);
   padding: 14px 18px;
   display: flex;
   align-items: flex-start;

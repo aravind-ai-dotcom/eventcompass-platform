@@ -122,14 +122,45 @@ export function useHuddles({
   );
 
   const matchedHuddles: MatchedHuddle[] = useMemo(() => {
-    if (!participant) return [];
-    const base = matchHuddlesForParticipant(
-      allHuddles,
-      participant,
-      responses,
-      preferences,
-      displayLimit,
+    const active = allHuddles.filter(
+      h => h.status !== "expired" && h.status !== "cancelled",
     );
+
+    let base: MatchedHuddle[] = [];
+
+    if (participant) {
+      const matched = matchHuddlesForParticipant(
+        active,
+        participant,
+        responses,
+        preferences,
+        displayLimit,
+      );
+      if (matched.length > 0) {
+        base = matched;
+      } else {
+        base = active
+          .filter(h => h.host_participant_id === participant.uid)
+          .map(h => ({
+            ...h,
+            match_score: 100,
+            match_reasons: ["You are hosting"],
+            user_response: responses[h.id] as MatchedHuddle["user_response"],
+          }))
+          .slice(0, displayLimit);
+      }
+    } else {
+      base = active
+        .filter(h => h.visibility === "public" || h.visibility === "matched")
+        .map(h => ({
+          ...h,
+          match_score: 5,
+          match_reasons: ["Open event invitation"],
+          user_response: responses[h.id] as MatchedHuddle["user_response"],
+        }))
+        .slice(0, displayLimit);
+    }
+
     return base.map(h => ({
       ...h,
       session_conflict: findSessionConflict(

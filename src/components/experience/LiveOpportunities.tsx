@@ -7,6 +7,7 @@ import type { SpeakerProfile } from "@/types/speaker";
 import { enrichHuddleWithSpeakerIntel } from "@/lib/speakerIntelligence";
 import HuddleCard from "@/components/experience/HuddleCard";
 import StartConversationModal from "@/components/experience/StartConversationModal";
+import CompassPanel from "@/components/experience/CompassPanel";
 
 interface LiveOpportunitiesProps {
   huddles: HuddlesController;
@@ -48,19 +49,15 @@ export default function LiveOpportunities({
 
   const liveCount = visible.filter(h => h.displayStatus === "happening_now" || h.displayStatus === "ending_soon").length;
 
-  return (
-    <div className={`live-opportunities${embedded ? " live-opportunities--embedded" : ""}`}>
-      <header className="live-opportunities-head live-opportunities-head--row">
-        <div>
-          <span className="live-opportunities-kicker">Community & connections</span>
-          <h2 className="live-opportunities-title">Huddles near you</h2>
-          <p className="live-opportunities-desc">
-            {liveCount > 0
-              ? `${liveCount} in-person invitation${liveCount === 1 ? "" : "s"} happening now — right people, right place, right time.`
-              : "Lightweight invitations for real-world conversations. No chat — just show up."}
-          </p>
-        </div>
-        {participantUid && (
+  const panelDescription =
+    liveCount > 0
+      ? `${liveCount} in-person invitation${liveCount === 1 ? "" : "s"} happening now — right people, right place, right time.`
+      : "Lightweight invitations for real-world conversations. No chat — just show up.";
+
+  const body = (
+    <>
+      {participantUid && (
+        <div className="live-opportunities-actions">
           <button
             type="button"
             className="action-chip live-opportunities-start"
@@ -68,17 +65,28 @@ export default function LiveOpportunities({
           >
             Start a Conversation
           </button>
-        )}
-      </header>
+        </div>
+      )}
 
       {loading && visible.length === 0 && (
         <p className="live-opportunities-desc">Loading matched huddles…</p>
       )}
 
       {!loading && visible.length === 0 && (
-        <p className="live-opportunities-desc">
-          No matched huddles right now. Refine your Compass profile or start an invitation.
-        </p>
+        <div className="live-opportunities-empty">
+          <p className="live-opportunities-desc">
+            No huddles matched yet — start an invitation and others can join you on site.
+          </p>
+          {participantUid && (
+            <button
+              type="button"
+              className="action-chip live-opportunities-start live-opportunities-start--empty"
+              onClick={() => setShowStart(true)}
+            >
+              Start a Conversation
+            </button>
+          )}
+        </div>
       )}
 
       <ul className="huddle-feed" aria-label="Matched huddles">
@@ -117,6 +125,30 @@ export default function LiveOpportunities({
           }}
         />
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <CompassPanel
+        icon="huddles"
+        kicker="Community & connections"
+        title="Huddles near you"
+        description={panelDescription}
+        className="live-opportunities live-opportunities--embedded"
+      >
+        {body}
+      </CompassPanel>
+    );
+  }
+
+  return (
+    <div className="live-opportunities">
+      <header className="live-opportunities-head">
+        <span className="live-opportunities-kicker">Community & connections</span>
+        <h2 className="live-opportunities-title">Huddles near you</h2>
+      </header>
+      {body}
     </div>
   );
 }

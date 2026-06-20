@@ -3,6 +3,7 @@
 import RecommendedConnectionCard, {
   type RecommendedPerson,
 } from "@/components/people/RecommendedConnectionCard";
+import CompassPanel from "@/components/experience/CompassPanel";
 import type { InboundConnectionSignal } from "@/types/connectionSignals";
 import { CONNECTION_BADGE_LABELS } from "@/lib/connectionBadges";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
@@ -75,13 +76,15 @@ export default function PeopleInterestedSection({
 
   const content = (
     <>
-      <header className="people-follow-up-split__header">
-        <p className="people-follow-up-split__kicker">Interested in you</p>
-        <h2 className="people-follow-up-split__title">People interested in you.</h2>
-        <p className="people-follow-up-split__note">
-          Attendees who expressed interest in meeting you — including mutual matches.
-        </p>
-      </header>
+      {!splitColumn && (
+        <header className="people-follow-up-split__header">
+          <p className="people-follow-up-split__kicker">Interested in you</p>
+          <h2 className="people-follow-up-split__title">People interested in you.</h2>
+          <p className="people-follow-up-split__note">
+            Attendees who expressed interest in meeting you — including mutual matches.
+          </p>
+        </header>
+      )}
 
       {inboundSignals.length > 0 ? (
         <div className="people-follow-up-split__cards connection-cards-grid">
@@ -148,7 +151,17 @@ export default function PeopleInterestedSection({
   );
 
   if (splitColumn) {
-    return <div className="people-follow-up-split__column">{content}</div>;
+    return (
+      <CompassPanel
+        icon="interested"
+        kicker="Interested in you"
+        title="People interested in you."
+        description="Attendees who expressed interest in meeting you — including mutual matches."
+        className="people-panel-box"
+      >
+        {content}
+      </CompassPanel>
+    );
   }
 
   if (inboundSignals.length === 0) return null;

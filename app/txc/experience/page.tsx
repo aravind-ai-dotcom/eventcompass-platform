@@ -63,6 +63,7 @@ import {
 } from "@/types/certificationTracker";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
+import CompassPanel from "@/components/experience/CompassPanel";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
@@ -2081,18 +2082,19 @@ export default function ExperiencePage() {
           )}
 
           {isModuleVisible("next_best_move") && nextBestMove && (
-            <div className="compass-module-block intelligence-surface intelligence-surface--prominent">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Next best move</div>
-                  <h2>The single most valuable thing to do next.</h2>
-                </div>
-              </div>
-              <NextBestMoveCard
-                nextBestMove={nextBestMove}
-                intelSession={nbmSession}
-                certLabel={certLabel}
-              />
+            <div className="compass-module-block">
+              <CompassPanel
+                icon="next-move"
+                variant="accent"
+                kicker="Next best move"
+                title="The single most valuable thing to do next."
+              >
+                <NextBestMoveCard
+                  nextBestMove={nextBestMove}
+                  intelSession={nbmSession}
+                  certLabel={certLabel}
+                />
+              </CompassPanel>
             </div>
           )}
 
@@ -2112,6 +2114,23 @@ export default function ExperiencePage() {
                   Expand Community below for more anchor moments.
                 </p>
               )}
+            </div>
+          )}
+
+          {isModuleVisible("conversations") && (
+            <div className="compass-module-block">
+              <LiveOpportunities
+                huddles={huddlesController}
+                speakerCatalog={speakerCatalog}
+                participantUid={participantId}
+                userDisplayName={displayName}
+                userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
+                hostJobTitle={String(participant?.job_title ?? "")}
+                hostOrganization={String(participant?.organization ?? participant?.company ?? "")}
+                visibleLimit={5}
+                embedded
+                onSaveContact={handleSaveHuddleContact}
+              />
             </div>
           )}
         </CompassSection>
@@ -2178,31 +2197,32 @@ export default function ExperiencePage() {
 
           {isModuleVisible("my_schedule") && myScheduleSessions.length > 0 && (
             <div className="compass-module-block">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Saved schedule</div>
-                  <h2>{myScheduleSessions.length} session{myScheduleSessions.length !== 1 ? "s" : ""} saved.</h2>
-                </div>
-              </div>
-              <div className="compass-schedule-list">
-                {myScheduleSessions.map(s => {
-                  const type = sessionTypeLabel(s);
-                  const track = s.tracks?.primary_track ?? "";
-                  const meta = sessionMeta(s);
-                  return (
-                    <div key={s.id} className="compass-schedule-row">
-                      <div>
-                        <p className="compass-schedule-type">{type}{track ? " · " + track : ""}</p>
-                        <p className="compass-schedule-title">{s.title}</p>
-                        {meta && <p className="compass-schedule-meta">{meta}</p>}
+              <CompassPanel
+                icon="schedule"
+                kicker="Saved schedule"
+                title={`${myScheduleSessions.length} session${myScheduleSessions.length !== 1 ? "s" : ""} saved.`}
+                description="Your shortlist for the week — remove anything that no longer fits."
+              >
+                <div className="compass-schedule-list">
+                  {myScheduleSessions.map(s => {
+                    const type = sessionTypeLabel(s);
+                    const track = s.tracks?.primary_track ?? "";
+                    const meta = sessionMeta(s);
+                    return (
+                      <div key={s.id} className="compass-schedule-row">
+                        <div>
+                          <p className="compass-schedule-type">{type}{track ? " · " + track : ""}</p>
+                          <p className="compass-schedule-title">{s.title}</p>
+                          {meta && <p className="compass-schedule-meta">{meta}</p>}
+                        </div>
+                        <button type="button" className="compass-schedule-remove" onClick={() => handleRemoveSession(s.id)}>
+                          Remove
+                        </button>
                       </div>
-                      <button type="button" className="compass-schedule-remove" onClick={() => handleRemoveSession(s.id)}>
-                        Remove
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              </CompassPanel>
             </div>
           )}
 
@@ -2219,23 +2239,6 @@ export default function ExperiencePage() {
           expanded={hydrated && isSectionExpanded("people")}
           onToggle={() => toggleSection("people")}
         >
-          {isModuleVisible("conversations") && (
-            <div className="compass-module-block live-opportunities-section">
-              <LiveOpportunities
-                huddles={huddlesController}
-                speakerCatalog={speakerCatalog}
-                participantUid={participantId}
-                userDisplayName={displayName}
-                userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
-                hostJobTitle={String(participant?.job_title ?? "")}
-                hostOrganization={String(participant?.organization ?? participant?.company ?? "")}
-                visibleLimit={5}
-                embedded
-                onSaveContact={handleSaveHuddleContact}
-              />
-            </div>
-          )}
-
           {isModuleVisible("recommended_connections") && (
             <RecommendedConnectionsSection
               people={recommendedPeople}
@@ -2255,36 +2258,30 @@ export default function ExperiencePage() {
           )}
 
           {isModuleVisible("my_connections") || isModuleVisible("people_interested_in_me") ? (
-            <section className="compass-module-block people-follow-up-split">
-              <div className="people-follow-up-split__layout">
-                {isModuleVisible("my_connections") && (
-                  <MyConnectionsSection
-                    records={sortedConnectionVault}
-                    onViewProfile={handleDetailsPerson}
-                    onRemove={handleRemoveConnection}
-                    onUpdateNote={handleUpdateConnectionNote}
-                    splitColumn
-                  />
-                )}
+            <div className="people-dual-panel-grid compass-module-block">
+              {isModuleVisible("my_connections") && (
+                <MyConnectionsSection
+                  records={sortedConnectionVault}
+                  onViewProfile={handleDetailsPerson}
+                  onRemove={handleRemoveConnection}
+                  onUpdateNote={handleUpdateConnectionNote}
+                  splitColumn
+                />
+              )}
 
-                {isModuleVisible("my_connections") && isModuleVisible("people_interested_in_me") && (
-                  <div className="people-follow-up-split__divider" role="separator" aria-orientation="vertical" />
-                )}
-
-                {isModuleVisible("people_interested_in_me") && (
-                  <PeopleInterestedSection
-                    inboundSignals={SAMPLE_INBOUND_SIGNALS}
-                    savedChampionRefs={savedChampionRefs}
-                    savedPeople={savedPeople}
-                    onRequestSave={handleRequestSavePerson}
-                    onSave={handleSavePerson}
-                    onShowDetails={handleDetailsPerson}
-                    profileSignals={profileSignals}
-                    splitColumn
-                  />
-                )}
-              </div>
-            </section>
+              {isModuleVisible("people_interested_in_me") && (
+                <PeopleInterestedSection
+                  inboundSignals={SAMPLE_INBOUND_SIGNALS}
+                  savedChampionRefs={savedChampionRefs}
+                  savedPeople={savedPeople}
+                  onRequestSave={handleRequestSavePerson}
+                  onSave={handleSavePerson}
+                  onShowDetails={handleDetailsPerson}
+                  profileSignals={profileSignals}
+                  splitColumn
+                />
+              )}
+            </div>
           ) : null}
         </CompassSection>
 
