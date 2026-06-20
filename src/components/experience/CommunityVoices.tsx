@@ -7,6 +7,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import CompassModuleHead from "@/components/experience/CompassModuleHead";
 
 type Champion = {
   id: string;
@@ -206,34 +207,11 @@ export default function CommunityVoices({ champions, maxVisible = 6 }: Props) {
 
   return (
     <section>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-          gap: "8px",
-        }}
-      >
-        <div>
-          <div className="section-kicker">Community voices</div>
-          <h2
-            style={{
-              fontSize: "clamp(1.6rem, 2.8vw, 2.2rem)",
-              fontWeight: 520,
-              letterSpacing: "-0.04em",
-              margin: "4px 0 0",
-              color: "var(--text)",
-            }}
-          >
-            Champions who make TechXchange extraordinary.
-          </h2>
-        </div>
-        <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "340px", margin: 0, lineHeight: 1.5 }}>
-          IBM Champions who have opted in to connect with attendees throughout the event.
-        </p>
-      </div>
+      <CompassModuleHead
+        kicker="Community voices"
+        title="Champions who make TechXchange extraordinary."
+        description="IBM Champions who have opted in to connect with attendees throughout the event."
+      />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
         {visible.map((c) => (

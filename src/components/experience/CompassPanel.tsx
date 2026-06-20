@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import CompassPanelIcon, { type CompassPanelIconName } from "@/components/experience/CompassPanelIcon";
+import CompassModuleHead from "@/components/experience/CompassModuleHead";
+import type { CompassPanelIconName } from "@/components/experience/CompassPanelIcon";
 
 interface CompassPanelProps {
   icon?: CompassPanelIconName;
@@ -30,17 +31,13 @@ export default function CompassPanel({
         className,
       ].filter(Boolean).join(" ")}
     >
-      {hasHead && (
-        <header className="compass-panel__head">
-          {icon && <CompassPanelIcon name={icon} />}
-          {(kicker || title || description) && (
-            <div className="compass-panel__copy">
-              {kicker && <p className="compass-panel__kicker">{kicker}</p>}
-              {title && <h2 className="compass-panel__title">{title}</h2>}
-              {description && <p className="compass-panel__desc">{description}</p>}
-            </div>
-          )}
-        </header>
+      {hasHead && kicker && title && (
+        <CompassModuleHead
+          icon={icon}
+          kicker={kicker}
+          title={title}
+          description={description}
+        />
       )}
       {children}
     </div>

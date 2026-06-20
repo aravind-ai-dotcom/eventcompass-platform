@@ -64,6 +64,7 @@ import {
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
 import CompassPanel from "@/components/experience/CompassPanel";
+import CompassModuleHead from "@/components/experience/CompassModuleHead";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
 import { useCompassUiPreferences } from "@/hooks/useCompassUiPreferences";
 import { sessionRecommendationLine, resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
@@ -1014,18 +1015,13 @@ function WhatYouToldCompass({ participant, embedded = false }: { participant: Ra
 
   return (
     <section className={embedded ? "compass-module-block" : "section"}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
-        <div>
-          <div className="section-kicker">What you told Compass</div>
-          <h2 style={{ fontSize: "clamp(1.5rem, 2.4vw, 2rem)", fontWeight: 520, letterSpacing: "-0.035em", margin: "4px 0 8px", lineHeight: 1.12 }}>
-            Your profile signals
-          </h2>
-          <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.92rem", maxWidth: "560px", lineHeight: 1.55 }}>
-            Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities.
-          </p>
-        </div>
-        <a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
-      </div>
+      <CompassModuleHead
+        kicker="What you told Compass"
+        title="Your profile signals"
+        description="Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities."
+        action={<a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>}
+        className="compass-module-head--with-action"
+      />
 
       {identityItems.length > 0 && (
         <div className="profile-identity-grid">
@@ -1118,16 +1114,11 @@ function DayTabExperience({
 
   return (
     <section className={sectionClass}>
-      <div className="section-head">
-        <div>
-          <div className="section-kicker">Your AI-powered week</div>
-          <h2>Compass selects and prioritizes your sessions.</h2>
-        </div>
-        <p>
-          A four-day plan shaped to your goals — Community, Learning, and Fun balanced across the week.
-          Conflict handling follows your preference below.
-        </p>
-      </div>
+      <CompassModuleHead
+        kicker="Your AI-powered week"
+        title="Compass selects and prioritizes your sessions."
+        description="A four-day plan shaped to your goals — Community, Learning, and Fun balanced across the week. Conflict handling follows your preference below."
+      />
 
       <div className="plan-mode-row" role="group" aria-label="Conflict handling">
         {([
@@ -2100,12 +2091,7 @@ export default function ExperiencePage() {
 
           {isModuleVisible("shared_moments") && (
             <div className="compass-module-block">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Shared moments</div>
-                  <h2>Not to miss.</h2>
-                </div>
-              </div>
+              <CompassModuleHead kicker="Shared moments" title="Not to miss." />
               <div className="compass-highlight-grid">
                 {sharedMomentItems.map(h => <HighlightActionCard key={h.id} h={h} />)}
               </div>
@@ -2178,15 +2164,11 @@ export default function ExperiencePage() {
 
           {isModuleVisible("recommended_sessions") && recommendedSessions.length > 0 && (
             <div className="compass-module-block">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Recommended</div>
-                  <h2>A curated mix across learning, community, and fun.</h2>
-                </div>
-              </div>
-              <p className="compass-module-note" style={{ marginBottom: "14px" }}>
-                {COMPASS_BALANCE_EXPLANATION}
-              </p>
+              <CompassModuleHead
+                kicker="Recommended"
+                title="A curated mix across learning, community, and fun."
+                description={COMPASS_BALANCE_EXPLANATION}
+              />
               <div className="intelligence-row">
                 {recommendedSessions.map(s => (
                   <SessionCard key={s.id} session={s} sched={schedState} certLabel={certLabel} />
@@ -2336,12 +2318,7 @@ export default function ExperiencePage() {
 
           {isModuleVisible("live_highlights") && (
             <div className="compass-module-block">
-              <div className="section-head narrow">
-                <div>
-                  <div className="section-kicker">Live highlights</div>
-                  <h2>Anchor moments this week.</h2>
-                </div>
-              </div>
+              <CompassModuleHead kicker="Live highlights" title="Anchor moments this week." />
               <div className="compass-highlight-grid">
                 {HIGHLIGHT_DATA.map(h => <HighlightActionCard key={h.id} h={h} />)}
               </div>

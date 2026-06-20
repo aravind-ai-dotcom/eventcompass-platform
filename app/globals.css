@@ -1584,15 +1584,15 @@ img { max-width: 100%; display: block; }
   font-size: 0.88rem;
 }
 
-/* Voice Compass companion card */
+/* Voice Compass companion card — accent gradient (pairs with Next Best Move) */
 .voice-companion-card {
-  border: 1px solid var(--line);
-  background: var(--panel);
+  border: 1px solid rgba(15, 98, 254, 0.28);
+  background: linear-gradient(180deg, rgba(15, 98, 254, 0.04) 0%, var(--panel) 100%);
   padding: 20px 22px 18px;
   overflow: visible;
 }
 
-/* Shared Compass module panel — matches Ask Compass card */
+/* Shared Compass module panel — boxed modules */
 .compass-panel {
   box-sizing: border-box;
   width: 100%;
@@ -1605,13 +1605,29 @@ img { max-width: 100%; display: block; }
   border-color: rgba(15, 98, 254, 0.28);
   background: linear-gradient(180deg, rgba(15, 98, 254, 0.03) 0%, var(--panel) 100%);
 }
-.compass-panel__head {
+
+/* Block titles — same typography boxed or unboxed */
+.compass-module-head {
   display: flex;
   align-items: flex-start;
   gap: 14px;
   margin-bottom: 16px;
 }
-.compass-panel__icon {
+.compass-module-head--with-action {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  row-gap: 10px;
+}
+.compass-module-head__copy {
+  min-width: 0;
+  flex: 1;
+}
+.compass-module-head__action {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.compass-panel__icon,
+.compass-module-head .compass-panel__icon {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
@@ -1622,11 +1638,12 @@ img { max-width: 100%; display: block; }
   background: var(--surface);
   color: var(--accent);
 }
-.compass-panel__copy {
-  min-width: 0;
-  flex: 1;
-}
-.compass-panel__kicker {
+.compass-module-head__kicker,
+.compass-panel__kicker,
+.compass-section-body .section-kicker,
+.compass-section-body .live-opportunities-kicker,
+.compass-section-body .people-follow-up-split__kicker,
+.compass-section-body .recommended-experts-block__kicker {
   margin: 0 0 4px;
   font-size: 0.64rem;
   font-weight: 700;
@@ -1634,7 +1651,13 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   color: var(--accent);
 }
-.compass-panel__title {
+.compass-module-head__title,
+.compass-panel__title,
+.compass-section-body .section-head h2,
+.compass-section-body .voice-companion-head .compass-module-head__title,
+.compass-section-body .live-opportunities-title,
+.compass-section-body .people-follow-up-split__title,
+.compass-section-body .why-compass-trust-title {
   margin: 0 0 4px;
   font-size: clamp(1.05rem, 1.6vw, 1.25rem);
   font-weight: 560;
@@ -1642,12 +1665,25 @@ img { max-width: 100%; display: block; }
   line-height: 1.2;
   color: var(--text);
 }
-.compass-panel__desc {
+.compass-module-head__desc,
+.compass-panel__desc,
+.compass-section-body .section-head p,
+.compass-section-body .section-head-note,
+.compass-section-body .compass-module-head__desc,
+.compass-section-body .live-opportunities-desc,
+.compass-section-body .people-follow-up-split__note,
+.compass-section-body .recommended-experts-block__note {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.45;
   max-width: 520px;
+}
+.compass-panel > .compass-module-head {
+  margin-bottom: 16px;
+}
+.compass-panel > :last-child:not(.compass-module-head) {
+  margin-bottom: 0;
 }
 
 .people-dual-panel-grid {
@@ -1671,21 +1707,13 @@ img { max-width: 100%; display: block; }
 }
 
 .voice-companion-head {
-  margin-bottom: 16px;
-  max-width: 520px;
+  margin-bottom: 0;
+  max-width: none;
 }
-.voice-companion-head h2 {
-  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
-  font-weight: 560;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
-  line-height: 1.2;
-}
-.voice-companion-head p {
+.voice-companion-head .compass-live-signal {
+  margin-top: 8px;
+  font-size: 0.78rem;
   color: var(--muted);
-  font-size: 0.84rem;
-  line-height: 1.45;
-  margin: 0;
 }
 .voice-companion-stack {
   display: flex;
@@ -6872,6 +6900,31 @@ img { max-width: 100%; display: block; }
   width: 100%;
   min-width: 0;
 }
+.compass-section-body .section-head,
+.compass-section-body .section-head.narrow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 16px;
+}
+.compass-section-body .intelligence-band .section-head {
+  margin-bottom: 16px;
+}
+.compass-section-body .section-head-note {
+  margin-top: 4px;
+}
+.compass-section-body .compass-module-note {
+  margin: -8px 0 14px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 520px;
+}
+.compass-section-body .compass-highlight-grid,
+.compass-section-body .intelligence-row {
+  margin-top: 0;
+}
 
 /* My Profile — summary cards + signal grid */
 .compass-profile-summary {
@@ -6984,24 +7037,43 @@ img { max-width: 100%; display: block; }
   .compass-section-body .section-head,
   .compass-section-body .section-head.narrow {
     margin-bottom: 14px;
-    gap: 8px;
   }
-  .compass-section-body .section-head h2 {
-    font-size: clamp(1.35rem, 5vw, 1.85rem);
-    line-height: 1.12;
-  }
+  .compass-section-body .voice-companion-card,
   .compass-section-body .compass-panel {
     padding: 16px 18px;
   }
-  .compass-section-body .intelligence-surface {
-    padding: 16px;
+  .compass-section-body .people-panel-box.compass-panel {
+    padding: 18px 16px 20px;
   }
-  .compass-section-body .live-opportunities-section {
-    padding-top: 16px;
-    padding-bottom: 16px;
+  .compass-section-body .compass-module-head {
+    margin-bottom: 14px;
+    gap: 12px;
   }
-  .compass-section-body .intelligence-surface--prominent > .section-head {
-    margin-bottom: 12px;
+  .compass-section-body .compass-module-head__desc,
+  .compass-module-head__title,
+  .compass-module-head__desc {
+    max-width: none;
+  }
+  .compass-module-head--with-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .compass-module-head--with-action .compass-module-head__action {
+    width: 100%;
+  }
+  .compass-module-head--with-action .compass-module-head__action .action-chip {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .live-opportunities-actions {
+    margin: 0 0 14px;
+  }
+  .live-opportunities-actions .live-opportunities-start,
+  .live-opportunities-start--empty {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
   }
   .next-best-move-card__layout,
   .next-best-move-card__layout--scored {
@@ -8468,8 +8540,8 @@ img { max-width: 100%; display: block; }
   gap: 8px;
   margin-top: 14px;
 }
-.live-opportunities--embedded .live-opportunities-title {
-  font-size: 1.15rem;
+.live-opportunities--embedded .compass-module-head__title {
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
 }
 .action-chip--ghost {
   opacity: 0.85;

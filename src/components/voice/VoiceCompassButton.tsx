@@ -58,6 +58,7 @@ import {
   resolveStoredTone,
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
+import CompassModuleHead from "@/components/experience/CompassModuleHead";
 
 /** Tiny silent WAV — unlocks audio playback during the user gesture. */
 const SILENT_WAV =
@@ -863,16 +864,14 @@ export default function VoiceCompassButton({
 
         {variant === "companion" ? (
           <>
-            <div className="voice-companion-head">
-              <h2>Ask Compass</h2>
-              <p>
-                Sessions. People. Certifications. Community.
-                What would you like help with?
-              </p>
-              <p className="compass-live-signal" aria-live="polite">
-                {compassLiveSignalText()}
-              </p>
-            </div>
+            <CompassModuleHead
+              kicker="Ask Compass"
+              title="Sessions. People. Certifications. Community."
+              description="What would you like help with?"
+            />
+            <p className="compass-live-signal" aria-live="polite">
+              {compassLiveSignalText()}
+            </p>
 
             <div className="voice-assistant-grid">
               {/* Left — Ask Compass trigger */}

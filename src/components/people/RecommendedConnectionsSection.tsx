@@ -5,6 +5,7 @@ import RecommendedConnectionCard, {
   type RecommendedPerson,
 } from "@/components/people/RecommendedConnectionCard";
 import ChampionMatchCarousel from "@/components/experience/ChampionMatchCarousel";
+import CompassModuleHead from "@/components/experience/CompassModuleHead";
 import type { ConnectionBadgeContext } from "@/lib/connectionBadges";
 
 interface RecommendedConnectionsSectionProps {
@@ -50,15 +51,11 @@ export default function RecommendedConnectionsSection({
 
   return (
     <section className={embedded ? "compass-module-block intelligence-band" : "section intelligence-band"}>
-      <div className="section-head narrow">
-        <div>
-          <div className="section-kicker">Recommended connections</div>
-          <h2>Who should I meet?</h2>
-        </div>
-        <p className="section-head-note">
-          One clear reason per person — badges show what kind of connection this is.
-        </p>
-      </div>
+      <CompassModuleHead
+        kicker="Recommended connections"
+        title="Who should I meet?"
+        description="One clear reason per person — badges show what kind of connection this is."
+      />
 
       {expertCards.length > 0 && (
         <div className="recommended-experts-block">
