@@ -6364,6 +6364,46 @@ img { max-width: 100%; display: block; }
   .story-section--compact {
     padding: 24px 0;
   }
+  .home-lifecycle-rotator {
+    width: 100%;
+    max-width: 100%;
+  }
+  .home-lifecycle-rotator-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+  .home-lifecycle-tab {
+    flex: none;
+    min-width: 0;
+    min-height: 44px;
+    padding: 12px 10px;
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.25;
+    white-space: normal;
+    border-right: 1px solid var(--line);
+  }
+  .home-lifecycle-tab:nth-child(2n) {
+    border-right: 0;
+  }
+  .home-lifecycle-tab:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+  .home-lifecycle-rotator-copy {
+    padding: 20px 16px 18px;
+    min-width: 0;
+  }
+  .home-lifecycle-rotator-copy p {
+    max-width: 100%;
+  }
+  .home-lifecycle-title {
+    overflow-wrap: anywhere;
+  }
   .hero-shell--compact .hero-actions {
     flex-direction: column;
     align-items: stretch;
@@ -6373,12 +6413,6 @@ img { max-width: 100%; display: block; }
   .hero-shell--compact .hero-actions .btn-secondary {
     width: 100%;
     min-height: 44px;
-  }
-  .home-lifecycle-tab {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .home-lifecycle-nav-btn {
     width: 44px;
