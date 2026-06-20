@@ -496,7 +496,15 @@ export default function VoiceCompassButton({
       });
 
       if (!res.ok) {
-        throw new Error(`/api/voice returned ${res.status}: ${await res.text()}`);
+        const errorText = await res.text();
+        if (
+          (res.status === 502 || res.status === 503) &&
+          /default credentials|credentials|not configured/i.test(errorText)
+        ) {
+          fallbackToSpeechSynthesis(text);
+          return;
+        }
+        throw new Error(`/api/voice returned ${res.status}: ${errorText}`);
       }
 
       const contentType = res.headers.get("content-type") ?? "";

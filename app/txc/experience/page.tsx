@@ -2071,7 +2071,7 @@ export default function ExperiencePage() {
                 participantTracks={pTracks}
                 certLabel={certLabel}
                 certificationJourney={certificationJourneyPlan}
-                isEnrolled
+                isEnrolled={enrolled}
                 onAddToSchedule={handleSaveSession}
                 onDoNotSuggestSession={handleHideSession}
                 onSavePerson={handleSavePerson}

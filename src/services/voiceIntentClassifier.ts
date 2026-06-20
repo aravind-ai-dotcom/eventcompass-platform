@@ -85,6 +85,7 @@ export type CoreVoiceIntent =
   | "diverse_recommendations"
   | "general_concierge"
   | "scope_clarify"
+  | "attendance_status"
   | "fallback"
   | "dismiss"
   | "mark_attended"
@@ -156,6 +157,7 @@ const KEYWORD_BUCKETS: Record<
     | "general_concierge"
     | "scope_clarify"
     | "diverse_recommendations"
+    | "attendance_status"
   >,
   string[]
 > = {
@@ -348,6 +350,25 @@ const FUN_DISCOVERY_PATTERNS = [
   "what should i do tonight",
 ];
 
+const ATTENDANCE_STATUS_PHRASES = [
+  "not attending",
+  "not registered",
+  "haven t registered",
+  "havent registered",
+  "still deciding",
+  "on the fence",
+  "should i attend",
+  "is it worth attending",
+  "thinking about attending",
+  "considering techxchange",
+  "why should i attend",
+  "what would i gain",
+  "what would i get",
+  "what do i get from",
+  "what is this event",
+  "tell me about techxchange",
+];
+
 const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "event_knowledge",
   "compass_conversation",
@@ -356,6 +377,7 @@ const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "general_concierge",
   "scope_clarify",
   "diverse_recommendations",
+  "attendance_status",
   "dismiss",
   "mark_attended",
 ]);
@@ -460,6 +482,10 @@ export function classifyVoiceIntent(
       topic: record.topic_key,
       voiceKnowledgeId: record.id,
     };
+  }
+
+  if (matchPhraseList(norm, ATTENDANCE_STATUS_PHRASES)) {
+    return { intent: "attendance_status", transcript, confidence: "high" };
   }
 
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
@@ -757,6 +783,10 @@ function tryConciergeRecovery(
     return buildPersonaResponse(personaTopic as PersonaKey, ctx);
   }
 
+  if (matchPhraseList(norm, ATTENDANCE_STATUS_PHRASES)) {
+    return buildAttendanceStatusResponse(norm, ctx);
+  }
+
   if (matchPhraseList(norm, FUN_DISCOVERY_PATTERNS)) {
     return buildFunDiscoveryResponse(ctx, norm);
   }
@@ -832,12 +862,61 @@ function notEnrolledResponse(locale: VoiceLocale = "en-US"): VoiceResponse {
   const spoken =
     locale === "zh-CN"
       ? "请先构建 My Compass，以便我为您提供个性化回答。"
-      : "Build your Compass first so I can personalize this.";
+      : "You are exploring TechXchange. Register to access your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.";
   const display =
     locale === "zh-CN"
       ? "请先构建 My Compass 以解锁个性化语音回答。"
-      : "Build My Compass first to unlock personalized voice answers.";
+      : "Start Your TechXchange Journey · Register to access personal Compass guidance.";
   return { spoken, display };
+}
+
+function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext): VoiceResponse {
+  const enrolled = isEnrolled(ctx);
+  const undecided =
+    /not attending|still deciding|on the fence|not registered|haven t registered|havent registered|thinking about attending|considering techxchange/.test(
+      norm,
+    );
+
+  if (undecided && !enrolled) {
+    return {
+      spoken:
+        "Are you still deciding whether to attend TechXchange? The event includes learning, certifications, experts, and community experiences. If you decide to attend, registration will unlock your personal Compass experience.",
+      display: "Start Your TechXchange Journey · Register",
+      action: "navigate_experience",
+    };
+  }
+
+  if (/should i attend|is it worth attending|why should i attend/.test(norm)) {
+    return {
+      spoken:
+        "That depends on your goals. TechXchange is designed for developers, architects, AI practitioners, infrastructure teams, data experts, partners, and technology leaders looking to learn, connect, and build new skills.",
+      display: "Evaluating TechXchange attendance",
+    };
+  }
+
+  if (/what would i gain|what would i get|what do i get/.test(norm)) {
+    return {
+      spoken:
+        "Many attendees come to learn new technologies, pursue certifications, meet experts, discover communities, and connect with peers facing similar challenges.",
+      display: "What attendees gain from TechXchange",
+    };
+  }
+
+  if (!enrolled) {
+    return {
+      spoken:
+        "You're still exploring TechXchange. The event brings together learning, hands-on experiences, experts, certifications, and community opportunities across AI, data, automation, cloud, infrastructure, security, and more. If you decide to attend, registration is the next step and will unlock your personal Compass experience.",
+      display: "Start Your TechXchange Journey · Register",
+      action: "navigate_experience",
+    };
+  }
+
+  const overview =
+    resolveEventKnowledgeText("event_overview") ?? EVENT_KNOWLEDGE.event_overview;
+  return {
+    spoken: overview,
+    display: "About TechXchange",
+  };
 }
 
 function knowledgeVoiceResponse(
@@ -962,6 +1041,9 @@ export function buildVoiceResponse(
     case "scope_clarify":
       return buildScopeClarifyResponse(experience);
 
+    case "attendance_status":
+      return buildAttendanceStatusResponse(norm, ctx);
+
     case "diverse_recommendations": {
       const moves = ctx.balancedMoves ?? [];
       const diverse = formatDiverseRecommendationVoice(moves);
@@ -977,6 +1059,26 @@ export function buildVoiceResponse(
       const primary = ctx.nextBestMove;
       const goal = topGoal(ctx);
       const huddle = huddleHint(ctx, norm);
+
+      if (primary?.type === "register") {
+        return {
+          spoken:
+            "You are exploring TechXchange. Registering gives you access to your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.",
+          display: "Start Your TechXchange Journey · Register",
+          action: "navigate_experience",
+        };
+      }
+
+      if (primary?.type === "profile") {
+        return {
+          spoken:
+            primary.headline.toLowerCase().includes("create")
+              ? "Tell Compass about your interests, goals, and areas of focus so we can personalize your event experience."
+              : "The more Compass knows about your interests and goals, the more relevant your recommendations become.",
+          display: `${primary.headline} · ${primary.ctaLabel ?? "Build My Compass"}`,
+          action: "navigate_experience",
+        };
+      }
 
       if (balanced.length > 0 || primary) {
         const lead = primary ?? balanced[0];

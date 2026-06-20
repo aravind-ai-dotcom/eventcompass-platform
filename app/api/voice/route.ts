@@ -1,4 +1,5 @@
 import textToSpeech from "@google-cloud/text-to-speech";
+import { readFileSync } from "node:fs";
 import {
   ENV_DEFAULT_VOICE,
   isAllowedTtsVoice,
@@ -6,11 +7,35 @@ import {
 
 function getTtsClient() {
   const encoded = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON_BASE64;
+  const inlineJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  const filePath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
   if (encoded) {
     const json = Buffer.from(encoded, "base64").toString("utf8");
     const credentials = JSON.parse(json);
 
+    return new textToSpeech.TextToSpeechClient({
+      projectId: credentials.project_id,
+      credentials: {
+        client_email: credentials.client_email,
+        private_key: credentials.private_key,
+      },
+    });
+  }
+
+  if (inlineJson) {
+    const credentials = JSON.parse(inlineJson);
+    return new textToSpeech.TextToSpeechClient({
+      projectId: credentials.project_id,
+      credentials: {
+        client_email: credentials.client_email,
+        private_key: credentials.private_key,
+      },
+    });
+  }
+
+  if (filePath) {
+    const credentials = JSON.parse(readFileSync(filePath, "utf8"));
     return new textToSpeech.TextToSpeechClient({
       projectId: credentials.project_id,
       credentials: {
@@ -96,8 +121,15 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[Google TTS]", error);
+    const message = error instanceof Error ? error.message : "Google TTS failed";
+    if (/default credentials|Could not load the default credentials/i.test(message)) {
+      return Response.json(
+        { error: "Google TTS credentials are not configured for this environment." },
+        { status: 503 }
+      );
+    }
     return Response.json(
-      { error: error instanceof Error ? error.message : "Google TTS failed" },
+      { error: message },
       { status: 502 }
     );
   }
