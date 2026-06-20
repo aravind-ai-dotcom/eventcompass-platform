@@ -327,9 +327,28 @@ export default function EnrollPage() {
   const [attendancePlan, setAttendancePlan] = useState("");
 
   // ── 03 · Your Background ────────────────────────────────────────────────────
-  const [university,     setUniversity]     = useState("");
-  const [pastEmployer,   setPastEmployer]   = useState("");
+  const [educationRows, setEducationRows] = useState<string[]>(["", "", ""]);
+  const [employerRows, setEmployerRows]   = useState<string[]>(["", "", ""]);
   const [careerInterest, setCareerInterest] = useState<string[]>([]);
+
+  function setEducationRow(index: number, value: string) {
+    setEducationRows(prev => prev.map((r, i) => (i === index ? value : r)));
+  }
+  function setEmployerRow(index: number, value: string) {
+    setEmployerRows(prev => prev.map((r, i) => (i === index ? value : r)));
+  }
+  function educationPayload() {
+    return educationRows
+      .map(r => r.trim())
+      .filter(Boolean)
+      .map(institution => ({ institution }));
+  }
+  function employersPayload() {
+    return employerRows
+      .map(r => r.trim())
+      .filter(Boolean)
+      .map(company => ({ company }));
+  }
 
   // Networking identity
   const [openAlumni,     setOpenAlumni]     = useState(false);
@@ -414,10 +433,22 @@ export default function EnrollPage() {
         if (attend) setAttendancePlan(attend);
 
         // Background
-        const uni = (p?.education as Array<{institution?: string}> | undefined)?.[0]?.institution || "";
-        if (uni) setUniversity(uni);
-        const pastEmp = (p?.past_employers as Array<{company?: string}> | undefined)?.[0]?.company || "";
-        if (pastEmp) setPastEmployer(pastEmp);
+        const eduList = (p?.education as Array<{institution?: string}> | undefined) ?? [];
+        if (eduList.length) {
+          setEducationRows([
+            eduList[0]?.institution ?? "",
+            eduList[1]?.institution ?? "",
+            eduList[2]?.institution ?? "",
+          ]);
+        }
+        const empList = (p?.past_employers as Array<{company?: string}> | undefined) ?? [];
+        if (empList.length) {
+          setEmployerRows([
+            empList[0]?.company ?? "",
+            empList[1]?.company ?? "",
+            empList[2]?.company ?? "",
+          ]);
+        }
         const ci = (p?.career_interests || u?.career_interests || []) as string[];
         if (ci.length) setCareerInterest(ci);
 
@@ -547,12 +578,13 @@ export default function EnrollPage() {
 
       const keywords = [
         ...goalLabels, ...tracks, ...commLabels,
-        university, pastEmployer, ...careerInterest,
+        ...educationRows, ...employerRows, ...careerInterest,
         organization, jobTitle, industry, persona, hopeText.trim(), country, city,
         githubProfile.trim(), personalWebsite.trim(),
       ].filter(Boolean).map(v => v.toLowerCase());
 
       const consentV1 = {
+        discoverable:                 consentPublicProfile,
         public_profile:               consentPublicProfile,
         show_linkedin:                consentShowLinkedin,
         allow_intro_requests:         consentAllowIntroRequests,
@@ -593,8 +625,8 @@ export default function EnrollPage() {
           attendance_plan:  attendancePlan,
           country:          country.trim(),
           city:             city.trim(),
-          education:        university.trim() ? [{ institution: university.trim() }] : [],
-          past_employers:   pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
+          education:        educationPayload(),
+          past_employers:   employersPayload(),
           career_interests: careerInterest,
           consent:          consentV1,
           networking_identity: networkingIdentity,
@@ -644,8 +676,8 @@ export default function EnrollPage() {
           linkedin_url:     linkedinUrl,
           github_profile:   githubProfile.trim(),
           personal_website: personalWebsite.trim(),
-          education:        university.trim() ? [{ institution: university.trim() }] : [],
-          past_employers:   pastEmployer.trim() ? [{ company: pastEmployer.trim() }] : [],
+          education:        educationPayload(),
+          past_employers:   employersPayload(),
           career_interests: careerInterest,
           networking_identity: networkingIdentity,
           consent:          consentV1,
@@ -898,16 +930,30 @@ export default function EnrollPage() {
                 <input type="url" value={personalWebsite} onChange={e => setPersonalWebsite(e.target.value)}
                   placeholder="https://yoursite.com" aria-label="Personal website" style={iS} />
               </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <FieldLabel>University / School</FieldLabel>
-                <input type="text" value={university} onChange={e => setUniversity(e.target.value)}
-                  placeholder="e.g. Georgia Tech, University of Toronto" style={iS} />
-              </label>
-              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                <FieldLabel>Most recent past employer</FieldLabel>
-                <input type="text" value={pastEmployer} onChange={e => setPastEmployer(e.target.value)}
-                  placeholder="e.g. Accenture, Red Hat, Deloitte" style={iS} />
-              </label>
+              {[0, 1, 2].map(i => (
+                <label key={`edu-${i}`} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <FieldLabel>{i === 0 ? "University / School" : `University / School (${i + 1})`}{i === 0 ? "" : " (optional)"}</FieldLabel>
+                  <input
+                    type="text"
+                    value={educationRows[i]}
+                    onChange={e => setEducationRow(i, e.target.value)}
+                    placeholder={i === 0 ? "e.g. NC State University" : "Additional institution (optional)"}
+                    style={iS}
+                  />
+                </label>
+              ))}
+              {[0, 1, 2].map(i => (
+                <label key={`emp-${i}`} style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  <FieldLabel>{i === 0 ? "Past employer" : `Past employer (${i + 1})`}{i === 0 ? "" : " (optional)"}</FieldLabel>
+                  <input
+                    type="text"
+                    value={employerRows[i]}
+                    onChange={e => setEmployerRow(i, e.target.value)}
+                    placeholder={i === 0 ? "e.g. IBM, Cisco" : "Additional employer (optional)"}
+                    style={iS}
+                  />
+                </label>
+              ))}
               <div>
                 <SubLabel title="Career interests" />
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>

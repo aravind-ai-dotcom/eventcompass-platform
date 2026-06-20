@@ -36,4 +36,10 @@ export interface LiveOpportunity {
   speakerRole?: "hosting" | "attending";
   /** Matched speaker display name for badge copy */
   speakerAttendeeName?: string;
+  /** Saved session title if huddle overlaps reserved agenda */
+  sessionConflict?: string;
+  /** Firestore huddle classification */
+  classification?: string;
+  /** Current user's response */
+  userResponse?: string;
 }

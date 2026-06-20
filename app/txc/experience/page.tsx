@@ -30,6 +30,7 @@ import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
 import BalancedMoveGrid from "@/components/experience/BalancedMoveGrid";
 import LiveOpportunities from "@/components/experience/LiveOpportunities";
+import { useHuddles } from "@/hooks/useHuddles";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import CommunityVoices    from "@/components/experience/CommunityVoices";
@@ -61,7 +62,6 @@ import {
   type CertificationResourcesMap,
   type CertificationStage,
 } from "@/types/certificationTracker";
-import { SAMPLE_LIVE_HUDDLES, rankLiveHuddles } from "@/lib/sampleLiveHuddles";
 import WhyCompassRecommendedWeek from "@/components/experience/WhyCompassRecommendedWeek";
 import CompassSection from "@/components/experience/CompassSection";
 import CustomizeCompassPanel from "@/components/experience/CustomizeCompassPanel";
@@ -1267,6 +1267,7 @@ export default function ExperiencePage() {
   const [detailSession, setDetailSession] = useState<ScoredSession | null>(null);
   const [savedSessions,  setSavedSessions]  = useState<string[]>([]);
   const [savedSchedule,  setSavedSchedule]  = useState<string[]>([]);
+  const [reservedSeats,  setReservedSeats]  = useState<string[]>([]);
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [activeCertificationId, setActiveCertificationId] = useState<string | null>(null);
   const [certificationResources, setCertificationResources] = useState<CertificationResourcesMap>({});
@@ -1506,6 +1507,29 @@ export default function ExperiencePage() {
     [savedSessions, savedSchedule],
   );
 
+  const huddleSessionInputs = useMemo(
+    () => allSessions.map(s => {
+      const raw = s as unknown as RawDoc;
+      return {
+        id: s.id,
+        title: String(s.title ?? "Session"),
+        start_time: s.start_time ?? (raw.schedule as { start_time?: string } | undefined)?.start_time,
+        end_time: (raw.end_time as string | undefined) ?? (raw.schedule as { end_time?: string } | undefined)?.end_time,
+        schedule: s.schedule,
+      };
+    }),
+    [allSessions],
+  );
+
+  const huddlesController = useHuddles({
+    participantUid: participantId || undefined,
+    participantRaw: participant,
+    savedSessionIds: mergedSavedSessionIds,
+    reservedSessionIds: reservedSeats,
+    sessions: huddleSessionInputs,
+    displayLimit: 5,
+  });
+
   const handleShowSessionInfo = useCallback((id: string) => {
     const found = allSessions.find(s => s.id === id);
     if (found) setDetailSession(found);
@@ -1597,11 +1621,7 @@ export default function ExperiencePage() {
   }, [activeCertification, certificationResources]);
   const certificationJourneyPlan = useMemo(() => {
     if (!activeCertification || certificationGoals.length === 0) return null;
-    const huddles = rankLiveHuddles(
-      SAMPLE_LIVE_HUDDLES,
-      ((participant?.event_signal_profile as RawDoc)?.tech_tracks as string[]) ?? [],
-      ((participant?.event_signal_profile as RawDoc)?.goals as string[]) ?? [],
-    );
+    const huddles = huddlesController.liveOpportunities;
     return buildCertificationJourneyPlan(
       activeCertification,
       allSessions,
@@ -1609,7 +1629,7 @@ export default function ExperiencePage() {
       huddles,
       activeCertPins,
     );
-  }, [activeCertification, allSessions, allChampions, participant, certificationGoals.length, activeCertPins]);
+  }, [activeCertification, allSessions, allChampions, participant, certificationGoals.length, activeCertPins, huddlesController.liveOpportunities]);
 
   const showCertJourney = useMemo(
     () => (participant ? shouldShowCertificationJourney(participant, certGoalIds) : false),
@@ -1619,10 +1639,7 @@ export default function ExperiencePage() {
   const pGoalsForBalance = ((participant?.event_signal_profile as RawDoc)?.goals as string[]) ?? [];
   const pTracksForBalance = ((participant?.event_signal_profile as RawDoc)?.tech_tracks as string[]) ?? [];
 
-  const rankedHuddlesForBalance = useMemo(
-    () => rankLiveHuddles(SAMPLE_LIVE_HUDDLES, pTracksForBalance, pGoalsForBalance),
-    [pGoalsForBalance, pTracksForBalance],
-  );
+  const rankedHuddlesForBalance = huddlesController.liveOpportunities;
 
   const balancedInput = useMemo((): BalancedRecommendationInput => ({
     learningSessions: learningList,
@@ -1772,6 +1789,7 @@ export default function ExperiencePage() {
         // Load persisted action state
         setSavedSessions( (pData.saved_sessions  as string[]) ?? []);
         setSavedSchedule( (pData.saved_schedule  as string[]) ?? []);
+        setReservedSeats( (pData.reserved_seats  as string[]) ?? []);
         setCertificationGoals((pData.certification_goals as string[]) ?? []);
         setActiveCertificationId((pData.active_certification_id as string) ?? null);
         setCertificationResources((pData.certification_resources as CertificationResourcesMap) ?? {});
@@ -2044,12 +2062,12 @@ export default function ExperiencePage() {
           {isModuleVisible("conversations") && (
             <div className="compass-module-block live-opportunities-section">
               <LiveOpportunities
-                participantGoals={pGoals}
-                participantTracks={pTracks}
+                huddles={huddlesController}
                 speakerCatalog={speakerCatalog}
+                participantUid={participantId}
                 userDisplayName={displayName}
                 userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
-                visibleLimit={4}
+                visibleLimit={5}
               />
             </div>
           )}

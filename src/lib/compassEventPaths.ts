@@ -42,3 +42,21 @@ export function contentSummariesCollection(eventId: CompassEventId | string): st
 export function experienceToEventId(experience: "techxchange" | "sko"): CompassEventId {
   return experience === "sko" ? SKO_EVENT_ID : TXC_EVENT_ID;
 }
+
+export function huddlesCollection(eventId: CompassEventId | string = TXC_EVENT_ID): string {
+  return `${eventBasePath(eventId)}/huddles`;
+}
+
+export function huddleDocPath(
+  huddleId: string,
+  eventId: CompassEventId | string = TXC_EVENT_ID,
+): string {
+  return `${huddlesCollection(eventId)}/${huddleId}`;
+}
+
+export function huddleResponsesCollection(
+  huddleId: string,
+  eventId: CompassEventId | string = TXC_EVENT_ID,
+): string {
+  return `${huddleDocPath(huddleId, eventId)}/responses`;
+}
