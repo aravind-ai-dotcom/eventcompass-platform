@@ -3,6 +3,7 @@
 // src/components/experience/NextBestMove.tsx
 // =============================================================================
 
+import Link from "next/link";
 import type { NextBestMove as NextBestMoveData } from "@/types";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import type { SessionIntelInput } from "@/lib/sessionIntelligence";
@@ -23,8 +24,11 @@ const TYPE_META: Record<
   session: { label: "Session", symbol: "▶" },
   champion: { label: "People", symbol: "◈" },
   community: { label: "Community", symbol: "◉" },
-  break: { label: "Break", symbol: "◌" },
+  break: { label: "Fun", symbol: "◌" },
   explore: { label: "Explore", symbol: "◎" },
+  register: { label: "Register", symbol: "◇" },
+  profile: { label: "Profile", symbol: "◆" },
+  certification_goal: { label: "Certification", symbol: "◐" },
 };
 
 function TypeBadge({ type }: { type: NextBestMoveData["type"] }) {
@@ -70,21 +74,33 @@ function ActionButton({
   label,
   variant,
   onClick,
+  href,
   muted,
 }: {
   label: string;
   variant: "primary" | "secondary";
   onClick?: () => void;
+  href?: string;
   muted?: boolean;
 }) {
+  const className = [
+    variant === "primary" ? "btn-primary" : "btn-secondary",
+    "next-best-move-card__action",
+    variant === "secondary" && muted ? "next-best-move-card__action--muted" : "",
+  ].filter(Boolean).join(" ");
+
+  if (href && !onClick) {
+    return (
+      <Link href={href} className={className}>
+        {label}
+      </Link>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
-      className={[
-        variant === "primary" ? "btn-primary" : "btn-secondary",
-        "next-best-move-card__action",
-        variant === "secondary" && muted ? "next-best-move-card__action--muted" : "",
-      ].filter(Boolean).join(" ")}
+      className={className}
       style={{
         cursor: onClick ? "pointer" : "default",
         opacity: onClick ? 1 : 0.55,
@@ -104,9 +120,12 @@ export default function NextBestMove({
   onDone,
   onViewDetails,
 }: NextBestMoveProps) {
+  const whyCopy = nextBestMove.whyItMatters ?? nextBestMove.reason;
   const hasScore =
     typeof nextBestMove.score === "number" && nextBestMove.score > 0;
   const showSideScore = hasScore && !(nextBestMove.type === "session" && intelSession);
+  const primaryCtaLabel = nextBestMove.ctaLabel;
+  const primaryCtaHref = nextBestMove.ctaHref;
 
   return (
     <section className="next-best-move-card">
@@ -140,19 +159,27 @@ export default function NextBestMove({
                 showKeySignals
               />
             </div>
-          ) : nextBestMove.reason ? (
+          ) : whyCopy ? (
             <div className="next-best-move-card__reason">
               <span className="next-best-move-card__reason-label" aria-hidden="true">
-                Why
+                Why this matters
               </span>
               <p className="next-best-move-card__reason-copy">
-                {nextBestMove.reason}
+                {whyCopy}
               </p>
             </div>
           ) : null}
 
           <div className="next-best-move-card__actions">
-            {onViewDetails && (
+            {primaryCtaLabel && (
+              <ActionButton
+                label={primaryCtaLabel}
+                variant="primary"
+                href={primaryCtaHref}
+                onClick={onViewDetails && !primaryCtaHref ? onViewDetails : undefined}
+              />
+            )}
+            {!primaryCtaLabel && onViewDetails && (
               <ActionButton label="View Details" variant="primary" onClick={onViewDetails} />
             )}
             {onDone && <ActionButton label="Done" variant="secondary" onClick={onDone} />}

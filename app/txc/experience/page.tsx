@@ -28,7 +28,6 @@ import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
-import BalancedMoveGrid from "@/components/experience/BalancedMoveGrid";
 import LiveOpportunities from "@/components/experience/LiveOpportunities";
 import { useHuddles } from "@/hooks/useHuddles";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
@@ -72,10 +71,10 @@ import SessionDetailModal from "@/components/sessions/SessionDetailModal";
 import {
   buildBalancedMoveSet,
   COMPASS_BALANCE_EXPLANATION,
-  pickBalancedNextBestMove,
   selectBalancedSessionBand,
   type BalancedRecommendationInput,
 } from "@/lib/recommendationBalancing";
+import { determineNextBestMove } from "@/services/nextBestMoveEngine";
 import { getCachedPillarWeights, loadRecommendationBalanceConfig } from "@/services/recommendationBalanceConfig";
 import type { PillarWeights } from "@/types/recommendationBalance";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
@@ -1284,7 +1283,7 @@ export default function ExperiencePage() {
   const [counts,       setCounts]       = useState<EventCounts>({ participants: 0, sessions: 0, champions: 0 });
   const [status,       setStatus]       = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg,     setErrorMsg]     = useState("");
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, enrolled } = useAuth();
   const participantId = user?.uid ?? "";
   const {
     prefs,
@@ -1685,9 +1684,30 @@ export default function ExperiencePage() {
     rankedHuddlesForBalance, showCertJourney, certLabel, pillarWeights,
   ]);
 
-  const balancedNextBestMove = useMemo(
-    () => pickBalancedNextBestMove(balancedInput),
-    [balancedInput],
+  const nextBestMove = useMemo(
+    () =>
+      determineNextBestMove({
+        user,
+        enrolled,
+        participant,
+        balancedInput,
+        savedSessionIds: mergedSavedSessionIds,
+        allSessions,
+        certificationGoalIds: certGoalIds,
+        hasCertIntent: showCertJourney,
+        savedConnectionCount: connectionVault.length,
+      }),
+    [
+      user,
+      enrolled,
+      participant,
+      balancedInput,
+      mergedSavedSessionIds,
+      allSessions,
+      certGoalIds,
+      showCertJourney,
+      connectionVault.length,
+    ],
   );
 
   const balancedMoveSet = useMemo(
@@ -1714,9 +1734,9 @@ export default function ExperiencePage() {
   }, [balancedRecommendedSessions, learningList, communityList, funList]);
 
   const nbmSession = useMemo(() => {
-    if (balancedNextBestMove?.type !== "session" || !balancedNextBestMove.entityId) return null;
-    return allSessions.find(s => s.id === balancedNextBestMove.entityId) ?? null;
-  }, [balancedNextBestMove, allSessions]);
+    if (nextBestMove?.type !== "session" || !nextBestMove.entityId) return null;
+    return allSessions.find(s => s.id === nextBestMove.entityId) ?? null;
+  }, [nextBestMove, allSessions]);
 
   const speakerCatalog = useMemo(
     () => buildSpeakerCatalog(championSources, allSessions.map(sessionFromScored)),
@@ -2038,7 +2058,7 @@ export default function ExperiencePage() {
             <div className="compass-module-block">
               <VoiceCompassButton
                 variant="companion"
-                nextBestMove={balancedNextBestMove}
+                nextBestMove={nextBestMove}
                 balancedMoves={balancedMoveSet}
                 topSession={nbmSession ?? rankedSessionsForVoice[0] ?? null}
                 topChampion={champions[0] ?? null}
@@ -2060,27 +2080,19 @@ export default function ExperiencePage() {
             </div>
           )}
 
-          {isModuleVisible("next_best_move") && balancedNextBestMove && (
+          {isModuleVisible("next_best_move") && nextBestMove && (
             <div className="compass-module-block intelligence-surface intelligence-surface--prominent">
               <div className="section-head narrow">
                 <div>
                   <div className="section-kicker">Next best move</div>
-                  <h2>One balanced pick for right now.</h2>
+                  <h2>The single most valuable thing to do next.</h2>
                 </div>
               </div>
               <NextBestMoveCard
-                nextBestMove={balancedNextBestMove}
+                nextBestMove={nextBestMove}
                 intelSession={nbmSession}
                 certLabel={certLabel}
               />
-              {balancedMoveSet.length > 1 && (
-                <div className="balanced-move-section">
-                  <p className="compass-module-note balanced-move-section__note">
-                    {COMPASS_BALANCE_EXPLANATION}
-                  </p>
-                  <BalancedMoveGrid moves={balancedMoveSet} />
-                </div>
-              )}
             </div>
           )}
 

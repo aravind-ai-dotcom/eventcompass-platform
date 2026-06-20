@@ -108,6 +108,10 @@ export function pillarFromMoveType(type: NextBestMove["type"]): ExperiencePillar
     case "break":
     case "explore":
       return "fun";
+    case "register":
+    case "profile":
+    case "certification_goal":
+      return "learning";
     default:
       return "learning";
   }

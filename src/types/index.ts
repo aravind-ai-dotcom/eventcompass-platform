@@ -39,13 +39,27 @@ export interface Participant {
   [key: string]: unknown;
 }
 
+export type NextBestMoveType =
+  | "session"
+  | "champion"
+  | "community"
+  | "break"
+  | "explore"
+  | "register"
+  | "profile"
+  | "certification_goal";
+
 export interface NextBestMove {
-  type: "session" | "champion" | "community" | "break" | "explore";
+  type: NextBestMoveType;
   headline: string;
   subline: string;
   reason: string;
+  whyItMatters?: string;
   score?: number;
   entityId?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  priority?: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
 export interface ScoredSession {
