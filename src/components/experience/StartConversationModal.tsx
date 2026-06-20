@@ -20,9 +20,11 @@ export const HUDDLE_TOPIC_SUGGESTIONS = [
 
 export const HUDDLE_LOCATION_SUGGESTIONS = [
   "Lunch Hall B",
-  "Hilton Lounge, 2nd Floor",
+  "Hilton Lobby",
+  "Certification Center",
   "Community Hub",
-  "Certification Zone",
+  "Outside Registration",
+  "Hilton Lounge, 2nd Floor",
   "Near Registration",
   "Sandbox Area",
   "Lobby Bar",
@@ -32,6 +34,8 @@ export const HUDDLE_LOCATION_SUGGESTIONS = [
 interface StartConversationModalProps {
   hostParticipantId: string;
   hostName: string;
+  hostJobTitle?: string;
+  hostOrganization?: string;
   onClose: () => void;
   onCreate: (input: CreateHuddleInput) => Promise<void | HuddleDoc>;
 }
@@ -39,6 +43,8 @@ interface StartConversationModalProps {
 export default function StartConversationModal({
   hostParticipantId,
   hostName,
+  hostJobTitle,
+  hostOrganization,
   onClose,
   onCreate,
 }: StartConversationModalProps) {
@@ -108,6 +114,8 @@ export default function StartConversationModal({
         target_audience: buildTargetAudience(),
         host_participant_id: hostParticipantId,
         host_name: hostName,
+        host_job_title: hostJobTitle,
+        host_organization: hostOrganization,
         date,
         start_time: startTime,
         end_time: endTime,

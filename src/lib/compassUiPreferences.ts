@@ -54,7 +54,7 @@ export const COMPASS_SECTION_LABELS: Record<CompassSectionId, string> = {
 export const COMPASS_MODULE_LABELS: Record<CompassModuleId, string> = {
   ask_compass: "Ask Compass",
   next_best_move: "Next Best Move",
-  conversations: "Huddles & conversations",
+  conversations: "Community & connections · Huddles",
   shared_moments: "Shared moments",
   certification_journey: "Certification Journey",
   four_day_plan: "Four-Day Plan",

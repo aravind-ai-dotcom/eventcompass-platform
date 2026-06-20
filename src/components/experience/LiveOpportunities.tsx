@@ -1,18 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { formatHuddleMatchLine } from "@/lib/huddleLifecycle";
-import { formatHuddleTimeRange } from "@/lib/huddleSchedule";
-import {
-  extraParticipantCount,
-  headingCount,
-  headingParticipants,
-  hostFirstName,
-  hostInitials,
-} from "@/lib/huddleStorage";
+import { useState } from "react";
+import type { HuddleParticipantPreview } from "@/types/huddleDataModel";
 import type { HuddlesController } from "@/hooks/useHuddles";
-import { enrichHuddleWithSpeakerIntel } from "@/lib/speakerIntelligence";
 import type { SpeakerProfile } from "@/types/speaker";
+import { enrichHuddleWithSpeakerIntel } from "@/lib/speakerIntelligence";
+import HuddleCard from "@/components/experience/HuddleCard";
 import StartConversationModal from "@/components/experience/StartConversationModal";
 
 interface LiveOpportunitiesProps {
@@ -21,7 +14,11 @@ interface LiveOpportunitiesProps {
   userDisplayName?: string;
   userFirstName?: string;
   participantUid?: string;
+  hostJobTitle?: string;
+  hostOrganization?: string;
   visibleLimit?: number;
+  embedded?: boolean;
+  onSaveContact?: (preview: HuddleParticipantPreview) => void;
 }
 
 export default function LiveOpportunities({
@@ -30,56 +27,37 @@ export default function LiveOpportunities({
   userDisplayName = "You",
   userFirstName = "You",
   participantUid,
+  hostJobTitle,
+  hostOrganization,
   visibleLimit = 5,
+  embedded = false,
+  onSaveContact,
 }: LiveOpportunitiesProps) {
   const [showStart, setShowStart] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
 
   const {
     loading,
     liveOpportunities,
     matchedHuddles,
-    responses,
     createHuddle,
-    respondOnMyWay,
-    cancelHuddle,
   } = huddles;
 
-  const visibleAll = useMemo(() => {
-    return liveOpportunities.map(opp => {
-      if (speakerCatalog.length === 0) return opp;
-      return enrichHuddleWithSpeakerIntel(opp, speakerCatalog);
-    });
-  }, [liveOpportunities, speakerCatalog]);
+  const visible = liveOpportunities
+    .slice(0, visibleLimit)
+    .map(opp => (speakerCatalog.length > 0 ? enrichHuddleWithSpeakerIntel(opp, speakerCatalog) : opp));
 
-  const visible = showAll ? visibleAll : visibleAll.slice(0, visibleLimit);
-  const liveCount = visibleAll.filter(h => h.status === "Happening now").length;
-
-  const handleOnMyWay = useCallback(
-    (huddleId: string) => {
-      void respondOnMyWay(huddleId, userDisplayName);
-    },
-    [respondOnMyWay, userDisplayName],
-  );
-
-  const isHost = useCallback(
-    (hostName?: string) =>
-      !!hostName &&
-      hostName.trim().toLowerCase() === userDisplayName.trim().toLowerCase(),
-    [userDisplayName],
-  );
+  const liveCount = visible.filter(h => h.displayStatus === "happening_now" || h.displayStatus === "ending_soon").length;
 
   return (
-    <div className="live-opportunities">
+    <div className={`live-opportunities${embedded ? " live-opportunities--embedded" : ""}`}>
       <header className="live-opportunities-head live-opportunities-head--row">
         <div>
-          <span className="live-opportunities-kicker">Live opportunities</span>
-          <h2 className="live-opportunities-title">Conversations forming around you</h2>
+          <span className="live-opportunities-kicker">Community & connections</span>
+          <h2 className="live-opportunities-title">Huddles near you</h2>
           <p className="live-opportunities-desc">
             {liveCount > 0
-              ? `${liveCount} huddle${liveCount === 1 ? "" : "s"} happening now.`
-              : "Lightweight invitations for real-world conversations — no chat threads."}
+              ? `${liveCount} in-person invitation${liveCount === 1 ? "" : "s"} happening now — right people, right place, right time.`
+              : "Lightweight invitations for real-world conversations. No chat — just show up."}
           </p>
         </div>
         {participantUid && (
@@ -93,153 +71,50 @@ export default function LiveOpportunities({
         )}
       </header>
 
-      {loading && visibleAll.length === 0 && (
+      {loading && visible.length === 0 && (
         <p className="live-opportunities-desc">Loading matched huddles…</p>
       )}
 
-      {!loading && visibleAll.length === 0 && (
+      {!loading && visible.length === 0 && (
         <p className="live-opportunities-desc">
-          No matched huddles yet. Start a conversation or refine your Compass profile.
+          No matched huddles right now. Refine your Compass profile or start an invitation.
         </p>
       )}
 
-      <ul className="huddle-feed" aria-label="Live huddles">
+      <ul className="huddle-feed" aria-label="Matched huddles">
         {visible.map(opp => {
           const matched = matchedHuddles.find(h => h.id === opp.id);
-          const isOnMyWay = responses[opp.id] === "on_my_way" || opp.userResponse === "on_my_way";
-          const isLive = opp.status === "Happening now";
-          const count = headingCount(opp, isOnMyWay, userFirstName);
-          const participants = headingParticipants(opp, isOnMyWay, userFirstName);
-          const extra = extraParticipantCount(count, participants.length);
-          const host = hostFirstName(opp);
-          const hostLabel = opp.hostName ?? host;
-          const scheduleLabel = matched
-            ? formatHuddleTimeRange(matched)
-            : opp.startTime ?? "Time TBD";
-          const userIsHost = isHost(opp.hostName);
-          const isExpanded = expandedId === opp.id;
-          const whyLine = formatHuddleMatchLine(opp.matchReasons);
-
+          if (!matched) return null;
           return (
             <li key={opp.id}>
-              <article className={`huddle-row${isLive ? " huddle-row--live" : ""}`}>
-                <div className="huddle-row-badge">
-                  {isLive && <span className="huddle-live-dot" aria-hidden="true" />}
-                  <span aria-hidden="true">{opp.emoji}</span>
-                  {isLive ? "Live now" : opp.category}
-                </div>
-
-                <div className="huddle-row-body">
-                  <h3 className="huddle-row-title">{opp.title}</h3>
-                  <p className="huddle-row-time">{isLive ? "Happening now" : scheduleLabel}</p>
-                  <p className="huddle-row-meta huddle-row-meta--compact">
-                    {count} heading there
-                    {opp.location ? ` · ${opp.location}` : ""}
-                  </p>
-                  <p className="huddle-row-match">Matched because: {whyLine}</p>
-
-                  {opp.sessionConflict && (
-                    <p className="huddle-row-slot-note" style={{ color: "var(--warn, #b8860b)" }}>
-                      Conflicts with a saved session at this time ({opp.sessionConflict}).
-                    </p>
-                  )}
-
-                  <div className="huddle-host-block">
-                    <p className="huddle-role-label">Host</p>
-                    <div className="huddle-host-row">
-                      <span className="huddle-avatar huddle-avatar--host" aria-hidden="true">
-                        {hostInitials(opp)}
-                      </span>
-                      <span className="huddle-host-name">{hostLabel}</span>
-                    </div>
-                  </div>
-
-                  {(isExpanded || participants.length > 0) && (
-                    <>
-                      <div className="huddle-attendee-divider" />
-                      <div className="huddle-attendee-block">
-                        <p className="huddle-role-label">Heading there</p>
-                        <div className="huddle-row-people-compact">
-                          {participants.map(name => (
-                            <span
-                              key={name}
-                              className="huddle-avatar"
-                              title={name}
-                            >
-                              {name[0]?.toUpperCase()}
-                            </span>
-                          ))}
-                          {extra > 0 && (
-                            <span className="huddle-avatar huddle-avatar--more">+{extra}</span>
-                          )}
-                          <span className="huddle-row-people">
-                            {participants.length > 0
-                              ? `${participants.join(", ")}${extra > 0 ? ` +${extra}` : ""}`
-                              : "Be the first to head over"}
-                          </span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {isExpanded && opp.description && (
-                    <div className="huddle-row-detail">
-                      <p>{opp.description}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="huddle-row-actions">
-                  {!userIsHost && (
-                    <button
-                      type="button"
-                      className={`action-chip action-chip--primary${isOnMyWay ? " action-chip--active" : ""}`}
-                      aria-pressed={isOnMyWay}
-                      onClick={() => handleOnMyWay(opp.id)}
-                    >
-                      {isOnMyWay ? "✓ On My Way" : "On My Way"}
-                    </button>
-                  )}
-                  {userIsHost && (
-                    <button
-                      type="button"
-                      className="action-chip"
-                      onClick={() => void cancelHuddle(opp.id)}
-                    >
-                      Cancel huddle
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="action-chip"
-                    aria-expanded={isExpanded}
-                    onClick={() => setExpandedId(isExpanded ? null : opp.id)}
-                  >
-                    {isExpanded ? "Less" : "Details"}
-                  </button>
-                </div>
-              </article>
+              <HuddleCard
+                opp={opp}
+                matched={matched}
+                huddles={huddles}
+                userDisplayName={userDisplayName}
+                userFirstName={userFirstName}
+                participantUid={participantUid}
+                onSaveContact={onSaveContact}
+              />
             </li>
           );
         })}
       </ul>
 
-      {visibleAll.length > visibleLimit && !showAll && (
-        <button
-          type="button"
-          className="action-chip compass-view-more"
-          onClick={() => setShowAll(true)}
-        >
-          View more ({visibleAll.length - visibleLimit} more)
-        </button>
-      )}
-
       {showStart && participantUid && (
         <StartConversationModal
           hostParticipantId={participantUid}
           hostName={userDisplayName}
+          hostJobTitle={hostJobTitle}
+          hostOrganization={hostOrganization}
           onClose={() => setShowStart(false)}
-          onCreate={createHuddle}
+          onCreate={async (input) => {
+            await createHuddle({
+              ...input,
+              host_job_title: hostJobTitle,
+              host_organization: hostOrganization,
+            });
+          }}
         />
       )}
     </div>

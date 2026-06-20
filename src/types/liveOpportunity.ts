@@ -42,4 +42,9 @@ export interface LiveOpportunity {
   classification?: string;
   /** Current user's response */
   userResponse?: string;
+  /** Computed lifecycle badge */
+  displayStatus?: string;
+  hostJobTitle?: string;
+  hostOrganization?: string;
+  hostParticipantId?: string;
 }

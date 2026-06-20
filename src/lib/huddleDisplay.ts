@@ -1,5 +1,6 @@
 import type { SessionConflictInput } from "@/lib/huddleConflict";
 import { huddleWindow } from "@/lib/huddleSchedule";
+import { resolveDisplayStatus, statusBadgeLabel } from "@/lib/huddleStatusUi";
 import type { HuddleDoc, MatchedHuddle } from "@/types/huddleDataModel";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
 import {
@@ -9,7 +10,7 @@ import {
 
 export function huddleToLiveOpportunity(h: MatchedHuddle): LiveOpportunity {
   const window = huddleWindow(h.date, h.start_time, h.end_time);
-  const isLive = h.status === "happening_now";
+  const displayStatus = resolveDisplayStatus(h);
 
   return {
     id: h.id,
@@ -30,7 +31,8 @@ export function huddleToLiveOpportunity(h: MatchedHuddle): LiveOpportunity {
         ? "certification"
         : "networking",
     emoji: classificationEmoji(h.classification),
-    status: isLive ? "Happening now" : h.status === "scheduled" ? "Scheduled" : h.status,
+    status: statusBadgeLabel(displayStatus),
+    displayStatus,
     matchReasons: h.match_reasons,
     filterKeys: [
       h.classification,
@@ -40,6 +42,9 @@ export function huddleToLiveOpportunity(h: MatchedHuddle): LiveOpportunity {
     ].map(s => s.toLowerCase()),
     hostName: h.host_name,
     hostFirstName: h.host_name.split(/\s+/)[0] ?? "Host",
+    hostJobTitle: h.host_job_title,
+    hostOrganization: h.host_organization,
+    hostParticipantId: h.host_participant_id,
     sessionConflict: h.session_conflict,
     classification: h.classification,
     userResponse: h.user_response,

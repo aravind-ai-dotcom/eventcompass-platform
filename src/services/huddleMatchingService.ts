@@ -1,5 +1,7 @@
+import { formatHuddleMatchBullets } from "@/lib/huddleMatchReasons";
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
 import { normalizeName } from "@/services/networkSignalService";
+import type { HuddlePreferences } from "@/services/huddlePreferencesService";
 import type {
   HuddleClassification,
   HuddleDoc,
@@ -93,7 +95,7 @@ export function scoreHuddleMatch(
       const uniHits = overlap(institutions(participant), ta.universities ?? []);
       if (uniHits.length === 0) return { matches: false, score: 0, reasons: [] };
       score += 40 + uniHits.length * 10;
-      reasons.push(`Alumni: ${uniHits[0]}`);
+      reasons.push(`${uniHits[0]} Alumni`);
       break;
     }
     case "past_employer": {
@@ -103,7 +105,7 @@ export function scoreHuddleMatch(
       const empHits = overlap(employers(participant), ta.past_employers ?? []);
       if (empHits.length === 0) return { matches: false, score: 0, reasons: [] };
       score += 40 + empHits.length * 10;
-      reasons.push(`Past employer: ${empHits[0]}`);
+      reasons.push(`Former ${empHits[0]} Employees`);
       break;
     }
     case "certification": {
@@ -117,11 +119,11 @@ export function scoreHuddleMatch(
       }
       if (certHits.length) {
         score += 35;
-        reasons.push(`Certification: ${certHits[0]}`);
+        reasons.push(`${certHits[0]} Certification Goal`);
       }
       if (topicHits.length) {
         score += 20;
-        reasons.push(`Topic overlap: ${topicHits[0]}`);
+        reasons.push(`${topicHits[0]} Interest`);
       }
       break;
     }
@@ -135,7 +137,7 @@ export function scoreHuddleMatch(
   );
   if (trackHits.length) {
     score += 15;
-    reasons.push(`Track: ${trackHits[0]}`);
+    reasons.push(`${trackHits[0]} Interest`);
   }
 
   const roleHits = overlap(
@@ -151,7 +153,7 @@ export function scoreHuddleMatch(
   if (kw.length) {
     score += Math.min(25, kw.length * 8);
     if (!reasons.some(r => r.includes(kw[0]))) {
-      reasons.push(`Matches your ${kw[0]} focus`);
+      reasons.push(`${kw[0]} Interest`);
     }
   }
 
@@ -194,37 +196,50 @@ export function matchHuddlesForParticipant(
   huddles: HuddleDoc[],
   participant: HuddleParticipantContext,
   responses: Record<string, string> = {},
+  preferences: HuddlePreferences | null = null,
   limit = 5,
 ): MatchedHuddle[] {
   const matched: MatchedHuddle[] = [];
+  const hidden = new Set(preferences?.hidden_huddle_ids ?? []);
+  const muted = new Set(preferences?.muted_classifications ?? []);
 
   for (const huddle of huddles) {
     if (huddle.status === "expired" || huddle.status === "cancelled") continue;
+    if (hidden.has(huddle.id)) continue;
+    if (muted.has(huddle.classification)) continue;
+    if (responses[huddle.id] === "not_for_me") continue;
 
     const { matches, score, reasons } = scoreHuddleMatch(huddle, participant);
     if (!matches) continue;
 
+    const bullets = formatHuddleMatchBullets(reasons, huddle.classification);
+    if (bullets.length === 0) continue;
+
     matched.push({
       ...huddle,
       match_score: score,
-      match_reasons: reasons.length ? reasons : ["Matched to your profile"],
+      match_reasons: bullets,
       user_response: responses[huddle.id] as MatchedHuddle["user_response"],
     });
   }
 
   return matched
     .sort((a, b) => {
-      const statusOrder = (s: string) =>
-        s === "happening_now" ? 0 : s === "scheduled" ? 1 : 2;
+      const statusOrder = (s: string) => {
+        if (s === "happening_now" || s === "ending_soon") return 0;
+        if (s === "scheduled") return 1;
+        return 2;
+      };
       const sa = statusOrder(a.status);
       const sb = statusOrder(b.status);
       if (sa !== sb) return sa - sb;
 
       const startA = new Date(`${a.date}T${a.start_time}`).getTime();
       const startB = new Date(`${b.date}T${b.start_time}`).getTime();
-      if (sa === 1 && startA !== startB) return startA - startB;
+      if (sa <= 1 && startA !== startB) return startA - startB;
 
       if (b.match_score !== a.match_score) return b.match_score - a.match_score;
+      if (b.on_my_way_count !== a.on_my_way_count) return b.on_my_way_count - a.on_my_way_count;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     })
     .slice(0, limit);

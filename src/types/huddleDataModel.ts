@@ -18,6 +18,7 @@ export type HuddleClassification = (typeof HUDDLE_CLASSIFICATIONS)[number];
 export const HUDDLE_STATUSES = [
   "scheduled",
   "happening_now",
+  "ending_soon",
   "expired",
   "cancelled",
 ] as const;
@@ -49,6 +50,8 @@ export interface HuddleDoc {
   target_audience: HuddleTargetAudience;
   host_participant_id: string;
   host_name: string;
+  host_job_title?: string;
+  host_organization?: string;
   date: string;
   start_time: string;
   end_time: string;
@@ -79,6 +82,8 @@ export interface CreateHuddleInput {
   target_audience: HuddleTargetAudience;
   host_participant_id: string;
   host_name: string;
+  host_job_title?: string;
+  host_organization?: string;
   date: string;
   start_time: string;
   end_time: string;
@@ -113,6 +118,28 @@ export interface HuddleParticipantContext {
   certification_goals?: string[];
   career_interests?: string[];
   compass_intelligence?: { matching_keywords?: string[] };
+}
+
+export interface HuddleParticipantPreview {
+  participant_id: string;
+  display_name: string;
+  first_name: string;
+  job_title?: string;
+  organization?: string;
+  shared_interest?: string;
+  is_host?: boolean;
+  badges: ("champion" | "community" | "certification")[];
+}
+
+export interface UpdateHuddleInput {
+  title?: string;
+  description?: string;
+  topics?: string[];
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  location?: string;
+  target_audience?: HuddleTargetAudience;
 }
 
 export interface MatchedHuddle extends HuddleDoc {

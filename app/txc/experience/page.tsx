@@ -103,6 +103,7 @@ import { SpeakerIntelligenceProvider, useSpeakerIntelligence } from "@/context/S
 import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
 import type { ScoredSpeaker } from "@/types/speaker";
 import type { ConnectionVaultRecord, SaveReason } from "@/types/connectionVault";
+import type { HuddleParticipantPreview } from "@/types/huddleDataModel";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
   const names = new Set<string>();
@@ -1500,6 +1501,30 @@ export default function ExperiencePage() {
     if (found) setDetailChampion(found);
   }, [allChampions, champions]);
 
+  const handleSaveHuddleContact = useCallback(
+    (preview: HuddleParticipantPreview) => {
+      if (!preview.participant_id) return;
+      if (connectionVault.some(r => r.personId === preview.participant_id)) return;
+      const record: ConnectionVaultRecord = {
+        id: preview.participant_id,
+        personId: preview.participant_id,
+        displayName: preview.display_name,
+        title: preview.job_title,
+        organization: preview.organization,
+        badges: preview.badges.includes("champion") ? ["champion"] : ["peer"],
+        saveReason: "networking",
+        dateAdded: new Date().toISOString(),
+        sharedInterests: preview.shared_interest ? [preview.shared_interest] : [],
+        sharedCommunities: [],
+        sharedCertifications: preview.badges.includes("certification") ? ["Certification"] : [],
+        notes: "",
+        metAtHuddle: preview.display_name,
+      };
+      persistVault([record, ...connectionVault]);
+    },
+    [connectionVault, persistVault],
+  );
+
   // ── Derived state for action bars ──────────────────────────────────────────
 
   const mergedSavedSessionIds = useMemo(
@@ -2059,19 +2084,6 @@ export default function ExperiencePage() {
             </div>
           )}
 
-          {isModuleVisible("conversations") && (
-            <div className="compass-module-block live-opportunities-section">
-              <LiveOpportunities
-                huddles={huddlesController}
-                speakerCatalog={speakerCatalog}
-                participantUid={participantId}
-                userDisplayName={displayName}
-                userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
-                visibleLimit={5}
-              />
-            </div>
-          )}
-
           {isModuleVisible("shared_moments") && (
             <div className="compass-module-block">
               <div className="section-head narrow">
@@ -2195,6 +2207,23 @@ export default function ExperiencePage() {
           expanded={hydrated && isSectionExpanded("people")}
           onToggle={() => toggleSection("people")}
         >
+          {isModuleVisible("conversations") && (
+            <div className="compass-module-block live-opportunities-section">
+              <LiveOpportunities
+                huddles={huddlesController}
+                speakerCatalog={speakerCatalog}
+                participantUid={participantId}
+                userDisplayName={displayName}
+                userFirstName={firstName || displayName.split(/\s+/)[0] || "You"}
+                hostJobTitle={String(participant?.job_title ?? "")}
+                hostOrganization={String(participant?.organization ?? participant?.company ?? "")}
+                visibleLimit={5}
+                embedded
+                onSaveContact={handleSaveHuddleContact}
+              />
+            </div>
+          )}
+
           {isModuleVisible("recommended_connections") && (
             <RecommendedConnectionsSection
               people={recommendedPeople}

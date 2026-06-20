@@ -172,6 +172,8 @@ const KEYWORD_BUCKETS: Record<
   find_huddles: [
     "conversation", "huddle", "meetup", "alumni", "coffee", "roundtable",
     "live opportunit", "forming nearby", "any alumni", "peer discussion",
+    "study group", "study groups", "ai meetup", "agentic ai", "anyone talking about",
+    "alumni gathering", "alumni gatherings",
   ],
   certification_help: [
     "certification", "certified", "cert exam", "exam prep", "exam", "pass my cert",

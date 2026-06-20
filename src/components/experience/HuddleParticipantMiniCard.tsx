@@ -1,69 +1,78 @@
 "use client";
 
-import type { HuddleParticipantProfile } from "@/lib/huddleParticipants";
+import type { HuddleParticipantPreview } from "@/types/huddleDataModel";
 
 interface HuddleParticipantMiniCardProps {
-  participant: HuddleParticipantProfile;
+  participant: HuddleParticipantPreview;
   onClose: () => void;
+  onSaveContact?: () => void;
+  onViewProfile?: () => void;
 }
+
+const BADGE_LABELS: Record<string, string> = {
+  champion: "Champion",
+  community: "Community",
+  certification: "Certification",
+};
 
 export default function HuddleParticipantMiniCard({
   participant,
   onClose,
+  onSaveContact,
+  onViewProfile,
 }: HuddleParticipantMiniCardProps) {
-  const initial = participant.firstName[0]?.toUpperCase() ?? "?";
-  const fullName = [participant.firstName, participant.lastName].filter(Boolean).join(" ");
+  const initial = participant.first_name[0]?.toUpperCase() ?? "?";
 
   return (
-    <div className="huddle-mini-overlay" role="dialog" aria-modal="true" aria-label={`${fullName} profile`}>
+    <div className="huddle-mini-overlay" role="dialog" aria-modal="true" aria-label={`${participant.display_name} profile`}>
       <button type="button" className="huddle-mini-backdrop" aria-label="Close" onClick={onClose} />
       <article className="huddle-mini-card champion-person-card">
         <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "14px" }}>
           <div className="huddle-avatar huddle-avatar--lg" aria-hidden="true">{initial}</div>
           <div style={{ minWidth: 0 }}>
-            <p className="connection-signal-name">{fullName}</p>
-            {(participant.role || participant.organization) && (
+            <p className="connection-signal-name">
+              {participant.display_name}
+              {participant.is_host ? " · Host" : ""}
+            </p>
+            {(participant.job_title || participant.organization) && (
               <p className="connection-signal-meta">
-                {[participant.role, participant.organization].filter(Boolean).join(" · ")}
+                {[participant.job_title, participant.organization].filter(Boolean).join(" · ")}
               </p>
             )}
           </div>
         </div>
 
-        {participant.interests && participant.interests.length > 0 && (
+        {participant.shared_interest && (
           <>
-            <p className="huddle-mini-label">Interests</p>
+            <p className="huddle-mini-label">Shared interest</p>
+            <p className="connection-signal-reason">{participant.shared_interest}</p>
+          </>
+        )}
+
+        {participant.badges.length > 0 && (
+          <>
+            <p className="huddle-mini-label">Badges</p>
             <div className="connection-signal-tags">
-              {participant.interests.map(tag => (
-                <span key={tag} className="connection-signal-tag">{tag}</span>
+              {participant.badges.map(b => (
+                <span key={b} className="connection-signal-tag">{BADGE_LABELS[b] ?? b}</span>
               ))}
             </div>
           </>
         )}
 
-        {participant.openTo && participant.openTo.length > 0 && (
-          <>
-            <p className="huddle-mini-label">Open to</p>
-            <div className="champion-person-intent">
-              {participant.openTo.map(item => (
-                <span key={item} className="champion-person-intent-tag">{item}</span>
-              ))}
-            </div>
-          </>
-        )}
+        <p className="huddle-trust-note">No messaging or contact details are shared here.</p>
 
-        {participant.sharedTopics && participant.sharedTopics.length > 0 && (
-          <>
-            <p className="huddle-mini-label">Shared topics</p>
-            <p className="connection-signal-reason">
-              {participant.sharedTopics.join(" · ")}
-            </p>
-          </>
-        )}
-
-        <button type="button" className="action-chip" onClick={onClose} style={{ marginTop: "14px" }}>
-          Close
-        </button>
+        <div className="huddle-mini-actions">
+          {onViewProfile && (
+            <button type="button" className="action-chip" onClick={onViewProfile}>View Profile</button>
+          )}
+          {onSaveContact && (
+            <button type="button" className="action-chip action-chip--primary" onClick={onSaveContact}>
+              Save Contact
+            </button>
+          )}
+          <button type="button" className="action-chip" onClick={onClose}>Close</button>
+        </div>
       </article>
     </div>
   );
