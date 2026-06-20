@@ -34,6 +34,14 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+function isFirestorePermissionError(err: unknown): boolean {
+  const code =
+    typeof err === "object" && err !== null && "code" in err
+      ? String((err as { code?: string }).code)
+      : "";
+  return code === "permission-denied" || code === "PERMISSION_DENIED";
+}
+
 function normalizeHuddle(id: string, data: Record<string, unknown>): HuddleDoc {
   const huddle: HuddleDoc = {
     id,
@@ -80,7 +88,9 @@ export async function fetchActiveHuddles(max = 50): Promise<HuddleDoc[]> {
       .map(d => normalizeHuddle(d.id, d.data()))
       .filter(h => h.status !== "expired" && h.status !== "cancelled");
   } catch (err) {
-    console.warn("[huddles] fetch failed", err);
+    if (!isFirestorePermissionError(err)) {
+      console.warn("[huddles] fetch failed", err);
+    }
     return [];
   }
 }
