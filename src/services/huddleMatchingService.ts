@@ -1,4 +1,6 @@
 import { formatHuddleMatchBullets } from "@/lib/huddleMatchReasons";
+import { huddleDisplaySortTier } from "@/lib/huddleStatusUi";
+import { huddleWindow } from "@/lib/huddleSchedule";
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
 import { normalizeName } from "@/services/networkSignalService";
 import type { HuddlePreferences } from "@/services/huddlePreferencesService";
@@ -225,18 +227,15 @@ export function matchHuddlesForParticipant(
 
   return matched
     .sort((a, b) => {
-      const statusOrder = (s: string) => {
-        if (s === "happening_now" || s === "ending_soon") return 0;
-        if (s === "scheduled") return 1;
-        return 2;
-      };
-      const sa = statusOrder(a.status);
-      const sb = statusOrder(b.status);
-      if (sa !== sb) return sa - sb;
+      const ta = huddleDisplaySortTier(a);
+      const tb = huddleDisplaySortTier(b);
+      if (ta !== tb) return ta - tb;
 
-      const startA = new Date(`${a.date}T${a.start_time}`).getTime();
-      const startB = new Date(`${b.date}T${b.start_time}`).getTime();
-      if (sa <= 1 && startA !== startB) return startA - startB;
+      const windowA = huddleWindow(a.date, a.start_time, a.end_time);
+      const windowB = huddleWindow(b.date, b.start_time, b.end_time);
+      const startA = windowA?.start.getTime() ?? 0;
+      const startB = windowB?.start.getTime() ?? 0;
+      if (ta <= 2 && startA !== startB) return startA - startB;
 
       if (b.match_score !== a.match_score) return b.match_score - a.match_score;
       if (b.on_my_way_count !== a.on_my_way_count) return b.on_my_way_count - a.on_my_way_count;
