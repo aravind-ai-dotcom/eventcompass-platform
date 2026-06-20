@@ -1,7 +1,7 @@
 "use client";
 // =============================================================================
 // EventCompass — Explore  /txc/explore
-// How Compass helps you succeed — milestone pathways with photography.
+// Outcome-first journey pathways — goal → how Compass helps → success.
 // =============================================================================
 import Image from "next/image";
 import Link from "next/link";
@@ -10,8 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 interface Journey {
   id: string;
   title: string;
-  goal: string;
   image: string;
+  /** Short step labels (1–3 words) for clean milestone alignment */
   flow: string[];
   accent: string;
   summary: string;
@@ -21,64 +21,58 @@ interface Journey {
 
 const JOURNEYS: Journey[] = [
   {
-    id: "learning",
-    title: "Learn New Technology",
-    goal: "I want to learn something new.",
-    image: "/event/ibm_txc_banner_1.jpg",
-    flow: ["Discover", "Learn", "Practice", "Connect", "Apply"],
-    accent: "#0f62fe",
-    summary:
-      "Compass helps prioritize the sessions, labs, experts, and communities that can accelerate your learning.",
-  },
-  {
     id: "certification",
-    title: "Earn a Certification",
-    goal: "I want to earn a certification.",
+    title: "Earn a certification",
     image: "/event/ibm_txc_banner_4.jpg",
-    flow: ["Choose", "Prepare", "Practice", "Mentor", "Achieve"],
+    flow: ["Choose", "Learn", "Experts", "Prepare", "Achieve"],
     accent: "#a56eff",
     summary:
-      "Compass connects certifications to sessions, labs, experts, study groups, and community support.",
+      "Learning paths, labs, experts, and study groups aligned to your certification goal.",
+  },
+  {
+    id: "experts",
+    title: "Meet the right experts",
+    image: "/event/ibm_txc_banner_1.jpg",
+    flow: ["Share", "Discover", "Connect", "Build", "Learn"],
+    accent: "#0f62fe",
+    summary:
+      "Speakers, Champions, mentors, and practitioners matched to your interests.",
   },
   {
     id: "networking",
-    title: "Find Your People",
-    goal: "I want to meet the right people.",
+    title: "Build meaningful connections",
     image: "/event/ibm_txc_banner_5.jpg",
-    flow: ["Discover", "Connect", "Meet", "Share", "Grow"],
+    flow: ["Share", "Match", "Meet", "Connect", "Stay"],
     accent: "#005d5d",
     summary:
-      "Compass introduces experts, peers, champions, speakers, and communities aligned to your interests.",
+      "Alumni, former colleagues, communities, and people worth meeting.",
   },
   {
-    id: "community",
-    title: "Grow Community",
-    goal: "I want to engage with a community.",
-    image: "/event/community-v2.jpg",
-    flow: ["Explore", "Join", "Participate", "Contribute", "Belong"],
-    accent: "#b45309",
-    summary:
-      "Compass helps uncover user groups, meetups, discussions, and community experiences.",
-  },
-  {
-    id: "problem-solving",
-    title: "Solve a Challenge",
-    goal: "I need answers and ideas.",
+    id: "challenge",
+    title: "Bring a challenge",
     image: "/event/expo.jpg",
-    flow: ["Define", "Learn", "Discuss", "Refine", "Deliver"],
+    flow: ["Define", "Explore", "Meet", "Gather", "Solve"],
     accent: "#da1e28",
     summary:
-      "Compass helps connect relevant content, experts, peer conversations, and practical solutions.",
+      "Sessions, experts, communities, and peer discussions to move you forward.",
+  },
+  {
+    id: "technology",
+    title: "Discover what's next",
+    image: "/event/community-v2.jpg",
+    flow: ["Explore", "Learn", "Practice", "Meet", "Expand"],
+    accent: "#b45309",
+    summary:
+      "Emerging technologies, hands-on experiences, and communities for your interests.",
   },
   {
     id: "champions",
-    title: "Champion Others",
-    goal: "I want to share what I know.",
+    title: "Inspire and connect",
     image: "/event/ibm-champion-journey.png",
-    flow: ["Meet", "Guide", "Inspire", "Support", "Amplify"],
+    flow: ["Share", "Meet", "Guide", "Connect", "Grow"],
     accent: "#0f62fe",
     summary:
-      "Compass helps champions connect with attendees, share expertise, and strengthen the community.",
+      "People who benefit from your knowledge, guidance, and experience.",
     href: "/txc/champions",
     accessLabel: "Meet Champions",
   },
@@ -90,11 +84,10 @@ export default function ExplorePage() {
   return (
     <>
       <section className="story-hero story-hero--strong story-hero--spacious explore-hero">
-        <div className="section-kicker">Explore · Compass</div>
-        <h1>How Compass helps you succeed.</h1>
+        <div className="section-kicker">Explore</div>
+        <h1>What do you want to accomplish?</h1>
         <p className="explore-hero-lead">
-          Choose what you want to accomplish. Compass helps connect the sessions,
-          people, communities, certifications, and live opportunities that move you forward.
+          Pick a path. See how Compass connects you to the people and experiences that get you there.
         </p>
       </section>
 
@@ -108,7 +101,7 @@ export default function ExplorePage() {
             <div className="explore-journey-image">
               <Image
                 src={journey.image}
-                alt={journey.title}
+                alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, 480px"
                 style={{ objectFit: "cover" }}
@@ -118,33 +111,25 @@ export default function ExplorePage() {
               <h2 id={`journey-${journey.id}`} className="explore-journey-title">
                 {journey.title}
               </h2>
-              <p className="explore-journey-goal">{journey.goal}</p>
               <p className="explore-journey-summary">{journey.summary}</p>
-              <p className="explore-journey-path-kicker">Your journey</p>
               <ol
-                className="explore-milestone-path explore-journey-milestones"
-                aria-label={`${journey.title} journey`}
+                className="explore-journey-steps"
+                aria-label={`${journey.title} steps`}
               >
                 {journey.flow.map((step, stepIndex) => (
-                  <li key={step} className="explore-milestone-step">
-                    <div className="explore-milestone-node">
-                      <span
-                        className="explore-milestone-dot"
-                        style={{
-                          borderColor: journey.accent,
-                          background: stepIndex === 0 ? journey.accent : "var(--surface)",
-                        }}
-                        aria-hidden="true"
-                      />
-                      {stepIndex < journey.flow.length - 1 && (
-                        <span
-                          className="explore-milestone-line"
-                          style={{ background: journey.accent }}
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
-                    <span className="explore-milestone-label">{step}</span>
+                  <li
+                    key={step}
+                    className="explore-journey-step"
+                    style={{ "--step-accent": journey.accent } as React.CSSProperties}
+                  >
+                    <span
+                      className={`explore-journey-step__dot${stepIndex === 0 ? " explore-journey-step__dot--active" : ""}`}
+                      aria-hidden="true"
+                    />
+                    <span className="explore-journey-step__num" aria-hidden="true">
+                      {stepIndex + 1}
+                    </span>
+                    <span className="explore-journey-step__label">{step}</span>
                   </li>
                 ))}
               </ol>
@@ -164,13 +149,13 @@ export default function ExplorePage() {
         <div>
           {user && enrolled ? (
             <>
-              <h2>Your journey is underway.</h2>
-              <p>Open My Compass to see your personalized path taking shape.</p>
+              <h2>Your path is taking shape.</h2>
+              <p>Open My Compass to see recommendations matched to your goals.</p>
             </>
           ) : (
             <>
-              <h2>Start with what you want to accomplish.</h2>
-              <p>Tell Compass your goals and build a TechXchange experience that moves you forward.</p>
+              <h2>Start with your goal.</h2>
+              <p>Share what you want to accomplish — Compass builds your experience from there.</p>
             </>
           )}
         </div>
