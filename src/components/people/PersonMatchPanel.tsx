@@ -5,6 +5,7 @@ import {
   buildPersonIntelligence,
   PERSON_SIGNAL_LABELS,
   type PersonIntelInput,
+  type PersonSignalId,
 } from "@/lib/personIntelligence";
 
 const DEFAULT_VISIBLE = 3;
@@ -33,6 +34,41 @@ function MatchScoreBadge({ score, compact }: { score: number; compact?: boolean 
   );
 }
 
+function MatchDimensionBars({
+  signals,
+  strengths,
+}: {
+  signals: PersonSignalId[];
+  strengths: Partial<Record<PersonSignalId, number>>;
+}) {
+  if (signals.length === 0) return null;
+
+  return (
+    <div className="person-match-dimensions">
+      <p className="person-match-dimensions__kicker">Match dimensions</p>
+      <div className="person-match-dimensions__list">
+        {signals.map(id => {
+          const strength = strengths[id] ?? 50;
+          return (
+            <div key={id} className="person-match-dimension">
+              <div className="person-match-dimension__head">
+                <span className="person-match-dimension__label">{PERSON_SIGNAL_LABELS[id]}</span>
+                <span className="person-match-dimension__value">{strength}%</span>
+              </div>
+              <div className="person-match-dimension__track" aria-hidden="true">
+                <div
+                  className="person-match-dimension__fill"
+                  style={{ width: `${strength}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function PersonMatchPanel({
   person,
   profileSignals = [],
@@ -49,55 +85,41 @@ export default function PersonMatchPanel({
   if (intel.score <= 0 && intel.reasons.length === 0) return null;
 
   return (
-    <div className={`session-intelligence-panel person-match-panel${compact ? " person-match-panel--compact" : ""}`}>
-      <div className="session-intelligence-head">
+    <div className={`person-match-panel${compact ? " person-match-panel--compact" : ""}`}>
+      <div className="person-match-panel__head">
         <MatchScoreBadge score={intel.score} compact={compact} />
-        <div className="session-intelligence-head-copy">
-          <p className="session-intelligence-kicker">Why Compass matched this person</p>
+        <div className="person-match-panel__head-copy">
+          <p className="person-match-panel__kicker">Why Compass matched this person</p>
           {intel.score > 0 && (
-            <p className="session-intelligence-score-note">
-              {intel.score}% match across {intel.signals.length > 0
-                ? intel.signals.map(s => PERSON_SIGNAL_LABELS[s].toLowerCase()).join(", ")
-                : "your profile signals"}
+            <p className="person-match-panel__score-note">
+              {intel.score}% alignment to your profile
             </p>
           )}
         </div>
       </div>
 
-      <ul className="session-intelligence-reasons">
-        {visibleReasons.map(reason => (
-          <li key={reason}>
-            <span className="session-intelligence-check" aria-hidden="true">✓</span>
-            {reason}
-          </li>
-        ))}
-      </ul>
+      {visibleReasons.length > 0 && (
+        <ul className="person-match-panel__reasons">
+          {visibleReasons.map(reason => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      )}
 
       {hasMore && (
         <button
           type="button"
-          className="session-intelligence-expand"
+          className="person-match-panel__expand"
           onClick={() => setExpanded(v => !v)}
           aria-expanded={expanded}
         >
           {expanded
             ? "Show fewer reasons"
-            : `Show ${intel.reasons.length - initialVisible} more reason${intel.reasons.length - initialVisible === 1 ? "" : "s"}`}
+            : `Show ${intel.reasons.length - initialVisible} more`}
         </button>
       )}
 
-      {intel.signals.length > 0 && (
-        <div className="session-intelligence-signals">
-          <p className="session-intelligence-signals-kicker">Match dimensions</p>
-          <div className="session-intelligence-signal-row">
-            {intel.signals.map(id => (
-              <span key={id} className="session-intelligence-signal">
-                {PERSON_SIGNAL_LABELS[id]}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <MatchDimensionBars signals={intel.signals} strengths={intel.signalStrengths} />
     </div>
   );
 }

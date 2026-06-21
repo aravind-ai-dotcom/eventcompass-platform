@@ -24,6 +24,17 @@ export interface PersonIntelligence {
   score: number;
   reasons: string[];
   signals: PersonSignalId[];
+  signalStrengths: Partial<Record<PersonSignalId, number>>;
+}
+
+function strengthForSignal(
+  id: PersonSignalId,
+  reasons: string[],
+  score: number,
+): number {
+  const hits = reasons.filter(r => inferSignalFromReason(r) === id).length;
+  const base = score > 0 ? Math.round(score * 0.5) : 38;
+  return Math.min(96, Math.max(32, base + hits * 14));
 }
 
 function inferSignalFromReason(line: string): PersonSignalId | null {
@@ -142,9 +153,15 @@ export function buildPersonIntelligence(
 
   const score = computeDisplayScore(person.compass_score ?? 0, reasons, signals);
 
+  const signalStrengths: Partial<Record<PersonSignalId, number>> = {};
+  for (const id of signals) {
+    signalStrengths[id] = strengthForSignal(id, reasons, score);
+  }
+
   return {
     score,
     reasons,
     signals: signals.slice(0, 5),
+    signalStrengths,
   };
 }

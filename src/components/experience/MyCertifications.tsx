@@ -111,10 +111,14 @@ function CertificationPanel({
           <div className="cert-panel__hero-top">
             <p className="cert-panel__eyebrow">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</p>
             <div className="cert-panel__hero-actions">
-              <button type="button" className="cert-panel__btn cert-panel__btn--ghost" onClick={onToggle}>
+              <button
+                type="button"
+                className="cert-panel__btn cert-panel__btn--ghost cert-panel__btn--compact"
+                onClick={onToggle}
+              >
                 {expanded ? "Hide plan" : "Explore plan"}
               </button>
-              <button type="button" className="cert-panel__btn" onClick={onRemove}>
+              <button type="button" className="cert-panel__btn cert-panel__btn--compact" onClick={onRemove}>
                 Remove
               </button>
             </div>
@@ -184,16 +188,16 @@ function CertificationPanel({
           </div>
         )}
 
-        <footer className="cert-panel__footer cert-panel__footer--inline">
+        <footer className="cert-panel__footer">
           <a
             href={certification.certification_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="cert-panel__btn cert-panel__btn--primary"
+            className="cert-panel__btn cert-panel__btn--primary cert-panel__btn--compact"
           >
             IBM Training ↗
           </a>
-          <Link href="/txc/sessions?view=learning-paths" className="cert-panel__btn">
+          <Link href="/txc/sessions?view=learning-paths" className="cert-panel__btn cert-panel__btn--compact">
             {CERTIFICATION_JOURNEY_COPY.viewAllSessions}
           </Link>
         </footer>
@@ -226,16 +230,16 @@ export default function MyCertifications({
               <p className="cert-panel__goal-sub">
                 Add up to {MAX_CERTIFICATION_ENROLLMENTS} certifications and Compass will shape your week around them.
               </p>
-              <div className="cert-panel__footer cert-panel__footer--inline">
-                <button
-                  type="button"
-                  className="cert-panel__btn cert-panel__btn--primary"
-                  onClick={() => setPickerOpen(true)}
-                >
-                  {CERTIFICATION_JOURNEY_COPY.addCertification}
-                </button>
-              </div>
             </div>
+            <footer className="cert-panel__footer">
+              <button
+                type="button"
+                className="cert-panel__btn cert-panel__btn--primary cert-panel__btn--compact"
+                onClick={() => setPickerOpen(true)}
+              >
+                {CERTIFICATION_JOURNEY_COPY.addCertification}
+              </button>
+            </footer>
           </div>
         </article>
         {enrollmentError && (
@@ -282,10 +286,10 @@ export default function MyCertifications({
       )}
 
       {enrolledIds.length < MAX_CERTIFICATION_ENROLLMENTS && (
-        <div className="cert-panel__footer cert-panel__footer--inline focus-cert-panel-stack__add">
+        <div className="focus-cert-panel-stack__add">
           <button
             type="button"
-            className="cert-panel__btn cert-panel__btn--primary"
+            className="focus-plan-export__btn focus-plan-export__btn--primary"
             onClick={() => setPickerOpen(true)}
           >
             {CERTIFICATION_JOURNEY_COPY.addCertification}

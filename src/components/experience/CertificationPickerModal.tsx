@@ -159,7 +159,7 @@ export default function CertificationPickerModal({
                   ) : (
                     <button
                       type="button"
-                      className="cert-panel__btn cert-panel__btn--primary"
+                      className="cert-panel__btn cert-panel__btn--primary cert-panel__btn--compact"
                       disabled={disabled}
                       onClick={() => onAdd(cert.certification_id)}
                     >

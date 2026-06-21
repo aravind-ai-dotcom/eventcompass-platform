@@ -37,7 +37,6 @@ export interface PersonActionState {
   savedPeople: string[];
   hiddenPeople: string[];
   onSave: (id: string) => void;
-  /** Opens save-reason modal when adding; omit for legacy toggle-only save. */
   onRequestSave?: (person: RecommendedPerson) => void;
   onHide: (id: string) => void;
   onDetails?: (id: string) => void;
@@ -51,10 +50,8 @@ interface RecommendedConnectionCardProps {
   badges?: ConnectionBadgeId[];
   mutual?: boolean;
   actions?: PersonActionState;
-  /** Show “Can we meet?” outbound signal (People I should meet). */
   allowMeetSignal?: boolean;
   compact?: boolean;
-  /** Hide last name, title, and organization; show skills and domains only. */
   anonymous?: boolean;
 }
 
@@ -93,7 +90,6 @@ export default function RecommendedConnectionCard({
   person,
   profileSignals = [],
   badgeContext,
-  primaryReason,
   badges,
   mutual = false,
   actions,
@@ -115,72 +111,80 @@ export default function RecommendedConnectionCard({
   const isSaved = actions?.savedPeople.includes(person.id) ?? false;
   const isHidden = actions?.hiddenPeople.includes(person.id) ?? false;
 
+  const showLinkedIn = !anonymous && linkedIn?.linkedinVisibility === "visible" && linkedIn.linkedin_url;
+  const linkedInBlocked = !anonymous && linkedIn?.linkedinVisibility === "consent_blocked";
+  const hasMetaRow = resolvedBadges.length > 0 || showLinkedIn || linkedInBlocked;
+
   if (isHidden) return null;
 
   return (
     <article className={`connection-card${compact ? " connection-card--compact" : ""}`}>
-      <div className="connection-card-head">
+      <header className="connection-card-head">
         <PersonAvatar name={shownName} photoUrl={anonymous ? undefined : person.photo_url} />
         <div className="connection-card-copy">
           <h3 className="connection-card-name">{shownName}</h3>
           {!anonymous && person.title && <p className="connection-card-role">{person.title}</p>}
           {!anonymous && org && <p className="connection-card-org">{org}</p>}
         </div>
-      </div>
+      </header>
 
-      {!anonymous && (
-        <PersonMatchPanel
-          person={person}
-          profileSignals={profileSignals}
-          compact={compact}
-        />
-      )}
+      <div className="connection-card-body">
+        {!anonymous && (
+          <PersonMatchPanel
+            person={person}
+            profileSignals={profileSignals}
+            compact={compact}
+          />
+        )}
 
-      {anonymous && skillTags.length > 0 && (
-        <div className="connection-card-skills">
-          <p className="connection-card-skills-kicker">Skills &amp; domains</p>
-          <div className="champion-person-tags">
-            {skillTags.map(tag => (
-              <span key={tag} className="champion-person-tag">{tag}</span>
-            ))}
+        {anonymous && skillTags.length > 0 && (
+          <div className="connection-card-skills">
+            <p className="connection-card-skills-kicker">Skills &amp; domains</p>
+            <div className="champion-person-tags">
+              {skillTags.map(tag => (
+                <span key={tag} className="champion-person-tag">{tag}</span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {!anonymous && linkedIn && linkedIn.linkedinVisibility === "visible" && linkedIn.linkedin_url && (
-        <a
-          href={linkedIn.linkedin_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="connection-card-linkedin"
-        >
-          LinkedIn profile →
-        </a>
-      )}
+        {hasMetaRow && (
+          <div className="connection-card-meta">
+            <ConnectionBadgeRow badges={resolvedBadges} />
+            {showLinkedIn && (
+              <a
+                href={linkedIn!.linkedin_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="connection-card-linkedin"
+              >
+                <span className="connection-card-linkedin__label">LinkedIn profile</span>
+                <span className="connection-card-linkedin__arrow" aria-hidden="true">↗</span>
+              </a>
+            )}
+            {linkedInBlocked && (
+              <p className="connection-card-linkedin connection-card-linkedin--blocked">
+                LinkedIn · not shared
+              </p>
+            )}
+          </div>
+        )}
 
-      {!anonymous && linkedIn?.linkedinVisibility === "consent_blocked" && (
-        <p className="connection-card-linkedin connection-card-linkedin--blocked" title="This person has a LinkedIn profile but chose not to share it with matches">
-          LinkedIn · not shared per their preferences
-        </p>
-      )}
+        {mutual && (
+          <p className="connection-card-mutual">Mutual interest — good moment to connect</p>
+        )}
 
-      <ConnectionBadgeRow badges={resolvedBadges} />
-
-      {mutual && (
-        <p className="connection-card-mutual">Mutual interest — good moment to connect</p>
-      )}
-
-      {allowMeetSignal && !anonymous && (
-        <div className="connection-card-meet-signal">
-          {meetSent ? (
-            <p className="connection-card-meet-signal__sent">
-              ✓ Signal sent — they&apos;ll know you&apos;d like to connect
-            </p>
-          ) : (
-            <>
+        {allowMeetSignal && !anonymous && (
+          <div className="connection-card-meet-signal">
+            {meetSent ? (
+              <p className="connection-card-meet-signal__sent">
+                ✓ Signal sent — they&apos;ll know you&apos;d like to connect
+              </p>
+            ) : (
               <button
                 type="button"
                 className="connection-card-action connection-card-action--signal"
+                title="A lightweight interest signal — not a formal introduction."
                 onClick={() => {
                   sendCanWeMeetSignal(person.id, person.display_name);
                   setMeetSent(true);
@@ -188,16 +192,18 @@ export default function RecommendedConnectionCard({
               >
                 Can we meet?
               </button>
+            )}
+            {!meetSent && !compact && (
               <p className="connection-card-meet-signal__note">
-                A lightweight interest signal — not a formal introduction. Lets them know you&apos;d welcome a conversation.
+                Lightweight interest signal — lets them know you&apos;d welcome a conversation.
               </p>
-            </>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
 
       {actions && !anonymous && (
-        <div className="connection-card-actions">
+        <footer className="connection-card-actions">
           {actions.onDetails && (
             <button type="button" className="connection-card-action" onClick={() => actions.onDetails!(person.id)}>
               Details
@@ -225,7 +231,7 @@ export default function RecommendedConnectionCard({
               Not for me
             </button>
           )}
-        </div>
+        </footer>
       )}
     </article>
   );
