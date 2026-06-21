@@ -15,7 +15,7 @@ import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import { SpeakerIntelligenceProvider } from "@/context/SpeakerIntelligenceContext";
-import { EVENT_MOMENT_HIGHLIGHTS } from "@/data/eventMoments";
+import { EVENT_MOMENT_HIGHLIGHTS } from "@/lib/eventMoments";
 import { SAMPLE_INBOUND_SIGNALS, recommendedShowsMutualInterest } from "@/lib/sampleConnectionSignals";
 import type { ExperienceScoredChampion } from "@/lib/experienceScoring";
 import { useExperiencePageData } from "@/hooks/useExperiencePageData";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { EventMomentHighlight } from "@/data/eventMoments";
+import type { EventMomentHighlight } from "@/lib/eventMoments";
 
 export default function FocusMomentCard({ moment }: { moment: EventMomentHighlight }) {
   return (

@@ -44,6 +44,5 @@ serviceAccountKey.json
 data/*.json
 data/**/*.jsonreview/
 review/
-data/
-data/
+/data/
 serviceAccountKey.json
