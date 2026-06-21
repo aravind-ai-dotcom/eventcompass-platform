@@ -183,6 +183,43 @@ export default function CompassPrintView() {
         </section>
       )}
 
+      {data.enrolledCertificationViews.length > 0 && (
+        <section className="compass-print-section print-page-break">
+          <h2 className="compass-print-section__title">My Certifications</h2>
+          <div className="compass-print-cert-grid">
+            {data.enrolledCertificationViews.map(view => (
+              <article key={view.certification.certification_id} className="compass-print-cert">
+                <h3 className="compass-print-cert__title">{view.certification.title}</h3>
+                <p className="compass-print-cert__meta">
+                  Readiness {view.readiness}% · {view.certification.product} · {view.certification.level}
+                </p>
+                {view.supportingSessions.length > 0 && (
+                  <div className="compass-print-cert__block">
+                    <p className="compass-print-cert__label">Supporting sessions</p>
+                    <ul>
+                      {view.supportingSessions.map(session => (
+                        <li key={session.id}>{session.title}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {view.supportingPeople.length > 0 && (
+                  <div className="compass-print-cert__block">
+                    <p className="compass-print-cert__label">People</p>
+                    <ul>
+                      {view.supportingPeople.map(person => (
+                        <li key={person.id}>{person.display_name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <p className="compass-print-cert__link">{view.certification.certification_url}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {ibmCommunities.length > 0 && (
         <section className="compass-print-section print-page-break">
           <h2 className="compass-print-section__title">Communities for Me</h2>

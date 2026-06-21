@@ -12,6 +12,7 @@ import CompassModuleHead from "@/components/experience/CompassModuleHead";
 import RecommendedConnectionCard from "@/components/people/RecommendedConnectionCard";
 import PeopleInterestedSection from "@/components/people/PeopleInterestedSection";
 import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
+import MyCertifications from "@/components/experience/MyCertifications";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import { SpeakerIntelligenceProvider } from "@/context/SpeakerIntelligenceContext";
@@ -194,6 +195,24 @@ export default function FocusCompassExperience() {
               ))}
             </div>
           </div>
+        </FocusCompassGroup>
+
+        <FocusCompassGroup
+          id="certifications"
+          icon="certifications"
+          label="My Certifications"
+          title="Your certification journey"
+          description="Track up to four certifications — Compass boosts sessions, people, and communities that support your path."
+          expanded={isGroupExpanded("certifications")}
+          onToggle={() => toggleGroup("certifications")}
+        >
+          <MyCertifications
+            views={data.enrolledCertificationViews}
+            catalog={data.certificationCatalog}
+            enrolledIds={data.certificationEnrollments.map(e => e.certification_id)}
+            onEnroll={data.handleEnrollCertification}
+            onRemove={data.handleRemoveCertification}
+          />
         </FocusCompassGroup>
 
         <FocusCompassGroup

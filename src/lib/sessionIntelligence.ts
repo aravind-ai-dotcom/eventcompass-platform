@@ -17,6 +17,7 @@ export type SessionSignalId =
 export type SessionBadgeId =
   | "hands-on"
   | "certification"
+  | "certification-booster"
   | "champion-led"
   | "community-favorite"
   | "popular"
@@ -27,6 +28,7 @@ export type SessionBadgeId =
 export const SESSION_BADGE_LABELS: Record<SessionBadgeId, string> = {
   "hands-on": "Hands-On",
   certification: "Certification",
+  "certification-booster": "Certification Booster",
   "champion-led": "Champion-Led",
   "community-favorite": "Community Favorite",
   popular: "Popular",
@@ -141,6 +143,11 @@ function classifyReason(raw: string, certLabel?: string | null): { signal: Sessi
     return { signal: "popular", line: "Popular among attendees with similar goals" };
   }
 
+  if (/supports your .+ goal/i.test(t)) {
+    const title = t.replace(/^supports your /i, "").replace(/ goal$/i, "").trim();
+    return { signal: "certification_match", line: `Supports your ${title} goal` };
+  }
+
   if (/supports your certification|supports certification journey|certification journey|exam readiness|pursuing this certification|frequently completed|study with peers|learn alongside|recommended preparation|popular among certification/i.test(t)) {
     if (/popular among certification|pursuing this certification/i.test(t)) {
       return { signal: "certification_match", line: "Popular among certification candidates" };
@@ -175,6 +182,10 @@ export function deriveSessionBadges(session: SessionIntelInput): SessionBadgeId[
 
   if (rules.hands_on || /lab|workshop|hands-on|instructor-led lab/.test(type)) {
     badges.push("hands-on");
+  }
+
+  if (/supports your .+ goal/i.test(reasons)) {
+    badges.push("certification-booster");
   }
 
   if (

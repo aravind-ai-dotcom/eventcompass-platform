@@ -1,4 +1,4 @@
-export const FOCUS_COMPASS_GROUP_IDS = ["today", "learning", "people", "community"] as const;
+export const FOCUS_COMPASS_GROUP_IDS = ["today", "learning", "certifications", "people", "community"] as const;
 
 export type FocusCompassGroupId = (typeof FOCUS_COMPASS_GROUP_IDS)[number];
 
@@ -12,6 +12,7 @@ function defaultGroups(): FocusCompassGroupState {
   return {
     today: true,
     learning: false,
+    certifications: false,
     people: false,
     community: false,
   };

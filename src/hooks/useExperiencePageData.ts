@@ -18,6 +18,22 @@ import { buildFocusSessionPlan } from "@/lib/sessionFocusPlan";
 import { mergeSavedSessionIds, addSessionToBothLists } from "@/lib/participantAgenda";
 import { recommendIbmCommunities, type ScoredIbmCommunity } from "@/lib/ibmCommunityMatching";
 import { loadIbmCommunityCatalog, type IbmCommunityCatalogSource } from "@/services/ibmCommunityService";
+import {
+  enrollInCertification,
+  loadCertificationCatalog,
+  loadCertificationEnrollments,
+  removeCertificationEnrollment,
+  type CertificationCatalogSource,
+} from "@/services/certificationService";
+import type { CertificationEnrollment, TxCertification } from "@/data/certifications";
+import { MAX_CERTIFICATION_ENROLLMENTS } from "@/data/certifications";
+import {
+  applyEnrollmentCommunityReasons,
+  boostChampionsForEnrollments,
+  boostSessionsForEnrollments,
+  buildEnrolledCertificationViews,
+  type EnrolledCertificationView,
+} from "@/lib/certificationMatching";
 import type { IbmCommunity } from "@/data/ibmCommunities";
 import { enrichLinkedInForPerson } from "@/lib/demoLinkedInEnrichment";
 import { resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
@@ -80,12 +96,8 @@ function toRecommendedPerson(
 
 export function useExperiencePageData() {
   const [participant, setParticipant] = useState<RawDoc | null>(null);
-  const [learningList, setLearningList] = useState<ExperienceScoredSession[]>([]);
-  const [communityList, setCommunityList] = useState<ExperienceScoredSession[]>([]);
-  const [funList, setFunList] = useState<ExperienceScoredSession[]>([]);
-  const [allSessions, setAllSessions] = useState<ExperienceScoredSession[]>([]);
-  const [champions, setChampions] = useState<ExperienceScoredChampion[]>([]);
-  const [allChampions, setAllChampions] = useState<ExperienceScoredChampion[]>([]);
+  const [baseAllSessions, setBaseAllSessions] = useState<ExperienceScoredSession[]>([]);
+  const [baseAllChampions, setBaseAllChampions] = useState<ExperienceScoredChampion[]>([]);
   const [savedSessions, setSavedSessions] = useState<string[]>([]);
   const [savedSchedule, setSavedSchedule] = useState<string[]>([]);
   const [reservedSeats, setReservedSeats] = useState<string[]>([]);
@@ -97,6 +109,9 @@ export function useExperiencePageData() {
   const [pillarWeights, setPillarWeights] = useState<PillarWeights>(() => getCachedPillarWeights());
   const [ibmCommunityCatalog, setIbmCommunityCatalog] = useState<IbmCommunity[]>([]);
   const [ibmCommunityCatalogSource, setIbmCommunityCatalogSource] = useState<IbmCommunityCatalogSource>("seed");
+  const [certificationCatalog, setCertificationCatalog] = useState<TxCertification[]>([]);
+  const [certificationCatalogSource, setCertificationCatalogSource] = useState<CertificationCatalogSource>("seed");
+  const [certificationEnrollments, setCertificationEnrollments] = useState<CertificationEnrollment[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -123,11 +138,13 @@ export function useExperiencePageData() {
         return;
       }
       try {
-        const [pSnap, sessSnap, champSnap, communityCatalog] = await Promise.all([
+        const [pSnap, sessSnap, champSnap, communityCatalog, certCatalog, certEnrollments] = await Promise.all([
           getDoc(doc(db, EXPERIENCE_EVENT_BASE + "/participants/" + participantId)),
           getDocs(collection(db, EXPERIENCE_EVENT_BASE + "/sessions")),
           getDocs(collection(db, EXPERIENCE_EVENT_BASE + "/champions")),
           loadIbmCommunityCatalog(),
+          loadCertificationCatalog(),
+          loadCertificationEnrollments(participantId),
         ]);
 
         if (!pSnap.exists()) {
@@ -150,22 +167,20 @@ export function useExperiencePageData() {
           })
           .sort((a, b) => b.compass_score - a.compass_score);
 
-        const { learning, community, fun } = partitionExperienceSessions(scored);
         const allScoredChampions = rawChampions
           .map(c => scoreExperienceChampion(pData, c))
           .sort((a, b) => b.compass_score - a.compass_score);
 
         setSessionSpeakerNames(speakerNames);
         setParticipant(pData);
-        setAllSessions(scored);
-        setLearningList(learning);
-        setCommunityList(community);
-        setFunList(fun);
-        setChampions(allScoredChampions.slice(0, 12));
-        setAllChampions(allScoredChampions);
+        setBaseAllSessions(scored);
+        setBaseAllChampions(allScoredChampions);
         setChampionSources(rawChampions.map(c => championFromRaw(c)));
         setIbmCommunityCatalog(communityCatalog.communities);
         setIbmCommunityCatalogSource(communityCatalog.source);
+        setCertificationCatalog(certCatalog.certifications);
+        setCertificationCatalogSource(certCatalog.source);
+        setCertificationEnrollments(certEnrollments);
         setSavedSessions((pData.saved_sessions as string[]) ?? []);
         setSavedSchedule((pData.saved_schedule as string[]) ?? []);
         setReservedSeats((pData.reserved_seats as string[]) ?? []);
@@ -190,6 +205,37 @@ export function useExperiencePageData() {
   const mergedSavedSessionIds = useMemo(
     () => mergeSavedSessionIds(savedSessions, savedSchedule),
     [savedSessions, savedSchedule],
+  );
+
+  const enrolledCertifications = useMemo((): TxCertification[] => {
+    const byId = new Map(certificationCatalog.map(c => [c.certification_id, c]));
+    return certificationEnrollments
+      .map(e => byId.get(e.certification_id))
+      .filter((c): c is TxCertification => !!c);
+  }, [certificationCatalog, certificationEnrollments]);
+
+  const allSessions = useMemo(
+    () => boostSessionsForEnrollments(baseAllSessions, enrolledCertifications),
+    [baseAllSessions, enrolledCertifications],
+  );
+
+  const allChampions = useMemo(
+    () => boostChampionsForEnrollments(baseAllChampions, enrolledCertifications),
+    [baseAllChampions, enrolledCertifications],
+  );
+
+  const { learningList, communityList, funList } = useMemo(() => {
+    const partitioned = partitionExperienceSessions(allSessions);
+    return {
+      learningList: partitioned.learning,
+      communityList: partitioned.community,
+      funList: partitioned.fun,
+    };
+  }, [allSessions]);
+
+  const boostedChampionsTop = useMemo(
+    () => [...allChampions].sort((a, b) => b.compass_score - a.compass_score).slice(0, 12),
+    [allChampions],
   );
 
   const huddleSessionInputs = useMemo(
@@ -229,7 +275,7 @@ export function useExperiencePageData() {
     learningSessions: learningList,
     communitySessions: communityList,
     funSessions: funList,
-    champions: champions.filter(c => !hiddenPeople.includes(c.id)),
+    champions: boostedChampionsTop.filter(c => !hiddenPeople.includes(c.id)),
     liveHuddles: huddlesController.liveOpportunities,
     hiddenSessionIds: hiddenSessions,
     hiddenPeopleIds: hiddenPeople,
@@ -239,7 +285,7 @@ export function useExperiencePageData() {
     sessionMeta: s => experienceSessionMeta(s as ExperienceScoredSession),
     sessionType: s => experienceSessionTypeLabel(s as ExperienceScoredSession),
     sessionReason: s => resolveSessionWhyLine(s as ExperienceScoredSession, certLabel),
-  }), [learningList, communityList, funList, champions, hiddenPeople, hiddenSessions, huddlesController.liveOpportunities, showCertJourney, certLabel, pillarWeights]);
+  }), [learningList, communityList, funList, boostedChampionsTop, hiddenPeople, hiddenSessions, huddlesController.liveOpportunities, showCertJourney, certLabel, pillarWeights]);
 
   const nextBestMove = useMemo(
     () => determineNextBestMove({
@@ -276,7 +322,7 @@ export function useExperiencePageData() {
 
   const recommendedIbmCommunities = useMemo((): ScoredIbmCommunity[] => {
     if (ibmCommunityCatalog.length === 0) return [];
-    return recommendIbmCommunities({
+    const base = recommendIbmCommunities({
       tracks: pTracks,
       goals: pGoals,
       products: pProducts,
@@ -285,7 +331,8 @@ export function useExperiencePageData() {
       catalog: ibmCommunityCatalog,
       limit: 5,
     });
-  }, [ibmCommunityCatalog, pTracks, pGoals, pProducts, pRoles, pIntentKeywords]);
+    return applyEnrollmentCommunityReasons(base, enrolledCertifications);
+  }, [ibmCommunityCatalog, pTracks, pGoals, pProducts, pRoles, pIntentKeywords, enrolledCertifications]);
 
   const speakerCtx = useMemo((): SpeakerParticipantContext => ({
     tracks: pTracks,
@@ -294,10 +341,10 @@ export function useExperiencePageData() {
   }), [pTracks, pGoals, showCertJourney]);
 
   const recommendedPeople = useMemo(
-    () => champions
+    () => boostedChampionsTop
       .filter(c => !hiddenPeople.includes(c.id) && c.compass_score > 0)
       .map(c => toRecommendedPerson(c, sessionSpeakerNames)),
-    [champions, hiddenPeople, sessionSpeakerNames],
+    [boostedChampionsTop, hiddenPeople, sessionSpeakerNames],
   );
 
   const rankedExperts = useMemo(
@@ -314,15 +361,18 @@ export function useExperiencePageData() {
     return [...byId.values()].slice(0, 8);
   }, [recommendedPeople, rankedExperts]);
 
+  const hasCertEnrollments = enrolledCertifications.length > 0;
+  const focusCertIntent = showCertJourney || hasCertEnrollments;
+
   const focusSessionPlan = useMemo(
     () => buildFocusSessionPlan(
       learningList,
       communityList,
       funList,
       hiddenSessions,
-      showCertJourney,
+      focusCertIntent,
     ),
-    [learningList, communityList, funList, hiddenSessions, showCertJourney],
+    [learningList, communityList, funList, hiddenSessions, focusCertIntent],
   );
 
   const focusLearningPlan = useMemo(() => {
@@ -349,7 +399,40 @@ export function useExperiencePageData() {
     [learningList, communityList, funList],
   );
 
-  const topChampion = champions.find(c => !hiddenPeople.includes(c.id) && c.compass_score > 0) ?? null;
+  const enrolledCertificationViews = useMemo((): EnrolledCertificationView[] => {
+    return buildEnrolledCertificationViews(
+      certificationEnrollments,
+      certificationCatalog,
+      allSessions,
+      recommendedPeople,
+      recommendedIbmCommunities,
+    );
+  }, [
+    certificationEnrollments,
+    certificationCatalog,
+    allSessions,
+    recommendedPeople,
+    recommendedIbmCommunities,
+  ]);
+
+  const handleEnrollCertification = useCallback(async (certificationId: string) => {
+    if (certificationEnrollments.length >= MAX_CERTIFICATION_ENROLLMENTS) return;
+    if (certificationEnrollments.some(e => e.certification_id === certificationId)) return;
+
+    const enrollment: CertificationEnrollment = {
+      certification_id: certificationId,
+      status: "planned",
+      added_at: new Date().toISOString(),
+    };
+    setCertificationEnrollments(prev => [...prev, enrollment]);
+    await enrollInCertification(participantId, certificationId);
+  }, [certificationEnrollments, participantId]);
+
+  const handleRemoveCertification = useCallback(async (certificationId: string) => {
+    setCertificationEnrollments(prev => prev.filter(e => e.certification_id !== certificationId));
+    await removeCertificationEnrollment(participantId, certificationId);
+  }, [participantId]);
+  const topChampion = boostedChampionsTop.find(c => !hiddenPeople.includes(c.id) && c.compass_score > 0) ?? null;
   const topSpeaker = rankedExperts[0] ?? null;
 
   const handleSaveSession = useCallback((id: string) => {
@@ -441,7 +524,7 @@ export function useExperiencePageData() {
     mergedSavedSessionIds,
     balancedMoveSet,
     rankedSessionsForVoice,
-    champions,
+    champions: boostedChampionsTop,
     topChampion,
     topSpeaker,
     rankedExperts,
@@ -463,6 +546,12 @@ export function useExperiencePageData() {
     savedChampionRefs,
     profileSignals: [...pTracks, ...pGoals, ...pIntentKeywords],
     certificationJourneyPlan: null,
+    certificationCatalog,
+    certificationCatalogSource,
+    certificationEnrollments,
+    enrolledCertificationViews,
+    handleEnrollCertification,
+    handleRemoveCertification,
   };
 }
 

@@ -7,6 +7,7 @@ export type CompassPanelIconName =
   | "connections"
   | "interested"
   | "learning"
+  | "certifications"
   | "moments"
   | "community";
 
@@ -70,6 +71,13 @@ export default function CompassPanelIcon({ name, className = "" }: CompassPanelI
       <>
         <path d="M8 10 16 6l8 4v12l-8 4-8-4V10z" />
         <path d="M16 10v12M8 10l8 4 8-4" />
+      </>
+    ),
+    certifications: (
+      <>
+        <circle cx="16" cy="16" r="9" />
+        <path d="M16 11v10M11 16h10" />
+        <path d="M13 13l6 6M19 13l-6 6" />
       </>
     ),
     moments: (
