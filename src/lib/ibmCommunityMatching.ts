@@ -60,6 +60,8 @@ export function recommendIbmCommunities(input: IbmCommunityMatchInput): ScoredIb
     matchScore += scoreFieldOverlap(attendeeTracks, community.tracks, "Track", matchReasons);
     matchScore += scoreFieldOverlap(attendeeTopics, community.topics, "Topic", matchReasons);
     matchScore += scoreFieldOverlap(attendeeProducts, community.products, "Product", matchReasons);
+    matchScore += scoreFieldOverlap(attendeeTracks, community.domains, "Domain", matchReasons);
+    matchScore += scoreFieldOverlap(attendeeTopics, community.tags, "Tag", matchReasons);
 
     // Token-level fallback for partial matches (e.g. "AI" in "Generative AI")
     const attendeeBlob = normalize([...attendeeTracks, ...attendeeTopics, ...attendeeProducts].join(" "));

@@ -8,11 +8,11 @@ import { IBM_COMMUNITIES, IBM_COMMUNITY_METRICS } from "@/data/ibmCommunities";
 import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
 
 const FEATURED_IDS = new Set([
-  "global-ai-data-science",
-  "ibm-community-hub",
-  "global-business-analytics",
+  "global-ai-and-data-science",
+  "watsonx-ai",
   "ibm-champions",
-  "user-groups",
+  "api-connect",
+  "ibm-guardium",
 ]);
 
 const featuredCommunities = IBM_COMMUNITIES.filter(c => FEATURED_IDS.has(c.community_id));

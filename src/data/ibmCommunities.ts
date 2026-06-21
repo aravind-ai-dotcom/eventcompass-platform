@@ -1,16 +1,67 @@
-// IBM Community destinations — official ecosystem (community.ibm.com)
+// IBM TechXchange Community catalog — normalized for Firestore + Compass matching
+import seedCatalog from "../seeds/ibm-techxchange-communities.seed.json";
 
 export type IbmCommunityType = "Topic Group" | "User Group" | "Program";
 
+export type IbmCommunityCategory =
+  | "AI"
+  | "Automation"
+  | "Data"
+  | "Security"
+  | "Sustainability"
+  | "Cloud"
+  | "IBM Z & LinuxONE"
+  | "Power"
+  | "Storage"
+  | "IBM Champions"
+  | "IBM Japan";
+
+export type IbmCommunityVisibility = "view_only";
+
+export type IbmCommunityTrack =
+  | "AI"
+  | "Application Development"
+  | "Application Integration"
+  | "Business Management & FinOps"
+  | "Cloud"
+  | "Data"
+  | "Data Security & IAM"
+  | "IBM Z & LinuxONE"
+  | "IT Optimization & Automation"
+  | "Power"
+  | "Red Hat"
+  | "Storage";
+
+export interface IbmTechXchangeCommunity {
+  community_id: string;
+  name: string;
+  category: IbmCommunityCategory | string;
+  visibility: IbmCommunityVisibility;
+  primary_product: string;
+  tags: string[];
+  domains: string[];
+  recommended_roles: string[];
+  recommended_tracks: IbmCommunityTrack[] | string[];
+  is_active: boolean;
+  source: "ibm_techxchange_communities";
+}
+
+/** UI-facing community shape (legacy + Compass cards). */
 export interface IbmCommunity {
   community_id: string;
   name: string;
   type: IbmCommunityType;
+  category: string;
   description: string;
   url: string;
   topics: string[];
   products: string[];
   tracks: string[];
+  tags: string[];
+  domains: string[];
+  recommended_roles: string[];
+  visibility: IbmCommunityVisibility;
+  primary_product: string;
   member_count?: number;
   thread_count?: number;
   library_count?: number;
@@ -22,113 +73,55 @@ export const IBM_COMMUNITY_METRICS = {
   userGroups: "250+",
 } as const;
 
-export const IBM_COMMUNITIES: IbmCommunity[] = [
-  {
-    community_id: "global-ai-data-science",
-    name: "Global AI & Data Science",
-    type: "Topic Group",
-    description:
-      "Practitioners building with watsonx, AI governance, data science, and enterprise AI — labs, best practices, and peer Q&A.",
-    url: "https://community.ibm.com/community/user/ai",
-    topics: ["AI", "Data Science", "Machine Learning", "watsonx", "Generative AI", "LLM", "Analytics"],
-    products: ["watsonx", "IBM Cloud Pak for Data", "SPSS"],
-    tracks: ["AI", "Data & Analytics", "Automation"],
-    member_count: 42000,
-    thread_count: 12800,
-    library_count: 890,
-  },
-  {
-    community_id: "ibm-community-hub",
-    name: "IBM Community Hub",
-    type: "Program",
-    description:
-      "The home for IBM Community — discover topic groups, user groups, Champions, and programs that continue beyond TechXchange.",
-    url: "https://community.ibm.com",
-    topics: ["IBM Community", "Networking", "Events", "Champions"],
-    products: [],
-    tracks: [],
-    member_count: 500000,
-  },
-  {
-    community_id: "global-business-analytics",
-    name: "Global Business Analytics",
-    type: "Topic Group",
-    description:
-      "Business analytics, planning, and intelligence — Cognos, Planning Analytics, and data-driven decision making.",
-    url: "https://community.ibm.com/community/user/businessanalytics",
-    topics: ["Analytics", "Business Intelligence", "Planning", "Cognos", "Data Governance"],
-    products: ["Cognos Analytics", "Planning Analytics"],
-    tracks: ["Data & Analytics", "Business Automation"],
-    member_count: 18500,
-    thread_count: 5400,
-    library_count: 420,
-  },
-  {
-    community_id: "ibm-champions",
-    name: "IBM Champions",
-    type: "Program",
-    description:
-      "Connect with IBM Champions — advocates, mentors, and community leaders across IBM technologies and user groups.",
-    url: "https://community.ibm.com/community/user/champions",
-    topics: ["Champions", "Advocacy", "Mentoring", "Leadership"],
-    products: [],
-    tracks: ["Community", "Leadership"],
-    member_count: 1200,
-    thread_count: 2100,
-  },
-  {
-    community_id: "user-groups",
-    name: "User Groups",
-    type: "User Group",
-    description:
-      "Local and virtual IBM user groups worldwide — meet peers, share implementations, and continue learning after the event.",
-    url: "https://community.ibm.com/community/user/groups",
-    topics: ["User Groups", "Local Events", "Peer Learning", "Networking"],
-    products: [],
-    tracks: ["Infrastructure", "Cloud", "Security", "Automation"],
-    member_count: 250000,
-    thread_count: 8900,
-  },
-  {
-    community_id: "automation-community",
-    name: "Automation Community",
-    type: "Topic Group",
-    description:
-      "Business automation, integration, and workflow — App Connect, API Connect, and event-driven architecture.",
-    url: "https://community.ibm.com/community/user/automation",
-    topics: ["Automation", "Integration", "API", "Workflow", "Event Streams"],
-    products: ["App Connect", "API Connect", "IBM MQ"],
-    tracks: ["Automation", "Integration"],
-    member_count: 22000,
-    thread_count: 6700,
-    library_count: 310,
-  },
-  {
-    community_id: "cloud-hybrid-platform",
-    name: "Cloud & Hybrid Platform",
-    type: "Topic Group",
-    description:
-      "Hybrid cloud, OpenShift, and platform engineering — modernization patterns and cloud-native operations.",
-    url: "https://community.ibm.com/community/user/cloud",
-    topics: ["Cloud", "Hybrid Cloud", "OpenShift", "Kubernetes", "Modernization"],
-    products: ["Red Hat OpenShift", "IBM Cloud"],
-    tracks: ["Cloud", "Infrastructure"],
-    member_count: 35000,
-    thread_count: 9100,
-    library_count: 520,
-  },
-  {
-    community_id: "security-community",
-    name: "Security Community",
-    type: "Topic Group",
-    description:
-      "Zero trust, identity, and threat management — QRadar, Guardium, and security operations best practices.",
-    url: "https://community.ibm.com/community/user/security",
-    topics: ["Security", "Zero Trust", "Identity", "SIEM", "Compliance"],
-    products: ["QRadar", "Guardium", "Verify"],
-    tracks: ["Security"],
-    member_count: 16000,
-    thread_count: 4800,
-    library_count: 280,
-  },
-];
+export const IBM_TECHXCHANGE_COMMUNITIES: IbmTechXchangeCommunity[] =
+  seedCatalog as IbmTechXchangeCommunity[];
+
+const CATEGORY_URL_SEGMENT: Record<string, string> = {
+  AI: "ai",
+  Automation: "automation",
+  Data: "data",
+  Security: "security",
+  Cloud: "cloud",
+  Power: "power",
+  Storage: "storage",
+  "IBM Champions": "champions",
+};
+
+function categoryToType(category: string): IbmCommunityType {
+  if (category === "IBM Champions") return "Program";
+  return "Topic Group";
+}
+
+function communityUrl(category: string): string {
+  const segment = CATEGORY_URL_SEGMENT[category] ?? "home";
+  return `https://community.ibm.com/community/user/${segment}`;
+}
+
+function buildDescription(c: IbmTechXchangeCommunity): string {
+  const focus = c.domains.length > 0 ? c.domains.join(", ") : c.category;
+  return `${c.name} — ${c.primary_product} community focused on ${focus}. Continue the conversation on IBM Community after TechXchange.`;
+}
+
+function toIbmCommunity(c: IbmTechXchangeCommunity): IbmCommunity {
+  const topics = [...new Set([...c.tags, ...c.domains])];
+  return {
+    community_id: c.community_id,
+    name: c.name,
+    type: categoryToType(c.category),
+    category: c.category,
+    description: buildDescription(c),
+    url: communityUrl(c.category),
+    topics,
+    products: [c.primary_product],
+    tracks: [...c.recommended_tracks],
+    tags: c.tags,
+    domains: c.domains,
+    recommended_roles: c.recommended_roles,
+    visibility: c.visibility,
+    primary_product: c.primary_product,
+  };
+}
+
+export const IBM_COMMUNITIES: IbmCommunity[] = IBM_TECHXCHANGE_COMMUNITIES
+  .filter(c => c.is_active)
+  .map(toIbmCommunity);
