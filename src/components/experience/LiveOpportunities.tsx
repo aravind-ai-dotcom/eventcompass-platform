@@ -6,6 +6,7 @@ import type { HuddlesController } from "@/hooks/useHuddles";
 import type { SpeakerProfile } from "@/types/speaker";
 import { enrichHuddleWithSpeakerIntel } from "@/lib/speakerIntelligence";
 import HuddleCard from "@/components/experience/HuddleCard";
+import HuddleModeIndicator from "@/components/experience/HuddleModeIndicator";
 import StartConversationModal from "@/components/experience/StartConversationModal";
 import CompassPanel from "@/components/experience/CompassPanel";
 
@@ -41,6 +42,9 @@ export default function LiveOpportunities({
     liveOpportunities,
     matchedHuddles,
     createHuddle,
+    displayMode,
+    fetchDiagnostic,
+    isDemoMode,
   } = huddles;
 
   const visible = liveOpportunities
@@ -56,8 +60,9 @@ export default function LiveOpportunities({
 
   const body = (
     <>
-      {participantUid && (
-        <div className="live-opportunities-actions">
+      <div className="live-opportunities-toolbar">
+        <HuddleModeIndicator displayMode={displayMode} fetchDiagnostic={fetchDiagnostic} />
+        {participantUid && (
           <button
             type="button"
             className="action-chip live-opportunities-start"
@@ -65,8 +70,8 @@ export default function LiveOpportunities({
           >
             Start a Conversation
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {loading && visible.length === 0 && (
         <p className="live-opportunities-desc">Loading matched huddles…</p>
@@ -102,6 +107,7 @@ export default function LiveOpportunities({
                 userDisplayName={userDisplayName}
                 userFirstName={userFirstName}
                 participantUid={participantUid}
+                isDemo={isDemoMode}
                 onSaveContact={onSaveContact}
               />
             </li>
@@ -122,6 +128,7 @@ export default function LiveOpportunities({
               host_job_title: hostJobTitle,
               host_organization: hostOrganization,
             });
+            setShowStart(false);
           }}
         />
       )}

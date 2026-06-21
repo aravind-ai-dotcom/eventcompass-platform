@@ -10,9 +10,12 @@ import {
   getCertificationJourneyTitle,
   isCertificationActivityType,
   resolveSelectedCertificationGoals,
-  shouldShowCertificationJourney,
-  hasCertificationIntent,
+  isCertificationJourneyActive,
 } from "@/lib/certificationProfile";
+import {
+  buildCertificationJourneyPlan,
+  resolveActiveCertification,
+} from "@/lib/certificationJourneyIntelligence";
 import { enrichSessionPlanningFields } from "@/lib/sessionPlanning";
 import { buildFocusSessionPlan } from "@/lib/sessionFocusPlan";
 import { mergeSavedSessionIds, addSessionToBothLists } from "@/lib/participantAgenda";
@@ -63,8 +66,9 @@ import {
   type ExperienceScoredSession,
 } from "@/lib/experienceScoring";
 import type { RecommendedPerson } from "@/components/people/RecommendedConnectionCard";
+import { recommendedShowsMutualInterest, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 import type { PillarWeights } from "@/types/recommendationBalance";
-import type { NextBestMove } from "@/types";
+import type { NextBestMove, ScoredChampion, ScoredSession } from "@/types";
 
 type RawDoc = Record<string, unknown>;
 
@@ -104,6 +108,7 @@ export function useExperiencePageData() {
   const [certificationGoals, setCertificationGoals] = useState<string[]>([]);
   const [hiddenSessions, setHiddenSessions] = useState<string[]>([]);
   const [hiddenPeople, setHiddenPeople] = useState<string[]>([]);
+  const [savedPeople, setSavedPeople] = useState<string[]>([]);
   const [championSources, setChampionSources] = useState<ReturnType<typeof championFromRaw>[]>([]);
   const [sessionSpeakerNames, setSessionSpeakerNames] = useState<Set<string>>(() => new Set());
   const [pillarWeights, setPillarWeights] = useState<PillarWeights>(() => getCachedPillarWeights());
@@ -159,7 +164,10 @@ export function useExperiencePageData() {
         const rawChampions = champSnap.docs.map(d => ({ id: d.id, ...d.data() } as RawDoc));
         const speakerNames = extractSessionSpeakerNames(rawSessions);
 
-        const certIntent = hasCertificationIntent(pData);
+        const certIntent = isCertificationJourneyActive(pData, {
+          enrollmentCount: certEnrollments.length,
+          selectedCertificationCount: ((pData.certification_goals as string[]) ?? []).length,
+        });
 
         const scored = rawSessions
           .map(s => {
@@ -188,6 +196,7 @@ export function useExperiencePageData() {
         setCertificationGoals((pData.certification_goals as string[]) ?? []);
         setHiddenSessions((pData.hidden_sessions as string[]) ?? []);
         setHiddenPeople((pData.hidden_people as string[]) ?? []);
+        setSavedPeople((pData.saved_people as string[]) ?? []);
         setStatus("ready");
         void loadRecommendationBalanceConfig().then(setPillarWeights);
       } catch (err: unknown) {
@@ -269,8 +278,26 @@ export function useExperiencePageData() {
     [participant, certificationGoals, savedSessions, savedSchedule, allSessions],
   );
 
-  const certLabel = participant ? getCertificationJourneyTitle(participant, resolveSelectedCertificationGoals(allSessions, certGoalIds)) : null;
-  const showCertJourney = participant ? shouldShowCertificationJourney(participant, certGoalIds) : false;
+  const certLabel = useMemo(() => {
+    if (!participant) return null;
+    const goalsFromEnrollments = enrolledCertifications.map(c => ({
+      id: c.certification_id,
+      title: c.title,
+      certification_code: c.exam_code,
+      track: c.txc_tracks[0],
+      topics: c.skill_tags,
+      products: c.related_products,
+    }));
+    return getCertificationJourneyTitle(participant, goalsFromEnrollments);
+  }, [participant, enrolledCertifications]);
+
+  const focusCertIntent = useMemo(
+    () => isCertificationJourneyActive(participant, {
+      enrollmentCount: certificationEnrollments.length,
+      selectedCertificationCount: certificationGoals.length,
+    }),
+    [participant, certificationEnrollments.length, certificationGoals.length],
+  );
 
   const balancedInput = useMemo((): BalancedRecommendationInput => ({
     learningSessions: learningList,
@@ -281,12 +308,12 @@ export function useExperiencePageData() {
     hiddenSessionIds: hiddenSessions,
     hiddenPeopleIds: hiddenPeople,
     rotationSeed: new Date().getDay(),
-    hasCertIntent: showCertJourney,
+    hasCertIntent: focusCertIntent,
     pillarWeights,
     sessionMeta: s => experienceSessionMeta(s as ExperienceScoredSession),
     sessionType: s => experienceSessionTypeLabel(s as ExperienceScoredSession),
     sessionReason: s => resolveSessionWhyLine(s as ExperienceScoredSession, certLabel),
-  }), [learningList, communityList, funList, boostedChampionsTop, hiddenPeople, hiddenSessions, huddlesController.liveOpportunities, showCertJourney, certLabel, pillarWeights]);
+  }), [learningList, communityList, funList, boostedChampionsTop, hiddenPeople, hiddenSessions, huddlesController.liveOpportunities, focusCertIntent, certLabel, pillarWeights]);
 
   const nextBestMove = useMemo(
     () => determineNextBestMove({
@@ -297,10 +324,10 @@ export function useExperiencePageData() {
       savedSessionIds: mergedSavedSessionIds,
       allSessions,
       certificationGoalIds: certGoalIds,
-      hasCertIntent: showCertJourney,
+      hasCertIntent: focusCertIntent,
       savedConnectionCount: 0,
     }),
-    [user, enrolled, participant, balancedInput, mergedSavedSessionIds, allSessions, certGoalIds, showCertJourney],
+    [user, enrolled, participant, balancedInput, mergedSavedSessionIds, allSessions, certGoalIds, focusCertIntent],
   );
 
   const nbmSession = useMemo(() => {
@@ -332,14 +359,15 @@ export function useExperiencePageData() {
       catalog: ibmCommunityCatalog,
       limit: 5,
     });
+    if (!focusCertIntent) return base;
     return applyEnrollmentCommunityReasons(base, enrolledCertifications);
-  }, [ibmCommunityCatalog, pTracks, pGoals, pProducts, pRoles, pIntentKeywords, enrolledCertifications]);
+  }, [ibmCommunityCatalog, pTracks, pGoals, pProducts, pRoles, pIntentKeywords, enrolledCertifications, focusCertIntent]);
 
   const speakerCtx = useMemo((): SpeakerParticipantContext => ({
     tracks: pTracks,
     goals: pGoals,
-    hasCertIntent: showCertJourney,
-  }), [pTracks, pGoals, showCertJourney]);
+    hasCertIntent: focusCertIntent,
+  }), [pTracks, pGoals, focusCertIntent]);
 
   const recommendedPeople = useMemo(
     () => boostedChampionsTop
@@ -359,11 +387,83 @@ export function useExperiencePageData() {
     for (const p of [...recommendedPeople, ...expertPeople]) {
       if (!byId.has(p.id)) byId.set(p.id, p);
     }
-    return [...byId.values()].slice(0, 8);
+    return [...byId.values()]
+      .sort((a, b) => (b.compass_score ?? 0) - (a.compass_score ?? 0))
+      .slice(0, 8);
   }, [recommendedPeople, rankedExperts]);
 
-  const hasCertEnrollments = enrolledCertifications.length > 0;
-  const focusCertIntent = showCertJourney || hasCertEnrollments;
+  const peopleYouWantToMeet = useMemo(() => {
+    const byId = new Map<string, RecommendedPerson>();
+
+    for (const id of savedPeople) {
+      const champ = allChampions.find(c => c.id === id);
+      if (champ && !hiddenPeople.includes(id)) {
+        byId.set(id, toRecommendedPerson(champ, sessionSpeakerNames));
+      }
+    }
+
+    for (const person of focusPeople) {
+      if (byId.size >= 5) break;
+      if (byId.has(person.id)) continue;
+      if (savedPeople.includes(person.id)) continue;
+      if (recommendedShowsMutualInterest(person.id, person.display_name, SAMPLE_INBOUND_SIGNALS)) {
+        byId.set(person.id, person);
+      }
+    }
+
+    for (const person of focusPeople) {
+      if (byId.size >= 5) break;
+      if (byId.has(person.id)) continue;
+      if (savedPeople.includes(person.id)) continue;
+      byId.set(person.id, person);
+    }
+
+    return [...byId.values()].slice(0, 5);
+  }, [savedPeople, allChampions, hiddenPeople, sessionSpeakerNames, focusPeople]);
+
+  const selectedCertGoals = useMemo(
+    () => resolveSelectedCertificationGoals(allSessions, certGoalIds),
+    [allSessions, certGoalIds],
+  );
+
+  const activeCertificationsForPlan = useMemo((): TxCertification[] => {
+    if (!focusCertIntent) return [];
+    return enrolledCertifications;
+  }, [focusCertIntent, enrolledCertifications]);
+
+  const certificationJourneyPlan = useMemo(() => {
+    if (!focusCertIntent) return null;
+    const goalsForJourney = selectedCertGoals.length > 0
+      ? selectedCertGoals
+      : enrolledCertifications.map(c => ({
+          id: c.certification_id,
+          title: c.title,
+          certification_code: c.exam_code,
+          track: c.txc_tracks[0],
+          topics: c.skill_tags,
+          products: c.related_products,
+        }));
+    const active = resolveActiveCertification(
+      goalsForJourney,
+      certLabel,
+      enrolledCertifications[0]?.certification_id ?? goalsForJourney[0]?.id,
+    );
+    if (!active) return null;
+    return buildCertificationJourneyPlan(
+      active,
+      allSessions as unknown as ScoredSession[],
+      allChampions as unknown as ScoredChampion[],
+      huddlesController.liveOpportunities,
+    );
+  }, [
+    focusCertIntent,
+    selectedCertGoals,
+    enrolledCertifications,
+    certLabel,
+    allSessions,
+    allChampions,
+    huddlesController.liveOpportunities,
+  ]);
 
   const focusSessionPlan = useMemo(
     () => buildFocusSessionPlan(
@@ -372,8 +472,9 @@ export function useExperiencePageData() {
       funList,
       hiddenSessions,
       focusCertIntent,
+      activeCertificationsForPlan,
     ),
-    [learningList, communityList, funList, hiddenSessions, focusCertIntent],
+    [learningList, communityList, funList, hiddenSessions, focusCertIntent, activeCertificationsForPlan],
   );
 
   const focusLearningPlan = useMemo(() => {
@@ -470,10 +571,12 @@ export function useExperiencePageData() {
   }, [hiddenSessions, persistPrefs]);
 
   const handleSavePerson = useCallback((id: string) => {
-    const next = hiddenPeople.filter(x => x !== id);
-    setHiddenPeople(next);
-    void persistPrefs({ hidden_people: next });
-  }, [hiddenPeople, persistPrefs]);
+    const next = savedPeople.includes(id)
+      ? savedPeople.filter(x => x !== id)
+      : [...savedPeople, id];
+    setSavedPeople(next);
+    void persistPrefs({ saved_people: next });
+  }, [savedPeople, persistPrefs]);
 
   const handleHidePerson = useCallback((id: string) => {
     const next = hiddenPeople.includes(id) ? hiddenPeople : [...hiddenPeople, id];
@@ -489,8 +592,14 @@ export function useExperiencePageData() {
   );
 
   const savedChampionRefs = useMemo(
-    () => allChampions.slice(0, 5).map(c => ({ id: c.id, display_name: c.display_name })),
-    [allChampions],
+    () => [
+      ...savedPeople.map(id => {
+        const c = allChampions.find(ch => ch.id === id);
+        return c ? { id: c.id, display_name: c.display_name } : null;
+      }).filter((r): r is { id: string; display_name: string } => !!r),
+      ...focusPeople.slice(0, 5).map(p => ({ id: p.id, display_name: p.display_name })),
+    ],
+    [savedPeople, allChampions, focusPeople],
   );
 
   const peopleBadgeContext = useMemo(
@@ -498,25 +607,25 @@ export function useExperiencePageData() {
     [viewerUniversities],
   );
 
+  const handleDetailsPerson = useCallback((id: string) => {
+    const found = allChampions.find(c => c.id === id);
+    return found ?? null;
+  }, [allChampions]);
+
   const peopleActions = useMemo(
     () => ({
-      savedPeople: [] as string[],
+      savedPeople,
       hiddenPeople,
       onSave: handleSavePerson,
       onHide: handleHidePerson,
     }),
-    [hiddenPeople, handleSavePerson, handleHidePerson],
+    [savedPeople, hiddenPeople, handleSavePerson, handleHidePerson],
   );
 
   const displayName = String(
     participant?.display_name ?? participant?.displayName ??
     [participant?.first_name, participant?.last_name].filter(Boolean).join(" ") ?? "Attendee",
   );
-
-  const handleDetailsPerson = useCallback((id: string) => {
-    const found = allChampions.find(c => c.id === id);
-    return found ?? null;
-  }, [allChampions]);
 
   return {
     status,
@@ -538,6 +647,7 @@ export function useExperiencePageData() {
     focusLearningPlan,
     focusSessionPlan,
     focusPeople,
+    peopleYouWantToMeet,
     learningList,
     communityList,
     funList,
@@ -565,8 +675,9 @@ export function useExperiencePageData() {
     peopleBadgeContext,
     peopleActions,
     savedChampionRefs,
+    savedPeople,
     profileSignals: [...pTracks, ...pGoals, ...pIntentKeywords],
-    certificationJourneyPlan: null,
+    certificationJourneyPlan,
     certificationCatalog,
     certificationCatalogSource,
     certificationEnrollments,
@@ -575,6 +686,7 @@ export function useExperiencePageData() {
     handleRemoveCertification,
     certificationError,
     clearCertificationError,
+    focusCertIntent,
   };
 }
 

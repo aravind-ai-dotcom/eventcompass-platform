@@ -23,6 +23,17 @@ export const CERTIFICATION_MILESTONES = [
 
 export const CERTIFICATION_JOURNEY_COPY = {
   sectionKicker: "Certification journey",
+  sectionTitle: "Working Toward a Certification",
+  supportingCopy:
+    "Great choice. Compass can help you identify learning opportunities, experts, study groups, and certification-related sessions throughout TechXchange.",
+  journeySteps: [
+    "Choose Certification",
+    "Build Learning Path",
+    "Attend Recommended Sessions",
+    "Meet Experts",
+    "Prepare with Confidence",
+    "Earn Certification",
+  ] as const,
   workingToward: "Working toward",
   progressSummary: "Progress summary",
   recommendedSessions: "Recommended sessions",
@@ -47,27 +58,60 @@ export const CERTIFICATION_JOURNEY_COPY = {
 const DEMO_CERTIFICATIONS: CertificationJourneyRecord[] =
   (certificationsBundle as { certifications: CertificationJourneyRecord[] }).certifications ?? [];
 
-/** True when attendee selected certification intent during enrollment. */
-export function hasCertificationIntent(participant: ProfileDoc): boolean {
+/** Enrollment goal labels that activate the Certification Journey (current + legacy). */
+const CERTIFICATION_ENROLLMENT_GOAL_LABELS = [
+  "pursue a certification journey",
+  "pursue a certification",
+  "earn a certification",
+] as const;
+
+/** True when attendee selected a certification enrollment goal during Build My Compass. */
+export function hasCertificationGoalSelected(participant: ProfileDoc): boolean {
   const goals = (sig(participant).goals as string[]) ?? [];
-  if (goals.some(g => /certification|certified|cert journey|pursue a certification|earn a certification/i.test(g))) return true;
-
-  const intent = (sig(participant).intent as ProfileDoc) ?? {};
-  const aspiration = String(intent.aspiration ?? "");
-  if (/certif|cert exam|certified|qiskit|watsonx|exam prep|learning path/i.test(aspiration)) {
-    return true;
-  }
-
-  const keywords = (intel(participant).matching_keywords as string[]) ?? [];
-  return keywords.some(k => /certif|certified|qiskit|exam prep|learning path/i.test(k));
+  return goals.some(g => {
+    const norm = g.toLowerCase().trim();
+    return CERTIFICATION_ENROLLMENT_GOAL_LABELS.some(
+      label => norm === label || norm.includes(label),
+    );
+  });
 }
 
-/** Show Certification Journey when attendee has cert intent or saved certification goals. */
+/**
+ * Certification Journey is active when ANY activation rule is true:
+ * 1. Enrollment goal (Pursue a Certification Journey / legacy Earn a Certification)
+ * 2. Certification selected via Add Certification (enrollments or profile certification_goals)
+ *
+ * Saved certification sessions are intentionally excluded (future enhancement).
+ */
+export function isCertificationJourneyActive(
+  participant: ProfileDoc | null | undefined,
+  options: {
+    enrollmentCount?: number;
+    selectedCertificationCount?: number;
+  } = {},
+): boolean {
+  const enrollmentCount = options.enrollmentCount ?? 0;
+  const selectedCertificationCount = options.selectedCertificationCount ?? 0;
+  if (enrollmentCount > 0 || selectedCertificationCount > 0) return true;
+  if (!participant) return false;
+  return hasCertificationGoalSelected(participant);
+}
+
+/** @deprecated Use hasCertificationGoalSelected */
+export function hasCertificationIntent(participant: ProfileDoc): boolean {
+  return hasCertificationGoalSelected(participant);
+}
+
+/** @deprecated Use isCertificationJourneyActive */
 export function shouldShowCertificationJourney(
   participant: ProfileDoc,
-  certGoalIds: string[],
+  _certGoalIds: string[] = [],
+  options: {
+    enrollmentCount?: number;
+    selectedCertificationCount?: number;
+  } = {},
 ): boolean {
-  return hasCertificationIntent(participant) || certGoalIds.length > 0;
+  return isCertificationJourneyActive(participant, options);
 }
 
 /** Shorter journey title for UI (learning journey, not exam card). */
@@ -81,7 +125,7 @@ export function getCertificationJourneyTitle(
     return dash.length > 1 ? dash[dash.length - 1].trim() : title.replace(/^IBM Certified\s+/i, "").trim();
   }
 
-  if (!hasCertificationIntent(participant)) return null;
+  if (!hasCertificationGoalSelected(participant) && selectedGoals.length === 0) return null;
 
   const intent = (sig(participant).intent as ProfileDoc) ?? {};
   const aspiration = String(intent.aspiration ?? "").trim();

@@ -57,7 +57,7 @@ export default function SessionIntelligencePanel({
       <div className="session-intelligence-head">
         <MatchScoreBadge score={intel.score} size={scoreSize} />
         <div className="session-intelligence-head-copy">
-          <p className="session-intelligence-kicker">Why Compass recommended this</p>
+          <p className="session-intelligence-kicker">Recommended because:</p>
           {intel.score > 0 && (
             <p className="session-intelligence-score-note">{intel.score}% match to your profile</p>
           )}

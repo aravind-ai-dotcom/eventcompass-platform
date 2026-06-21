@@ -3,11 +3,11 @@ import { humanizeMatchReasons, humanizeScoringReason } from "@/lib/sessionRecomm
 export type PersonSignalId = "technology" | "industry" | "goal" | "networking" | "certification";
 
 export const PERSON_SIGNAL_LABELS: Record<PersonSignalId, string> = {
-  technology: "Technology",
-  industry: "Industry",
-  goal: "Goal",
-  networking: "Networking",
-  certification: "Certification",
+  technology: "Technology Match",
+  industry: "Industry Match",
+  goal: "Goal Match",
+  networking: "Networking Match",
+  certification: "Certification Match",
 };
 
 export interface PersonIntelInput {
@@ -18,6 +18,7 @@ export interface PersonIntelInput {
   company?: string;
   profile?: { domains?: string[]; products?: string[] };
   attendance?: { available_for_1x1?: boolean };
+  education?: Array<{ institution?: string } | string>;
 }
 
 export interface PersonIntelligence {
@@ -55,7 +56,37 @@ export function buildPersonMatchReasons(
   const seen = new Set<string>();
 
   for (const raw of person.compass_reasons ?? []) {
-    const line = humanizeScoringReason(raw);
+    const t = raw.trim().toLowerCase();
+    let line: string | null = null;
+
+    if (/champion|ibm champion/i.test(t)) {
+      const domain = person.profile?.domains?.[0] ?? person.profile?.products?.[0];
+      line = domain
+        ? `Champion in ${domain}`
+        : "Champion in your area of interest";
+    } else if (/speaker|presenting|session speaker/i.test(t)) {
+      line = "Speaker on a recommended session";
+    } else if (/certif|exam|credential/i.test(t)) {
+      line = "Preparing for same certification";
+    } else if (/partner|business partner/i.test(t)) {
+      line = "Partner ecosystem expertise";
+    } else if (/industry|sector|vertical/i.test(t)) {
+      line = "Similar industry focus";
+    } else if (/former ibm|ex-ibm|past employer.*ibm/i.test(t)) {
+      line = "Former IBM employee";
+    } else if (/alumni|university|nc state/i.test(t)) {
+      const uni = person.education?.[0];
+      const name = typeof uni === "string" ? uni : uni?.institution;
+      line = name ? `${name} alumni` : "Shared alumni network";
+    } else if (/shared expertise|shared interest|technology|track|domain|product|watsonx|agentic/i.test(t)) {
+      const domain = person.profile?.domains?.[0] ?? person.profile?.products?.[0];
+      line = domain
+        ? `Shared ${domain} interests`
+        : "Shared technical interests";
+    } else {
+      line = humanizeScoringReason(raw);
+    }
+
     if (line && !seen.has(line)) {
       seen.add(line);
       lines.push(line);
@@ -108,7 +139,7 @@ export function buildPersonMatchReasons(
     return humanizeMatchReasons(person.compass_reasons);
   }
 
-  if (lines.length === 0) {
+  if (lines.length < 2) {
     lines.push("Aligned with your Compass profile signals");
   }
 

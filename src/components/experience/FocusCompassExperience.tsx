@@ -1,45 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import NextBestMoveCard from "@/components/experience/NextBestMove";
 import LiveOpportunities from "@/components/experience/LiveOpportunities";
 import FocusDayPlanSection from "@/components/experience/FocusDayPlanSection";
+import DontMissMomentsSection from "@/components/experience/DontMissMomentsSection";
 import FocusCompassHero from "@/components/experience/FocusCompassHero";
 import FocusCompassGroup from "@/components/experience/FocusCompassGroup";
-import FocusMomentCard from "@/components/experience/FocusMomentCard";
-import CompassModuleHead from "@/components/experience/CompassModuleHead";
-import RecommendedConnectionCard from "@/components/people/RecommendedConnectionCard";
-import PeopleInterestedSection from "@/components/people/PeopleInterestedSection";
+import FocusCustomizePanel from "@/components/experience/FocusCustomizePanel";
+import FocusPeopleSection from "@/components/experience/FocusPeopleSection";
 import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
 import MyCertifications from "@/components/experience/MyCertifications";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import { SpeakerIntelligenceProvider } from "@/context/SpeakerIntelligenceContext";
-import { EVENT_MOMENT_HIGHLIGHTS } from "@/lib/eventMoments";
+import { isFocusGroupVisible } from "@/lib/focusCompassUiPreferences";
 import { SAMPLE_INBOUND_SIGNALS, recommendedShowsMutualInterest } from "@/lib/sampleConnectionSignals";
 import type { ExperienceScoredChampion } from "@/lib/experienceScoring";
 import { useExperiencePageData } from "@/hooks/useExperiencePageData";
 import { useFocusCompassGroups } from "@/hooks/useFocusCompassGroups";
+import { useFocusCompassUiPreferences } from "@/hooks/useFocusCompassUiPreferences";
 import type { ScoredSession, ScoredChampion } from "@/types";
 
 export default function FocusCompassExperience() {
   const data = useExperiencePageData();
   const { toggleGroup, isGroupExpanded } = useFocusCompassGroups();
+  const {
+    prefs: uiPrefs,
+    customizeOpen,
+    setCustomizeOpen,
+    setBlockVisible,
+    isBlockVisible,
+  } = useFocusCompassUiPreferences();
   const [detailChampion, setDetailChampion] = useState<ExperienceScoredChampion | null>(null);
 
+  const showGroup = (groupId: Parameters<typeof isFocusGroupVisible>[0]) =>
+    isFocusGroupVisible(groupId, uiPrefs.blocks);
+
   const ibmCommunities = data.recommendedIbmCommunities;
-  const hasCommunityMatches = ibmCommunities.some(c => c.matchScore > 0);
-
-  const peopleToMeet = data.recommendedPeople.slice(0, 8);
-
-  const peopleMutualRefs = useMemo(
-    () => [
-      ...data.savedChampionRefs,
-      ...peopleToMeet.map(p => ({ id: p.id, display_name: p.display_name })),
-    ],
-    [data.savedChampionRefs, peopleToMeet],
-  );
 
   const openPersonDetails = (id: string) => {
     const champ = data.handleDetailsPerson(id);
@@ -76,6 +75,31 @@ export default function FocusCompassExperience() {
   const voiceNbmSession = data.nbmSession as unknown as ScoredSession | null;
   const peopleBalanceCount = data.champions.filter(c => c.compass_score > 0).length;
 
+  const voicePanel = (
+    <VoiceCompassButton
+      variant="companion"
+      embedInCommandCenter
+      nextBestMove={data.nextBestMove}
+      balancedMoves={data.balancedMoveSet}
+      topSession={voiceNbmSession}
+      topChampion={voiceChampion}
+      topSpeaker={data.topSpeaker}
+      rankedSpeakers={data.rankedExperts}
+      speakerCatalog={data.speakerCatalog}
+      speakerCtx={data.speakerCtx}
+      rankedSessions={voiceSessions}
+      participantGoals={data.pGoals}
+      participantTracks={data.pTracks}
+      certLabel={data.certLabel}
+      certificationJourney={data.certificationJourneyPlan}
+      isEnrolled={data.enrolled}
+      onAddToSchedule={data.handleSaveSession}
+      onDoNotSuggestSession={data.handleHideSession}
+      onSavePerson={data.handleSavePerson}
+      onDoNotSuggestPerson={data.handleHidePerson}
+    />
+  );
+
   return (
     <SpeakerIntelligenceProvider
       catalog={data.speakerCatalog}
@@ -86,6 +110,14 @@ export default function FocusCompassExperience() {
       }}
     >
       <div className="focus-compass-page">
+        <FocusCustomizePanel
+          open={customizeOpen}
+          prefs={uiPrefs}
+          showCertifications={data.focusCertIntent}
+          onClose={() => setCustomizeOpen(false)}
+          onBlockChange={setBlockVisible}
+        />
+
         <FocusCompassHero
           displayName={data.displayName}
           participant={data.participant}
@@ -95,79 +127,41 @@ export default function FocusCompassExperience() {
           learningCount={data.learningList.length}
           communityCount={data.communityList.length}
           funCount={data.funList.length}
+          onCustomize={() => setCustomizeOpen(true)}
+          voicePanel={voicePanel}
         />
 
+        {showGroup("today") && isBlockVisible("next_best_move") && (
         <FocusCompassGroup
           id="today"
           icon="next-move"
           label="Today"
-          title="What matters now"
-          description="Ask Compass, act on your next move, and join live conversations on site."
+          title="Next best move"
+          description="The single most valuable thing to do next."
           expanded={isGroupExpanded("today")}
           onToggle={() => toggleGroup("today")}
         >
-          <div className="focus-compass-block focus-compass-block--voice">
-            <VoiceCompassButton
-              variant="companion"
+          {data.nextBestMove ? (
+            <NextBestMoveCard
               nextBestMove={data.nextBestMove}
-              balancedMoves={data.balancedMoveSet}
-              topSession={voiceNbmSession}
-              topChampion={voiceChampion}
-              topSpeaker={data.topSpeaker}
-              rankedSpeakers={data.rankedExperts}
-              speakerCatalog={data.speakerCatalog}
-              speakerCtx={data.speakerCtx}
-              rankedSessions={voiceSessions}
-              participantGoals={data.pGoals}
-              participantTracks={data.pTracks}
+              intelSession={voiceNbmSession}
               certLabel={data.certLabel}
-              certificationJourney={data.certificationJourneyPlan}
-              isEnrolled={data.enrolled}
-              onAddToSchedule={data.handleSaveSession}
-              onDoNotSuggestSession={data.handleHideSession}
-              onSavePerson={data.handleSavePerson}
-              onDoNotSuggestPerson={data.handleHidePerson}
             />
-          </div>
-
-          {data.nextBestMove && (
-            <div className="focus-compass-block">
-              <CompassModuleHead
-                icon="next-move"
-                kicker="Right now"
-                title="Next best move"
-                description="The single most valuable thing to do next."
-                className="focus-compass-submodule"
-              />
-              <NextBestMoveCard
-                nextBestMove={data.nextBestMove}
-                intelSession={voiceNbmSession}
-                certLabel={data.certLabel}
-              />
-            </div>
+          ) : (
+            <p className="focus-compass-section__desc">
+              Complete your profile and Compass will surface your next best move.
+            </p>
           )}
-
-          <div className="focus-compass-block">
-            <LiveOpportunities
-              huddles={data.huddlesController}
-              speakerCatalog={data.speakerCatalog}
-              participantUid={data.participantId}
-              userDisplayName={data.userDisplayName}
-              userFirstName={data.userFirstName}
-              hostJobTitle={data.hostJobTitle}
-              hostOrganization={data.hostOrganization}
-              visibleLimit={6}
-              embedded
-            />
-          </div>
         </FocusCompassGroup>
+        )}
 
+        {showGroup("learning") && isBlockVisible("learning_plan") && (
         <FocusCompassGroup
           id="learning"
           icon="learning"
           label="My Learning"
-          title="Your week plan"
-          description="Curated sessions by day — core learning, certification, and peer perspective."
+          title="Your learning plan"
+          description="A curated plan based on your interests, goals, and certifications."
           expanded={isGroupExpanded("learning")}
           onToggle={() => toggleGroup("learning")}
         >
@@ -180,29 +174,59 @@ export default function FocusCompassExperience() {
             savedSessionIds={data.mergedSavedSessionIds}
             onSaveSession={data.handleSaveSession}
           />
-
-          <div className="focus-compass-block focus-compass-block--moments">
-            <CompassModuleHead
-              icon="moments"
-              kicker="Event"
-              title="Moments not to miss"
-              description="Anchor experiences that shape the week."
-              className="focus-compass-submodule"
-            />
-            <div className="opportunity-grid three focus-moment-grid">
-              {EVENT_MOMENT_HIGHLIGHTS.map(moment => (
-                <FocusMomentCard key={moment.id} moment={moment} />
-              ))}
-            </div>
-          </div>
         </FocusCompassGroup>
+        )}
 
+        {showGroup("moments") && isBlockVisible("event_moments") && (
+        <FocusCompassGroup
+          id="moments"
+          icon="moments"
+          label="Event"
+          title="Don't miss these moments"
+          description="Defining TechXchange experiences — shared by everyone, not session recommendations."
+          expanded={isGroupExpanded("moments")}
+          onToggle={() => toggleGroup("moments")}
+        >
+          <DontMissMomentsSection />
+        </FocusCompassGroup>
+        )}
+
+        {showGroup("people") && isBlockVisible("people_to_meet") && (
+        <FocusCompassGroup
+          id="people"
+          icon="connections"
+          label="My People"
+          title="People to meet"
+          description="Who Compass recommends — champions, speakers, and peers matched to your goals."
+          expanded={isGroupExpanded("people")}
+          onToggle={() => toggleGroup("people")}
+        >
+          <FocusPeopleSection
+            recommended={data.focusPeople}
+            wantToMeet={data.peopleYouWantToMeet}
+            inboundSignals={SAMPLE_INBOUND_SIGNALS}
+            savedChampionRefs={data.savedChampionRefs}
+            profileSignals={data.profileSignals}
+            badgeContext={data.peopleBadgeContext}
+            actions={{
+              ...data.peopleActions,
+              onDetails: openPersonDetails,
+            }}
+            onOpenDetails={openPersonDetails}
+            recommendedMutualCheck={person =>
+              recommendedShowsMutualInterest(person.id, person.display_name, SAMPLE_INBOUND_SIGNALS)
+            }
+          />
+        </FocusCompassGroup>
+        )}
+
+        {data.focusCertIntent && showGroup("certifications") && isBlockVisible("certifications") && (
         <FocusCompassGroup
           id="certifications"
           icon="certifications"
           label="My Certifications"
-          title="Your certification journey"
-          description="Track up to four certifications — Compass boosts sessions, people, and communities that support your path."
+          title="Working Toward a Certification"
+          description="Great choice. Compass can help you identify learning opportunities, experts, study groups, and certification-related sessions throughout TechXchange."
           expanded={isGroupExpanded("certifications")}
           onToggle={() => toggleGroup("certifications")}
         >
@@ -216,80 +240,15 @@ export default function FocusCompassExperience() {
             onClearError={data.clearCertificationError}
           />
         </FocusCompassGroup>
+        )}
 
-        <FocusCompassGroup
-          id="people"
-          icon="connections"
-          label="My People"
-          title="Connections for you"
-          description="Who Compass recommends — and who has signaled interest in meeting you."
-          expanded={isGroupExpanded("people")}
-          onToggle={() => toggleGroup("people")}
-        >
-          <div className="people-dual-panel-grid focus-people-dual">
-            <div className="focus-people-column compass-panel people-panel-box">
-              <CompassModuleHead
-                icon="connections"
-                kicker="Recommended"
-                title="People I should meet"
-                description="Champions, speakers, and peers matched to your interests."
-                className="focus-compass-submodule focus-compass-submodule--compact"
-              />
-              {peopleToMeet.length > 0 ? (
-                <div className="focus-people-stack">
-                  {peopleToMeet.map(person => (
-                    <RecommendedConnectionCard
-                      key={person.id}
-                      person={person}
-                      profileSignals={data.profileSignals}
-                      badgeContext={{
-                        ...data.peopleBadgeContext,
-                        isSpeaker: person.is_speaker,
-                      }}
-                      primaryReason={person.compass_reasons?.[0] ?? null}
-                      mutual={recommendedShowsMutualInterest(
-                        person.id,
-                        person.display_name,
-                        SAMPLE_INBOUND_SIGNALS,
-                      )}
-                      allowMeetSignal
-                      compact
-                      actions={{
-                        ...data.peopleActions,
-                        onDetails: openPersonDetails,
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="people-follow-up-split__empty">
-                  Complete your Compass profile to unlock people matches.
-                </p>
-              )}
-            </div>
-
-            <PeopleInterestedSection
-              inboundSignals={SAMPLE_INBOUND_SIGNALS}
-              savedChampionRefs={peopleMutualRefs}
-              savedPeople={data.peopleActions.savedPeople}
-              onSave={data.handleSavePerson}
-              onShowDetails={openPersonDetails}
-              profileSignals={data.profileSignals}
-              splitColumn
-            />
-          </div>
-        </FocusCompassGroup>
-
+        {showGroup("community") && isBlockVisible("ibm_communities") && (
         <FocusCompassGroup
           id="community"
           icon="community"
           label="My Community"
-          title="IBM Communities for you"
-          description={
-            hasCommunityMatches
-              ? "Matched to your tracks, goals, and Compass intent from the TechXchange community catalog."
-              : "Persistent topic groups aligned to your profile — loaded from the IBM Community catalog."
-          }
+          title="Recommended IBM Communities"
+          description="Where to continue learning, discussion, and participation after TechXchange — official IBM Community destinations only."
           expanded={isGroupExpanded("community")}
           onToggle={() => toggleGroup("community")}
         >
@@ -310,6 +269,31 @@ export default function FocusCompassExperience() {
             )}
           </div>
         </FocusCompassGroup>
+        )}
+
+        {showGroup("conversations") && isBlockVisible("live_huddles") && (
+        <FocusCompassGroup
+          id="conversations"
+          icon="huddles"
+          label="Live"
+          title="Live conversations around you"
+          description="Lightweight in-person invitations — right people, right place, right time."
+          expanded={isGroupExpanded("conversations")}
+          onToggle={() => toggleGroup("conversations")}
+        >
+          <LiveOpportunities
+            huddles={data.huddlesController}
+            speakerCatalog={data.speakerCatalog}
+            participantUid={data.participantId}
+            userDisplayName={data.userDisplayName}
+            userFirstName={data.userFirstName}
+            hostJobTitle={data.hostJobTitle}
+            hostOrganization={data.hostOrganization}
+            visibleLimit={6}
+            embedded
+          />
+        </FocusCompassGroup>
+        )}
 
         <footer className="focus-compass-footer">
           <Link href="/txc/experience/print" className="focus-compass-advanced-link">
@@ -324,10 +308,10 @@ export default function FocusCompassExperience() {
           <ChampionDetailModal
             champion={detailChampion}
             isLoggedIn
-            isSaved={false}
+            isSaved={data.savedPeople.includes(detailChampion.id)}
             matchReasons={detailChampion.compass_reasons}
             profileSignals={data.profileSignals}
-            onToggleSave={() => setDetailChampion(null)}
+            onToggleSave={() => data.handleSavePerson(detailChampion.id)}
             onClose={() => setDetailChampion(null)}
           />
         )}

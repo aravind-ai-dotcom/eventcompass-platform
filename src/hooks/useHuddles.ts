@@ -35,6 +35,8 @@ import type {
   UpdateHuddleInput,
 } from "@/types/huddleDataModel";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
+import type { HuddleDisplayMode, HuddleFetchDiagnostic } from "@/lib/huddleDataSource";
+import { huddleDisplayMode } from "@/lib/huddleDataSource";
 
 export interface HuddlesController {
   loading: boolean;
@@ -42,6 +44,9 @@ export interface HuddlesController {
   matchedHuddles: MatchedHuddle[];
   responses: Record<string, HuddleResponseType>;
   preferences: HuddlePreferences;
+  displayMode: HuddleDisplayMode;
+  fetchDiagnostic: HuddleFetchDiagnostic;
+  isDemoMode: boolean;
   createHuddle: (input: CreateHuddleInput) => Promise<HuddleDoc>;
   respondOnMyWay: (huddleId: string, displayName: string) => Promise<void>;
   respondNotForMe: (huddleId: string, classification: MatchedHuddle["classification"]) => Promise<void>;
@@ -78,6 +83,7 @@ export function useHuddles({
     reported_huddle_ids: [],
   });
   const [loading, setLoading] = useState(true);
+  const [fetchDiagnostic, setFetchDiagnostic] = useState<HuddleFetchDiagnostic>("sample");
   const [sampleAttendeeOverrides, setSampleAttendeeOverrides] = useState<Record<string, string[]>>({});
   const loggedViews = useRef(new Set<string>());
 
@@ -89,7 +95,7 @@ export function useHuddles({
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [huddles, prefs] = await Promise.all([
+      const [fetchResult, prefs] = await Promise.all([
         fetchActiveHuddles(),
         participantUid ? loadHuddlePreferences(participantUid) : Promise.resolve({
           hidden_huddle_ids: [],
@@ -97,6 +103,8 @@ export function useHuddles({
           reported_huddle_ids: [],
         }),
       ]);
+      const huddles = fetchResult.huddles;
+      setFetchDiagnostic(fetchResult.diagnostic);
       setAllHuddles(huddles);
       setPreferences(prefs);
 
@@ -106,6 +114,8 @@ export function useHuddles({
           huddles.map(h => h.id),
         );
         setResponses(resp);
+      } else if (huddles.length === 0) {
+        setResponses({});
       }
     } finally {
       setLoading(false);
@@ -122,6 +132,18 @@ export function useHuddles({
     () => [...new Set([...savedSessionIds, ...reservedSessionIds])],
     [savedSessionIds, reservedSessionIds],
   );
+
+  const activeFirestoreCount = useMemo(
+    () => allHuddles.filter(h => h.status !== "expired" && h.status !== "cancelled").length,
+    [allHuddles],
+  );
+
+  const displayMode = useMemo(
+    () => huddleDisplayMode(activeFirestoreCount),
+    [activeFirestoreCount],
+  );
+
+  const isDemoMode = displayMode === "demo";
 
   const matchedHuddles: MatchedHuddle[] = useMemo(() => {
     const active = allHuddles.filter(
@@ -372,6 +394,9 @@ export function useHuddles({
     allHuddles,
     responses,
     preferences,
+    displayMode,
+    fetchDiagnostic,
+    isDemoMode,
     refresh,
     createHuddle: create,
     respondOnMyWay,

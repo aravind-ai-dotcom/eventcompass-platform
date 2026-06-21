@@ -9,7 +9,7 @@ export const CONNECTION_BADGE_LABELS: Record<ConnectionBadgeId, string> = {
   partner: "Partner",
   mentor: "Mentor",
   "community-leader": "IBM Community Leader",
-  "certification-guide": "Certification Guide",
+  "certification-guide": "Certification Mentor",
 };
 
 interface PersonBadgeInput {
@@ -129,6 +129,25 @@ export function deriveConnectionBadges(
 
   // De-dupe while preserving order; cap visible badges
   return [...new Set(badges)].slice(0, 4);
+}
+
+const BADGE_PRIORITY: ConnectionBadgeId[] = [
+  "champion",
+  "speaker",
+  "certification-guide",
+  "mentor",
+  "partner",
+  "community-leader",
+  "alumni",
+  "peer",
+];
+
+/** Single prominent badge for compact focus cards. */
+export function primaryConnectionBadge(badges: ConnectionBadgeId[]): ConnectionBadgeId | null {
+  for (const id of BADGE_PRIORITY) {
+    if (badges.includes(id)) return id;
+  }
+  return badges[0] ?? null;
 }
 
 /** Primary recommendation line with optional alumni-specific copy. */

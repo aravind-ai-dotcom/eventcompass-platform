@@ -60,6 +60,11 @@ import {
   resolveEventKnowledgeText,
   resolvePersonaGuidanceText,
 } from "@/services/voice/voiceKnowledgeResolver";
+import {
+  formatEventHighlightsDisplay,
+  formatEventHighlightsVoice,
+  findEventMomentByQuery,
+} from "@/lib/eventMoments";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
 import {
   blocksEventRecommendations,
@@ -185,6 +190,9 @@ const KEYWORD_BUCKETS: Record<
     "certification", "certified", "cert exam", "exam prep", "exam", "pass my cert",
     "study group", "qiskit cert", "how do i prepare", "prepare for cert",
     "sessions for cert", "certification journey",
+    "i want to get certified", "help me earn a certification",
+    "what certification should i pursue", "show certification opportunities",
+    "get certified", "earn a certification", "pursue a certification",
   ],
   explain_my_day: [
     "today", "right now", "what now", "this afternoon", "tonight", "happening now",
@@ -218,6 +226,27 @@ const ACTION_PATTERNS: Array<[CoreVoiceIntent, string[]]> = [
 ];
 
 const CERT_CODE = /\bc\d{3,5}\b/i;
+
+const EVENT_HIGHLIGHTS_PHRASES = [
+  "what are the major events",
+  "major events at techxchange",
+  "major event",
+  "what should i not miss",
+  "what shouldnt i miss",
+  "what shouldn't i miss",
+  "dont miss",
+  "don't miss",
+  "event highlights",
+  "defining moments",
+  "unmissable",
+  "must attend events",
+  "must-see events",
+  "celebrations happening",
+  "any celebrations",
+  "awards and celebration",
+  "what is happening at techxchange",
+  "headline events",
+];
 
 const EVENT_KNOWLEDGE_PATTERNS: Array<[EventKnowledgeKey, string[]]> = [
   ["event_dates", [
@@ -342,6 +371,10 @@ const IBM_COMMUNITY_PATTERNS = [
   "user groups should i",
   "ibm community hub",
   "online community after the event",
+  "where can i continue learning",
+  "how do i stay involved after techxchange",
+  "stay involved after techxchange",
+  "is there an ibm community for ai",
 ];
 
 const FUN_DISCOVERY_PATTERNS = [
@@ -516,6 +549,10 @@ export function classifyVoiceIntent(
 
   if (matchPhraseList(norm, IBM_COMMUNITY_PATTERNS)) {
     return { intent: "ibm_community", transcript, confidence: "high" };
+  }
+
+  if (matchPhraseList(norm, EVENT_HIGHLIGHTS_PHRASES)) {
+    return { intent: "event_knowledge", transcript, confidence: "high", topic: "event_highlights" };
   }
 
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
@@ -699,11 +736,14 @@ function buildFunDiscoveryResponse(
   const evening = /tonight|evening|after session|after sessions/.test(norm);
   const social = /social|fun|party|celebration/.test(norm);
   const networking = /network|gather|meetup|meet up|people gathering/.test(norm);
+  const highlightHint = evening || social
+    ? ` Don't Miss These Moments includes Sandbox Block Party Tuesday at 6 PM and Awards & Celebration Thursday.`
+    : "";
   const activities = pickFunActivities({ evening, social, networking, limit: 4 });
   const huddle = topHuddle(ctx, norm);
   const spokenBody = formatFunDiscoverySpoken(activities, huddle?.title);
   const displayBody = formatFunDiscoveryDisplay(activities, huddle?.title);
-  const spoken = baseOverride ? `${baseOverride} ${spokenBody}` : spokenBody;
+  const spoken = baseOverride ? `${baseOverride} ${spokenBody}` : spokenBody + highlightHint;
   const display = baseOverride ? `${baseOverride} · ${displayBody}` : displayBody;
 
   if (knowledge && !knowledge.spoken.toLowerCase().includes("check your agenda")) {
@@ -1044,7 +1084,29 @@ export function buildVoiceResponse(
   switch (intent as CoreVoiceIntent) {
 
     case "event_knowledge": {
-      const key = (classified.topic ?? "event_overview") as EventKnowledgeKey;
+      const topic = classified.topic ?? "event_overview";
+
+      if (topic === "event_highlights") {
+        return {
+          spoken: formatEventHighlightsVoice(6),
+          display: formatEventHighlightsDisplay(),
+          action: "navigate_experience",
+        };
+      }
+
+      if (topic === "sandbox_block_party") {
+        const moment = findEventMomentByQuery("sandbox");
+        if (moment) {
+          const spoken = `${moment.title} is ${moment.day} at ${moment.time} in ${moment.location}. ${moment.description}`;
+          return {
+            spoken,
+            display: `${moment.title} · ${moment.day} · ${moment.time}`,
+            action: "navigate_experience",
+          };
+        }
+      }
+
+      const key = topic as EventKnowledgeKey;
       const answer =
         resolveEventKnowledgeText(key) ??
         EVENT_KNOWLEDGE[key] ??
@@ -1325,6 +1387,20 @@ export function buildVoiceResponse(
     }
 
     case "certification_help": {
+      if (ctx.certificationJourney) {
+        const journeyTopic = matchCertificationJourneyQuestion(norm);
+        if (journeyTopic) {
+          const journey = formatCertificationJourneyVoice(journeyTopic, ctx.certificationJourney);
+          return { ...journey, action: "navigate_experience" };
+        }
+        const short = ctx.certificationJourney.shortTitle;
+        return {
+          spoken: `You're working toward ${short}. Open Working Toward a Certification on My Compass for sessions, experts, and communities matched to your path.`,
+          display: `Certification · ${short}`,
+          action: "navigate_experience",
+        };
+      }
+
       const certHuddle = ctx.liveHuddles?.find(h => h.source === "certification");
       const goal = topGoal(ctx);
       const certCode = transcript.match(CERT_CODE)?.[0]?.toUpperCase() ?? "";

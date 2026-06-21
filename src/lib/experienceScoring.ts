@@ -1,9 +1,10 @@
 import {
   applyCertificationSessionBoost,
   getCertificationJourneyTitle,
-  hasCertificationIntent,
+  hasCertificationGoalSelected,
   isCertificationActivityType,
 } from "@/lib/certificationProfile";
+import type { LearningPortfolioCategory } from "@/lib/learningPortfolioCategories";
 import type { PlanningClass, RecommendationTier } from "@/lib/sessionPlanning";
 
 export const EXPERIENCE_EVENT_BASE = "organizations/ibm/events/txc2026";
@@ -54,6 +55,7 @@ export interface ExperienceScoredSession {
   end_minutes?: number;
   display_time?: string;
   explore_anytime?: boolean;
+  portfolio_category?: LearningPortfolioCategory;
 }
 
 export interface ExperienceScoredChampion {
@@ -196,7 +198,7 @@ export function scoreExperienceChampion(participant: RawDoc, raw: RawDoc): Exper
   const reasons: string[] = shared.map(kw => "Shared expertise: " + kw);
   if (attendance?.available_for_1x1 === true) reasons.push("Available for 1:1");
 
-  if (hasCertificationIntent(participant)) {
+  if (hasCertificationGoalSelected(participant)) {
     const domains = lower([
       ...((profile.domains as string[]) ?? []),
       ...((raw.domains as string[]) ?? []),

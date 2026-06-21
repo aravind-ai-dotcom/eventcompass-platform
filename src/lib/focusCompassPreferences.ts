@@ -1,4 +1,12 @@
-export const FOCUS_COMPASS_GROUP_IDS = ["today", "learning", "certifications", "people", "community"] as const;
+export const FOCUS_COMPASS_GROUP_IDS = [
+  "today",
+  "conversations",
+  "learning",
+  "moments",
+  "people",
+  "certifications",
+  "community",
+] as const;
 
 export type FocusCompassGroupId = (typeof FOCUS_COMPASS_GROUP_IDS)[number];
 
@@ -11,9 +19,11 @@ export const COMPASS_MOBILE_BREAKPOINT = 768;
 function defaultGroups(): FocusCompassGroupState {
   return {
     today: true,
+    conversations: false,
     learning: false,
-    certifications: false,
+    moments: false,
     people: false,
+    certifications: false,
     community: false,
   };
 }

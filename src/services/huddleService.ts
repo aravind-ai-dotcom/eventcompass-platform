@@ -12,7 +12,8 @@ import {
   orderBy,
   limit as firestoreLimit,
 } from "firebase/firestore";
-import { tryGetDb } from "@/lib/firebase";
+import { firebaseConfigured, tryGetDb } from "@/lib/firebase";
+import type { HuddleFetchDiagnostic } from "@/lib/huddleDataSource";
 import {
   TXC_EVENT_ID,
   eventBasePath,
@@ -73,9 +74,18 @@ function normalizeHuddle(id: string, data: Record<string, unknown>): HuddleDoc {
   return withComputedStatus(huddle);
 }
 
-export async function fetchActiveHuddles(max = 50): Promise<HuddleDoc[]> {
+export interface FetchActiveHuddlesResult {
+  huddles: HuddleDoc[];
+  diagnostic: HuddleFetchDiagnostic;
+}
+
+export async function fetchActiveHuddles(max = 50): Promise<FetchActiveHuddlesResult> {
+  if (!firebaseConfigured) {
+    return { huddles: [], diagnostic: "firebase-disabled" };
+  }
+
   const db = tryGetDb();
-  if (!db) return [];
+  if (!db) return { huddles: [], diagnostic: "firebase-disabled" };
 
   try {
     const q = query(
@@ -84,14 +94,19 @@ export async function fetchActiveHuddles(max = 50): Promise<HuddleDoc[]> {
       firestoreLimit(max),
     );
     const snap = await getDocs(q);
-    return snap.docs
+    const huddles = snap.docs
       .map(d => normalizeHuddle(d.id, d.data()))
       .filter(h => h.status !== "expired" && h.status !== "cancelled");
+    return {
+      huddles,
+      diagnostic: huddles.length > 0 ? "live" : "empty-collection",
+    };
   } catch (err) {
-    if (!isFirestorePermissionError(err)) {
-      console.warn("[huddles] fetch failed", err);
+    if (isFirestorePermissionError(err)) {
+      return { huddles: [], diagnostic: "permission-fallback" };
     }
-    return [];
+    console.warn("[huddles] fetch failed", err);
+    return { huddles: [], diagnostic: "sample" };
   }
 }
 

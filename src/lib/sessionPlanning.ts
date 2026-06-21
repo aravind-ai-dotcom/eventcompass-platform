@@ -1,3 +1,4 @@
+import { assignPortfolioCategory } from "@/lib/learningPortfolioCategories";
 import type { ExperienceScoredSession } from "@/lib/experienceScoring";
 
 export type PlanningClass =
@@ -120,7 +121,7 @@ export function enrichSessionPlanningFields(
     (raw.recommendation_tier as RecommendationTier | undefined)
     ?? inferRecommendationTier(planning_class, scored.compass_score, hasCertIntent);
 
-  return {
+  return assignPortfolioCategory({
     ...scored,
     planning_class,
     recommendation_tier,
@@ -128,5 +129,5 @@ export function enrichSessionPlanningFields(
     end_minutes: typeof raw.end_minutes === "number" ? raw.end_minutes : scored.end_minutes,
     display_time: typeof raw.display_time === "string" ? raw.display_time : scored.display_time,
     explore_anytime: raw.explore_anytime === true || recommendation_tier === "explore",
-  };
+  });
 }

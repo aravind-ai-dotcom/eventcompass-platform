@@ -27,8 +27,8 @@ export type SessionBadgeId =
 
 export const SESSION_BADGE_LABELS: Record<SessionBadgeId, string> = {
   "hands-on": "Hands-On",
-  certification: "Certification",
-  "certification-booster": "Certification Booster",
+  certification: "Essential for Certification",
+  "certification-booster": "Supports Certification Goal",
   "champion-led": "Champion-Led",
   "community-favorite": "Community Favorite",
   popular: "Popular",
@@ -294,11 +294,17 @@ export function buildSessionRecommendationReasons(
     signals.push("track_match");
   }
 
-  if (lines.length === 0) {
-    lines.push("Strong fit for your goals this week");
+  if (lines.length < 2 && session.compass_score && session.compass_score >= 30) {
+    if (!lines.some(l => /profile|goals/i.test(l))) {
+      lines.push("Highly relevant to your selected tracks");
+    }
   }
 
-  return lines.slice(0, 6);
+  if (lines.length < 2) {
+    lines.push("Recommended for attendees with similar interests");
+  }
+
+  return lines.slice(0, 4);
 }
 
 function uniqueSessionSignals(ids: SessionSignalId[]): SessionSignalId[] {

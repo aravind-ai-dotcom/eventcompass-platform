@@ -116,7 +116,7 @@ export default function HuddleDetailSheet({
 
         {opp.matchReasons.length > 0 && (
           <div className="huddle-match-block">
-            <p className="huddle-match-heading">Why this matters</p>
+            <p className="huddle-match-heading">Matched because:</p>
             <ul className="huddle-match-list">
               {opp.matchReasons.map(r => (
                 <li key={r}>{r}</li>

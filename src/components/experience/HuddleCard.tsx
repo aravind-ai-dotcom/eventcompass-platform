@@ -22,6 +22,7 @@ interface HuddleCardProps {
   userDisplayName: string;
   userFirstName: string;
   participantUid?: string;
+  isDemo?: boolean;
   onSaveContact?: (preview: HuddleParticipantPreview) => void;
 }
 
@@ -44,6 +45,7 @@ export default function HuddleCard({
   userDisplayName,
   userFirstName,
   participantUid,
+  isDemo = false,
   onSaveContact,
 }: HuddleCardProps) {
   const isMobileWalk = useMobileWalkLayout();
@@ -94,10 +96,10 @@ export default function HuddleCard({
     ];
     if (isOnMyWay && !userIsHost && !attendeeNames.some(n => n.toLowerCase() === userFirstName.toLowerCase())) {
       const you = {
-        name: userFirstName,
+        name: userDisplayName,
         initial: userFirstName[0]?.toUpperCase() ?? "Y",
         preview: {
-          participant_id: participantUid ?? "",
+          participant_id: participantUid ?? "self",
           display_name: userDisplayName,
           first_name: userFirstName,
           badges: [],
@@ -106,11 +108,18 @@ export default function HuddleCard({
       };
       entries.push(you);
     }
-    return entries;
+
+    const seen = new Set<string>();
+    return entries.filter(entry => {
+      const key = `${entry.isHost ? "host" : "guest"}:${entry.name.toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [opp, hostPreview, attendeeNames, isOnMyWay, userIsHost, userFirstName, userDisplayName, participantUid]);
 
   const attendeePreviews = previewEntries.filter(e => !e.isHost);
-  const shownCount = Math.min(4, previewEntries.length);
+  const shownCount = Math.min(6, previewEntries.length);
   const extra = Math.max(0, totalHeading - shownCount);
   const scheduleLine = `${formatHuddleTimeRange(matched)}${opp.location ? ` · ${opp.location}` : ""}`;
 
@@ -133,11 +142,16 @@ export default function HuddleCard({
     if (isMobileWalk) setDetailSheetOpen(true);
   };
 
+  const hostFirstName = opp.hostFirstName ?? opp.hostName?.split(/\s+/)[0] ?? "Host";
+  const onMyWayTitle = isDemo
+    ? "Demo huddle — On my way is saved locally until you refresh"
+    : "On my way — saved to Firestore";
+
   return (
     <>
-      <article className={`huddle-row huddle-row--compact${isLive ? " huddle-row--live" : ""}`}>
-        <div className="huddle-compact-line huddle-compact-line--meta">
-          <div className="huddle-compact-badges">
+      <article className={`huddle-card huddle-card--premium${isLive ? " huddle-card--live" : ""}`}>
+        <div className="huddle-card__meta">
+          <div className="huddle-card__badges">
             <span className={`${classClass} huddle-badge--category`} title={`Category: ${classLabel}`}>
               {classLabel}
             </span>
@@ -145,91 +159,95 @@ export default function HuddleCard({
               {statusLabel}
             </span>
           </div>
-          <span className="huddle-compact-schedule">{scheduleLine}</span>
+          <span className="huddle-card__schedule">{scheduleLine}</span>
         </div>
 
-        <div className="huddle-compact-line huddle-compact-line--title">
-          <h3 className="huddle-row-title">{opp.title}</h3>
-          {opp.description && (
-            <p className="huddle-compact-desc">{opp.description}</p>
-          )}
-        </div>
+        <h3 className="huddle-card__title">{opp.title}</h3>
+        {opp.description && (
+          <p className="huddle-card__desc">{opp.description}</p>
+        )}
 
-        <div className="huddle-compact-line huddle-compact-line--foot">
-          <div className="huddle-compact-people">
-            <span className="huddle-compact-people__label">
-              {totalHeading} heading{isOnMyWay && !userIsHost ? " · You’re in" : ""}
-            </span>
-            <div className="huddle-avatar-row huddle-avatar-row--compact">
-              {previewEntries.slice(0, 4).map(entry => (
-                <button
-                  key={`${entry.name}-${entry.isHost ? "host" : "guest"}`}
-                  type="button"
-                  className={`huddle-avatar huddle-avatar--btn huddle-avatar--sm${entry.isHost ? " huddle-avatar--host" : ""}`}
-                  title={entry.isHost ? `${entry.name} (Host)` : entry.name}
-                  onClick={() => void openPreview(entry.preview, entry.name)}
-                >
-                  {entry.initial}
-                </button>
+        {opp.matchReasons.length > 0 && (
+          <div className="huddle-match-block huddle-match-block--compact">
+            <p className="huddle-match-heading">Matched because:</p>
+            <ul className="huddle-match-list">
+              {opp.matchReasons.slice(0, 2).map(r => (
+                <li key={r}>{r}</li>
               ))}
-              {extra > 0 && (
-                <span className="huddle-avatar huddle-avatar--more huddle-avatar--sm">+{extra}</span>
-              )}
-              <span className="huddle-compact-names">
-                {previewEntries.slice(0, 3).map(entry => (
-                  <button
-                    key={`name-${entry.name}`}
-                    type="button"
-                    className="huddle-compact-name"
-                    onClick={() => void openPreview(entry.preview, entry.name)}
-                  >
-                    {entry.isHost ? `${entry.name.split(/\s+/)[0]} (host)` : entry.name.split(/\s+/)[0]}
-                  </button>
-                ))}
-              </span>
-            </div>
+            </ul>
           </div>
+        )}
 
-          <div className="huddle-compact-actions">
-            {!userIsHost && (
-              <>
-                <button
-                  type="button"
-                  className={`action-chip action-chip--compact${isOnMyWay ? " action-chip--active" : ""}`}
-                  aria-pressed={isOnMyWay}
-                  onClick={() => void huddles.respondOnMyWay(opp.id, userDisplayName)}
-                >
-                  {isOnMyWay ? "✓ On my way" : "On my way"}
-                </button>
-                <button
-                  type="button"
-                  className="action-chip action-chip--compact action-chip--ghost"
-                  onClick={() => void huddles.respondNotForMe(opp.id, matched.classification)}
-                >
-                  Pass
-                </button>
-              </>
+        <div className="huddle-card__people">
+          <p className="huddle-card__host">
+            Hosted by <strong>{hostFirstName}</strong>
+            {totalHeading > 1 && (
+              <span className="huddle-card__count">
+                · {totalHeading} heading{isOnMyWay && !userIsHost ? " · You’re in" : ""}
+              </span>
             )}
-            {userIsHost && (
-              <div className="huddle-host-controls">
-                <button type="button" className="action-chip action-chip--compact" onClick={() => setHostMenuOpen(v => !v)}>
-                  Host
-                </button>
-                {hostMenuOpen && (
-                  <div className="huddle-host-menu">
-                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.extendHuddle(opp.id)}>Extend</button>
-                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
-                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
-                  </div>
-                )}
-              </div>
-            )}
-            {isMobileWalk && (
-              <button type="button" className="action-chip action-chip--compact" onClick={openDetails}>
-                Details
+          </p>
+          <div className="huddle-avatar-row huddle-avatar-row--card">
+            {previewEntries.slice(0, 6).map((entry, i) => (
+              <button
+                key={`avatar-${entry.isHost ? "host" : "guest"}-${i}`}
+                type="button"
+                className={`huddle-avatar huddle-avatar--btn huddle-avatar--sm${entry.isHost ? " huddle-avatar--host" : ""}`}
+                title={entry.isHost ? `${entry.name} (Host)` : entry.name}
+                aria-label={entry.isHost ? `Host ${entry.name}` : entry.name}
+                onClick={() => void openPreview(entry.preview, entry.name)}
+              >
+                {entry.initial}
               </button>
+            ))}
+            {extra > 0 && (
+              <span className="huddle-avatar huddle-avatar--more huddle-avatar--sm" aria-hidden="true">
+                +{extra}
+              </span>
             )}
           </div>
+        </div>
+
+        <div className="huddle-card__actions">
+          {!userIsHost && (
+            <>
+              <button
+                type="button"
+                className={`action-chip action-chip--compact${isOnMyWay ? " action-chip--active" : ""}`}
+                aria-pressed={isOnMyWay}
+                title={onMyWayTitle}
+                onClick={() => void huddles.respondOnMyWay(opp.id, userDisplayName)}
+              >
+                {isOnMyWay ? "✓ On my way" : "On my way"}
+              </button>
+              <button
+                type="button"
+                className="action-chip action-chip--compact action-chip--ghost"
+                onClick={() => void huddles.respondNotForMe(opp.id, matched.classification)}
+              >
+                Pass
+              </button>
+            </>
+          )}
+          {userIsHost && (
+            <div className="huddle-host-controls">
+              <button type="button" className="action-chip action-chip--compact" onClick={() => setHostMenuOpen(v => !v)}>
+                Host
+              </button>
+              {hostMenuOpen && (
+                <div className="huddle-host-menu">
+                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.extendHuddle(opp.id)}>Extend</button>
+                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
+                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
+                </div>
+              )}
+            </div>
+          )}
+          {isMobileWalk && (
+            <button type="button" className="action-chip action-chip--compact" onClick={openDetails}>
+              Details
+            </button>
+          )}
         </div>
       </article>
 

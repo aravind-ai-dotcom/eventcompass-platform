@@ -1,11 +1,28 @@
 import type { IbmCommunity } from "@/data/ibmCommunities";
 import { formatMemberCount } from "@/lib/ibmCommunityMatching";
+import { buildCommunityMatchReasons } from "@/lib/communityIntelligence";
 
 interface Props {
   community: IbmCommunity;
   matchReasons?: string[];
   /** Compact card for Focus mode — matches event moment tiles. */
   compact?: boolean;
+}
+
+function CommunityReasonsList({ reasons, compact }: { reasons: string[]; compact?: boolean }) {
+  const lines = buildCommunityMatchReasons(reasons);
+  if (lines.length === 0) return null;
+
+  return (
+    <div className={`community-intel${compact ? " community-intel--compact" : ""}`}>
+      <p className="community-intel__kicker">Why Recommended</p>
+      <ul className="community-intel__reasons">
+        {lines.slice(0, 4).map(reason => (
+          <li key={reason}>{reason}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default function IbmCommunityCard({ community, matchReasons, compact = false }: Props) {
@@ -20,7 +37,7 @@ export default function IbmCommunityCard({ community, matchReasons, compact = fa
         </div>
         <h3>{community.name}</h3>
         {matchReasons && matchReasons.length > 0 && (
-          <p className="session-card-meta">Matched on {matchReasons.slice(0, 2).join(" · ")}</p>
+          <CommunityReasonsList reasons={matchReasons} compact />
         )}
         <p>{community.description}</p>
         <div className="focus-session-card__actions">
@@ -53,9 +70,7 @@ export default function IbmCommunityCard({ community, matchReasons, compact = fa
         </div>
       )}
       {matchReasons && matchReasons.length > 0 && (
-        <p className="ibm-community-card__match">
-          Matched on {matchReasons.slice(0, 2).join(" · ")}
-        </p>
+        <CommunityReasonsList reasons={matchReasons} />
       )}
       <a
         href={community.url}

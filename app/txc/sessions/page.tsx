@@ -18,7 +18,10 @@ import SessionIntelligencePanel from "@/components/sessions/SessionIntelligenceP
 import SessionDetailModal from "@/components/sessions/SessionDetailModal";
 import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
 import { selectBalancedSessionBand } from "@/lib/recommendationBalancing";
-import { hasCertificationIntent } from "@/lib/certificationProfile";
+import {
+  isCertificationJourneyActive,
+  hasCertificationGoalSelected,
+} from "@/lib/certificationProfile";
 import {
   buildSpeakerCatalog,
   championFromRaw,
@@ -746,9 +749,11 @@ function SessionsPageContent() {
       tracks: (sig.tech_tracks as string[]) ?? [],
       goals: (sig.goals as string[]) ?? [],
       keywords: (intel.matching_keywords as string[]) ?? [],
-      hasCertIntent: hasCertificationIntent(participantData),
+      hasCertIntent: isCertificationJourneyActive(participantData, {
+        selectedCertificationCount: certificationGoals.length,
+      }),
     };
-  }, [participantData]);
+  }, [participantData, certificationGoals.length]);
 
   const handleViewSpeaker = useCallback((speakerId: string) => {
     const session = allScored.find(s =>
@@ -981,9 +986,9 @@ function SessionsPageContent() {
   }, [isFiltered, filtered, allScored, doNotSuggest]);
 
   const recommended = useMemo(() => {
-    const hasCertIntent =
-      hasCertificationIntent(participantData) ||
-      certificationGoals.length > 0;
+    const hasCertIntent = isCertificationJourneyActive(participantData, {
+      selectedCertificationCount: certificationGoals.length,
+    });
     const balancedIds = selectBalancedSessionBand(baseList, 6, hasCertIntent).map(s => s.id);
     const byId = new Map(baseList.map(s => [s.id, s]));
     const scored = balancedIds

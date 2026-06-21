@@ -1,5 +1,6 @@
 import { isCertificationActivityType } from "@/lib/certificationProfile";
 import type { ExperienceScoredSession } from "@/lib/experienceScoring";
+import { inferPortfolioCategory } from "@/lib/learningPortfolioCategories";
 import { shouldHideFromFocus } from "@/lib/sessionPlanning";
 import {
   getSessionEndMinutes,
@@ -90,13 +91,16 @@ export function groupDaySessions(
     s => !isCertificationActivityType(s) && s.planning_class !== "lab" && s.planning_class !== "workshop" && s.planning_class !== "bootcamp",
   );
   const cert = visible(learning).filter(s => isCertificationActivityType(s) || s.planning_class === "certification");
-  const perspective = visible(community);
+
+  const communityVisible = visible(community);
+  const networking = communityVisible.filter(s => inferPortfolioCategory(s) === "NETWORKING");
+  const perspective = communityVisible.filter(s => inferPortfolioCategory(s) !== "NETWORKING");
 
   const labs = visible(learning).filter(
     s => s.planning_class === "lab" || s.planning_class === "workshop" || s.planning_class === "bootcamp",
   );
 
-  return { core, cert, perspective, labs };
+  return { core, cert, perspective, networking, labs };
 }
 
 export { getSessionEndMinutes, getSessionStartMinutes, sessionDayLabel };

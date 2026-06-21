@@ -48,10 +48,10 @@ import {
   applyCertificationSessionBoost,
   gatherCertificationGoalIds,
   getCertificationJourneyTitle,
-  hasCertificationIntent,
+  hasCertificationGoalSelected,
   isCertificationActivityType,
+  isCertificationJourneyActive,
   resolveSelectedCertificationGoals,
-  shouldShowCertificationJourney,
 } from "@/lib/certificationProfile";
 import {
   buildCertificationJourneyPlan,
@@ -464,7 +464,7 @@ function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
   const reasons: string[] = shared.map(kw => "Shared expertise: " + kw);
   if (attendance?.available_for_1x1 === true) reasons.push("Available for 1:1");
 
-  if (hasCertificationIntent(participant)) {
+  if (hasCertificationGoalSelected(participant)) {
     const domains = lower([
       ...((profile.domains as string[]) ?? []),
       ...((raw.domains as string[]) ?? []),
@@ -1527,8 +1527,12 @@ export default function ClassicExperiencePage() {
   }, [activeCertification, allSessions, allChampions, participant, certificationGoals.length, activeCertPins, huddlesController.liveOpportunities]);
 
   const showCertJourney = useMemo(
-    () => (participant ? shouldShowCertificationJourney(participant, certGoalIds) : false),
-    [participant, certGoalIds],
+    () => (participant
+      ? isCertificationJourneyActive(participant, {
+          selectedCertificationCount: certificationGoals.length,
+        })
+      : false),
+    [participant, certificationGoals.length],
   );
 
   const pGoalsForBalance = ((participant?.event_signal_profile as RawDoc)?.goals as string[]) ?? [];

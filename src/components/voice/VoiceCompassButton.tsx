@@ -95,6 +95,8 @@ const DEMO_ACTIVITIES: ActivityItem[] = [
 
 interface VoiceCompassButtonProps {
   variant?: "inline" | "companion";
+  /** Hides module head when embedded in the Focus command center hero. */
+  embedInCommandCenter?: boolean;
   nextBestMove?:           NextBestMove | null;
   balancedMoves?:          NextBestMove[];
   topSession?:             ScoredSession | null;
@@ -350,6 +352,7 @@ function VoiceTonePicker({
 
 export default function VoiceCompassButton({
   variant = "inline",
+  embedInCommandCenter = false,
   nextBestMove,
   balancedMoves,
   topSession,
@@ -860,15 +863,20 @@ export default function VoiceCompassButton({
         @media(max-width:480px){ .vcb-btn:not(.vcb-btn-companion){width:100%;justify-content:center;} }
       `}</style>
 
-      <div className={variant === "companion" ? "voice-companion-card" : "vcb-container"}>
+      <div className={[
+        variant === "companion" ? "voice-companion-card" : "vcb-container",
+        embedInCommandCenter ? "voice-companion-card--command-center" : "",
+      ].filter(Boolean).join(" ")}>
 
         {variant === "companion" ? (
           <>
-            <CompassModuleHead
-              kicker="Ask Compass"
-              title="Sessions. People. Certifications. IBM Community."
-              description="What would you like help with?"
-            />
+            {!embedInCommandCenter && (
+              <CompassModuleHead
+                kicker="Ask Compass"
+                title="Sessions. People. Certifications. IBM Community."
+                description="What would you like help with?"
+              />
+            )}
             <p className="compass-live-signal" aria-live="polite">
               {compassLiveSignalText()}
             </p>

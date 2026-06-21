@@ -20,6 +20,24 @@ interface MyCertificationsProps {
   onClearError: () => void;
 }
 
+function CertificationActivationIntro() {
+  return (
+    <header className="cert-activation-intro">
+      <p className="cert-activation-intro__copy">{CERTIFICATION_JOURNEY_COPY.supportingCopy}</p>
+      <ol className="cert-activation-intro__steps" aria-label="Certification journey">
+        {CERTIFICATION_JOURNEY_COPY.journeySteps.map((step, index) => (
+          <li key={step} className="cert-activation-intro__step">
+            <span className="cert-activation-intro__step-index" aria-hidden="true">
+              {index + 1}
+            </span>
+            <span className="cert-activation-intro__step-label">{step}</span>
+          </li>
+        ))}
+      </ol>
+    </header>
+  );
+}
+
 function PlanTile({
   label,
   items,
@@ -221,14 +239,16 @@ export default function MyCertifications({
   if (views.length === 0) {
     return (
       <>
+        <CertificationActivationIntro />
         <article className="cert-panel cert-panel--empty cert-panel--focus">
           <div className="cert-panel__rail" aria-hidden="true" />
           <div className="cert-panel__main">
             <div className="cert-panel__hero cert-panel__hero--empty">
               <p className="cert-panel__eyebrow">{CERTIFICATION_JOURNEY_COPY.sectionKicker}</p>
-              <h3 className="cert-panel__goal-title">Your certification journey</h3>
+              <h3 className="cert-panel__goal-title">{CERTIFICATION_JOURNEY_COPY.sectionTitle}</h3>
               <p className="cert-panel__goal-sub">
-                Add up to {MAX_CERTIFICATION_ENROLLMENTS} certifications and Compass will shape your week around them.
+                Choose up to {MAX_CERTIFICATION_ENROLLMENTS} certifications — Compass will surface only sessions,
+                people, and communities that support your path.
               </p>
             </div>
             <footer className="cert-panel__footer">
@@ -264,6 +284,7 @@ export default function MyCertifications({
 
   return (
     <>
+      <CertificationActivationIntro />
       <div className="focus-cert-panel-stack">
         {views.map(view => (
           <CertificationPanel
