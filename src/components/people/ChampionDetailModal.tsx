@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { enrichLinkedInForPerson } from "@/lib/demoLinkedInEnrichment";
 import { displayFirstName, personSkillDomainTags } from "@/lib/personCardHelpers";
+import PersonMatchPanel from "@/components/people/PersonMatchPanel";
 
 export interface ChampionDetail {
   id: string;
@@ -16,6 +18,8 @@ export interface ChampionDetail {
   linkedin_url?: string;
   consent?: { show_linkedin?: boolean };
   attendance?: { available_for_1x1?: boolean };
+  compass_score?: number;
+  compass_reasons?: string[];
 }
 
 interface ChampionDetailModalProps {
@@ -25,6 +29,7 @@ interface ChampionDetailModalProps {
   isLoggedIn?: boolean;
   isSaved?: boolean;
   matchReasons?: string[];
+  profileSignals?: string[];
   onToggleSave?: () => void;
   onRemove?: () => void;
 }
@@ -40,6 +45,7 @@ export default function ChampionDetailModal({
   isLoggedIn = false,
   isSaved = false,
   matchReasons = [],
+  profileSignals = [],
   onToggleSave,
   onRemove,
 }: ChampionDetailModalProps) {
@@ -52,6 +58,12 @@ export default function ChampionDetailModal({
   ].slice(0, 6);
   const shownName = anonymous ? firstName(champion.display_name) : champion.display_name;
   const visibleTags = anonymous ? skillTags : domains;
+  const linkedIn = anonymous ? null : enrichLinkedInForPerson(champion);
+
+  const personForIntel = {
+    ...champion,
+    compass_reasons: matchReasons.length > 0 ? matchReasons : champion.compass_reasons,
+  };
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -100,26 +112,29 @@ export default function ChampionDetailModal({
             Open to technical conversations
           </p>
         )}
-        {!anonymous && matchReasons.length > 0 && (
-          <>
-            <p style={{ color: "var(--muted)", fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.09em", fontWeight: 680, margin: "16px 0 8px" }}>
-              Why Compass matched this
-            </p>
-            <ul className="session-modal-reasons">
-              {matchReasons.slice(0, 4).map(r => <li key={r}>{r}</li>)}
-            </ul>
-          </>
+        {!anonymous && (
+          <div style={{ marginTop: "14px" }}>
+            <PersonMatchPanel
+              person={personForIntel}
+              profileSignals={profileSignals}
+            />
+          </div>
         )}
-        {!anonymous && champion.linkedin_url && champion.consent?.show_linkedin !== false && (
+        {!anonymous && linkedIn?.linkedinVisibility === "visible" && linkedIn.linkedin_url && (
           <a
-            href={champion.linkedin_url}
+            href={linkedIn.linkedin_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="action-chip"
-            style={{ marginTop: "16px", display: "inline-flex" }}
+            className="action-chip connection-card-linkedin"
+            style={{ marginTop: "14px", display: "inline-flex" }}
           >
-            View LinkedIn profile
+            View LinkedIn profile →
           </a>
+        )}
+        {!anonymous && linkedIn?.linkedinVisibility === "consent_blocked" && (
+          <p className="connection-card-linkedin connection-card-linkedin--blocked" style={{ marginTop: "14px" }}>
+            LinkedIn · not shared per their preferences
+          </p>
         )}
         {anonymous && (
           <p style={{ margin: "14px 0 0", color: "var(--muted)", fontSize: "0.88rem", lineHeight: 1.5 }}>

@@ -47,7 +47,6 @@ export default function HuddleCard({
   onSaveContact,
 }: HuddleCardProps) {
   const isMobileWalk = useMobileWalkLayout();
-  const [expanded, setExpanded] = useState(false);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<HuddleParticipantPreview | null>(null);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
@@ -59,6 +58,8 @@ export default function HuddleCard({
 
   const statusLabel = statusBadgeLabelForHuddle(matched);
   const statusClass = statusBadgeClassForHuddle(matched);
+  const classLabel = classificationLabel((opp.classification ?? "general") as MatchedHuddle["classification"]);
+  const classClass = classificationBadgeClass(opp.classification ?? "general");
 
   const hostPreview: HuddleParticipantPreview = {
     participant_id: opp.hostParticipantId ?? "",
@@ -84,7 +85,7 @@ export default function HuddleCard({
         preview: hostPreview,
         isHost: true,
       },
-      ...attendeeNames.slice(0, 2).map(name => ({
+      ...attendeeNames.map(name => ({
         name,
         initial: name[0]?.toUpperCase() ?? "?",
         preview: null as HuddleParticipantPreview | null,
@@ -103,15 +104,15 @@ export default function HuddleCard({
         } as HuddleParticipantPreview,
         isHost: false,
       };
-      if (entries.length < 4) entries.splice(1, 0, you);
+      entries.push(you);
     }
     return entries;
   }, [opp, hostPreview, attendeeNames, isOnMyWay, userIsHost, userFirstName, userDisplayName, participantUid]);
 
   const attendeePreviews = previewEntries.filter(e => !e.isHost);
-  const shownCount = Math.min(3, previewEntries.length);
+  const shownCount = Math.min(4, previewEntries.length);
   const extra = Math.max(0, totalHeading - shownCount);
-  const scanMatchLine = opp.matchReasons[0] ?? "Matched to your profile and interests.";
+  const scheduleLine = `${formatHuddleTimeRange(matched)}${opp.location ? ` · ${opp.location}` : ""}`;
 
   const openPreview = useCallback(async (preview: HuddleParticipantPreview | null, name: string) => {
     if (preview?.participant_id) {
@@ -130,245 +131,126 @@ export default function HuddleCard({
 
   const openDetails = () => {
     if (isMobileWalk) setDetailSheetOpen(true);
-    else setExpanded(v => !v);
   };
-
-  if (isMobileWalk) {
-    return (
-      <>
-        <article className={`huddle-row huddle-row--v2 huddle-row--mobile-walk${isLive ? " huddle-row--live" : ""}`}>
-          <div className="huddle-scan">
-            <div className="huddle-row-top-badges">
-              <span className={classificationBadgeClass(opp.classification ?? "general")}>
-                {classificationLabel((opp.classification ?? "general") as MatchedHuddle["classification"])}
-              </span>
-              <span className={statusClass}>{statusLabel}</span>
-            </div>
-
-            <h3 className="huddle-row-title">{opp.title}</h3>
-            <p className="huddle-scan-when">
-              {formatHuddleTimeRange(matched)}
-              {opp.location ? ` · ${opp.location}` : ""}
-            </p>
-
-            <button
-              type="button"
-              className="huddle-host-strip"
-              onClick={() => void openPreview(hostPreview, opp.hostName ?? "Host")}
-            >
-              <span className="huddle-avatar huddle-avatar--host" aria-hidden="true">
-                {(opp.hostFirstName ?? "H")[0]?.toUpperCase()}
-              </span>
-              <span className="huddle-host-strip__text">
-                <span className="huddle-role-label">Host</span>
-                <span className="huddle-host-name">{opp.hostName}</span>
-                {(opp.hostJobTitle || opp.hostOrganization) && (
-                  <span className="huddle-host-meta">
-                    {[opp.hostJobTitle, opp.hostOrganization].filter(Boolean).join(" · ")}
-                  </span>
-                )}
-              </span>
-            </button>
-
-            <div className="huddle-attendee-block huddle-attendee-block--compact">
-              <p className="huddle-role-label">
-                {totalHeading} heading there{isOnMyWay ? " · You’re on your way" : ""}
-              </p>
-              <div className="huddle-avatar-row">
-                {previewEntries.slice(0, 3).map(entry => (
-                  <button
-                    key={entry.name}
-                    type="button"
-                    className={`huddle-avatar huddle-avatar--btn${entry.isHost ? " huddle-avatar--host" : ""}`}
-                    title={entry.name}
-                    onClick={() => void openPreview(entry.preview, entry.name)}
-                  >
-                    {entry.initial}
-                  </button>
-                ))}
-                {extra > 0 && (
-                  <span className="huddle-avatar huddle-avatar--more">+{extra}</span>
-                )}
-              </div>
-            </div>
-
-            <p className="huddle-scan-match">{scanMatchLine}</p>
-          </div>
-
-          <div className="huddle-row-actions huddle-row-actions--mobile-walk">
-            {!userIsHost && (
-              <button
-                type="button"
-                className={`huddle-cta-on-my-way${isOnMyWay ? " huddle-cta-on-my-way--active" : ""}`}
-                aria-pressed={isOnMyWay}
-                onClick={() => void huddles.respondOnMyWay(opp.id, userDisplayName)}
-              >
-                {isOnMyWay ? "✓ On My Way" : "On My Way"}
-              </button>
-            )}
-            {userIsHost && (
-              <button type="button" className="huddle-cta-on-my-way huddle-cta-on-my-way--host" onClick={openDetails}>
-                Host · View details
-              </button>
-            )}
-            <button type="button" className="huddle-details-trigger" onClick={openDetails}>
-              Details
-            </button>
-          </div>
-        </article>
-
-        {detailSheetOpen && (
-          <HuddleDetailSheet
-            opp={opp}
-            matched={matched}
-            huddles={huddles}
-            statusLabel={statusLabel}
-            statusClass={statusClass}
-            userIsHost={userIsHost}
-            isOnMyWay={isOnMyWay}
-            userDisplayName={userDisplayName}
-            totalHeading={totalHeading}
-            onClose={() => setDetailSheetOpen(false)}
-            onOpenPreview={(preview, name) => void openPreview(preview, name)}
-            hostPreview={hostPreview}
-            attendeePreviews={attendeePreviews}
-            extraAttendees={extra}
-          />
-        )}
-
-        {selectedPreview && (
-          <HuddleParticipantMiniCard
-            participant={selectedPreview}
-            onClose={() => setSelectedPreview(null)}
-            onSaveContact={onSaveContact ? () => onSaveContact(selectedPreview) : undefined}
-          />
-        )}
-      </>
-    );
-  }
 
   return (
     <>
-      <article className={`huddle-row huddle-row--v2 huddle-row--desktop${isLive ? " huddle-row--live" : ""}`}>
-        <div className="huddle-row-top-badges">
-          <span className={classificationBadgeClass(opp.classification ?? "general")}>
-            {classificationLabel((opp.classification ?? "general") as MatchedHuddle["classification"])}
-          </span>
-          <span className={statusClass}>{statusLabel}</span>
+      <article className={`huddle-row huddle-row--compact${isLive ? " huddle-row--live" : ""}`}>
+        <div className="huddle-compact-line huddle-compact-line--meta">
+          <div className="huddle-compact-badges">
+            <span className={`${classClass} huddle-badge--category`} title={`Category: ${classLabel}`}>
+              {classLabel}
+            </span>
+            <span className={`${statusClass} huddle-badge--status`} title={`Status: ${statusLabel}`}>
+              {statusLabel}
+            </span>
+          </div>
+          <span className="huddle-compact-schedule">{scheduleLine}</span>
         </div>
 
-        <div className="huddle-row-body">
+        <div className="huddle-compact-line huddle-compact-line--title">
           <h3 className="huddle-row-title">{opp.title}</h3>
-          <p className="huddle-row-time">{formatHuddleTimeRange(matched)}</p>
-          {opp.location && (
-            <p className="huddle-row-location">{opp.location}</p>
+          {opp.description && (
+            <p className="huddle-compact-desc">{opp.description}</p>
           )}
+        </div>
 
-          {opp.matchReasons.length > 0 && (
-            <div className="huddle-match-block">
-              <p className="huddle-match-heading">Matched because:</p>
-              <ul className="huddle-match-list">
-                {opp.matchReasons.map(r => (
-                  <li key={r}>{r}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {opp.sessionConflict && (
-            <p className="huddle-row-slot-note huddle-row-slot-note--warn">
-              Conflicts with a saved session at this time ({opp.sessionConflict}).
-            </p>
-          )}
-
-          <div className="huddle-host-block">
-            <p className="huddle-role-label">Host</p>
-            <button
-              type="button"
-              className="huddle-host-name"
-              onClick={() => void openPreview(hostPreview, opp.hostName ?? "Host")}
-            >
-              {opp.hostName}
-            </button>
-            {(opp.hostJobTitle || opp.hostOrganization) && (
-              <p className="huddle-host-meta">
-                {[opp.hostJobTitle, opp.hostOrganization].filter(Boolean).join(" · ")}
-              </p>
-            )}
-          </div>
-
-          <div className="huddle-attendee-divider" />
-          <div className="huddle-attendee-block">
-            <p className="huddle-role-label">Heading there · {totalHeading}</p>
-            <div className="huddle-people-preview">
-              {previewEntries.slice(0, 3).map(entry => (
+        <div className="huddle-compact-line huddle-compact-line--foot">
+          <div className="huddle-compact-people">
+            <span className="huddle-compact-people__label">
+              {totalHeading} heading{isOnMyWay && !userIsHost ? " · You’re in" : ""}
+            </span>
+            <div className="huddle-avatar-row huddle-avatar-row--compact">
+              {previewEntries.slice(0, 4).map(entry => (
                 <button
-                  key={entry.name}
+                  key={`${entry.name}-${entry.isHost ? "host" : "guest"}`}
                   type="button"
-                  className="huddle-people-preview__name"
+                  className={`huddle-avatar huddle-avatar--btn huddle-avatar--sm${entry.isHost ? " huddle-avatar--host" : ""}`}
+                  title={entry.isHost ? `${entry.name} (Host)` : entry.name}
                   onClick={() => void openPreview(entry.preview, entry.name)}
                 >
-                  {entry.isHost ? `${entry.name} (Host)` : entry.name}
+                  {entry.initial}
                 </button>
               ))}
               {extra > 0 && (
-                <span className="huddle-people-preview__more">+{extra} more</span>
+                <span className="huddle-avatar huddle-avatar--more huddle-avatar--sm">+{extra}</span>
               )}
+              <span className="huddle-compact-names">
+                {previewEntries.slice(0, 3).map(entry => (
+                  <button
+                    key={`name-${entry.name}`}
+                    type="button"
+                    className="huddle-compact-name"
+                    onClick={() => void openPreview(entry.preview, entry.name)}
+                  >
+                    {entry.isHost ? `${entry.name.split(/\s+/)[0]} (host)` : entry.name.split(/\s+/)[0]}
+                  </button>
+                ))}
+              </span>
             </div>
           </div>
 
-          {expanded && opp.description && (
-            <p className="huddle-row-detail">{opp.description}</p>
-          )}
-        </div>
-
-        <div className="huddle-row-actions">
-          {!userIsHost && (
-            <>
-              <button
-                type="button"
-                className={`action-chip action-chip--primary${isOnMyWay ? " action-chip--active" : ""}`}
-                aria-pressed={isOnMyWay}
-                onClick={() => void huddles.respondOnMyWay(opp.id, userDisplayName)}
-              >
-                {isOnMyWay ? "✓ On My Way" : "On My Way"}
+          <div className="huddle-compact-actions">
+            {!userIsHost && (
+              <>
+                <button
+                  type="button"
+                  className={`action-chip action-chip--compact${isOnMyWay ? " action-chip--active" : ""}`}
+                  aria-pressed={isOnMyWay}
+                  onClick={() => void huddles.respondOnMyWay(opp.id, userDisplayName)}
+                >
+                  {isOnMyWay ? "✓ On my way" : "On my way"}
+                </button>
+                <button
+                  type="button"
+                  className="action-chip action-chip--compact action-chip--ghost"
+                  onClick={() => void huddles.respondNotForMe(opp.id, matched.classification)}
+                >
+                  Pass
+                </button>
+              </>
+            )}
+            {userIsHost && (
+              <div className="huddle-host-controls">
+                <button type="button" className="action-chip action-chip--compact" onClick={() => setHostMenuOpen(v => !v)}>
+                  Host
+                </button>
+                {hostMenuOpen && (
+                  <div className="huddle-host-menu">
+                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.extendHuddle(opp.id)}>Extend</button>
+                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
+                    <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
+                  </div>
+                )}
+              </div>
+            )}
+            {isMobileWalk && (
+              <button type="button" className="action-chip action-chip--compact" onClick={openDetails}>
+                Details
               </button>
-              <button
-                type="button"
-                className="action-chip"
-                onClick={() => void huddles.respondNotForMe(opp.id, matched.classification)}
-              >
-                Not For Me
-              </button>
-            </>
-          )}
-
-          {userIsHost && (
-            <div className="huddle-host-controls">
-              <button type="button" className="action-chip" onClick={() => setHostMenuOpen(v => !v)}>
-                Host controls
-              </button>
-              {hostMenuOpen && (
-                <div className="huddle-host-menu">
-                  <button type="button" className="action-chip" onClick={() => void huddles.extendHuddle(opp.id)}>Extend time</button>
-                  <button type="button" className="action-chip" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
-                  <button type="button" className="action-chip" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button type="button" className="action-chip" onClick={() => setExpanded(v => !v)}>
-            {expanded ? "Less" : "Details"}
-          </button>
-          <button type="button" className="action-chip action-chip--ghost" onClick={() => void huddles.hideHuddleById(opp.id)}>
-            Hide
-          </button>
-          <button type="button" className="action-chip action-chip--ghost" onClick={() => void huddles.reportHuddleById(opp.id)}>
-            Report
-          </button>
+            )}
+          </div>
         </div>
       </article>
+
+      {detailSheetOpen && (
+        <HuddleDetailSheet
+          opp={opp}
+          matched={matched}
+          huddles={huddles}
+          statusLabel={statusLabel}
+          statusClass={statusClass}
+          userIsHost={userIsHost}
+          isOnMyWay={isOnMyWay}
+          userDisplayName={userDisplayName}
+          totalHeading={totalHeading}
+          onClose={() => setDetailSheetOpen(false)}
+          onOpenPreview={(preview, name) => void openPreview(preview, name)}
+          hostPreview={hostPreview}
+          attendeePreviews={attendeePreviews}
+          extraAttendees={extra}
+        />
+      )}
 
       {selectedPreview && (
         <HuddleParticipantMiniCard

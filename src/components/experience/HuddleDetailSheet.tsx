@@ -67,6 +67,9 @@ export default function HuddleDetailSheet({
         </div>
 
         <h3 className="huddle-row-title">{opp.title}</h3>
+        {opp.description && (
+          <p className="huddle-row-detail">{opp.description}</p>
+        )}
         <p className="huddle-row-time">{formatHuddleTimeRange(matched)}</p>
         {opp.location && <p className="huddle-row-location">{opp.location}</p>}
 

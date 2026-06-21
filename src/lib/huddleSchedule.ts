@@ -2,6 +2,18 @@ import type { HuddleDoc, HuddleStatus } from "@/types/huddleDataModel";
 
 const DEFAULT_TZ = "America/New_York";
 
+export function addMinutesToTime(time: string, minutes: number): string {
+  const parts = time.split(":");
+  if (parts.length < 2) return "";
+  const h = Number(parts[0]);
+  const m = Number(parts[1]);
+  if (Number.isNaN(h) || Number.isNaN(m)) return "";
+  const total = h * 60 + m + minutes;
+  const nh = Math.floor(total / 60) % 24;
+  const nm = total % 60;
+  return `${String(nh).padStart(2, "0")}:${String(nm).padStart(2, "0")}`;
+}
+
 /** Build local Date from YYYY-MM-DD + HH:mm (24h). */
 export function huddleWindow(
   date: string,

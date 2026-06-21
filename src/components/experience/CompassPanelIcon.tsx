@@ -5,7 +5,10 @@ export type CompassPanelIconName =
   | "huddles"
   | "schedule"
   | "connections"
-  | "interested";
+  | "interested"
+  | "learning"
+  | "moments"
+  | "community";
 
 interface CompassPanelIconProps {
   name: CompassPanelIconName;
@@ -61,6 +64,25 @@ export default function CompassPanelIcon({ name, className = "" }: CompassPanelI
         <circle cx="16" cy="12" r="4" />
         <path d="M8 26c0-4.5 3.6-8 8-8s8 3.5 8 8" />
         <path d="M22 14l3 3-3 3" />
+      </>
+    ),
+    learning: (
+      <>
+        <path d="M8 10 16 6l8 4v12l-8 4-8-4V10z" />
+        <path d="M16 10v12M8 10l8 4 8-4" />
+      </>
+    ),
+    moments: (
+      <>
+        <rect x="7" y="8" width="18" height="18" rx="1" />
+        <path d="M11 6v4M21 6v4M7 14h18" />
+        <path d="M16 17l-2 2 2 2" />
+      </>
+    ),
+    community: (
+      <>
+        <circle cx="16" cy="16" r="9" />
+        <path d="M16 7v18M7 16h18M10.5 10.5l11 11M21.5 10.5l-11 11" />
       </>
     ),
   };

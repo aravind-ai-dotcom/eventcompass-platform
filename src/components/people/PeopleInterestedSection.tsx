@@ -7,7 +7,7 @@ import CompassPanel from "@/components/experience/CompassPanel";
 import type { InboundConnectionSignal } from "@/types/connectionSignals";
 import { CONNECTION_BADGE_LABELS } from "@/lib/connectionBadges";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
-import { inboundShowsMutual } from "@/lib/sampleConnectionSignals";
+import { inboundShowsMutual, inboundDisplayName } from "@/lib/sampleConnectionSignals";
 
 interface PeopleInterestedSectionProps {
   inboundSignals: InboundConnectionSignal[];
@@ -42,7 +42,7 @@ function inferInboundBadges(signal: InboundConnectionSignal): ConnectionBadgeId[
 function inboundToRecommendedPerson(signal: InboundConnectionSignal): RecommendedPerson {
   return {
     id: signal.id,
-    display_name: signal.fromFirstName,
+    display_name: inboundDisplayName(signal),
     organization: signal.organization,
     profile: signal.domains?.length ? { domains: signal.domains } : undefined,
     compass_reasons: signal.whyInterested ? [signal.whyInterested] : undefined,
@@ -107,13 +107,13 @@ export default function PeopleInterestedSection({
             );
           }
 
-          const initial = signal.fromFirstName.trim()[0]?.toUpperCase() ?? "?";
+          const initial = inboundDisplayName(signal).trim()[0]?.toUpperCase() ?? "?";
           return (
             <article key={signal.id} className="connection-card connection-card--compact">
               <div className="connection-card-head">
                 <div className="connection-card-avatar" aria-hidden="true">{initial}</div>
                 <div className="connection-card-copy">
-                  <h3 className="connection-card-name">{signal.fromFirstName}</h3>
+                  <h3 className="connection-card-name">{inboundDisplayName(signal)}</h3>
                   {signal.organization && (
                     <p className="connection-card-org">{signal.organization}</p>
                   )}

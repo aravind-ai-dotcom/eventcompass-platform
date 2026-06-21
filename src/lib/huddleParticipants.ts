@@ -20,7 +20,7 @@ const PROFILES: Record<string, HuddleParticipantProfile> = {
   },
   Priya: {
     firstName: "Priya",
-    lastName: "Sharma",
+    lastName: "Chandrasekaran",
     organization: "IBM",
     role: "Cloud Architect",
     interests: ["Agentic AI", "Hybrid Cloud"],

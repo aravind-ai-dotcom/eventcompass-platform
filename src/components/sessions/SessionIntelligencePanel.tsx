@@ -12,10 +12,13 @@ interface SessionIntelligencePanelProps {
   session: SessionIntelInput;
   certLabel?: string | null;
   scoreSize?: "sm" | "md";
-  /** Show 2 reasons by default; expand for all (mobile-friendly). */
+  /** Show 3 reasons by default; expand for all (mobile-friendly). */
   collapsible?: boolean;
   showKeySignals?: boolean;
+  initialVisible?: number;
 }
+
+const DEFAULT_VISIBLE_REASONS = 3;
 
 function MatchScoreBadge({ score, size = "sm" }: { score: number; size?: "sm" | "md" }) {
   if (score <= 0) return null;
@@ -40,13 +43,14 @@ export default function SessionIntelligencePanel({
   scoreSize = "sm",
   collapsible = true,
   showKeySignals = true,
+  initialVisible = DEFAULT_VISIBLE_REASONS,
 }: SessionIntelligencePanelProps) {
   const [expanded, setExpanded] = useState(false);
   const intel = buildSessionIntelligence(session, certLabel);
   const visibleReasons = collapsible && !expanded
-    ? intel.reasons.slice(0, 2)
+    ? intel.reasons.slice(0, initialVisible)
     : intel.reasons;
-  const hasMore = collapsible && intel.reasons.length > 2;
+  const hasMore = collapsible && intel.reasons.length > initialVisible;
 
   return (
     <div className="session-intelligence-panel">
@@ -76,7 +80,7 @@ export default function SessionIntelligencePanel({
           onClick={() => setExpanded(v => !v)}
           aria-expanded={expanded}
         >
-          {expanded ? "Show fewer reasons" : `Show ${intel.reasons.length - 2} more reasons`}
+          {expanded ? "Show fewer reasons" : `Show ${intel.reasons.length - initialVisible} more reason${intel.reasons.length - initialVisible === 1 ? "" : "s"}`}
         </button>
       )}
 

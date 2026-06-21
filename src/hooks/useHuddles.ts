@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { findSessionConflict, type SessionConflictInput } from "@/lib/huddleConflict";
-import { huddleToLiveOpportunity } from "@/lib/huddleDisplay";
+import { huddleToLiveOpportunity, sampleLiveOpportunityToMatched } from "@/lib/huddleDisplay";
+import { SAMPLE_LIVE_HUDDLES } from "@/lib/sampleLiveHuddles";
 import {
   matchHuddlesForParticipant,
   participantFromRaw,
@@ -77,6 +78,7 @@ export function useHuddles({
     reported_huddle_ids: [],
   });
   const [loading, setLoading] = useState(true);
+  const [sampleAttendeeOverrides, setSampleAttendeeOverrides] = useState<Record<string, string[]>>({});
   const loggedViews = useRef(new Set<string>());
 
   const participant: HuddleParticipantContext | null = useMemo(() => {
@@ -128,7 +130,19 @@ export function useHuddles({
 
     let base: MatchedHuddle[] = [];
 
-    if (participant) {
+    if (active.length === 0) {
+      base = SAMPLE_LIVE_HUDDLES.slice(0, displayLimit).map(opp => {
+        const matched = sampleLiveOpportunityToMatched(opp);
+        const extra = sampleAttendeeOverrides[opp.id] ?? [];
+        const names = [...new Set([...matched.on_my_way_names, ...extra])];
+        return {
+          ...matched,
+          on_my_way_names: names,
+          on_my_way_count: names.length,
+          user_response: responses[opp.id] as MatchedHuddle["user_response"],
+        };
+      });
+    } else if (participant) {
       const matched = matchHuddlesForParticipant(
         active,
         participant,
@@ -171,7 +185,7 @@ export function useHuddles({
         sessions,
       ),
     }));
-  }, [allHuddles, participant, responses, preferences, displayLimit, reservedIds, sessions]);
+  }, [allHuddles, participant, responses, preferences, displayLimit, reservedIds, sessions, sampleAttendeeOverrides]);
 
   useEffect(() => {
     if (!participantUid) return;
@@ -215,9 +229,24 @@ export function useHuddles({
 
   const respondOnMyWay = useCallback(
     async (huddleId: string, displayName: string) => {
-      if (!participantUid) return;
+      const isSample = SAMPLE_LIVE_HUDDLES.some(s => s.id === huddleId);
       const prev = responses[huddleId];
       const next: HuddleResponseType = prev === "on_my_way" ? "interested" : "on_my_way";
+      const firstName = displayName.split(/\s+/)[0] ?? displayName;
+
+      if (isSample) {
+        setResponses(r => ({ ...r, [huddleId]: next }));
+        setSampleAttendeeOverrides(prevNames => {
+          const current = prevNames[huddleId] ?? [];
+          if (next === "on_my_way") {
+            return { ...prevNames, [huddleId]: [...new Set([...current, firstName])] };
+          }
+          return { ...prevNames, [huddleId]: current.filter(n => n.toLowerCase() !== firstName.toLowerCase()) };
+        });
+        return;
+      }
+
+      if (!participantUid) return;
       await setHuddleResponse(huddleId, participantUid, displayName, next, prev);
       setResponses(r => ({ ...r, [huddleId]: next }));
       if (next === "on_my_way") {

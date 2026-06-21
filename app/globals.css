@@ -4586,11 +4586,12 @@ img { max-width: 100%; display: block; }
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--line);
-  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .huddle-feed > li + li {
-  border-top: 1px solid var(--line);
+  border-top: none;
 }
 .huddle-row--live {
   background: rgba(15, 98, 254, 0.04);
@@ -4895,6 +4896,43 @@ img { max-width: 100%; display: block; }
   font-family: inherit;
   font-size: 0.92rem;
   box-sizing: border-box;
+}
+.start-conversation-input--textarea {
+  height: auto;
+  min-height: 72px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.start-conversation-input--date,
+.start-conversation-input--time {
+  color-scheme: light dark;
+}
+.start-conversation-input:invalid,
+.start-conversation-input:user-invalid {
+  box-shadow: none;
+  border-color: var(--line);
+}
+.start-conversation-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.start-conversation-inline-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.start-conversation-hint {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.start-conversation-error {
+  margin-top: 12px;
+  font-size: 0.82rem;
+  color: var(--danger, #c0392b);
+  line-height: 1.4;
 }
 .start-conversation-review {
   font-size: 0.9rem;
@@ -8487,6 +8525,16 @@ img { max-width: 100%; display: block; }
 .huddle-class-badge--champion { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 .huddle-class-badge--general,
 .huddle-class-badge--industry { background: var(--panel); color: var(--soft); border-color: var(--line); }
+.huddle-badge--category {
+  background: transparent !important;
+  border-style: dashed;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.huddle-badge--status {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
 .huddle-status-badge--scheduled { background: var(--panel); color: var(--muted); border-color: var(--line); }
 .huddle-status-badge--happening-now { background: #ecfdf5; color: #047857; border-color: #6ee7b7; }
 .huddle-status-badge--starting-soon { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
@@ -8566,6 +8614,124 @@ img { max-width: 100%; display: block; }
 }
 .action-chip--ghost {
   opacity: 0.85;
+  font-size: 0.74rem;
+}
+
+/* ── Huddle compact strip (~3 lines) ─────────────────────────────────────── */
+.huddle-row--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.huddle-row--compact.huddle-row--live {
+  border-color: rgba(5, 150, 105, 0.35);
+  background: rgba(236, 253, 245, 0.35);
+}
+.huddle-compact-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.huddle-compact-line--meta {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.huddle-compact-line--title {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.huddle-compact-line--foot {
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+.huddle-compact-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.huddle-compact-schedule {
+  font-size: 0.74rem;
+  color: var(--soft);
+  line-height: 1.3;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+}
+.huddle-compact-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  width: 100%;
+}
+.huddle-row--compact .huddle-row-title {
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+.huddle-compact-people {
+  min-width: 0;
+  flex: 1;
+}
+.huddle-compact-people__label {
+  display: block;
+  font-size: 0.64rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.huddle-avatar-row--compact {
+  margin-top: 0;
+  gap: 4px;
+}
+.huddle-avatar--sm {
+  width: 24px;
+  height: 24px;
+  font-size: 0.68rem;
+}
+.huddle-compact-names {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 4px;
+  align-items: center;
+}
+.huddle-compact-name {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 0.74rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.huddle-compact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.action-chip--compact {
+  min-height: 32px;
+  padding: 0 10px;
   font-size: 0.74rem;
 }
 
@@ -8832,4 +8998,1099 @@ img { max-width: 100%; display: block; }
     justify-content: center;
     min-height: 44px;
   }
+}
+
+/* ── My Compass — Focus Mode ──────────────────────────────────────────────── */
+.focus-compass-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 32px;
+}
+.focus-compass-group {
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--site-header-height) + 8px);
+}
+.focus-compass-group__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.focus-compass-group__header:hover .focus-compass-group__chevron {
+  color: var(--text);
+}
+.focus-compass-group__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 9px;
+  color: var(--muted);
+  transition: color 0.15s ease;
+}
+.focus-compass-group__chevron svg {
+  display: block;
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0.38, 0.9);
+  transform: rotate(0deg);
+}
+.focus-compass-group__chevron--open svg {
+  transform: rotate(90deg);
+}
+.focus-compass-group__divider {
+  height: 0;
+  margin: 0;
+  border: none;
+}
+.focus-compass-group__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 100%);
+  color: var(--accent);
+}
+.focus-compass-group__icon .compass-panel__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.focus-compass-group__copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.focus-compass-group__label {
+  display: block;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.focus-compass-group__title {
+  display: block;
+  margin: 0;
+  font-size: clamp(1.05rem, 3.2vw, 1.25rem);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.focus-compass-group__desc {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  max-width: 40rem;
+}
+.focus-compass-group--expanded .focus-compass-group__header {
+  padding-bottom: 14px;
+}
+.focus-compass-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 26px;
+}
+.focus-compass-block {
+  margin-bottom: 22px;
+}
+.focus-compass-block:last-child {
+  margin-bottom: 0;
+}
+.focus-compass-block--voice .voice-companion-card {
+  margin-top: 0;
+}
+.focus-compass-submodule {
+  margin-bottom: 14px;
+}
+.focus-compass-submodule--compact {
+  margin-bottom: 12px;
+}
+.focus-compass-submodule .compass-module-head__title {
+  font-size: clamp(1.02rem, 2.5vw, 1.18rem);
+}
+.focus-compass-block .next-best-move-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px 20px;
+}
+.focus-moment-grid {
+  margin-top: 2px;
+}
+.focus-moment-card {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.focus-moment-card p:not(.session-card-meta) {
+  flex: 1;
+}
+.focus-compass-block--moments {
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.focus-compass-hero {
+  padding: 20px 0 18px;
+}
+.focus-compass-hero__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.focus-compass-hero__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px 14px;
+}
+.focus-compass-hero__link {
+  font-size: 0.78rem;
+  font-weight: 560;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.focus-compass-hero__link:hover {
+  color: var(--text);
+}
+.focus-compass-hero__link--accent {
+  color: var(--accent);
+}
+.focus-compass-hero__title-row {
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.focus-compass-hero__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.carbon-panel {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.carbon-panel--hero {
+  padding: 16px 18px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.035) 0%,
+    rgba(255, 255, 255, 0.008) 48%,
+    transparent 100%
+  );
+}
+.carbon-panel--metrics {
+  padding: 16px 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(15, 98, 254, 0.045) 0%,
+    rgba(138, 63, 252, 0.03) 55%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border-color: rgba(15, 98, 254, 0.12);
+}
+.focus-compass-hero__metrics.carbon-panel--metrics .focus-metric-block + .focus-metric-block {
+  padding-top: 8px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.connection-card-linkedin {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 560;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.connection-card-linkedin--blocked {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-style: italic;
+  text-decoration: none;
+  cursor: default;
+}
+.person-match-panel--compact {
+  padding: 10px 0 0;
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.person-match-panel--compact .session-intelligence-head {
+  gap: 8px;
+}
+.person-match-panel--compact .session-intelligence-kicker {
+  font-size: 0.62rem;
+}
+.person-match-panel--compact .session-intelligence-score-note {
+  font-size: 0.72rem;
+}
+.person-match-panel--compact .session-intelligence-reasons li {
+  font-size: 0.78rem;
+}
+.person-match-panel--compact .session-intelligence-signals {
+  margin-top: 6px;
+}
+.focus-compass-hero__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.75rem, 7vw, 2.35rem);
+  font-weight: 520;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+.focus-compass-hero__subtitle {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.focus-compass-hero__role {
+  margin: 10px 0 0;
+  font-size: 0.84rem;
+  color: var(--soft);
+  line-height: 1.35;
+}
+.focus-compass-hero__signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  max-width: 36rem;
+}
+.focus-compass-hero__metrics {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 11px;
+  min-width: 0;
+  width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+.focus-metric-block {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  gap: 0 12px;
+  align-items: start;
+}
+.focus-metric-block--link {
+  text-decoration: none;
+  color: inherit;
+  border-radius: 2px;
+  transition: opacity 0.15s ease;
+}
+.focus-metric-block--link:hover {
+  opacity: 0.88;
+}
+.focus-metric-block__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.focus-metric-block__summary {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.25;
+}
+.focus-metric-block__bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.focus-metric-block__bar-row .focus-metric-row__track {
+  flex: 1;
+  min-width: 0;
+}
+.focus-metric-block__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+}
+.focus-metric-block__legend .week-balance-legend-item {
+  font-size: 0.68rem;
+  gap: 4px;
+}
+.focus-metric-block__legend .week-balance-legend-item em {
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text);
+}
+.focus-metric-block__legend .week-balance-swatch {
+  width: 6px;
+  height: 6px;
+}
+.focus-metric-block__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 0;
+}
+.focus-metric-block__chips .compass-signal-chip {
+  font-size: 0.62rem;
+  padding: 1px 5px;
+  line-height: 1.35;
+}
+.focus-metric-row {
+  display: grid;
+  grid-template-columns: 4.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 22px;
+}
+.focus-metric-row--link {
+  grid-template-columns: 4.75rem minmax(0, 1fr) auto;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 2px;
+  transition: opacity 0.15s ease;
+}
+.focus-metric-row--link:hover {
+  opacity: 0.88;
+}
+.focus-metric-row__label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--purple-soft);
+  white-space: nowrap;
+  line-height: 1;
+  padding-top: 2px;
+}
+.focus-metric-row__track,
+.focus-metric-block .week-balance-bar,
+.focus-metric-block .compass-signal-bar {
+  height: 5px;
+  margin: 0;
+  min-width: 0;
+  width: 100%;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.focus-metric-block .compass-signal-bar {
+  background: var(--line);
+}
+.focus-metric-row__value {
+  font-size: 0.82rem;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  min-width: 2.25rem;
+  text-align: right;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.focus-metric-row__value--complete {
+  color: var(--purple);
+}
+.compass-energy-card {
+  text-decoration: none;
+  color: inherit;
+}
+@media (max-width: 768px) {
+  .focus-compass-hero {
+    padding: 16px 0 14px;
+  }
+  .focus-compass-hero__toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .focus-compass-hero__links {
+    justify-content: flex-start;
+  }
+  .focus-compass-hero__title-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .focus-compass-hero__metrics {
+    max-width: none;
+  }
+}
+.focus-compass-section {
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+.focus-compass-section--ask {
+  padding-top: 0;
+  border-top: none;
+}
+.focus-compass-section--ask .voice-companion-card {
+  margin-top: 0;
+}
+.focus-day-tab-list {
+  margin-bottom: 18px;
+}
+.focus-session-grid {
+  margin-bottom: 4px;
+}
+.focus-session-card {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.focus-session-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.action-chip--quiet {
+  border-color: var(--line);
+  color: var(--muted);
+  background: transparent;
+}
+.action-chip--saved {
+  border-color: rgba(15, 98, 254, 0.35);
+  color: var(--accent);
+  background: rgba(15, 98, 254, 0.04);
+}
+.focus-people-dual {
+  align-items: stretch;
+}
+.focus-people-column {
+  padding: 18px 18px 20px;
+  min-width: 0;
+}
+.focus-people-column__head {
+  margin-bottom: 14px;
+}
+.focus-people-column__head .people-follow-up-split__title {
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+}
+.focus-people-dual .focus-people-cards,
+.focus-people-dual .people-panel-box .people-follow-up-split__cards,
+.focus-people-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.focus-people-stack .connection-card,
+.focus-people-dual .people-follow-up-split__cards .connection-card {
+  width: 100%;
+}
+.focus-people-dual .connection-card--compact {
+  padding: 14px;
+  gap: 8px;
+}
+.focus-people-dual .connection-card-name {
+  font-size: 0.92rem;
+}
+.focus-people-dual .connection-card-role,
+.focus-people-dual .connection-card-org {
+  font-size: 0.78rem;
+}
+.focus-compass-section__head {
+  margin-bottom: 16px;
+}
+.focus-compass-section__kicker {
+  display: block;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.focus-compass-section__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.focus-compass-section__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  max-width: 40rem;
+}
+.focus-compass-section .next-best-move-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px 20px;
+}
+.focus-learning-group {
+  margin-bottom: 18px;
+}
+.focus-learning-group:last-child {
+  margin-bottom: 0;
+}
+.focus-learning-group__label {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 680;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.focus-learning-group__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.focus-session-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.focus-session-row__type {
+  margin: 0 0 4px;
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.focus-session-row__title {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+  font-weight: 560;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.focus-session-row__meta,
+.focus-session-row__why {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.focus-session-row__why {
+  margin-top: 6px;
+  color: var(--soft);
+}
+.focus-session-row__cta {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 0.82rem;
+  font-weight: 560;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.focus-view-more {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 560;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 44px;
+}
+.focus-moments-list,
+.focus-people-list,
+.focus-ibm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.focus-moment-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.focus-moment-row__title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.focus-moment-row__meta {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: var(--font-mono, ui-monospace);
+}
+.focus-moment-row__desc {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.focus-moment-row__cta {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 560;
+  color: var(--accent);
+  white-space: nowrap;
+  align-self: center;
+}
+.focus-ibm-grid {
+  margin-top: 2px;
+}
+.ibm-community-card--focus {
+  min-height: 100%;
+}
+.focus-compass-footer,
+.focus-compass-classic-footer {
+  padding: 28px 0 16px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+}
+.focus-compass-advanced-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.84rem;
+  font-weight: 560;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.focus-compass-advanced-link:hover {
+  color: var(--text);
+}
+@media (max-width: 768px) {
+  .focus-compass-group__header {
+    padding: 14px 0;
+    gap: 10px;
+  }
+  .focus-compass-group__chevron {
+    margin-top: 7px;
+  }
+  .focus-compass-group__icon {
+    width: 36px;
+    height: 36px;
+  }
+  .focus-compass-group__body {
+    padding-bottom: 20px;
+  }
+  .focus-compass-block {
+    margin-bottom: 18px;
+  }
+  .focus-compass-section {
+    padding: 18px 0;
+  }
+  .focus-session-row,
+  .focus-moment-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .focus-session-row__cta,
+  .focus-moment-row__cta {
+    align-self: flex-start;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .focus-people-dual {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Plan mode — premium chips (Focus week plan) */
+.plan-mode-row--premium {
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.plan-mode-chip--premium {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  text-align: left;
+  max-width: 340px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.plan-mode-chip--premium.is-active {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 98, 254, 0.08) 0%,
+    rgba(138, 63, 252, 0.05) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.plan-mode-chip__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+  opacity: 0.85;
+}
+.plan-mode-chip__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.plan-mode-chip__label {
+  font-size: 0.84rem;
+  font-weight: 620;
+  color: var(--text);
+  line-height: 1.2;
+}
+.plan-mode-chip__hint {
+  font-size: 0.72rem;
+  font-weight: 450;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.plan-mode-chip--premium.is-active .plan-mode-chip__label {
+  color: var(--accent);
+}
+
+.focus-plan-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.focus-plan-export__btn {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--soft);
+  font-size: 0.82rem;
+  font-weight: 560;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.focus-plan-export__btn--primary {
+  border-color: rgba(15, 98, 254, 0.45);
+  color: var(--accent);
+  background: rgba(15, 98, 254, 0.06);
+}
+
+.connection-card-meet-signal {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.connection-card-action--signal {
+  border-color: rgba(15, 98, 254, 0.45) !important;
+  color: var(--accent) !important;
+  background: rgba(15, 98, 254, 0.06) !important;
+}
+.connection-card-meet-signal__note {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.connection-card-meet-signal__sent {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 560;
+  color: var(--accent);
+}
+
+/* Printable Compass plan */
+.compass-print-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 28px 48px;
+  color: var(--text);
+  background: var(--bg);
+}
+.compass-print-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.compass-print-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.compass-print-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--soft);
+  font-size: 0.84rem;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.compass-print-toolbar__btn.is-active,
+.compass-print-toolbar__btn--accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.compass-print-toolbar__btn--primary {
+  border-color: rgba(15, 98, 254, 0.45);
+  color: var(--accent);
+  background: rgba(15, 98, 254, 0.06);
+}
+.compass-print-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line);
+}
+.compass-print-header__brand {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+}
+.compass-print-header__event {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.compass-print-attendee {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.compass-print-attendee__name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+.compass-print-attendee__role {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.compass-print-attendee__meters .focus-metric-block + .focus-metric-block {
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.compass-print-day {
+  margin-bottom: 28px;
+}
+.compass-print-day__title {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+.compass-print-session-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.compass-print-session {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 10px 12px;
+  min-height: 88px;
+}
+.compass-print-session__time {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+.compass-print-session__title {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  font-weight: 580;
+  line-height: 1.25;
+}
+.compass-print-session__meta {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.compass-print-session__match {
+  margin: 6px 0 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.compass-print-section {
+  margin-bottom: 28px;
+}
+.compass-print-section__title {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 620;
+}
+.compass-print-community-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.compass-print-community {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px 14px;
+}
+.compass-print-community__name {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 580;
+}
+.compass-print-community__meta {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.compass-print-community__reason {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--soft);
+}
+.compass-print-people-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.compass-print-person {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.compass-print-person__name {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 580;
+}
+.compass-print-person__role,
+.compass-print-person__reason {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.compass-print-person__footer {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.compass-print-person__linkedin--muted {
+  opacity: 0.75;
+}
+.compass-print-footer {
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.compass-print-loading {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .compass-print-page {
+    max-width: none;
+    padding: 0;
+    background: #fff;
+    color: #161616;
+  }
+  .compass-print-page--landscape {
+    /* Browser print dialog: user selects landscape; hint via size */
+  }
+  .print-page-break {
+    break-after: page;
+    page-break-after: always;
+  }
+  .compass-print-session,
+  .compass-print-community,
+  .compass-print-person,
+  .compass-print-attendee {
+    background: #fff;
+    border-color: #e0e0e0;
+  }
+  .compass-print-session-grid,
+  .compass-print-community-grid,
+  .compass-print-people-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .compass-print-session-grid,
+  .compass-print-community-grid,
+  .compass-print-people-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .compass-print-attendee {
+    grid-template-columns: 1fr;
+  }
+}
+
+@page {
+  margin: 12mm;
 }
