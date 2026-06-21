@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TxCertification } from "@/data/certifications";
 import { MAX_CERTIFICATION_ENROLLMENTS } from "@/data/certifications";
+import { shortenCertificationTitle } from "@/lib/certificationJourneyIntelligence";
 
 interface CertificationPickerModalProps {
   open: boolean;
@@ -69,15 +70,16 @@ export default function CertificationPickerModal({
   if (!open) return null;
 
   return (
-    <div className="cert-add-modal cert-picker-modal" role="dialog" aria-modal="true" aria-labelledby="cert-picker-title">
+    <div className="cert-add-modal" role="dialog" aria-modal="true" aria-labelledby="cert-picker-title">
       <button type="button" className="cert-add-modal__backdrop" onClick={onClose} aria-label="Close" />
-      <div className="cert-add-modal__panel">
+      <div className="cert-add-modal__panel cert-add-modal__panel--premium">
         <header className="cert-add-modal__head">
           <div>
             <p className="cert-add-modal__kicker">Certification catalog</p>
-            <h2 id="cert-picker-title">Add certification</h2>
+            <h2 id="cert-picker-title">Add a certification</h2>
             <p className="cert-add-modal__lead">
-              You can add up to {MAX_CERTIFICATION_ENROLLMENTS} certifications. Compass will shape your week around them.
+              Choose up to {MAX_CERTIFICATION_ENROLLMENTS} paths. Compass will match sessions, experts, and
+              communities from the event catalog — not a fixed list.
             </p>
           </div>
           <button type="button" className="cert-add-modal__close" onClick={onClose} aria-label="Close">
@@ -85,31 +87,45 @@ export default function CertificationPickerModal({
           </button>
         </header>
 
-        <div className="cert-picker-modal__filters">
-          <div className="cert-add-modal__search">
+        <div className="cert-add-modal__toolbar">
+          <div className="cert-add-modal__search cert-add-modal__search--inline">
             <input
               type="search"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search by product, track, or title…"
+              placeholder="Search by name, code, product, or track…"
               aria-label="Search certifications"
             />
           </div>
-          <select
-            value={trackFilter}
-            onChange={e => setTrackFilter(e.target.value)}
-            aria-label="Filter by track"
-            className="cert-picker-modal__track-select"
-          >
-            <option value="all">All tracks</option>
-            {tracks.map(track => (
-              <option key={track} value={track}>{track}</option>
-            ))}
-          </select>
+          {tracks.length > 0 && (
+            <div className="cert-panel__tabs cert-add-modal__tabs" role="tablist" aria-label="Filter by track">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={trackFilter === "all"}
+                className={`cert-panel__tab${trackFilter === "all" ? " cert-panel__tab--active" : ""}`}
+                onClick={() => setTrackFilter("all")}
+              >
+                All tracks
+              </button>
+              {tracks.map(track => (
+                <button
+                  key={track}
+                  type="button"
+                  role="tab"
+                  aria-selected={trackFilter === track}
+                  className={`cert-panel__tab${trackFilter === track ? " cert-panel__tab--active" : ""}`}
+                  onClick={() => setTrackFilter(track)}
+                >
+                  {track}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {atLimit && (
-          <p className="cert-picker-modal__limit" role="status">
+          <p className="cert-add-modal__limit" role="status">
             You can add up to {MAX_CERTIFICATION_ENROLLMENTS} certifications.
           </p>
         )}
@@ -122,9 +138,11 @@ export default function CertificationPickerModal({
               <li key={cert.certification_id} className="cert-add-modal__item">
                 <div className="cert-add-modal__item-body">
                   <p className="cert-add-modal__code">{cert.exam_code}</p>
-                  <h3>{cert.title}</h3>
+                  <h3>{shortenCertificationTitle(cert.title)}</h3>
                   <p className="cert-add-modal__meta">
-                    {[cert.product, cert.level].filter(Boolean).join(" · ")}
+                    {[cert.product, cert.level, ...cert.txc_tracks.slice(0, 2)]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                   <p className="cert-add-modal__desc">{cert.description}</p>
                   {cert.skill_tags.length > 0 && (
@@ -137,15 +155,15 @@ export default function CertificationPickerModal({
                 </div>
                 <div className="cert-add-modal__item-actions">
                   {enrolled ? (
-                    <span className="cert-add-modal__saved">Added</span>
+                    <span className="cert-add-modal__saved">Tracking</span>
                   ) : (
                     <button
                       type="button"
-                      className="action-chip"
+                      className="cert-panel__btn cert-panel__btn--primary"
                       disabled={disabled}
                       onClick={() => onAdd(cert.certification_id)}
                     >
-                      Add
+                      Add to My Goals
                     </button>
                   )}
                 </div>

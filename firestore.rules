@@ -57,7 +57,28 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
 
-    // TechXchange participant data + other event subcollections
+    // TechXchange participant profile
+    match /organizations/{org}/events/{event}/participants/{participantId} {
+      allow read, write: if isSignedIn();
+
+      match /certification_enrollments/{certificationId} {
+        allow read, write: if isSignedIn() && request.auth.uid == participantId;
+      }
+    }
+
+    // TechXchange certification catalog
+    match /organizations/{org}/events/{event}/certifications/{certificationId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // TechXchange IBM communities catalog
+    match /organizations/{org}/events/{event}/communities/{communityId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // TechXchange other event subcollections (single segment under event)
     match /organizations/{org}/events/{event}/{subcollection}/{doc} {
       allow read, write: if isSignedIn();
     }

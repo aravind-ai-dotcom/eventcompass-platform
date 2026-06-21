@@ -112,6 +112,7 @@ export function useExperiencePageData() {
   const [certificationCatalog, setCertificationCatalog] = useState<TxCertification[]>([]);
   const [certificationCatalogSource, setCertificationCatalogSource] = useState<CertificationCatalogSource>("seed");
   const [certificationEnrollments, setCertificationEnrollments] = useState<CertificationEnrollment[]>([]);
+  const [certificationError, setCertificationError] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -424,14 +425,34 @@ export function useExperiencePageData() {
       status: "planned",
       added_at: new Date().toISOString(),
     };
+    const previous = certificationEnrollments;
     setCertificationEnrollments(prev => [...prev, enrollment]);
-    await enrollInCertification(participantId, certificationId);
+    setCertificationError(null);
+    try {
+      await enrollInCertification(participantId, certificationId);
+    } catch (err) {
+      console.error("[ExperiencePage] enroll certification:", err);
+      setCertificationEnrollments(previous);
+      setCertificationError(
+        "Could not save your certification selection. Sign in again, or ask your admin to deploy updated Firestore rules.",
+      );
+    }
   }, [certificationEnrollments, participantId]);
 
   const handleRemoveCertification = useCallback(async (certificationId: string) => {
+    const previous = certificationEnrollments;
     setCertificationEnrollments(prev => prev.filter(e => e.certification_id !== certificationId));
-    await removeCertificationEnrollment(participantId, certificationId);
-  }, [participantId]);
+    setCertificationError(null);
+    try {
+      await removeCertificationEnrollment(participantId, certificationId);
+    } catch (err) {
+      console.error("[ExperiencePage] remove certification:", err);
+      setCertificationEnrollments(previous);
+      setCertificationError("Could not remove certification. Please try again.");
+    }
+  }, [certificationEnrollments, participantId]);
+
+  const clearCertificationError = useCallback(() => setCertificationError(null), []);
   const topChampion = boostedChampionsTop.find(c => !hiddenPeople.includes(c.id) && c.compass_score > 0) ?? null;
   const topSpeaker = rankedExperts[0] ?? null;
 
@@ -552,6 +573,8 @@ export function useExperiencePageData() {
     enrolledCertificationViews,
     handleEnrollCertification,
     handleRemoveCertification,
+    certificationError,
+    clearCertificationError,
   };
 }
 

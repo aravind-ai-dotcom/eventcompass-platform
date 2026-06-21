@@ -210,8 +210,10 @@ export default function FocusCompassExperience() {
             views={data.enrolledCertificationViews}
             catalog={data.certificationCatalog}
             enrolledIds={data.certificationEnrollments.map(e => e.certification_id)}
+            enrollmentError={data.certificationError}
             onEnroll={data.handleEnrollCertification}
             onRemove={data.handleRemoveCertification}
+            onClearError={data.clearCertificationError}
           />
         </FocusCompassGroup>
 
