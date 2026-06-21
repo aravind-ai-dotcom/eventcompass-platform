@@ -23,7 +23,7 @@ interface Props {
 const PILLAR_CONFIG = [
   { key: "people"    as const, label: "People",    color: "#8a3ffc",        desc: "Champions, experts, and connections worth making" },
   { key: "learning"  as const, label: "Learning",  color: "var(--accent)", desc: "Breakouts, labs, and technical sessions" },
-  { key: "community" as const, label: "Community", color: "#0D9488",        desc: "Peer roundtables, meetups, and huddles" },
+  { key: "community" as const, label: "Networking", color: "#0D9488",        desc: "Peer roundtables, meetups, and huddles" },
   { key: "fun"       as const, label: "Fun",        color: "#D97706",        desc: "Keynotes, receptions, and social moments" },
 ];
 
@@ -65,11 +65,11 @@ function getBalanceInsight(counts: PillarCount): string {
     fun:       counts.fun / total,
   };
 
-  if (pct.learning > 0.55) return "Your plan is heavily Learning-focused. Compass will also nudge people, community, and fun moments.";
+  if (pct.learning > 0.55) return "Your plan is heavily Learning-focused. Compass will also nudge people, networking, and fun moments.";
   if (pct.people < 0.08 && counts.people === 0) return "Add people connections — champions and peer conversations often create the most value.";
   if (pct.fun > 0.45) return "Your plan leans social. Great for energy — Compass keeps learning and people in the mix too.";
-  if (pct.community < 0.1) return "Your plan has limited Community time. Live huddles and meetups round out the week.";
-  return "Good mix across people, learning, community, and fun. Compass keeps your recommendations intentionally balanced.";
+  if (pct.community < 0.1) return "Your plan has limited networking time. Live huddles and meetups round out the week.";
+  return "Good mix across people, learning, networking, and fun. Compass keeps your recommendations intentionally balanced.";
 }
 
 export default function ExperienceBalance({ sessionCounts, attendedCounts }: Props) {

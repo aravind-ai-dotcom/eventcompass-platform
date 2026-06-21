@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { CompassSectionId } from "@/lib/compassUiPreferences";
 import { COMPASS_SECTION_LABELS } from "@/lib/compassUiPreferences";
+import { scrollIntoViewWithHeaderOffset } from "@/lib/scrollIntoViewWithHeaderOffset";
 
 interface CompassSectionProps {
   id: CompassSectionId;
@@ -17,10 +19,20 @@ export default function CompassSection({
   children,
 }: CompassSectionProps) {
   const label = COMPASS_SECTION_LABELS[id];
+  const headerRef = useRef<HTMLButtonElement>(null);
+  const prevExpanded = useRef(expanded);
+
+  useEffect(() => {
+    if (expanded && !prevExpanded.current) {
+      scrollIntoViewWithHeaderOffset(headerRef.current);
+    }
+    prevExpanded.current = expanded;
+  }, [expanded]);
 
   return (
     <section className="compass-section" data-section={id}>
       <button
+        ref={headerRef}
         type="button"
         className="compass-section-header"
         onClick={onToggle}

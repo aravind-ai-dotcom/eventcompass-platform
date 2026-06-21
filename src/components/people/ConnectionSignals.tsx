@@ -188,7 +188,7 @@ export default function ConnectionSignals({
         </div>
         <p>
           These attendees have signaled interest in connecting based on shared goals,
-          expertise, or community interests.
+          expertise, or topic interests.
         </p>
       </div>
 

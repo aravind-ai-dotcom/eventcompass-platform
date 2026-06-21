@@ -45,6 +45,7 @@ import {
   isDiverseRecommendationQuery,
   pickBalancedSessionRecommendation,
 } from "@/lib/recommendationBalancing";
+import { recommendIbmCommunities } from "@/lib/ibmCommunityMatching";
 import {
   findSpeakersForQuery,
   formatSpeakerIntelligenceVoice,
@@ -79,6 +80,7 @@ export type CoreVoiceIntent =
   | "find_sessions"
   | "find_people"
   | "find_huddles"
+  | "ibm_community"
   | "certification_help"
   | "explain_my_day"
   | "explain_my_week"
@@ -108,6 +110,7 @@ export type VoiceResponseAction =
   | "show_champions"
   | "show_sessions"
   | "show_day"
+  | "show_communities"
   | "dismiss"
   | "mark_attended";
 
@@ -158,6 +161,7 @@ const KEYWORD_BUCKETS: Record<
     | "scope_clarify"
     | "diverse_recommendations"
     | "attendance_status"
+    | "ibm_community"
   >,
   string[]
 > = {
@@ -319,6 +323,27 @@ const PERSONA_PATTERNS: Array<[PersonaKey, string[]]> = [
   ]],
 ];
 
+const IBM_COMMUNITY_PATTERNS = [
+  "what communities should i join",
+  "which communities should i join",
+  "communities should i join",
+  "is there an ibm community for",
+  "ibm community for",
+  "any ibm community for",
+  "ibm communities for",
+  "where can i continue after techxchange",
+  "continue after techxchange",
+  "where can i continue the conversation",
+  "continue the conversation after",
+  "join ibm community",
+  "ibm topic group",
+  "ibm user group",
+  "topic groups should i",
+  "user groups should i",
+  "ibm community hub",
+  "online community after the event",
+];
+
 const FUN_DISCOVERY_PATTERNS = [
   "anything fun",
   "something fun today",
@@ -378,6 +403,7 @@ const PUBLIC_CORE_INTENTS = new Set<CoreVoiceIntent>([
   "scope_clarify",
   "diverse_recommendations",
   "attendance_status",
+  "ibm_community",
   "dismiss",
   "mark_attended",
 ]);
@@ -486,6 +512,10 @@ export function classifyVoiceIntent(
 
   if (matchPhraseList(norm, ATTENDANCE_STATUS_PHRASES)) {
     return { intent: "attendance_status", transcript, confidence: "high" };
+  }
+
+  if (matchPhraseList(norm, IBM_COMMUNITY_PATTERNS)) {
+    return { intent: "ibm_community", transcript, confidence: "high" };
   }
 
   const eventTopic = matchTopic(norm, EVENT_KNOWLEDGE_PATTERNS);
@@ -1102,7 +1132,7 @@ export function buildVoiceResponse(
           const balanceNote =
             alternates && !alternates.startsWith("Open My")
               ? ` ${alternates}`
-              : " Compass balances learning, people, community, and fun across your plan.";
+              : " Compass balances learning, people, networking, and fun across your plan.";
           return {
             spoken: `${spoken}${balanceNote}`,
             display: balanced.map(m => m.headline).slice(0, 4).join(" · "),
@@ -1231,6 +1261,31 @@ export function buildVoiceResponse(
       };
     }
 
+    case "ibm_community": {
+      const matches = recommendIbmCommunities({
+        tracks: ctx.participantTracks ?? [],
+        topics: ctx.participantGoals ?? [],
+        goals: ctx.participantGoals ?? [],
+        limit: 3,
+      });
+      const names = matches.map(m => m.name).join(", ");
+      const detail = matches
+        .map(m => `${m.name} (${m.type})`)
+        .join(" · ");
+
+      const templates = [
+        "IBM Community has more than five hundred thousand members, two hundred topic groups, and two hundred fifty user groups. Based on your profile, I'd explore {names}. These are persistent IBM destinations — not live Huddles. Open IBM Community in Compass for links.",
+        "After TechXchange, IBM Community is where the conversation continues — topic groups, user groups, and Champions. For you, I'd start with {names}. Visit IBM Community in Compass to join.",
+        "For IBM topic groups and user groups beyond the event, look at {names}. IBM Community is separate from live Huddles on My Compass. I can show you links on the IBM Community page.",
+      ];
+      const spoken = fill(pickTemplate(templates, seed), { names });
+      return {
+        spoken,
+        display: detail || "IBM Community · topic groups · user groups",
+        action: "show_communities",
+      };
+    }
+
     case "find_huddles": {
       const huddle = topHuddle(ctx, norm);
       if (!huddle) {
@@ -1304,7 +1359,7 @@ export function buildVoiceResponse(
 
       if (!title) {
         return {
-          spoken:  "Open My Experience for today's Community, Learning, and Fun plan across the week.",
+          spoken:  "Open My Experience for today's Networking, Learning, and Fun plan across the week.",
           display: "See your day plan on My Experience.",
           action:  "navigate_experience",
         };
@@ -1323,7 +1378,7 @@ export function buildVoiceResponse(
       const session = sessionForContext(ctx);
       const title = session?.title ?? ctx.nextBestMove?.headline ?? "your top matches";
       const templates = [
-        "Your four-day plan is organized around {title} and your goals. Open My Experience for Community, Learning, and Fun by day.",
+        "Your four-day plan is organized around {title} and your goals. Open My Experience for Networking, Learning, and Fun by day.",
         "Compass spread your week across sessions and moments like {title}. See the full plan on My Experience.",
         "The week plan prioritizes {title} among your matches — My Experience shows each day.",
       ];

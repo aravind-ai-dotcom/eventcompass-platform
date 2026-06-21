@@ -866,7 +866,7 @@ export default function VoiceCompassButton({
           <>
             <CompassModuleHead
               kicker="Ask Compass"
-              title="Sessions. People. Certifications. Community."
+              title="Sessions. People. Certifications. IBM Community."
               description="What would you like help with?"
             />
             <p className="compass-live-signal" aria-live="polite">
@@ -1019,8 +1019,13 @@ export default function VoiceCompassButton({
                       </a>
                     )}
                     {response.action === "show_champions" && (
-                      <a href="/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                      <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
                         View Champions →
+                      </a>
+                    )}
+                    {response.action === "show_communities" && (
+                      <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                        IBM Community →
                       </a>
                     )}
                   </div>
@@ -1178,8 +1183,13 @@ export default function VoiceCompassButton({
                   </a>
                 )}
                 {response.action === "show_champions" && (
-                  <a href="/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                  <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
                     View Champions →
+                  </a>
+                )}
+                {response.action === "show_communities" && (
+                  <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
+                    IBM Community →
                   </a>
                 )}
                 {response.action === "show_day" && (

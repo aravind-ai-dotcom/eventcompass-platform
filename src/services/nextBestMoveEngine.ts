@@ -192,7 +192,7 @@ function buildHuddleMove(huddle: LiveOpportunity, whyItMatters: string): NextBes
     whyItMatters,
     entityId: huddle.id,
     ctaLabel: "Join Huddle",
-    ctaHref: "/txc/experience#community",
+    ctaHref: "/txc/experience#today",
     priority: 4,
   };
 }
@@ -352,7 +352,7 @@ function pickCommunityMove(input: BalancedRecommendationInput): NextBestMove | n
         /study group|cert prep|certification/i.test(`${h.title} ${h.category}`),
     );
     if (certHuddle) {
-      return buildHuddleMove(certHuddle, "Community opportunity aligned with your certification path.");
+      return buildHuddleMove(certHuddle, "Networking opportunity aligned with your certification path.");
     }
   }
 
@@ -366,7 +366,7 @@ function pickCommunityMove(input: BalancedRecommendationInput): NextBestMove | n
   );
   const session = topScored(communityPool);
   if (session) {
-    const why = deriveWhyItMatters(session, input, ["Community opportunity."]);
+    const why = deriveWhyItMatters(session, input, ["Networking opportunity."]);
     const move = buildSessionMove(session, input, why);
     return { ...move, type: "community" };
   }

@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/txc/explore", label: "Explore" },
   { href: "/txc/sessions", label: "Sessions" },
   { href: "/txc/champions", label: "Champions" },
+  { href: "/txc/communities", label: "IBM Community" },
   { href: "/txc/pulse", label: "Pulse" },
 ];
 

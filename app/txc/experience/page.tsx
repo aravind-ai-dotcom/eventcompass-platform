@@ -22,8 +22,9 @@
 // CSS:            globals.css class names only
 // =============================================================================
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { tryGetDb } from "@/lib/firebase";
+import { scrollIntoViewWithHeaderOffset } from "@/lib/scrollIntoViewWithHeaderOffset";
 import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { getFeaturedChampions } from "@/services/firestoreService";
@@ -33,6 +34,7 @@ import { useHuddles } from "@/hooks/useHuddles";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import TechXchangeTV      from "@/components/experience/TechXchangeTV";
 import CommunityVoices    from "@/components/experience/CommunityVoices";
+import RecommendedIbmCommunities from "@/components/communities/RecommendedIbmCommunities";
 import { useAuth } from "@/context/AuthContext";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import RecommendedConnectionsSection from "@/components/people/RecommendedConnectionsSection";
@@ -518,7 +520,7 @@ function WeekInBalance({ people, learning, community, fun }: {
   const segments = [
     { label: "People",    w: peopleW, color: "#8a3ffc", count: people },
     { label: "Learning",  w: learnW, color: "#0f62fe", count: learning },
-    { label: "Community", w: commW,  color: "var(--purple-soft)", count: community },
+    { label: "Networking", w: commW,  color: "var(--purple-soft)", count: community },
     { label: "Fun",       w: funW,   color: "#009d9a", count: fun },
     { label: "Open",      w: openW,  color: "var(--line-strong)", count: 0 },
   ].filter(s => s.w > 0);
@@ -532,7 +534,7 @@ function WeekInBalance({ people, learning, community, fun }: {
     <div className="week-balance-card">
       <p className="week-balance-kicker">Your week in balance</p>
       <p className="week-balance-sub">
-        People {peoplePct}% · Learning {learnPct}% · Community {commPct}% · Fun {funPct}%
+        People {peoplePct}% · Learning {learnPct}% · Networking {commPct}% · Fun {funPct}%
       </p>
       <div className="week-balance-bar">
         {total === 0 ? (
@@ -547,7 +549,7 @@ function WeekInBalance({ people, learning, community, fun }: {
         {[
           { label: "People", count: people, color: "#8a3ffc" },
           { label: "Learning", count: learning, color: "#0f62fe" },
-          { label: "Community", count: community, color: "var(--purple-soft)" },
+          { label: "Networking", count: community, color: "var(--purple-soft)" },
           { label: "Fun", count: fun, color: "#009d9a" },
         ].map(item => (
           <span key={item.label} className="week-balance-legend-item">
@@ -866,7 +868,7 @@ function HighlightActionCard({ h }: { h: typeof HIGHLIGHT_DATA[number] }) {
 function PillarSection({ pillar, sessions, limit = 3, sched, certLabel }: { pillar: string; sessions: ScoredSession[]; limit?: number; sched?: ExpScheduleState; certLabel?: string | null }) {
   const PILLAR_META: Record<string, { kicker: string; heading: string; desc: string }> = {
     Learning:  { kicker: "Learning",  heading: "Sessions matched to your goals.",       desc: "Labs, breakouts, and workshops scored against your tracks and keywords." },
-    Community: { kicker: "Community", heading: "People and moments worth your time.",   desc: "Expert sessions and community experiences for your profile." },
+    Community: { kicker: "Networking", heading: "People and moments worth your time.", desc: "Expert sessions and networking experiences for your profile." },
     Fun:       { kicker: "Fun",       heading: "Moments that make the week memorable.", desc: "Keynotes, social events, and experiences worth your time." },
   };
   if (sessions.length === 0) return null;
@@ -1018,7 +1020,7 @@ function WhatYouToldCompass({ participant, embedded = false }: { participant: Ra
       <CompassModuleHead
         kicker="What you told Compass"
         title="Your profile signals"
-        description="Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Community · Learning · Fun activities."
+        description="Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Networking · Learning · Fun activities."
         action={<a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>}
         className="compass-module-head--with-action"
       />
@@ -1095,6 +1097,8 @@ function DayTabExperience({
   const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
   const [mobileDays, setMobileDays] = useState(false);
   const [expandedDay, setExpandedDay] = useState<EventDay | null>("Monday");
+  const accordionRefs = useRef<Partial<Record<EventDay, HTMLButtonElement | null>>>({});
+  const prevExpandedDay = useRef<EventDay | null>(expandedDay);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -1103,6 +1107,15 @@ function DayTabExperience({
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
+
+  useEffect(() => {
+    if (!mobileDays || !expandedDay || expandedDay === prevExpandedDay.current) {
+      prevExpandedDay.current = expandedDay;
+      return;
+    }
+    scrollIntoViewWithHeaderOffset(accordionRefs.current[expandedDay] ?? null);
+    prevExpandedDay.current = expandedDay;
+  }, [expandedDay, mobileDays]);
 
   const dayLearning  = getSessionsForDay(learningList,  activeDay, planMode).slice(0, 3);
   const dayCommunity = getSessionsForDay(communityList, activeDay, planMode).slice(0, 3);
@@ -1117,7 +1130,7 @@ function DayTabExperience({
       <CompassModuleHead
         kicker="Your AI-powered week"
         title="Compass selects and prioritizes your sessions."
-        description="A four-day plan shaped to your goals — Community, Learning, and Fun balanced across the week. Conflict handling follows your preference below."
+        description="A four-day plan shaped to your goals — Networking, Learning, and Fun balanced across the week. Conflict handling follows your preference below."
       />
 
       <div className="plan-mode-row" role="group" aria-label="Conflict handling">
@@ -1163,6 +1176,7 @@ function DayTabExperience({
             return (
               <div key={day} className="day-accordion-item">
                 <button
+                  ref={(el) => { accordionRefs.current[day] = el; }}
                   type="button"
                   className="day-accordion-trigger"
                   aria-expanded={isOpen}
@@ -2097,7 +2111,7 @@ export default function ExperiencePage() {
               </div>
               {isMobile && HIGHLIGHT_DATA.length > 1 && (
                 <p className="compass-module-note">
-                  Expand Community below for more anchor moments.
+                  Expand IBM Community below for more anchor moments.
                 </p>
               )}
             </div>
@@ -2166,7 +2180,7 @@ export default function ExperiencePage() {
             <div className="compass-module-block">
               <CompassModuleHead
                 kicker="Recommended"
-                title="A curated mix across learning, community, and fun."
+                title="A curated mix across learning, networking, and fun."
                 description={COMPASS_BALANCE_EXPLANATION}
               />
               <div className="intelligence-row">
@@ -2304,6 +2318,13 @@ export default function ExperiencePage() {
           expanded={hydrated && isSectionExpanded("community")}
           onToggle={() => toggleSection("community")}
         >
+          <RecommendedIbmCommunities
+            tracks={pTracks}
+            goals={pGoals}
+            products={((sig.products as string[]) ?? []).slice(0, 8)}
+            embedded
+          />
+
           {isModuleVisible("community_activity") && (
             <div className="compass-module-block">
               <CommunityVoices champions={featuredChampions} />

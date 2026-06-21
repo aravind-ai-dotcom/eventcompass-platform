@@ -38,7 +38,7 @@ export type SessionFormat =
   | "general_session";
 
 export const COMPASS_BALANCE_EXPLANATION =
-  "Compass balances learning, people, community, and fun to help you get the most from TechXchange.";
+  "Compass balances learning, people, networking, and fun to help you get the most from TechXchange.";
 
 export const DIVERSE_RECOMMENDATION_PATTERNS = [
   "what else should i do",
@@ -438,7 +438,7 @@ export function formatDiverseRecommendationVoice(moves: NextBestMove[]): {
   }
 
   const intro =
-    "Compass keeps your week curated across learning, people, community, and fun. Here are diverse picks:";
+    "Compass keeps your week curated across learning, people, networking, and fun. Here are diverse picks:";
   const lines = suggestions.map(s => {
     const label = s.pillar.charAt(0).toUpperCase() + s.pillar.slice(1);
     return `${label}: ${s.spoken.split(".")[0]}.`;
@@ -458,7 +458,7 @@ export function formatWhyRecommendedWithBalance(
     .map(m => m.headline)
     .filter(Boolean);
   if (others.length === 0) {
-    return `${primaryReason} Compass balances learning, people, community, and fun across your plan.`;
+    return `${primaryReason} Compass balances learning, people, networking, and fun across your plan.`;
   }
   return `${primaryReason} Compass also surfaces ${others.join(" and ")} so your week stays balanced.`;
 }

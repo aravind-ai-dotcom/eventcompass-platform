@@ -34,7 +34,7 @@ export default function BalancedMoveGrid({ moves }: BalancedMoveGridProps) {
   return (
     <div
       className="balanced-move-groups"
-      aria-label="Balanced recommendations across learning, people, community, and fun"
+      aria-label="Balanced recommendations across learning, people, networking, and fun"
     >
       {groups.map(({ pillar, moves: pillarMoves }) => (
         <section

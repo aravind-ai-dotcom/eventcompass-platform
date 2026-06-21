@@ -208,7 +208,7 @@ export default function CommunityVoices({ champions, maxVisible = 6 }: Props) {
   return (
     <section>
       <CompassModuleHead
-        kicker="Community voices"
+        kicker="IBM Community voices"
         title="Champions who make TechXchange extraordinary."
         description="IBM Champions who have opted in to connect with attendees throughout the event."
       />

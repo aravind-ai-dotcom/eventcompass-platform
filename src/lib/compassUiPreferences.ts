@@ -48,13 +48,13 @@ export const COMPASS_SECTION_LABELS: Record<CompassSectionId, string> = {
   learning: "My Learning",
   people: "My People",
   profile: "My Profile",
-  community: "Community",
+  community: "IBM Community",
 };
 
 export const COMPASS_MODULE_LABELS: Record<CompassModuleId, string> = {
   ask_compass: "Ask Compass",
   next_best_move: "Next Best Move",
-  conversations: "Community & connections · Huddles",
+  conversations: "Networking & Connections · Huddles",
   shared_moments: "Shared moments",
   certification_journey: "Certification Journey",
   four_day_plan: "Four-Day Plan",
@@ -67,7 +67,7 @@ export const COMPASS_MODULE_LABELS: Record<CompassModuleId, string> = {
   profile_signals: "Profile signals",
   intent_summary: "Intent summary",
   week_balance: "Week in balance",
-  community_activity: "Community activity",
+  community_activity: "Networking Activity",
   techxchange_tv: "TechXchange TV",
   live_highlights: "Live highlights",
   export_panel: "Save & export",

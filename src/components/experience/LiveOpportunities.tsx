@@ -132,7 +132,7 @@ export default function LiveOpportunities({
     return (
       <CompassPanel
         icon="huddles"
-        kicker="Community & connections"
+        kicker="Networking & Connections"
         title="Huddles near you"
         description={panelDescription}
         className="live-opportunities live-opportunities--embedded"
@@ -145,7 +145,7 @@ export default function LiveOpportunities({
   return (
     <div className="live-opportunities">
       <header className="live-opportunities-head">
-        <span className="live-opportunities-kicker">Community & connections</span>
+        <span className="live-opportunities-kicker">Networking & Connections</span>
         <h2 className="live-opportunities-title">Huddles near you</h2>
       </header>
       {body}

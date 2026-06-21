@@ -8,7 +8,7 @@ export const CONNECTION_BADGE_LABELS: Record<ConnectionBadgeId, string> = {
   peer: "Peer",
   partner: "Partner",
   mentor: "Mentor",
-  "community-leader": "Community Leader",
+  "community-leader": "IBM Community Leader",
   "certification-guide": "Certification Guide",
 };
 
