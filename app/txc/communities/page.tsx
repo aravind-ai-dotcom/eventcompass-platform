@@ -4,18 +4,8 @@
 // =============================================================================
 
 import Link from "next/link";
+import IbmCommunityBrowser from "@/components/communities/IbmCommunityBrowser";
 import { IBM_COMMUNITIES, IBM_COMMUNITY_METRICS } from "@/data/ibmCommunities";
-import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
-
-const FEATURED_IDS = new Set([
-  "global-ai-and-data-science",
-  "watsonx-ai",
-  "ibm-champions",
-  "api-connect",
-  "ibm-guardium",
-]);
-
-const featuredCommunities = IBM_COMMUNITIES.filter(c => FEATURED_IDS.has(c.community_id));
 
 export default function CommunitiesPage() {
   return (
@@ -24,7 +14,8 @@ export default function CommunitiesPage() {
         <div className="section-kicker">IBM Community</div>
         <h1>IBM Community</h1>
         <p>
-          Continue the conversation with IBM topic groups, user groups, Champions, and peers beyond TechXchange.
+          Browse {IBM_COMMUNITIES.length} TechXchange communities — filter by category and keyword to find your group.
+          In production this catalog scales to hundreds of IBM Community destinations.
         </p>
       </section>
 
@@ -35,8 +26,8 @@ export default function CommunitiesPage() {
             <span>members</span>
           </article>
           <article>
-            <b>{IBM_COMMUNITY_METRICS.topicGroups}</b>
-            <span>topic groups</span>
+            <b>{IBM_COMMUNITIES.length}</b>
+            <span>in catalog</span>
           </article>
           <article>
             <b>{IBM_COMMUNITY_METRICS.userGroups}</b>
@@ -57,11 +48,7 @@ export default function CommunitiesPage() {
           </p>
         </div>
 
-        <div className="ibm-community-grid">
-          {featuredCommunities.map(community => (
-            <IbmCommunityCard key={community.community_id} community={community} />
-          ))}
-        </div>
+        <IbmCommunityBrowser communities={IBM_COMMUNITIES} />
       </section>
 
       <section className="section">

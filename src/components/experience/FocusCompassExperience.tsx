@@ -16,7 +16,6 @@ import ChampionDetailModal from "@/components/people/ChampionDetailModal";
 import VoiceCompassButton from "@/components/voice/VoiceCompassButton";
 import { SpeakerIntelligenceProvider } from "@/context/SpeakerIntelligenceContext";
 import { EVENT_MOMENT_HIGHLIGHTS } from "@/data/eventMoments";
-import { recommendIbmCommunities } from "@/lib/ibmCommunityMatching";
 import { SAMPLE_INBOUND_SIGNALS, recommendedShowsMutualInterest } from "@/lib/sampleConnectionSignals";
 import type { ExperienceScoredChampion } from "@/lib/experienceScoring";
 import { useExperiencePageData } from "@/hooks/useExperiencePageData";
@@ -28,15 +27,8 @@ export default function FocusCompassExperience() {
   const { toggleGroup, isGroupExpanded } = useFocusCompassGroups();
   const [detailChampion, setDetailChampion] = useState<ExperienceScoredChampion | null>(null);
 
-  const ibmCommunities = useMemo(
-    () => recommendIbmCommunities({
-      tracks: data.pTracks,
-      goals: data.pGoals,
-      products: data.pProducts,
-      limit: 5,
-    }),
-    [data.pTracks, data.pGoals, data.pProducts],
-  );
+  const ibmCommunities = data.recommendedIbmCommunities;
+  const hasCommunityMatches = ibmCommunities.some(c => c.matchScore > 0);
 
   const peopleToMeet = data.recommendedPeople.slice(0, 8);
 
@@ -179,6 +171,7 @@ export default function FocusCompassExperience() {
           onToggle={() => toggleGroup("learning")}
         >
           <FocusDayPlanSection
+            focusPlan={data.focusSessionPlan}
             learningList={data.learningList}
             communityList={data.communityList}
             hiddenSessionIds={data.hiddenSessions}
@@ -271,19 +264,29 @@ export default function FocusCompassExperience() {
           icon="community"
           label="My Community"
           title="IBM Communities for you"
-          description="Persistent topic groups and user groups aligned to your interests."
+          description={
+            hasCommunityMatches
+              ? "Matched to your tracks, goals, and Compass intent from the TechXchange community catalog."
+              : "Persistent topic groups aligned to your profile — loaded from the IBM Community catalog."
+          }
           expanded={isGroupExpanded("community")}
           onToggle={() => toggleGroup("community")}
         >
           <div className="opportunity-grid three focus-ibm-grid">
-            {ibmCommunities.map(community => (
-              <IbmCommunityCard
-                key={community.community_id}
-                community={community}
-                matchReasons={community.matchScore > 0 ? community.matchReasons : undefined}
-                compact
-              />
-            ))}
+            {ibmCommunities.length > 0 ? (
+              ibmCommunities.map(community => (
+                <IbmCommunityCard
+                  key={community.community_id}
+                  community={community}
+                  matchReasons={community.matchScore > 0 ? community.matchReasons : undefined}
+                  compact
+                />
+              ))
+            ) : (
+              <p className="people-follow-up-split__empty">
+                Community recommendations will appear once your catalog is loaded.
+              </p>
+            )}
           </div>
         </FocusCompassGroup>
 

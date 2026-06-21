@@ -122,6 +122,32 @@ function toIbmCommunity(c: IbmTechXchangeCommunity): IbmCommunity {
   };
 }
 
+export function mapTechXchangeCommunityToIbmCommunity(c: IbmTechXchangeCommunity): IbmCommunity {
+  return toIbmCommunity(c);
+}
+
+/** Map a Firestore communities doc to the UI catalog shape. */
+export function mapFirestoreCommunityDoc(raw: Record<string, unknown>): IbmCommunity | null {
+  const communityId = String(raw.community_id ?? raw.id ?? "").trim();
+  if (!communityId || raw.is_active === false) return null;
+
+  const seedLike: IbmTechXchangeCommunity = {
+    community_id: communityId,
+    name: String(raw.name ?? communityId),
+    category: String(raw.category ?? "AI"),
+    visibility: (raw.visibility as IbmTechXchangeCommunity["visibility"]) ?? "view_only",
+    primary_product: String(raw.primary_product ?? raw.name ?? communityId),
+    tags: Array.isArray(raw.tags) ? raw.tags.map(String) : [],
+    domains: Array.isArray(raw.domains) ? raw.domains.map(String) : [],
+    recommended_roles: Array.isArray(raw.recommended_roles) ? raw.recommended_roles.map(String) : [],
+    recommended_tracks: Array.isArray(raw.recommended_tracks) ? raw.recommended_tracks.map(String) : [],
+    is_active: raw.is_active !== false,
+    source: "ibm_techxchange_communities",
+  };
+
+  return toIbmCommunity(seedLike);
+}
+
 export const IBM_COMMUNITIES: IbmCommunity[] = IBM_TECHXCHANGE_COMMUNITIES
   .filter(c => c.is_active)
   .map(toIbmCommunity);

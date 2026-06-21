@@ -5,6 +5,10 @@ export interface IbmCommunityMatchInput {
   topics?: string[];
   goals?: string[];
   products?: string[];
+  roles?: string[];
+  intentKeywords?: string[];
+  /** Override catalog (e.g. Firestore-loaded). Defaults to bundled seed. */
+  catalog?: IbmCommunity[];
   limit?: number;
 }
 
@@ -48,12 +52,14 @@ function scoreFieldOverlap(
 }
 
 export function recommendIbmCommunities(input: IbmCommunityMatchInput): ScoredIbmCommunity[] {
+  const catalog = input.catalog ?? IBM_COMMUNITIES;
   const attendeeTracks = [...(input.tracks ?? []), ...(input.goals ?? [])];
-  const attendeeTopics = [...(input.topics ?? []), ...(input.goals ?? [])];
+  const attendeeTopics = [...(input.topics ?? []), ...(input.goals ?? []), ...(input.intentKeywords ?? [])];
   const attendeeProducts = input.products ?? [];
+  const attendeeRoles = input.roles ?? [];
   const limit = input.limit ?? 4;
 
-  const scored = IBM_COMMUNITIES.map(community => {
+  const scored = catalog.map(community => {
     const matchReasons: string[] = [];
     let matchScore = 0;
 
@@ -62,14 +68,22 @@ export function recommendIbmCommunities(input: IbmCommunityMatchInput): ScoredIb
     matchScore += scoreFieldOverlap(attendeeProducts, community.products, "Product", matchReasons);
     matchScore += scoreFieldOverlap(attendeeTracks, community.domains, "Domain", matchReasons);
     matchScore += scoreFieldOverlap(attendeeTopics, community.tags, "Tag", matchReasons);
+    matchScore += scoreFieldOverlap(attendeeRoles, community.recommended_roles, "Role", matchReasons);
+    matchScore += scoreFieldOverlap(attendeeTracks, [community.category], "Category", matchReasons);
+    matchScore += scoreFieldOverlap(attendeeTopics, [community.primary_product], "Product focus", matchReasons);
 
-    // Token-level fallback for partial matches (e.g. "AI" in "Generative AI")
-    const attendeeBlob = normalize([...attendeeTracks, ...attendeeTopics, ...attendeeProducts].join(" "));
-    for (const topic of community.topics) {
-      for (const token of tokens(topic)) {
+    const attendeeBlob = normalize([
+      ...attendeeTracks,
+      ...attendeeTopics,
+      ...attendeeProducts,
+      ...attendeeRoles,
+    ].join(" "));
+
+    for (const tag of [...community.tags, ...community.domains]) {
+      for (const token of tokens(tag)) {
         if (token.length >= 3 && attendeeBlob.includes(token)) {
           matchScore += 1;
-          const reason = `Topic: ${topic}`;
+          const reason = `Tag: ${tag}`;
           if (!matchReasons.includes(reason)) matchReasons.push(reason);
         }
       }
@@ -81,7 +95,7 @@ export function recommendIbmCommunities(input: IbmCommunityMatchInput): ScoredIb
     .sort((a, b) => b.matchScore - a.matchScore);
 
   if (scored.length === 0) {
-    return IBM_COMMUNITIES.slice(0, limit).map(c => ({
+    return catalog.slice(0, limit).map(c => ({
       ...c,
       matchScore: 0,
       matchReasons: ["Popular IBM Community destination"],

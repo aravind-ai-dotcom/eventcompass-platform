@@ -1,69 +1,19 @@
 import { isCertificationActivityType } from "@/lib/certificationProfile";
 import type { ExperienceScoredSession } from "@/lib/experienceScoring";
+import { shouldHideFromFocus } from "@/lib/sessionPlanning";
+import {
+  getSessionEndMinutes,
+  getSessionStartMinutes,
+  hasTimeRangeConflict,
+  sessionDayLabel,
+  sessionTimeRange,
+  sortSessionsForScheduling,
+} from "@/lib/sessionTimeUtils";
 
 export const EVENT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday"] as const;
 export type EventDay = (typeof EVENT_DAYS)[number];
 
 export type PlanConflictMode = "best-fit" | "show-both" | "capacity";
-
-function sessionDayLabel(session: ExperienceScoredSession): string {
-  const raw = session as unknown as Record<string, unknown>;
-  return String(session.schedule?.day ?? session.date ?? raw.date ?? "");
-}
-
-function parseSessionTimeMinutes(session: ExperienceScoredSession): number {
-  const raw = session as unknown as Record<string, unknown>;
-  const start = String(session.schedule?.start_time ?? session.start_time ?? raw.start_time ?? "");
-  if (!start) return 9999;
-  const m12 = start.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
-  if (m12) {
-    let h = parseInt(m12[1], 10);
-    const min = parseInt(m12[2], 10);
-    const ap = m12[3].toLowerCase();
-    if (ap === "pm" && h !== 12) h += 12;
-    if (ap === "am" && h === 12) h = 0;
-    return h * 60 + min;
-  }
-  const m24 = start.match(/^(\d{1,2}):(\d{2})$/);
-  if (m24) return parseInt(m24[1], 10) * 60 + parseInt(m24[2], 10);
-  return 9999;
-}
-
-function sortByEventTimeThenFit(a: ExperienceScoredSession, b: ExperienceScoredSession): number {
-  const timeDiff = parseSessionTimeMinutes(a) - parseSessionTimeMinutes(b);
-  if (timeDiff !== 0) return timeDiff;
-  return (b.compass_score ?? 0) - (a.compass_score ?? 0);
-}
-
-function scheduleSessionsForDay(
-  sessions: ExperienceScoredSession[],
-  mode: PlanConflictMode,
-): ExperienceScoredSession[] {
-  const sorted = [...sessions].sort(sortByEventTimeThenFit);
-  if (mode === "show-both") return sorted;
-
-  const bySlot = new Map<number, ExperienceScoredSession>();
-  for (const s of sorted) {
-    const slot = parseSessionTimeMinutes(s);
-    const existing = bySlot.get(slot);
-    if (!existing) {
-      bySlot.set(slot, s);
-      continue;
-    }
-    if (mode === "capacity") {
-      const capA = sessionCapacityRank(s);
-      const capB = sessionCapacityRank(existing);
-      if (capA !== capB) {
-        if (capA > capB) bySlot.set(slot, s);
-        continue;
-      }
-    }
-    if ((s.compass_score ?? 0) > (existing.compass_score ?? 0)) {
-      bySlot.set(slot, s);
-    }
-  }
-  return [...bySlot.values()].sort(sortByEventTimeThenFit);
-}
 
 function sessionCapacityRank(session: ExperienceScoredSession): number {
   const raw = session as unknown as Record<string, unknown>;
@@ -72,6 +22,45 @@ function sessionCapacityRank(session: ExperienceScoredSession): number {
   if (cap?.status === "limited") return 1;
   if (typeof cap?.available === "number" && cap.available > 0) return 2;
   return 3;
+}
+
+function scheduleSessionsForDay(
+  sessions: ExperienceScoredSession[],
+  mode: PlanConflictMode,
+): ExperienceScoredSession[] {
+  const sorted = [...sessions].sort(sortSessionsForScheduling);
+  if (mode === "show-both") {
+    return sorted.filter(s => !shouldHideFromFocus(s));
+  }
+
+  const selected: ExperienceScoredSession[] = [];
+
+  for (const session of sorted) {
+    if (shouldHideFromFocus(session)) continue;
+
+    const range = sessionTimeRange(session);
+    const conflictIndex = selected.findIndex(existing =>
+      hasTimeRangeConflict(sessionTimeRange(existing), range),
+    );
+
+    if (conflictIndex === -1) {
+      selected.push(session);
+      continue;
+    }
+
+    if (mode === "capacity") {
+      const existing = selected[conflictIndex];
+      const capA = sessionCapacityRank(session);
+      const capB = sessionCapacityRank(existing);
+      if (capA > capB) selected[conflictIndex] = session;
+      else if (capA === capB && (session.compass_score ?? 0) > (existing.compass_score ?? 0)) {
+        selected[conflictIndex] = session;
+      }
+    }
+    // best-fit: keep higher-ranked session already selected (sorted order)
+  }
+
+  return selected.sort((a, b) => getSessionStartMinutes(a) - getSessionStartMinutes(b));
 }
 
 export function getSessionsForDay(
@@ -97,9 +86,17 @@ export function groupDaySessions(
   const visible = (list: ExperienceScoredSession[]) =>
     getSessionsForDay(list, day, mode).filter(s => !hiddenIds.includes(s.id));
 
-  const core = visible(learning).filter(s => !isCertificationActivityType(s));
-  const cert = visible(learning).filter(s => isCertificationActivityType(s));
+  const core = visible(learning).filter(
+    s => !isCertificationActivityType(s) && s.planning_class !== "lab" && s.planning_class !== "workshop" && s.planning_class !== "bootcamp",
+  );
+  const cert = visible(learning).filter(s => isCertificationActivityType(s) || s.planning_class === "certification");
   const perspective = visible(community);
 
-  return { core, cert, perspective };
+  const labs = visible(learning).filter(
+    s => s.planning_class === "lab" || s.planning_class === "workshop" || s.planning_class === "bootcamp",
+  );
+
+  return { core, cert, perspective, labs };
 }
+
+export { getSessionEndMinutes, getSessionStartMinutes, sessionDayLabel };

@@ -4,12 +4,16 @@ import { useMemo } from "react";
 import CompassModuleHead from "@/components/experience/CompassModuleHead";
 import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
 import { recommendIbmCommunities } from "@/lib/ibmCommunityMatching";
+import type { IbmCommunity } from "@/data/ibmCommunities";
 
 interface Props {
   tracks?: string[];
   topics?: string[];
   goals?: string[];
   products?: string[];
+  roles?: string[];
+  intentKeywords?: string[];
+  catalog?: IbmCommunity[];
   limit?: number;
   embedded?: boolean;
 }
@@ -19,12 +23,24 @@ export default function RecommendedIbmCommunities({
   topics = [],
   goals = [],
   products = [],
+  roles = [],
+  intentKeywords = [],
+  catalog,
   limit = 3,
   embedded = false,
 }: Props) {
   const recommendations = useMemo(
-    () => recommendIbmCommunities({ tracks, topics, goals, products, limit }),
-    [tracks, topics, goals, products, limit],
+    () => recommendIbmCommunities({
+      tracks,
+      topics,
+      goals,
+      products,
+      roles,
+      intentKeywords,
+      catalog,
+      limit,
+    }),
+    [tracks, topics, goals, products, roles, intentKeywords, catalog, limit],
   );
 
   const hasPersonalMatch = recommendations.some(r => r.matchScore > 0);

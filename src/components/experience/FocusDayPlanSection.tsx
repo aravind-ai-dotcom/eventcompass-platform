@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import FocusSessionCard from "@/components/experience/FocusSessionCard";
 import PlanModeSelector from "@/components/experience/PlanModeSelector";
 import {
   EVENT_DAYS,
   groupDaySessions,
-  getSessionsForDay,
   type EventDay,
   type PlanConflictMode,
 } from "@/lib/experienceDayPlan";
+import { focusDayToGroups, type FocusSessionPlan } from "@/lib/sessionFocusPlan";
 import { downloadIcsPlan } from "@/lib/icalExport";
 import type { ExperienceScoredSession } from "@/lib/experienceScoring";
 
 interface Props {
+  focusPlan: FocusSessionPlan;
   learningList: ExperienceScoredSession[];
   communityList: ExperienceScoredSession[];
   hiddenSessionIds: string[];
@@ -29,7 +30,7 @@ function SessionGroup({
   certLabel,
   savedSessionIds,
   onSaveSession,
-  initialVisible = 3,
+  initialVisible = 5,
 }: {
   label: string;
   sessions: ExperienceScoredSession[];
@@ -71,6 +72,7 @@ function SessionGroup({
 }
 
 export default function FocusDayPlanSection({
+  focusPlan,
   learningList,
   communityList,
   hiddenSessionIds,
@@ -81,30 +83,18 @@ export default function FocusDayPlanSection({
   const [activeDay, setActiveDay] = useState<EventDay>("Monday");
   const [planMode, setPlanMode] = useState<PlanConflictMode>("best-fit");
 
-  const { core, cert, perspective } = groupDaySessions(
-    learningList,
-    communityList,
-    activeDay,
-    hiddenSessionIds,
-    planMode,
-  );
-
-  const hasContent = core.length > 0 || cert.length > 0 || perspective.length > 0;
-
-  const exportSessions = EVENT_DAYS.flatMap(day => {
-    const ids = new Set<string>();
-    const rows: ExperienceScoredSession[] = [];
-    for (const s of [
-      ...getSessionsForDay(learningList, day, planMode),
-      ...getSessionsForDay(communityList, day, planMode),
-    ]) {
-      if (!hiddenSessionIds.includes(s.id) && !ids.has(s.id)) {
-        ids.add(s.id);
-        rows.push(s);
-      }
+  const groups = useMemo(() => {
+    if (planMode === "show-both") {
+      const g = groupDaySessions(learningList, communityList, activeDay, hiddenSessionIds, planMode);
+      return { ...g, labs: [] as ExperienceScoredSession[] };
     }
-    return rows;
-  });
+    return focusDayToGroups(focusPlan.byDay[activeDay]);
+  }, [planMode, learningList, communityList, activeDay, hiddenSessionIds, focusPlan]);
+
+  const { core, cert, perspective, labs } = groups;
+  const hasContent = core.length > 0 || cert.length > 0 || perspective.length > 0 || labs.length > 0;
+
+  const exportSessions = focusPlan.printLearning.filter(s => !hiddenSessionIds.includes(s.id));
 
   return (
     <>
@@ -145,25 +135,38 @@ export default function FocusDayPlanSection({
       ) : (
         <>
           <SessionGroup
-            label="Core learning"
+            label="Must attend & core learning"
             sessions={core}
             certLabel={certLabel}
             savedSessionIds={savedSessionIds}
             onSaveSession={onSaveSession}
+            initialVisible={5}
           />
+          {labs.length > 0 && (
+            <SessionGroup
+              label="Labs & workshops"
+              sessions={labs}
+              certLabel={certLabel}
+              savedSessionIds={savedSessionIds}
+              onSaveSession={onSaveSession}
+              initialVisible={1}
+            />
+          )}
           <SessionGroup
             label="Certification support"
             sessions={cert}
             certLabel={certLabel}
             savedSessionIds={savedSessionIds}
             onSaveSession={onSaveSession}
+            initialVisible={2}
           />
           <SessionGroup
-            label="Industry & peer perspective"
+            label="Explore & community"
             sessions={perspective}
             certLabel={certLabel}
             savedSessionIds={savedSessionIds}
             onSaveSession={onSaveSession}
+            initialVisible={2}
           />
         </>
       )}

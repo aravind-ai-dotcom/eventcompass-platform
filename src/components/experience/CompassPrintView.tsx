@@ -5,24 +5,16 @@ import Link from "next/link";
 import EnergyIndicator from "@/components/experience/EnergyIndicator";
 import WeekInBalance from "@/components/experience/WeekInBalance";
 import CompassSignalCompact from "@/components/experience/CompassSignalCompact";
-import {
-  EVENT_DAYS,
-  getSessionsForDay,
-  type EventDay,
-  type PlanConflictMode,
-} from "@/lib/experienceDayPlan";
+import { EVENT_DAYS, type EventDay } from "@/lib/experienceDayPlan";
 import { downloadIcsPlan } from "@/lib/icalExport";
-import { recommendIbmCommunities } from "@/lib/ibmCommunityMatching";
 import { enrichLinkedInForPerson } from "@/lib/demoLinkedInEnrichment";
+import { focusDayToGroups } from "@/lib/sessionFocusPlan";
+import { sessionDisplayTime } from "@/lib/sessionTimeUtils";
 import { useExperiencePageData } from "@/hooks/useExperiencePageData";
 import type { ExperienceScoredSession } from "@/lib/experienceScoring";
 
 function sessionTimeLabel(session: ExperienceScoredSession): string {
-  const raw = session as unknown as Record<string, unknown>;
-  const start = String(session.schedule?.start_time ?? session.start_time ?? raw.start_time ?? "");
-  const end = String(session.schedule?.end_time ?? raw.end_time ?? "");
-  if (start && end) return `${start} – ${end}`;
-  return start || "TBA";
+  return sessionDisplayTime(session);
 }
 
 function sessionRoom(session: ExperienceScoredSession): string {
@@ -45,39 +37,12 @@ function PrintSessionTile({ session }: { session: ExperienceScoredSession }) {
 
 export default function CompassPrintView() {
   const data = useExperiencePageData();
-  const [planMode] = useState<PlanConflictMode>("best-fit");
   const [layout, setLayout] = useState<"landscape" | "portrait">("landscape");
 
-  const ibmCommunities = useMemo(
-    () =>
-      recommendIbmCommunities({
-        tracks: data.pTracks,
-        goals: data.pGoals,
-        products: data.pProducts,
-        limit: 8,
-      }),
-    [data.pTracks, data.pGoals, data.pProducts],
-  );
+  const ibmCommunities = data.recommendedIbmCommunities.slice(0, 5);
 
-  const allPlanSessions = useMemo(() => {
-    const ids = new Set<string>();
-    const out: ExperienceScoredSession[] = [];
-    for (const day of EVENT_DAYS) {
-      for (const s of getSessionsForDay(data.learningList, day, planMode)) {
-        if (!ids.has(s.id) && !data.hiddenSessions.includes(s.id)) {
-          ids.add(s.id);
-          out.push(s);
-        }
-      }
-      for (const s of getSessionsForDay(data.communityList, day, planMode)) {
-        if (!ids.has(s.id) && !data.hiddenSessions.includes(s.id)) {
-          ids.add(s.id);
-          out.push(s);
-        }
-      }
-    }
-    return out;
-  }, [data.learningList, data.communityList, data.hiddenSessions, planMode]);
+  const printPlan = data.focusSessionPlan;
+  const exportSessions = printPlan.printLearning.filter(s => !data.hiddenSessions.includes(s.id));
 
   const peopleBalanceCount = data.champions.filter(c => c.compass_score > 0).length;
   const peopleToMeet = data.recommendedPeople.slice(0, 8);
@@ -129,7 +94,7 @@ export default function CompassPrintView() {
           <button
             type="button"
             className="compass-print-toolbar__btn compass-print-toolbar__btn--primary"
-            onClick={() => downloadIcsPlan(allPlanSessions)}
+            onClick={() => downloadIcsPlan(exportSessions)}
           >
             Download calendar (.ics)
           </button>
@@ -159,33 +124,45 @@ export default function CompassPrintView() {
         </div>
         <div className="compass-print-attendee__meters">
           <EnergyIndicator
-            learning={data.learningList.length}
+            learning={printPlan.printLearning.length}
             community={data.communityList.length}
             fun={data.funList.length}
             strip
           />
           <WeekInBalance
             people={peopleBalanceCount}
-            learning={data.learningList.length}
-            community={data.communityList.length}
-            fun={data.funList.length}
+            learning={printPlan.printLearning.length}
+            community={ibmCommunities.length}
+            fun={printPlan.exploreAnytime.length}
             strip
           />
           <CompassSignalCompact participant={data.participant} strip />
         </div>
       </section>
 
+      {printPlan.mustAttend.length > 0 && (
+        <section className="compass-print-section">
+          <h2 className="compass-print-section__title">My Must Attend Plan</h2>
+          <div className="compass-print-session-grid">
+            {printPlan.mustAttend.map(session => (
+              <PrintSessionTile key={session.id} session={session} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {EVENT_DAYS.map(day => {
+        const groups = focusDayToGroups(printPlan.byDay[day as EventDay]);
         const daySessions = [
-          ...getSessionsForDay(data.learningList, day as EventDay, planMode),
-          ...getSessionsForDay(data.communityList, day as EventDay, planMode),
+          ...groups.core.filter(s => !printPlan.mustAttend.some(m => m.id === s.id)),
+          ...groups.labs,
         ].filter(s => !data.hiddenSessions.includes(s.id));
 
         if (daySessions.length === 0) return null;
 
         return (
           <section key={day} className="compass-print-day print-page-break">
-            <h2 className="compass-print-day__title">{day}</h2>
+            <h2 className="compass-print-day__title">{day} — Strong matches</h2>
             <div className="compass-print-session-grid">
               {daySessions.map(session => (
                 <PrintSessionTile key={session.id} session={session} />
@@ -195,9 +172,20 @@ export default function CompassPrintView() {
         );
       })}
 
+      {printPlan.exploreAnytime.length > 0 && (
+        <section className="compass-print-section print-page-break">
+          <h2 className="compass-print-section__title">Explore Anytime</h2>
+          <div className="compass-print-session-grid">
+            {printPlan.exploreAnytime.map(session => (
+              <PrintSessionTile key={session.id} session={session} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {ibmCommunities.length > 0 && (
         <section className="compass-print-section print-page-break">
-          <h2 className="compass-print-section__title">IBM Communities for you</h2>
+          <h2 className="compass-print-section__title">Communities for Me</h2>
           <div className="compass-print-community-grid">
             {ibmCommunities.map(c => (
               <article key={c.community_id} className="compass-print-community">

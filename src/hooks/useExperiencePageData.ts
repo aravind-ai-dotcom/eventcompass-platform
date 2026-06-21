@@ -11,8 +11,14 @@ import {
   isCertificationActivityType,
   resolveSelectedCertificationGoals,
   shouldShowCertificationJourney,
+  hasCertificationIntent,
 } from "@/lib/certificationProfile";
+import { enrichSessionPlanningFields } from "@/lib/sessionPlanning";
+import { buildFocusSessionPlan } from "@/lib/sessionFocusPlan";
 import { mergeSavedSessionIds, addSessionToBothLists } from "@/lib/participantAgenda";
+import { recommendIbmCommunities, type ScoredIbmCommunity } from "@/lib/ibmCommunityMatching";
+import { loadIbmCommunityCatalog, type IbmCommunityCatalogSource } from "@/services/ibmCommunityService";
+import type { IbmCommunity } from "@/data/ibmCommunities";
 import { enrichLinkedInForPerson } from "@/lib/demoLinkedInEnrichment";
 import { resolveSessionWhyLine } from "@/lib/sessionRecommendationLine";
 import {
@@ -89,6 +95,8 @@ export function useExperiencePageData() {
   const [championSources, setChampionSources] = useState<ReturnType<typeof championFromRaw>[]>([]);
   const [sessionSpeakerNames, setSessionSpeakerNames] = useState<Set<string>>(() => new Set());
   const [pillarWeights, setPillarWeights] = useState<PillarWeights>(() => getCachedPillarWeights());
+  const [ibmCommunityCatalog, setIbmCommunityCatalog] = useState<IbmCommunity[]>([]);
+  const [ibmCommunityCatalogSource, setIbmCommunityCatalogSource] = useState<IbmCommunityCatalogSource>("seed");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -115,10 +123,11 @@ export function useExperiencePageData() {
         return;
       }
       try {
-        const [pSnap, sessSnap, champSnap] = await Promise.all([
+        const [pSnap, sessSnap, champSnap, communityCatalog] = await Promise.all([
           getDoc(doc(db, EXPERIENCE_EVENT_BASE + "/participants/" + participantId)),
           getDocs(collection(db, EXPERIENCE_EVENT_BASE + "/sessions")),
           getDocs(collection(db, EXPERIENCE_EVENT_BASE + "/champions")),
+          loadIbmCommunityCatalog(),
         ]);
 
         if (!pSnap.exists()) {
@@ -132,8 +141,13 @@ export function useExperiencePageData() {
         const rawChampions = champSnap.docs.map(d => ({ id: d.id, ...d.data() } as RawDoc));
         const speakerNames = extractSessionSpeakerNames(rawSessions);
 
+        const certIntent = hasCertificationIntent(pData);
+
         const scored = rawSessions
-          .map(s => scoreExperienceSession(pData, s))
+          .map(s => {
+            const base = scoreExperienceSession(pData, s);
+            return enrichSessionPlanningFields(s, base, certIntent);
+          })
           .sort((a, b) => b.compass_score - a.compass_score);
 
         const { learning, community, fun } = partitionExperienceSessions(scored);
@@ -150,6 +164,8 @@ export function useExperiencePageData() {
         setChampions(allScoredChampions.slice(0, 12));
         setAllChampions(allScoredChampions);
         setChampionSources(rawChampions.map(c => championFromRaw(c)));
+        setIbmCommunityCatalog(communityCatalog.communities);
+        setIbmCommunityCatalogSource(communityCatalog.source);
         setSavedSessions((pData.saved_sessions as string[]) ?? []);
         setSavedSchedule((pData.saved_schedule as string[]) ?? []);
         setReservedSeats((pData.reserved_seats as string[]) ?? []);
@@ -251,9 +267,25 @@ export function useExperiencePageData() {
   );
 
   const sig = (participant?.event_signal_profile as RawDoc) ?? {};
+  const intel = (participant?.compass_intelligence as RawDoc) ?? {};
   const pTracks = ((sig.tech_tracks as string[]) ?? []).slice(0, 8);
   const pGoals = ((sig.goals as string[]) ?? []).slice(0, 8);
   const pProducts = ((sig.products as string[]) ?? []).slice(0, 8);
+  const pRoles = ((sig.roles_at_txc as string[]) ?? []).slice(0, 6);
+  const pIntentKeywords = ((intel.matching_keywords as string[]) ?? []).slice(0, 12);
+
+  const recommendedIbmCommunities = useMemo((): ScoredIbmCommunity[] => {
+    if (ibmCommunityCatalog.length === 0) return [];
+    return recommendIbmCommunities({
+      tracks: pTracks,
+      goals: pGoals,
+      products: pProducts,
+      roles: pRoles,
+      intentKeywords: pIntentKeywords,
+      catalog: ibmCommunityCatalog,
+      limit: 5,
+    });
+  }, [ibmCommunityCatalog, pTracks, pGoals, pProducts, pRoles, pIntentKeywords]);
 
   const speakerCtx = useMemo((): SpeakerParticipantContext => ({
     tracks: pTracks,
@@ -282,18 +314,29 @@ export function useExperiencePageData() {
     return [...byId.values()].slice(0, 8);
   }, [recommendedPeople, rankedExperts]);
 
+  const focusSessionPlan = useMemo(
+    () => buildFocusSessionPlan(
+      learningList,
+      communityList,
+      funList,
+      hiddenSessions,
+      showCertJourney,
+    ),
+    [learningList, communityList, funList, hiddenSessions, showCertJourney],
+  );
+
   const focusLearningPlan = useMemo(() => {
-    const core = learningList
-      .filter(s => !isCertificationActivityType(s) && !hiddenSessions.includes(s.id))
-      .slice(0, 4);
-    const cert = learningList
-      .filter(s => isCertificationActivityType(s) && !hiddenSessions.includes(s.id))
-      .slice(0, 3);
-    const perspective = communityList
-      .filter(s => !hiddenSessions.includes(s.id))
-      .slice(0, 3);
-    return { core, cert, perspective };
-  }, [learningList, communityList, hiddenSessions]);
+    const core = focusSessionPlan.printLearning.filter(
+      s => !isCertificationActivityType(s) && s.planning_class !== "certification",
+    ).slice(0, 5);
+    const cert = focusSessionPlan.byDay.Monday.certification
+      .concat(focusSessionPlan.byDay.Tuesday.certification)
+      .concat(focusSessionPlan.byDay.Wednesday.certification)
+      .concat(focusSessionPlan.byDay.Thursday.certification);
+    const uniqueCert = [...new Map(cert.map(s => [s.id, s])).values()].slice(0, 3);
+    const perspective = focusSessionPlan.exploreAnytime.slice(0, 3);
+    return { core, cert: uniqueCert, perspective };
+  }, [focusSessionPlan]);
 
   const balancedMoveSet = useMemo(
     () => buildBalancedMoveSet(balancedInput),
@@ -381,10 +424,15 @@ export function useExperiencePageData() {
     pTracks,
     pGoals,
     pProducts,
+    pRoles,
+    ibmCommunityCatalog,
+    ibmCommunityCatalogSource,
+    recommendedIbmCommunities,
     nextBestMove: nextBestMove as NextBestMove | null,
     nbmSession,
     certLabel,
     focusLearningPlan,
+    focusSessionPlan,
     focusPeople,
     learningList,
     communityList,
@@ -413,7 +461,7 @@ export function useExperiencePageData() {
     peopleBadgeContext,
     peopleActions,
     savedChampionRefs,
-    profileSignals: [...pTracks, ...pGoals],
+    profileSignals: [...pTracks, ...pGoals, ...pIntentKeywords],
     certificationJourneyPlan: null,
   };
 }

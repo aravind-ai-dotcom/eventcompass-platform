@@ -4,6 +4,7 @@ import {
   hasCertificationIntent,
   isCertificationActivityType,
 } from "@/lib/certificationProfile";
+import type { PlanningClass, RecommendationTier } from "@/lib/sessionPlanning";
 
 export const EXPERIENCE_EVENT_BASE = "organizations/ibm/events/txc2026";
 
@@ -47,6 +48,12 @@ export interface ExperienceScoredSession {
   compass_reasons: string[];
   certification_id?: string;
   certification_code?: string;
+  planning_class?: PlanningClass;
+  recommendation_tier?: RecommendationTier;
+  start_minutes?: number;
+  end_minutes?: number;
+  display_time?: string;
+  explore_anytime?: boolean;
 }
 
 export interface ExperienceScoredChampion {

@@ -40,8 +40,8 @@ export default function IbmCommunityCard({ community, matchReasons, compact = fa
   return (
     <article className="ibm-community-card">
       <div className="ibm-community-card__meta">
-        <span className="ibm-community-card__type">{community.type}</span>
-        {members && <span className="ibm-community-card__stat">{members}</span>}
+        <span className="ibm-community-card__type">{community.category}</span>
+        <span className="ibm-community-card__stat">{community.primary_product}</span>
       </div>
       <h3 className="ibm-community-card__name">{community.name}</h3>
       <p className="ibm-community-card__desc">{community.description}</p>
