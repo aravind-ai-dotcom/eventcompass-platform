@@ -1,6 +1,6 @@
 "use client";
 
-import { proofCountLabel, useEventProofCounts } from "@/hooks/useEventProofCounts";
+import { formatProofCount, proofCountLabel, useEventProofCounts } from "@/hooks/useEventProofCounts";
 
 const ITEMS = [
   { key: "sessions" as const, label: "Sessions" },
@@ -19,6 +19,11 @@ const FALLBACK = {
 export default function HomeProofStrip() {
   const counts = useEventProofCounts();
 
+  const showIdentityRow =
+    counts.returningAttendeePct !== null ||
+    counts.firstTimeAttendeePct !== null ||
+    counts.championSignalCount > 0;
+
   return (
     <section className="home-proof-strip" aria-label="TechXchange scale">
       <ul className="home-proof-strip__list">
@@ -31,6 +36,32 @@ export default function HomeProofStrip() {
           </li>
         ))}
       </ul>
+
+      {showIdentityRow && !counts.loading && (
+        <ul className="home-proof-strip__identity" aria-label="Audience identity signals">
+          {counts.returningAttendeePct !== null && (
+            <li className="home-proof-strip__identity-item">
+              <span className="home-proof-strip__identity-value">{counts.returningAttendeePct}%</span>
+              <span className="home-proof-strip__identity-label">returning attendees</span>
+            </li>
+          )}
+          {counts.firstTimeAttendeePct !== null && (
+            <li className="home-proof-strip__identity-item">
+              <span className="home-proof-strip__identity-value">{counts.firstTimeAttendeePct}%</span>
+              <span className="home-proof-strip__identity-label">first-time attendees</span>
+            </li>
+          )}
+          <li className="home-proof-strip__identity-item">
+            <span className="home-proof-strip__identity-value">
+              {formatProofCount(
+                counts.championSignalCount || FALLBACK.champions,
+                true,
+              )}
+            </span>
+            <span className="home-proof-strip__identity-label">IBM Champions expected</span>
+          </li>
+        </ul>
+      )}
     </section>
   );
 }

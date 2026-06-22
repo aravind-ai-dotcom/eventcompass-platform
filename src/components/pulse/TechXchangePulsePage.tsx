@@ -153,6 +153,72 @@ export default function TechXchangePulsePage() {
               <NostalgiaBox title="Communities forming" rows={topCommunities(data.communities, 6)} total={total} withBars />
             </div>
           </section>
+
+          {data.identity && total > 0 && (
+            <section className="story-section story-section--spacious">
+              <span className="narrative-kicker">Identity signals</span>
+              <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
+                Champion status, TechXchange history, and event-journey preferences — aggregated percentages only.
+              </p>
+              <div className="pulse-intent-cards pulse-intent-cards--identity">
+                <article className="pulse-intent-card pulse-identity-card">
+                  <h3 className="pulse-identity-card__title">TechXchange Alumni</h3>
+                  <ul className="pulse-identity-card__list">
+                    <li>
+                      <span>Returning attendees</span>
+                      <b>{pct(data.identity.alumni.returning, total)}%</b>
+                    </li>
+                    <li>
+                      <span>First-time attendees</span>
+                      <b>{pct(data.identity.alumni.firstTime, total)}%</b>
+                    </li>
+                    <li>
+                      <span>No response</span>
+                      <b>{pct(data.identity.alumni.noResponse, total)}%</b>
+                    </li>
+                  </ul>
+                </article>
+                <article className="pulse-intent-card pulse-identity-card">
+                  <h3 className="pulse-identity-card__title">Champion Signal</h3>
+                  <ul className="pulse-identity-card__list">
+                    <li>
+                      <span>IBM Champion</span>
+                      <b>{pct(data.identity.champion.ibm_champion, total)}%</b>
+                    </li>
+                    <li>
+                      <span>Former Champion</span>
+                      <b>{pct(data.identity.champion.former_champion, total)}%</b>
+                    </li>
+                    <li>
+                      <span>Interested in becoming Champion</span>
+                      <b>{pct(data.identity.champion.interested + data.identity.champion.champion_nominee, total)}%</b>
+                    </li>
+                    <li>
+                      <span>Not applicable / no response</span>
+                      <b>{pct(data.identity.champion.not_applicable + data.identity.champion.no_response, total)}%</b>
+                    </li>
+                  </ul>
+                </article>
+                <article className="pulse-intent-card pulse-identity-card">
+                  <h3 className="pulse-identity-card__title">Attendance Memory Opt-In</h3>
+                  <ul className="pulse-identity-card__list">
+                    <li>
+                      <span>Enabled</span>
+                      <b>{pct(data.identity.memory.enabled, total)}%</b>
+                    </li>
+                    <li>
+                      <span>Not enabled</span>
+                      <b>{pct(data.identity.memory.disabled, total)}%</b>
+                    </li>
+                    <li>
+                      <span>No response</span>
+                      <b>{pct(data.identity.memory.noResponse, total)}%</b>
+                    </li>
+                  </ul>
+                </article>
+              </div>
+            </section>
+          )}
         </>
       )}
 

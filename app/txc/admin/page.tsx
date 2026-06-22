@@ -22,6 +22,12 @@ import {
 import { VoiceIntelligenceAdminView } from "@/components/admin/VoiceIntelligenceAdminView";
 import { VoicePronunciationAdminView } from "@/components/admin/VoicePronunciationAdminView";
 import { RecommendationBalanceAdminView } from "@/components/admin/RecommendationBalanceAdminView";
+import IdentitySignalsAdminView from "@/components/admin/IdentitySignalsAdminView";
+import {
+  aggregateIdentitySignals,
+  IDENTITY_AGGREGATE_SEED,
+  type IdentityAggregate,
+} from "@/lib/identitySignals";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -41,7 +47,7 @@ type AdminView =
   | "dashboard" | "personas"    | "champions"     | "snapshots"
   | "capacity"  | "consent"     | "activity"      | "content"
   | "credits"   | "voice"       | "voice-pronunciation" | "voice-intelligence" | "recommendation-balance" | "signals"       | "access"    | "ingest"    | "exports"     | "audit"
-  | "participants" | "sessions-table" | "quality"
+  | "participants" | "sessions-table" | "quality" | "identity-signals"
   | "health" | "command" | "champion-intel" | "consent-intel"
   | "heatmap" | "data-quality" | "exec-snapshot" | "right-now";
 
@@ -90,6 +96,7 @@ const NAV_GROUPS: NavGroup[] = [
     description: "Understand participant signals, intent, consent, and audience patterns.",
     items: [
       { id: "participants",  label: "Participants"   },
+      { id: "identity-signals", label: "Identity Signals" },
       { id: "signals",       label: "Signals"        },
       { id: "personas",      label: "Personas"       },
       { id: "consent",       label: "Consent"        },
@@ -589,6 +596,7 @@ interface AdminData {
   topGoals: [string, number][];
   topNeeds: [string, number][];
   topCareerInterests: [string, number][];
+  identitySignals: IdentityAggregate;
 }
 
 function emptyData(): AdminData {
@@ -615,6 +623,7 @@ function emptyData(): AdminData {
     topGoals: [], topNeeds: [], topCareerInterests: [],
     attendancePlanCounts: { yes: 0, deciding: 0, no: 0, unknown: 0 },
     attendancePlanOverTime: [],
+    identitySignals: { ...IDENTITY_AGGREGATE_SEED, history: { ...IDENTITY_AGGREGATE_SEED.history } },
   };
 }
 
@@ -1034,6 +1043,8 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   const topNeeds = Object.entries(participantNeeds).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
   const topCareerInterests = Object.entries(participantCareerInterests).sort((a,b) => b[1]-a[1]).slice(0,10) as [string,number][];
   const attendancePlanOverTime = buildAttendanceTimeSeries(attendancePlanEntries);
+  const partData = parts.map(doc => (doc.data() ?? {}) as Record<string, unknown>);
+  const identitySignals = aggregateIdentitySignals(partData);
 
   return {
     loading: false, error: null, lastRefresh: new Date(),
@@ -1054,6 +1065,7 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
     lowEngagementRows, highEngagementRows,
     topGoals, topNeeds, topCareerInterests,
     attendancePlanCounts, attendancePlanOverTime,
+    identitySignals,
   };
 }
 
@@ -4622,6 +4634,12 @@ export default function AdminPage() {
     capacity:         <CapacityView          data={data} />,
     consent:          <ConsentView           data={data} />,
     participants:     <ParticipantsTableView data={data} />,
+    "identity-signals": (
+      <IdentitySignalsAdminView
+        identitySignals={data.identitySignals}
+        totalParticipants={data.totalParticipants}
+      />
+    ),
     "sessions-table": <SessionsTableView     data={data} />,
     quality:          <DataQualityView       data={data} />,
     activity:         <ActivityView />,

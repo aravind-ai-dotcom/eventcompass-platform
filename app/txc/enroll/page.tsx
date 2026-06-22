@@ -27,6 +27,14 @@ import { useAuth }                      from "@/context/AuthContext";
 import { tryGetDb } from "@/lib/firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
+import {
+  buildIdentitySignalsPayload,
+  CHAMPION_STATUS_OPTIONS,
+  DEFAULT_ACTIVITY_MEMORY,
+  parseIdentitySignals,
+  TXC_HISTORY_EVENTS,
+  type ChampionStatus,
+} from "@/lib/identitySignals";
 
 const BASE = "organizations/ibm/events/txc2026";
 
@@ -377,6 +385,12 @@ export default function EnrollPage() {
   const [consentAllowSmsUpdates,         setConsentAllowSmsUpdates]         = useState(false);
   const [consentAllowEventNotifications, setConsentAllowEventNotifications] = useState(true);
 
+  // ── TechXchange Identity ────────────────────────────────────────────────────
+  const [championStatus, setChampionStatus] = useState<ChampionStatus | "">("");
+  const [attendedTxcBefore, setAttendedTxcBefore] = useState<boolean | null>(null);
+  const [txcHistory, setTxcHistory] = useState<string[]>([]);
+  const [attendanceMemoryEnabled, setAttendanceMemoryEnabled] = useState<boolean | null>(null);
+
   // ── Enrolled redirect — skip when in edit mode ────────────────────────────
   useEffect(() => {
     if (isEditMode === null) return; // wait for mode to resolve
@@ -502,6 +516,16 @@ export default function EnrollPage() {
         );
         if (asp) setHopeText(asp);
 
+        const identity = parseIdentitySignals(p as Record<string, unknown> | null);
+        if (identity) {
+          if (identity.champion_status) setChampionStatus(identity.champion_status);
+          if (identity.attended_txc_before !== null) setAttendedTxcBefore(identity.attended_txc_before);
+          if (identity.techxchange_history.length) setTxcHistory(identity.techxchange_history);
+          if (identity.attendance_memory_enabled !== null) {
+            setAttendanceMemoryEnabled(identity.attendance_memory_enabled);
+          }
+        }
+
         // Consent
         const cv1 = (p?.consent || u?.consent || {}) as Record<string, boolean>;
         if (cv1.public_profile              !== undefined) setConsentPublicProfile(cv1.public_profile);
@@ -571,7 +595,7 @@ export default function EnrollPage() {
   }
 
   // ── Save ──────────────────────────────────────────────────────────────────
-  const canSubmit = goals.length > 0 || tracks.length > 0;
+  const canSubmit = (goals.length > 0 || tracks.length > 0) && championStatus !== "";
 
   async function handleSave() {
     const uid = user?.uid;
@@ -624,9 +648,20 @@ export default function EnrollPage() {
         open_to_career_conversations:       openCareer,
       };
 
+      const identity_signals = buildIdentitySignalsPayload({
+        champion_status: championStatus,
+        attended_txc_before: attendedTxcBefore,
+        techxchange_history: txcHistory,
+        attendance_memory_enabled: attendanceMemoryEnabled,
+      });
+
+      const partRef = doc(db, `${BASE}/participants/${uid}`);
+      const existingSnap = await getDoc(partRef);
+      const hasActivityMemory = Boolean(existingSnap.data()?.activity_memory);
+
       // ── participants/{uid} — schema v1 ────────────────────────────────────
       await setDoc(
-        doc(db, `${BASE}/participants/${uid}`),
+        partRef,
         {
           id:               uid,
           participant_id:   uid,
@@ -652,6 +687,8 @@ export default function EnrollPage() {
           career_interests: careerInterest,
           consent:          consentV1,
           networking_identity: networkingIdentity,
+          identity_signals,
+          ...(hasActivityMemory ? {} : { activity_memory: DEFAULT_ACTIVITY_MEMORY }),
           event_signal_profile: {
             goals:        goalLabels,
             tech_tracks:  tracks,
@@ -909,6 +946,76 @@ export default function EnrollPage() {
           </IntentSubsection>
         </section>
 
+        {/* ── 03 · TechXchange Identity ─────────────────────────────────── */}
+        <section id="enroll-identity" className="section">
+          <StepLabel
+            step="03 · TechXchange Identity"
+            title="Your TechXchange story."
+            subtitle="Champion status and event history help Compass recognize you and shape follow-up after the event."
+          />
+
+          <div style={{ display: "grid", gap: "22px" }}>
+            <div>
+              <SubLabel title="IBM Champion status (required)" />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {CHAMPION_STATUS_OPTIONS.map(opt => (
+                  <Chip
+                    key={opt.id}
+                    label={opt.label}
+                    selected={championStatus === opt.id}
+                    onClick={() => setChampionStatus(opt.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <SubLabel title="Have you attended TechXchange before?" />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: attendedTxcBefore === true ? "12px" : 0 }}>
+                <Chip label="Yes" selected={attendedTxcBefore === true} onClick={() => setAttendedTxcBefore(true)} />
+                <Chip label="No, this is my first TechXchange" selected={attendedTxcBefore === false} onClick={() => { setAttendedTxcBefore(false); setTxcHistory([]); }} />
+                <Chip label="Prefer not to answer" selected={attendedTxcBefore === null} onClick={() => { setAttendedTxcBefore(null); setTxcHistory([]); }} />
+              </div>
+              {attendedTxcBefore === true && (
+                <div>
+                  <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
+                    Select every TechXchange you have attended.
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {TXC_HISTORY_EVENTS.map(event => (
+                      <Chip
+                        key={event.id}
+                        label={event.label}
+                        selected={txcHistory.includes(event.id)}
+                        onClick={() => tog(txcHistory, setTxcHistory, event.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <SubLabel title="Remember your event journey after TechXchange?" />
+              <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5, maxWidth: "40rem" }}>
+                This helps Compass organize session resources, people you met, huddles that mattered, and follow-up opportunities after TechXchange.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                <Chip
+                  label="Yes, help me track my event journey"
+                  selected={attendanceMemoryEnabled === true}
+                  onClick={() => setAttendanceMemoryEnabled(true)}
+                />
+                <Chip
+                  label="No, keep my profile simple"
+                  selected={attendanceMemoryEnabled === false}
+                  onClick={() => setAttendanceMemoryEnabled(false)}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Improve My Compass (optional — refine after enrollment) ───── */}
         <details className="enroll-optional-block">
           <summary>Improve My Compass — add background and professional details</summary>
@@ -1018,7 +1125,7 @@ export default function EnrollPage() {
         {/* ── 03 · Consent ──────────────────────────────────────────────── */}
         <section className="section">
           <StepLabel
-            step="03 · Consent"
+            step="04 · Consent"
             title="Your data, your choice."
             subtitle="Compass uses your profile only for this event. Change these settings any time."
           />

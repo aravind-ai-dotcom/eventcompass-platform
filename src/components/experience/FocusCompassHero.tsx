@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import CompassSignalCompact from "@/components/experience/CompassSignalCompact";
 import EnergyIndicator from "@/components/experience/EnergyIndicator";
+import IdentitySignalBadges from "@/components/experience/IdentitySignalBadges";
 import WeekInBalance from "@/components/experience/WeekInBalance";
 
 type RawDoc = Record<string, unknown>;
@@ -34,6 +35,7 @@ export default function FocusCompassHero({
 }: FocusCompassHeroProps) {
   const jobTitle = String(participant.job_title ?? "");
   const company = String(participant.organization ?? participant.company ?? "");
+  const firstName = displayName.trim().split(/\s+/)[0] ?? "";
   const signalItems = [...tracks, ...goals];
   const visibleSignals = signalItems.slice(0, 5);
   const extraSignals = signalItems.length - visibleSignals.length;
@@ -65,6 +67,7 @@ export default function FocusCompassHero({
       <div className="focus-command-center__shell">
         <div className="focus-compass-hero__copy">
           <h1 className="focus-compass-hero__title">{displayName}</h1>
+          <IdentitySignalBadges participant={participant} firstName={firstName} />
           <p className="focus-compass-hero__subtitle">
             A focused plan for what to learn, who to meet, and where to engage.
           </p>

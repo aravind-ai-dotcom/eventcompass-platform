@@ -1,5 +1,7 @@
 /** Aggregated audience trends for unsigned / permission-fallback pulse views. */
 
+import { IDENTITY_AGGREGATE_SEED, type IdentityAggregate } from "@/lib/identitySignals";
+
 export interface PulseAudienceData {
   audienceTotal: number;
   trendingTopics: Record<string, number>;
@@ -11,6 +13,7 @@ export interface PulseAudienceData {
   openToColleague: number;
   openToCareer: number;
   openToMentoring: number;
+  identity: IdentityAggregate;
 }
 
 export const PULSE_AUDIENCE_SEED: PulseAudienceData = {
@@ -59,4 +62,5 @@ export const PULSE_AUDIENCE_SEED: PulseAudienceData = {
   openToColleague: 368,
   openToCareer: 294,
   openToMentoring: 241,
+  identity: IDENTITY_AGGREGATE_SEED,
 };

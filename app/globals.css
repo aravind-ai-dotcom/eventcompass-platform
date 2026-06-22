@@ -1308,6 +1308,119 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   color: var(--muted);
 }
+.home-proof-strip__identity {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+}
+.home-proof-strip__identity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.home-proof-strip__identity-value {
+  font-size: 1rem;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+.home-proof-strip__identity-label {
+  font-size: 0.72rem;
+  font-weight: 560;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--muted);
+}
+
+/* Identity signal badges — My Compass */
+.identity-signal-badges {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.identity-signal-badges__welcome {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--soft);
+  font-weight: 500;
+}
+.identity-signal-badges__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.identity-signal-badges__history {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.identity-signal-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--soft);
+}
+.identity-signal-badge--champion {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  color: var(--text);
+}
+.identity-signal-badge--alum {
+  border-color: color-mix(in srgb, var(--accent-2, var(--accent)) 28%, var(--line));
+  background: color-mix(in srgb, var(--accent-2, var(--accent)) 6%, var(--panel));
+}
+.identity-signal-badge--first-time {
+  border-color: var(--line);
+  background: var(--panel);
+  color: var(--soft);
+}
+
+/* Pulse — identity signal tiles */
+.pulse-intent-cards--identity {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.pulse-identity-card__title {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pulse-identity-card__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.pulse-identity-card__list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: var(--soft);
+}
+.pulse-identity-card__list b {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  font-weight: 650;
+}
 
 /* Home — Compass preview panel */
 .home-compass-preview {
