@@ -37,8 +37,32 @@ async function main() {
     return records.length;
   }
 
+  async function upsertVoiceKnowledgeSeed(): Promise<number> {
+    const col = db.collection(`${BASE}/voice_knowledge`);
+    let count = 0;
+    for (const record of TXC_VOICE_KNOWLEDGE_SEED) {
+      await col.doc(record.id).set(
+        {
+          category: record.category,
+          title: record.title,
+          trigger_phrases: record.trigger_phrases,
+          response: record.response,
+          enabled: record.enabled,
+          topic_key: record.topic_key ?? null,
+          updated_by: record.updated_by ?? "seed",
+          updated_at: record.updated_at,
+          source: "compass_seed",
+        },
+        { merge: true },
+      );
+      count++;
+    }
+    console.log(`Upserted ${count} docs into voice_knowledge (merge)`);
+    return count;
+  }
+
   await seedCollection("knowledgeBase", TXC_KNOWLEDGE_SEED);
-  await seedCollection("voice_knowledge", TXC_VOICE_KNOWLEDGE_SEED);
+  await upsertVoiceKnowledgeSeed();
   await seedCollection("voiceDictionary", TXC_VOICE_DICTIONARY_SEED);
   await seedCollection("sttNormalization", TXC_STT_NORMALIZATION_SEED);
   console.log("Done.");

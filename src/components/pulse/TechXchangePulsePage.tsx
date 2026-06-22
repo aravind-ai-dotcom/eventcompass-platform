@@ -3,39 +3,15 @@
 // SKO sellers use /pulse (SkoPulseView).
 
 import { useEffect, useState } from "react";
-import { tryGetDb } from "@/lib/firebase";
-import { getDocs, collection } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
-  accumulateEducation,
-  accumulatePastEmployers,
-  accumulateParticipantTrendingTopics,
   countryFlag,
-  incPublicCommunity,
-  incPublicSignal,
-  isInternalParticipant,
-  participantNetworkingIdentity,
   top,
   topCommunities,
 } from "@/lib/roomSignals";
-import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
-
-const BASE = "organizations/ibm/events/txc2026";
-type RawDoc = Record<string, unknown>;
-
-interface PulseData {
-  audienceTotal: number;
-  trendingTopics: Record<string, number>;
-  topCountries: Record<string, number>;
-  topUniversities: Record<string, number>;
-  topPastEmployers: Record<string, number>;
-  communities: Record<string, number>;
-  openToAlumni: number;
-  openToColleague: number;
-  openToCareer: number;
-  openToMentoring: number;
-}
+import { loadPulseAudience, type PulseDataSource } from "@/lib/pulseDataLoader";
+import type { PulseAudienceData } from "@/lib/pulseAudienceSeed";
 
 function pct(count: number, total: number): number {
   if (total <= 0) return 0;
@@ -90,58 +66,26 @@ function NostalgiaBox({
 
 export default function TechXchangePulsePage() {
   const { user, enrolled } = useAuth();
-  const [data, setData] = useState<PulseData | null>(null);
+  const [data, setData] = useState<PulseAudienceData | null>(null);
+  const [source, setSource] = useState<PulseDataSource>("aggregated");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const db = tryGetDb();
-    if (!db) {
-      setLoading(false);
-      return;
-    }
-    getDocs(collection(db, `${BASE}/participants`))
-      .then(snap => {
-        let audienceTotal = 0;
-        const trendingTopics: Record<string, number> = {};
-        const topCountries: Record<string, number> = {};
-        const topUniversities: Record<string, number> = {};
-        const topPastEmployers: Record<string, number> = {};
-        const communities: Record<string, number> = {};
-        let openToAlumni = 0;
-        let openToColleague = 0;
-        let openToCareer = 0;
-        let openToMentoring = 0;
-
-        for (const d of snap.docs) {
-          const p = d.data() as RawDoc;
-          if (!isInternalParticipant(p)) audienceTotal++;
-          accumulateParticipantTrendingTopics(trendingTopics, p);
-          incPublicSignal(topCountries, String(p.country ?? ""));
-          accumulateEducation(topUniversities, p.education);
-          accumulatePastEmployers(topPastEmployers, p.past_employers);
-          for (const c of (p.community as string[] | undefined) ?? []) incPublicCommunity(communities, c);
-          const ni = participantNetworkingIdentity(p);
-          if (isOpenToAlumniConnections(ni)) openToAlumni++;
-          if (ni.open_to_past_colleague_connections) openToColleague++;
-          if (ni.open_to_career_conversations) openToCareer++;
-          if (isOpenToMentoringConversations(p)) openToMentoring++;
-        }
-
-        setData({
-          audienceTotal,
-          trendingTopics,
-          topCountries,
-          topUniversities,
-          topPastEmployers,
-          communities,
-          openToAlumni,
-          openToColleague,
-          openToCareer,
-          openToMentoring,
-        });
+    let cancelled = false;
+    setLoading(true);
+    void loadPulseAudience(!!user)
+      .then(result => {
+        if (cancelled) return;
+        setData(result.data);
+        setSource(result.source);
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const total = data?.audienceTotal ?? 0;
   const connectionItems = data
@@ -153,6 +97,8 @@ export default function TechXchangePulsePage() {
       ].filter(item => item.val > 0)
         .map(item => ({ ...item, pct: pct(item.val, total) }))
     : [];
+
+  const showAggregatedDisclaimer = source === "aggregated";
 
   return (
     <>
@@ -172,6 +118,15 @@ export default function TechXchangePulsePage() {
 
       {!loading && data && (
         <>
+          {showAggregatedDisclaimer && (
+            <section className="section no-top-border pulse-disclaimer">
+              <p className="pulse-disclaimer__copy">
+                Aggregated audience signals from registrations and stated intent — trends only, no individual profiles.
+                Sign in to personalize your Compass and add your signal to the room.
+              </p>
+            </section>
+          )}
+
           <section className="story-section">
             <span className="narrative-kicker">Audience snapshot</span>
             <p className="pulse-snapshot-lead">
@@ -205,7 +160,7 @@ export default function TechXchangePulsePage() {
         <section className="story-section story-section--spacious">
           <span className="narrative-kicker">Connection intent</span>
           <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
-            These are attendees who signaled openness to a type of conversation — not matches to you personally.
+            Attendees signaling openness to a type of conversation — a directional read on who is in the room.
           </p>
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (

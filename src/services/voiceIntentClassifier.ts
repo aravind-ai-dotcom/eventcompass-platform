@@ -38,6 +38,7 @@ import {
 } from "@/services/knowledge/knowledgeResolver";
 import { logKnowledgeAnalytics } from "@/services/knowledge/knowledgeMatchingService";
 import { experienceToEventId } from "@/lib/compassEventPaths";
+import { resolveVoiceKnowledgeSpokenDisplay } from "@/lib/voiceKnowledgeResponse";
 import {
   formatBalancedVoiceAlternates,
   formatDiverseRecommendationVoice,
@@ -799,13 +800,23 @@ function buildVoiceKnowledgeResponse(
     case "Certifications":
       return {
         spoken: record.response,
-        display: record.title,
+        display: record.display_response ?? record.title,
         action: "show_sessions",
       };
     case "Fallback Responses":
       return { spoken: record.response, display: record.response };
-    default:
-      return { spoken: record.response, display: record.response };
+    default: {
+      const resolved = resolveVoiceKnowledgeSpokenDisplay(record);
+      let display = resolved.display;
+      if (record.redirect_type === "external_site" && record.source_url) {
+        display = `${display} ${record.source_url}`;
+      } else if (record.redirect_type === "official_faq" && record.source_url) {
+        display = `${display} Official FAQ: ${record.source_url}`;
+      } else if (record.redirect_type === "guest_services" && record.contact_email) {
+        display = `${display} Guest Services: ${record.contact_email}`;
+      }
+      return { spoken: resolved.spoken, display };
+    }
   }
 }
 

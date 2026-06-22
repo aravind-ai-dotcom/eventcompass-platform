@@ -11,6 +11,7 @@ import { hasMeetSignal, sendCanWeMeetSignal } from "@/lib/meetSignals";
 import { buildPersonIntelligence } from "@/lib/personIntelligence";
 import { downloadPersonVCard } from "@/lib/personVcard";
 import PersonMatchPanel from "@/components/people/PersonMatchPanel";
+import LinkedInProfileLink from "@/components/icons/LinkedInProfileLink";
 import type { RecommendedPerson, PersonActionState } from "@/components/people/RecommendedConnectionCard";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
 
@@ -111,15 +112,11 @@ export default function FocusPersonCard({
       <ConnectionBadgeRow badges={resolvedBadges} />
 
       {showLinkedIn && (
-        <a
+        <LinkedInProfileLink
           href={linkedIn!.linkedin_url}
-          target="_blank"
-          rel="noopener noreferrer"
           className="focus-person-card__linkedin"
           onClick={e => e.stopPropagation()}
-        >
-          LinkedIn profile ↗
-        </a>
+        />
       )}
 
       {mutual && (

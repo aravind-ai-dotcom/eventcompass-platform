@@ -8,6 +8,7 @@
 // Data:    Client-side Firestore reads — organizations/ibm/events/txc2026
 // =============================================================================
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, CSSProperties } from "react";
 import { tryGetDb } from "@/lib/firebase";
@@ -3431,6 +3432,24 @@ function ExportsView() {
     <div>
       <SectionHead kicker="Exports" title="Data portability for your team."
         sub="Export Compass data as CSV or JSON. All exports include a timestamp and version header." />
+      <Panel style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "14px" }}>
+        <div>
+          <p style={{ margin: "0 0 4px", color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Voice Knowledge
+          </p>
+          <p style={{ margin: 0, color: S.soft, fontSize: "0.9rem", fontWeight: 550 }}>
+            Study and review unified Voice Compass knowledge (83 records) as Excel.
+          </p>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          <Link href="/setup/txc/export" style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 14px", border: `1px solid ${IBM.blue}`, color: IBM.blueLight, textDecoration: "none", fontSize: "0.82rem" }}>
+            Export Knowledge XLSX
+          </Link>
+          <Link href="/txc/admin/knowledge" style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 14px", border: `1px solid ${S.line}`, color: S.soft, textDecoration: "none", fontSize: "0.82rem" }}>
+            Knowledge Admin →
+          </Link>
+        </div>
+      </Panel>
       <div style={{ display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
         gap: "1px", background: S.line, border: `1px solid ${S.line}` }}>
@@ -4325,7 +4344,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
       <SectionHead kicker="Executive Snapshot"
-        title="VP-level summary — TechXchange 2026."
+        title="Leadership-level summary — TechXchange 2026."
         sub={`One-page view for leadership. Refreshed ${data.lastRefresh?.toLocaleTimeString() ?? "—"}.`} />
 
       {/* KPI grid */}

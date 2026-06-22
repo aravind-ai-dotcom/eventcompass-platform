@@ -31,6 +31,21 @@ export function voiceKnowledgeCollection(eventId: CompassEventId | string): stri
   return `${eventBasePath(eventId)}/voice_knowledge`;
 }
 
+/** @deprecated Use voice_knowledge — legacy FAQ-lite collection */
+export function txcFaqKnowledgeCollection(eventId: CompassEventId | string = TXC_EVENT_ID): string {
+  return `${eventBasePath(eventId)}/knowledge`;
+}
+
+/** Category metadata for migrated official FAQ voice knowledge */
+export function voiceKnowledgeCategoriesCollection(eventId: CompassEventId | string): string {
+  return `${eventBasePath(eventId)}/voice_knowledge_categories`;
+}
+
+/** @deprecated Use voice_knowledge_categories */
+export function txcFaqKnowledgeCategoriesCollection(eventId: CompassEventId | string = TXC_EVENT_ID): string {
+  return `${eventBasePath(eventId)}/knowledge_categories`;
+}
+
 export function translationMemoryCollection(eventId: CompassEventId | string): string {
   return `${eventBasePath(eventId)}/translationMemory`;
 }

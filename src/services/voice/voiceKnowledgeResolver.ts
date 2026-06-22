@@ -46,6 +46,54 @@ export function categoryToIntent(category: VoiceKnowledgeCategory): VoiceKnowled
   }
 }
 
+function scorePhraseMatch(norm: string, phrase: string): number {
+  const p = normalise(phrase);
+  if (!p || !norm.includes(p)) return 0;
+  return p.length + (p.includes(" ") ? 12 : 0);
+}
+
+function scoreRecordMatch(norm: string, record: VoiceKnowledgeRecord): VoiceKnowledgeMatch | null {
+  let bestScore = 0;
+  let matchedPhrase = "";
+
+  for (const phrase of record.trigger_phrases) {
+    const score = scorePhraseMatch(norm, phrase);
+    if (score > bestScore) {
+      bestScore = score;
+      matchedPhrase = phrase;
+    }
+  }
+
+  const titleScore = scorePhraseMatch(norm, record.title);
+  if (titleScore > bestScore) {
+    bestScore = titleScore;
+    matchedPhrase = record.title;
+  }
+
+  if (record.intent) {
+    const intentScore = scorePhraseMatch(norm, record.intent.replace(/_/g, " "));
+    if (intentScore > bestScore) {
+      bestScore = intentScore;
+      matchedPhrase = record.intent;
+    }
+  }
+
+  for (const tag of record.tags ?? []) {
+    const tagScore = scorePhraseMatch(norm, tag.replace(/_/g, " "));
+    if (tagScore > bestScore) {
+      bestScore = tagScore;
+      matchedPhrase = tag;
+    }
+  }
+
+  if (bestScore <= 0) return null;
+  return {
+    record,
+    score: bestScore + (record.priority ?? 50) / 100,
+    matchedPhrase,
+  };
+}
+
 export function matchVoiceKnowledge(
   transcript: string,
   eventId: CompassEventId | string = TXC_EVENT_ID,
@@ -57,17 +105,22 @@ export function matchVoiceKnowledge(
   const includeFallback = options?.includeFallback ?? false;
   let best: VoiceKnowledgeMatch | null = null;
 
-  for (const record of getEnabledVoiceKnowledgeRecords(eventId)) {
+  const records = [...getEnabledVoiceKnowledgeRecords(eventId)].sort(
+    (a, b) => (b.priority ?? 50) - (a.priority ?? 50),
+  );
+
+  for (const record of records) {
     if (record.category === "Fallback Responses" && !includeFallback) continue;
     if (record.category === "Event Scope") continue;
 
-    for (const phrase of record.trigger_phrases) {
-      const p = normalise(phrase);
-      if (!p || !norm.includes(p)) continue;
-      const score = p.length + (p.includes(" ") ? 10 : 0);
-      if (!best || score > best.score) {
-        best = { record, score, matchedPhrase: phrase };
-      }
+    const candidate = scoreRecordMatch(norm, record);
+    if (!candidate) continue;
+    if (!best || candidate.score > best.score) {
+      best = candidate;
+    } else if (candidate.score === best.score) {
+      const candidatePriority = candidate.record.priority ?? 50;
+      const bestPriority = best.record.priority ?? 50;
+      if (candidatePriority > bestPriority) best = candidate;
     }
   }
 

@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed:txc-governance": "tsx scripts/seed-txc-compass-governance.ts",
+    "seed:txc-knowledge": "tsx scripts/seed-txc-knowledge.ts",
+    "seed:txc-voice-knowledge-full": "tsx scripts/seed-txc-voice-knowledge-full.ts",
+    "export:txc-knowledge": "tsx scripts/export-txc-knowledge.ts",
     "seed:sko-product": "tsx scripts/seed-sko-product.ts",
     "seed:sko-governance": "tsx scripts/seed-sko-governance.ts",
     "import:sessions": "tsx scripts/importSessions.ts",
@@ -22,7 +25,8 @@
     "firebase-admin": "^13.10.0",
     "next": "16.2.7",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

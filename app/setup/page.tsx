@@ -25,6 +25,7 @@ export default function SetupHubPage() {
             <p>Knowledge, voice pronunciation, STT normalization, and analytics.</p>
             <ul>
               <li><Link href="/setup/txc/knowledge">Knowledge</Link></li>
+              <li><Link href="/setup/txc/export">Export &amp; study (XLSX)</Link></li>
               <li><Link href="/setup/txc/voice">Voice</Link></li>
               <li><Link href="/setup/txc/stt">STT</Link></li>
             </ul>

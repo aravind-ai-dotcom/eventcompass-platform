@@ -53,59 +53,37 @@ export default function FocusCompassHero({
               Customize
             </button>
           )}
-          <Link href="/txc/enroll?mode=edit" className="focus-compass-hero__link">
-            Edit profile
-          </Link>
-          <Link href="/txc/enroll?mode=edit" className="focus-compass-hero__link focus-compass-hero__link--accent">
+          <Link href="/txc/enroll?mode=edit" className="focus-compass-refine-btn">
             Refine My Compass →
           </Link>
         </div>
       </div>
 
       <div className="focus-command-center__shell">
-        <div className="focus-command-center__identity experience-hero-title-row">
-          <div className="focus-compass-hero__copy">
-            <h1 className="focus-compass-hero__title">{displayName}</h1>
-            <p className="focus-compass-hero__subtitle">
-              A focused plan for what to learn, who to meet, and where to engage.
+        <div className="focus-compass-hero__copy">
+          <h1 className="focus-compass-hero__title">{displayName}</h1>
+          <p className="focus-compass-hero__subtitle">
+            A focused plan for what to learn, who to meet, and where to engage.
+          </p>
+
+          {(jobTitle || company) && (
+            <p className="focus-compass-hero__role">
+              {[jobTitle, company].filter(Boolean).join(" · ")}
             </p>
+          )}
 
-            {(jobTitle || company) && (
-              <p className="focus-compass-hero__role">
-                {[jobTitle, company].filter(Boolean).join(" · ")}
-              </p>
-            )}
-
-            {visibleSignals.length > 0 && (
-              <div className="focus-compass-hero__signals">
-                {visibleSignals.map(item => (
-                  <span key={item} className="experience-hero-chip">{item}</span>
-                ))}
-                {extraSignals > 0 && (
-                  <span className="experience-hero-chip experience-hero-chip--muted">
-                    +{extraSignals} more
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <aside className="focus-command-center__metrics" aria-label="Compass signals">
-            <EnergyIndicator
-              learning={learningCount}
-              community={communityCount}
-              fun={funCount}
-              strip
-            />
-            <WeekInBalance
-              people={peopleCount}
-              learning={learningCount}
-              community={communityCount}
-              fun={funCount}
-              strip
-            />
-            <CompassSignalCompact participant={participant} strip />
-          </aside>
+          {visibleSignals.length > 0 && (
+            <div className="focus-compass-hero__signals">
+              {visibleSignals.map(item => (
+                <span key={item} className="experience-hero-chip">{item}</span>
+              ))}
+              {extraSignals > 0 && (
+                <span className="experience-hero-chip experience-hero-chip--muted">
+                  +{extraSignals} more
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {voicePanel && (
@@ -113,6 +91,23 @@ export default function FocusCompassHero({
             {voicePanel}
           </div>
         )}
+
+        <aside className="focus-command-center__metrics" aria-label="Compass signals">
+          <EnergyIndicator
+            learning={learningCount}
+            community={communityCount}
+            fun={funCount}
+            strip
+          />
+          <WeekInBalance
+            people={peopleCount}
+            learning={learningCount}
+            community={communityCount}
+            fun={funCount}
+            strip
+          />
+          <CompassSignalCompact participant={participant} strip />
+        </aside>
       </div>
     </header>
   );

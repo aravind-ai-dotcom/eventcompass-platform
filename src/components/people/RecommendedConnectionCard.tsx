@@ -13,6 +13,7 @@ import {
 } from "@/lib/personCardHelpers";
 import { hasMeetSignal, sendCanWeMeetSignal } from "@/lib/meetSignals";
 import PersonMatchPanel from "@/components/people/PersonMatchPanel";
+import LinkedInProfileLink from "@/components/icons/LinkedInProfileLink";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
 
 export interface RecommendedPerson {
@@ -152,15 +153,11 @@ export default function RecommendedConnectionCard({
           <div className="connection-card-meta">
             <ConnectionBadgeRow badges={resolvedBadges} />
             {showLinkedIn && (
-              <a
+              <LinkedInProfileLink
                 href={linkedIn!.linkedin_url}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="connection-card-linkedin"
-              >
-                <span className="connection-card-linkedin__label">LinkedIn profile</span>
-                <span className="connection-card-linkedin__arrow" aria-hidden="true">↗</span>
-              </a>
+                onClick={e => e.stopPropagation()}
+              />
             )}
             {linkedInBlocked && (
               <p className="connection-card-linkedin connection-card-linkedin--blocked">
