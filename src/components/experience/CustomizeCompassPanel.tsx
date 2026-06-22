@@ -49,7 +49,7 @@ export default function CustomizeCompassPanel({
         onClick={e => e.stopPropagation()}
       >
         <header className="compass-customize-head">
-          <h2 id="compass-customize-title">Customize My Compass</h2>
+          <h2 id="compass-customize-title">Customize my view</h2>
           <p>Choose which modules appear. Nothing is deleted — only hidden.</p>
         </header>
 

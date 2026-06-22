@@ -50,7 +50,7 @@ export default function FocusCustomizePanel({
         onClick={e => e.stopPropagation()}
       >
         <header className="compass-customize-head">
-          <h2 id="focus-customize-title">Customize My Compass</h2>
+          <h2 id="focus-customize-title">Customize my view</h2>
           <p>Choose which sections appear in Focus mode. Ask Compass is always on — nothing else is deleted, only hidden.</p>
         </header>
 

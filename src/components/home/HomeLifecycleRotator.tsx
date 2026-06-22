@@ -59,6 +59,8 @@ export default function HomeLifecycleRotator() {
 
   useEffect(() => {
     if (paused) return;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
     const timer = window.setInterval(() => {
       setActive(prev => (prev + 1) % LIFECYCLE.length);
     }, ROTATE_MS);
@@ -91,9 +93,16 @@ export default function HomeLifecycleRotator() {
             className={`home-lifecycle-tab${active === index ? " is-active" : ""}`}
             onClick={() => goTo(index)}
           >
-            {item.kicker}
+            <span className="home-lifecycle-tab__label">{item.kicker}</span>
+            <span className="home-lifecycle-tab__index" aria-hidden="true">{index + 1}</span>
           </button>
         ))}
+      </div>
+      <div className="home-lifecycle-progress" aria-hidden="true">
+        <span
+          className="home-lifecycle-progress__fill"
+          style={{ width: `${((active + 1) / LIFECYCLE.length) * 100}%` }}
+        />
       </div>
 
       <div

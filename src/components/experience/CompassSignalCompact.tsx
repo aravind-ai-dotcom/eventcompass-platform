@@ -47,7 +47,7 @@ export default function CompassSignalCompact({
   if (strip) {
     return (
       <Link
-        href="/txc/enroll?mode=edit"
+        href="/txc/enroll?mode=edit&focus=intent"
         className={`focus-metric-block focus-metric-block--link${complete ? " focus-metric-block--complete" : ""}`}
       >
         <span className="focus-metric-row__label">Signal</span>
@@ -84,7 +84,7 @@ export default function CompassSignalCompact({
 
   return (
     <Link
-      href="/txc/enroll?mode=edit"
+      href="/txc/enroll?mode=edit&focus=intent"
       className={`compass-signal-card compass-signal-card--clickable${complete ? " compass-signal-card--complete" : ""}${compact ? " compass-signal-card--compact" : ""}`}
     >
       <div className="compass-signal-head">

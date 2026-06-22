@@ -48,12 +48,15 @@ export default function FocusCompassHero({
               type="button"
               className="compass-customize-trigger"
               onClick={() => onCustomize()}
-              aria-label="Customize My Compass"
+              aria-label="Customize my view"
             >
-              Customize
+              Customize my view
             </button>
           )}
-          <Link href="/txc/enroll?mode=edit" className="focus-compass-refine-btn">
+          <Link href="/txc/enroll?mode=edit&focus=profile" className="focus-compass-edit-profile-btn">
+            Edit profile
+          </Link>
+          <Link href="/txc/enroll?mode=edit&focus=intent" className="focus-compass-refine-btn">
             Refine My Compass →
           </Link>
         </div>

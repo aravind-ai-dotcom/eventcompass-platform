@@ -886,7 +886,7 @@ function WhatYouToldCompass({ participant, embedded = false }: { participant: Ra
         kicker="What you told Compass"
         title="Your profile signals"
         description="Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Networking · Learning · Fun activities."
-        action={<a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>}
+        action={<a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine My Compass →</a>}
         className="compass-module-head--with-action"
       />
 
@@ -1881,14 +1881,22 @@ export default function ClassicExperiencePage() {
       <section className="section no-top-border experience-hero-compact">
         <div className="experience-hero-toolbar">
           <div className="section-kicker">My Compass</div>
-          <button
-            type="button"
-            className="compass-customize-trigger"
-            onClick={() => setCustomizeOpen(true)}
-            aria-label="Customize My Compass"
-          >
-            ⚙ Customize
-          </button>
+          <div className="focus-compass-hero__links">
+            <button
+              type="button"
+              className="compass-customize-trigger"
+              onClick={() => setCustomizeOpen(true)}
+              aria-label="Customize my view"
+            >
+              Customize my view
+            </button>
+            <Link href="/txc/enroll?mode=edit&focus=profile" className="focus-compass-edit-profile-btn">
+              Edit profile
+            </Link>
+            <Link href="/txc/enroll?mode=edit&focus=intent" className="focus-compass-refine-btn">
+              Refine My Compass →
+            </Link>
+          </div>
         </div>
         <div className="experience-hero-copy">
           <h1 className="experience-hero-title">{displayName}</h1>
@@ -2230,7 +2238,7 @@ export default function ClassicExperiencePage() {
             Refine your profile to sharpen every recommendation.
           </p>
         </div>
-        <a href="/txc/enroll?mode=edit" className="action-chip">Refine My Compass →</a>
+        <a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine My Compass →</a>
       </section>
       </SpeakerIntelligenceProvider>
 

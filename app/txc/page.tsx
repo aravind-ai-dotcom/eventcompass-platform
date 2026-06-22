@@ -4,12 +4,14 @@
 // Lifetime value: Prepare → Meet → Experience → Continue
 // =============================================================================
 import Link from "next/link";
+import HomeCompassPreview from "@/components/home/HomeCompassPreview";
 import HomeLifecycleRotator from "@/components/home/HomeLifecycleRotator";
+import HomeProofStrip from "@/components/home/HomeProofStrip";
 
 export default function HomePage() {
   return (
     <>
-      <section className="hero-shell hero-shell--home hero-shell--compact">
+      <section className="hero-shell hero-shell--home hero-shell--compact hero-shell--with-preview">
         <div className="hero-copy">
           <span className="eyebrow">IBM TechXchange 2026</span>
           <h1 className="home-hero-title">
@@ -24,7 +26,10 @@ export default function HomePage() {
             <Link href="/txc/explore" className="btn-secondary">How Compass works</Link>
           </div>
         </div>
+        <HomeCompassPreview />
       </section>
+
+      <HomeProofStrip />
 
       <section className="story-section story-section--compact no-top-border">
         <HomeLifecycleRotator />

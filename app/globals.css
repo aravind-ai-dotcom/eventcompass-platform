@@ -1245,12 +1245,159 @@ img { max-width: 100%; display: block; }
 .hero-shell--compact .hero-actions {
   margin-top: 20px;
 }
+.hero-shell--with-preview {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+@media (min-width: 960px) {
+  .hero-shell--with-preview {
+    grid-template-columns: minmax(0, 1.05fr) minmax(300px, 380px);
+    gap: 32px;
+    align-items: start;
+  }
+}
 .home-section-title {
   font-size: clamp(1.5rem, 2.5vw, 2.2rem);
   line-height: 1.12;
   letter-spacing: -0.035em;
   font-weight: 520;
   margin: 0;
+}
+
+/* Home — proof strip */
+.home-proof-strip {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding: 18px 0;
+  margin-bottom: 8px;
+}
+.home-proof-strip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+}
+@media (min-width: 640px) {
+  .home-proof-strip__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+.home-proof-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.home-proof-strip__value {
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 560;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.home-proof-strip__label {
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Home — Compass preview panel */
+.home-compass-preview {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 16px 16px 14px;
+  min-width: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 40px -32px rgba(0, 0, 0, 0.45);
+}
+[data-theme="light"] .home-compass-preview {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 16px 32px -28px rgba(15, 23, 42, 0.12);
+}
+.home-compass-preview__head {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.home-compass-preview__kicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.home-compass-preview__note {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.home-compass-preview__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.home-compass-preview__card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 12px;
+}
+.home-compass-preview__card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.home-compass-preview__card-kicker {
+  font-size: 0.62rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.home-compass-preview__match {
+  font-size: 0.72rem;
+  font-weight: 640;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.home-compass-preview__card-title {
+  margin: 0 0 3px;
+  font-size: 0.86rem;
+  font-weight: 560;
+  line-height: 1.3;
+  color: var(--text);
+}
+.home-compass-preview__card-meta {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.home-compass-preview__card--session { border-left: 3px solid var(--accent); }
+.home-compass-preview__card--expert { border-left: 3px solid #0f62fe; }
+.home-compass-preview__card--certification { border-left: 3px solid #a56eff; }
+.home-compass-preview__card--networking { border-left: 3px solid #005d5d; }
+.home-compass-preview__foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
 /* Nostalgia / belonging row */
@@ -1348,6 +1495,213 @@ img { max-width: 100%; display: block; }
   margin: 0;
   max-width: 640px;
 }
+
+/* Explore — journey selector + featured panel */
+.explore-selector-section {
+  padding: 0 0 32px;
+}
+.explore-journey-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 0 16px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.explore-journey-chips::-webkit-scrollbar {
+  display: none;
+}
+.explore-journey-chip {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 560;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  max-width: min(280px, 78vw);
+}
+.explore-journey-chip:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+.explore-journey-chip.is-active {
+  color: var(--text);
+  border-color: var(--journey-accent, var(--accent));
+  background: var(--surface);
+  box-shadow: inset 0 -2px 0 var(--journey-accent, var(--accent));
+}
+@media (min-width: 960px) {
+  .explore-journey-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .explore-journey-chip {
+    max-width: none;
+  }
+}
+.explore-journey-feature {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+@media (min-width: 768px) {
+  .explore-journey-feature {
+    grid-template-columns: minmax(260px, 38%) minmax(0, 1fr);
+    min-height: 420px;
+  }
+}
+.explore-journey-feature__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .explore-journey-feature__media {
+    aspect-ratio: auto;
+    min-height: 100%;
+    border-bottom: 0;
+    border-right: 1px solid var(--line);
+  }
+}
+.explore-journey-feature__body {
+  padding: 22px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .explore-journey-feature__body {
+    padding: 28px 28px 30px;
+  }
+}
+.explore-journey-feature__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  color: var(--text);
+}
+.explore-journey-feature__outcome {
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--soft);
+  max-width: 44rem;
+}
+.explore-journey-feature__helps {
+  margin-bottom: 16px;
+}
+.explore-journey-feature__helps-kicker {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.explore-journey-feature__helps ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.explore-journey-feature__helps li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.explore-journey-feature__helps li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  background: var(--journey-accent, var(--accent));
+}
+.explore-journey-feature__gate {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 40rem;
+}
+.explore-journey-feature__previews {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+@media (min-width: 640px) {
+  .explore-journey-feature__previews {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.explore-preview-card {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 10px 12px;
+  min-width: 0;
+}
+.explore-preview-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.explore-preview-card__kicker {
+  font-size: 0.62rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.explore-preview-card__match {
+  font-size: 0.72rem;
+  font-weight: 640;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.explore-preview-card__title {
+  margin: 0 0 3px;
+  font-size: 0.84rem;
+  font-weight: 560;
+  line-height: 1.3;
+  color: var(--text);
+}
+.explore-preview-card__meta {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.explore-preview-card--session { border-left: 3px solid var(--accent); }
+.explore-preview-card--expert { border-left: 3px solid #0f62fe; }
+.explore-preview-card--certification { border-left: 3px solid #a56eff; }
+.explore-preview-card--community { border-left: 3px solid #005d5d; }
+.explore-preview-card--networking { border-left: 3px solid #005d5d; }
+.explore-journey-feature__foot {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
 .explore-journey {
   display: grid;
   grid-template-columns: 1fr;
@@ -2754,6 +3108,10 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 .home-lifecycle-tab:last-child {
   border-right: 0;
@@ -2766,6 +3124,34 @@ img { max-width: 100%; display: block; }
   color: var(--text);
   background: var(--surface);
   box-shadow: inset 0 -2px 0 var(--accent);
+}
+.home-lifecycle-tab__index {
+  display: none;
+  font-size: 0.68rem;
+  font-weight: 640;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 768px) {
+  .home-lifecycle-tab__index {
+    display: inline;
+  }
+}
+.home-lifecycle-progress {
+  height: 2px;
+  background: var(--line);
+}
+.home-lifecycle-progress__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-lifecycle-progress__fill,
+  .home-lifecycle-rotator-slide {
+    transition: none;
+  }
 }
 .home-lifecycle-rotator-panel {
   display: grid;
@@ -2915,6 +3301,7 @@ img { max-width: 100%; display: block; }
   letter-spacing: -0.03em;
   font-weight: 520;
   margin: 0;
+  color: var(--text);
 }
 
 /* ── Sprint 2: Explore milestone paths ────────────────────────────────────── */
@@ -9614,6 +10001,28 @@ img { max-width: 100%; display: block; }
   background: rgba(15, 98, 254, 0.06);
   border-color: rgba(15, 98, 254, 0.5);
   color: #4589ff;
+}
+.focus-compass-edit-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 0.78rem;
+  font-weight: 560;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.focus-compass-edit-profile-btn:hover {
+  background: var(--hover);
+  border-color: var(--line-strong);
+  color: var(--text);
 }
 .linkedin-profile-link {
   display: inline-flex;

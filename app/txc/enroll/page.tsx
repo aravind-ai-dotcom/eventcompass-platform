@@ -6,7 +6,9 @@
 //
 // ?mode=edit   → prefills from Firestore, skips the "already enrolled" redirect,
 //                shows "Update My Compass" CTA instead of "Build My Compass".
-// (no param)   → fresh enrollment; redirects to /experience if already enrolled.
+// ?focus=profile → scroll to name, employer, and role fields (with mode=edit).
+// ?focus=intent  → scroll to goals, tracks, and connection intent (with mode=edit).
+// (no param)   → fresh enrollment; redirects to /txc/experience if already enrolled.
 //
 // Prefill order:
 //   1. participants/{uid}  — full schema v1 (takes priority)
@@ -277,7 +279,7 @@ function ConfirmScreen({
       </section>
       <section className="section no-top-border">
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <Link href="/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
           <button onClick={onEdit} className="btn-secondary">
             {isEditMode ? "Make more changes" : "Edit my signal"}
           </button>
@@ -298,8 +300,12 @@ export default function EnrollPage() {
 
   // ── Mode detection (window.location avoids Next.js useSearchParams/Suspense) ──
   const [isEditMode,  setIsEditMode]  = useState<boolean | null>(null);
+  const [editFocus,   setEditFocus]   = useState<"profile" | "intent" | null>(null);
   useEffect(() => {
-    setIsEditMode(new URLSearchParams(window.location.search).get("mode") === "edit");
+    const params = new URLSearchParams(window.location.search);
+    setIsEditMode(params.get("mode") === "edit");
+    const focus = params.get("focus");
+    setEditFocus(focus === "profile" || focus === "intent" ? focus : null);
   }, []);
 
   const [authed,     setAuthed]     = useState(false);
@@ -375,9 +381,25 @@ export default function EnrollPage() {
   useEffect(() => {
     if (isEditMode === null) return; // wait for mode to resolve
     if (!loading && user && enrolled && !isEditMode) {
-      router.replace("/experience");
+      router.replace("/txc/experience");
     }
   }, [loading, user, enrolled, isEditMode, router]);
+
+  // ── Scroll to profile vs intent section in edit mode ───────────────────────
+  useEffect(() => {
+    if (!isEditMode || prefilling) return;
+    const focus = editFocus ?? "intent";
+    const timer = window.setTimeout(() => {
+      if (focus === "profile") {
+        const details = document.querySelector(".enroll-optional-block");
+        if (details instanceof HTMLDetailsElement) details.open = true;
+        document.getElementById("enroll-about-you")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      document.getElementById("enroll-intent")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [isEditMode, editFocus, prefilling]);
 
   // ── Prefill from Firestore ────────────────────────────────────────────────
   useEffect(() => {
@@ -707,13 +729,21 @@ export default function EnrollPage() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="compact-hero enroll-hero">
         <div className="section-kicker">
-          {isEditMode ? "Refine My Compass" : "Build My Compass"}
-        </div>
-        <h1>Tell Compass what matters to you.</h1>
-        <p>
           {isEditMode
-            ? "Update your goals, interests, or connection intent — your scores and matches refresh immediately."
-            : "Start with your goals. Learning tracks and connection intent sharpen your matches when you add them."}
+            ? (editFocus === "profile" ? "Edit profile" : "Refine My Compass")
+            : "Build My Compass"}
+        </div>
+        <h1>
+          {isEditMode && editFocus === "profile"
+            ? "Update your name, role, and employer."
+            : "Tell Compass what matters to you."}
+        </h1>
+        <p>
+          {isEditMode && editFocus === "profile"
+            ? "Fix spelling, job title, organization, and background details. Your matches refresh when you save."
+            : isEditMode
+              ? "Update your goals, interests, or connection intent — your scores and matches refresh immediately."
+              : "Start with your goals. Learning tracks and connection intent sharpen your matches when you add them."}
         </p>
       </section>
 
@@ -726,13 +756,30 @@ export default function EnrollPage() {
       <div style={{ maxWidth: "800px" }}>
 
         {/* ── 01 · About You ────────────────────────────────────────────── */}
-        <section className="section no-top-border">
+        <section id="enroll-about-you" className="section no-top-border">
           <StepLabel
             step="01 · About You"
             title="The basics."
             subtitle="Name and location — enough for Compass to personalize your badge and regional sessions."
           />
           <div style={{ display: "grid", gap: "14px" }}>
+
+            {user?.email && isEditMode && (
+              <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                <FieldLabel>Account email</FieldLabel>
+                <input
+                  type="email"
+                  value={user.email}
+                  readOnly
+                  aria-readonly="true"
+                  aria-label="Account email"
+                  style={{ ...iS, color: "var(--muted)", cursor: "not-allowed" }}
+                />
+                <p style={{ color: "var(--muted)", fontSize: "0.78rem", margin: "6px 0 0", lineHeight: 1.45 }}>
+                  Used for sign-in. To change your email, sign out and create a new account with the correct address, or contact event support.
+                </p>
+              </label>
+            )}
 
             <div style={twoCol}>
               <label style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
@@ -780,7 +827,7 @@ export default function EnrollPage() {
         </section>
 
         {/* ── 02 · Intent (core) ─────────────────────────────────────────── */}
-        <section className="section">
+        <section id="enroll-intent" className="section">
           <StepLabel
             step="02 · Your Intent"
             title="Goals — why are you attending?"
