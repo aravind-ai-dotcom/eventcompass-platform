@@ -1,14 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import ForgeArtwork from "@/components/media/ForgeArtwork";
 import { FORGE_PILLARS } from "@/config/forgeBrand";
+
+const LIFECYCLE_IMAGES = [
+  "/forge/hero-crystal-beam.png",
+  "/forge/visual-signals.svg",
+  "/forge/visual-trajectory.svg",
+] as const;
 
 const LIFECYCLE = FORGE_PILLARS.map((pillar, index) => ({
   ...pillar,
-  image: ["/event/learning-lab.jpg", "/event/people-v2.jpg", "/event/ibm_txc_banner_B.jpg"][index],
-  objectPosition: ["center top", "center 55%", "center center"][index],
+  image: LIFECYCLE_IMAGES[index],
 }));
 
 const ROTATE_MS = 7000;
@@ -75,19 +80,16 @@ export default function HomeLifecycleRotator() {
         aria-labelledby={`lifecycle-tab-${phase.id}`}
         className="home-lifecycle-rotator-panel"
       >
-        <div className="home-lifecycle-rotator-media">
+        <div className="home-lifecycle-rotator-media forge-visual-stage">
           {LIFECYCLE.map((item, index) => (
             <div
               key={item.id}
               className={`home-lifecycle-rotator-slide${active === index ? " is-active" : ""}`}
               aria-hidden={active !== index}
             >
-              <Image
+              <ForgeArtwork
                 src={item.image}
-                alt=""
-                fill
-                sizes="(max-width: 768px) 100vw, 55vw"
-                style={{ objectFit: "cover", objectPosition: item.objectPosition }}
+                className="forge-visual-stage__art"
                 priority={index === 0}
               />
             </div>

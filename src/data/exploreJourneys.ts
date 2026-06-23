@@ -25,7 +25,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "certification",
     title: "Earn a certification",
-    image: "/event/ibm_txc_banner_4.jpg",
+    image: "/forge/visual-trajectory.svg",
     accent: "#6366F1",
     outcome: "Walk into your learning path with a focused plan built around FORGE.",
     helps: [
@@ -79,7 +79,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "experts",
     title: "Meet the right experts",
-    image: "/event/ibm_txc_banner_1.jpg",
+    image: "/forge/visual-signals.svg",
     accent: "#3B82F6",
     outcome: "Spend your time with practitioners who match your technology and role.",
     helps: [
@@ -121,13 +121,13 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "networking",
     title: "Build meaningful connections",
-    image: "/event/ibm_txc_banner_5.jpg",
+    image: "/forge/visual-constellation.svg",
     accent: "#3B82F6",
     outcome: "Meet alumni, peers, and practitioners who share your goals — not random hallway luck.",
     helps: [
       "Match you with people who share products and interests",
       "Prioritize mutual-intent networking opportunities",
-      "Suggest communities to continue conversations after TXC",
+      "Suggest communities to continue conversations after FORGE",
       "Surface huddles and small-group moments worth joining",
     ],
     anonymousPreviews: [
@@ -163,7 +163,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "challenge",
     title: "Bring a challenge",
-    image: "/event/expo.jpg",
+    image: "/forge/hero-crystal-beam.png",
     accent: "#22D3EE",
     outcome: "Turn a real problem into sessions, experts, and peer conversations that move it forward.",
     helps: [
@@ -205,7 +205,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "technology",
     title: "Discover what's next",
-    image: "/event/community-v2.jpg",
+    image: "/forge/visual-constellation.svg",
     accent: "#A855F7",
     outcome: "Explore emerging tech through hands-on sessions, demos, and communities — not brochure browsing.",
     helps: [
@@ -247,7 +247,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "champions",
     title: "Inspire and connect",
-    image: "/event/ibm-champion-journey.png",
+    image: "/forge/hero-crystal-prism.png",
     accent: "#3B82F6",
     outcome: "Find attendees and community members who benefit from your experience — and vice versa.",
     helps: [
