@@ -1,6 +1,7 @@
 "use client";
 
-import PulseDonutBox, { alumniDonutSegments } from "@/components/pulse/PulseDonutBox";
+import HomeJourneyTile from "@/components/home/HomeJourneyTile";
+import { alumniDonutSegments } from "@/components/pulse/PulseDonutBox";
 import { proofCountLabel, useEventProofCounts } from "@/hooks/useEventProofCounts";
 
 const STATS = [
@@ -52,13 +53,7 @@ export default function HomeProofStrip() {
         ))}
 
         <li className="home-proof-strip__item home-proof-strip__item--journey" aria-busy={counts.loading}>
-          <PulseDonutBox
-            embed
-            mini
-            split
-            title="TechXchange Journey"
-            segments={alumniSegments}
-          />
+          <HomeJourneyTile segments={alumniSegments} />
         </li>
       </ul>
     </section>

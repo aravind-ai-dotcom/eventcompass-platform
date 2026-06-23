@@ -41,11 +41,13 @@ function DonutChart({
   size = 120,
   stroke = 16,
   split = false,
+  centerFill = "var(--panel)",
 }: {
   segments: DonutSegment[];
   size?: number;
   stroke?: number;
   split?: boolean;
+  centerFill?: string;
 }) {
   const total = segments.reduce((sum, s) => sum + s.value, 0);
   if (total <= 0) return null;
@@ -101,7 +103,7 @@ function DonutChart({
           strokeLinecap="butt"
           transform={`rotate(${-90 + aPct * 360} ${cx} ${cy})`}
         />
-        <circle cx={cx} cy={cy} r={radius - stroke * 0.55} fill="var(--panel)" />
+        <circle cx={cx} cy={cy} r={radius - stroke * 0.55} fill={centerFill} />
       </svg>
     );
   }
@@ -150,6 +152,8 @@ function DonutChart({
     </svg>
   );
 }
+
+export { DonutChart };
 
 export default function PulseDonutBox({
   title,
