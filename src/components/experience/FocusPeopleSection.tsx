@@ -1,7 +1,7 @@
 "use client";
 
 import FocusPersonCard from "@/components/experience/FocusPersonCard";
-import FocusPersonRow from "@/components/experience/FocusPersonRow";
+import FocusPersonSavedCard from "@/components/experience/FocusPersonSavedCard";
 import type { RecommendedPerson, PersonActionState } from "@/components/people/RecommendedConnectionCard";
 import type { ConnectionBadgeContext } from "@/lib/connectionBadges";
 import type { InboundConnectionSignal } from "@/types/connectionSignals";
@@ -100,13 +100,14 @@ export default function FocusPeopleSection({
             </h3>
             <p className="focus-people-column__desc">Saved connections and follow-up candidates.</p>
           </header>
-          <div className="focus-people-column__scroll">
+          <div className="focus-people-column__cards">
             {wantToMeet.length > 0 ? (
               wantToMeet.map(person => (
-                <FocusPersonRow
+                <FocusPersonSavedCard
                   key={person.id}
                   person={person}
                   profileSignals={profileSignals}
+                  badgeContext={badgeContext}
                   actions={actions}
                   onOpenDetails={onOpenDetails}
                 />
@@ -127,18 +128,19 @@ export default function FocusPeopleSection({
             </h3>
             <p className="focus-people-column__desc">Attendees who signaled interest — including mutual matches.</p>
           </header>
-          <div className="focus-people-column__scroll">
+          <div className="focus-people-column__cards">
             {inboundSignals.length > 0 ? (
               inboundSignals.map(signal => {
                 const person = inboundToRecommendedPerson(signal);
                 const badges = inferInboundBadges(signal);
                 return (
-                  <FocusPersonRow
+                  <FocusPersonSavedCard
                     key={signal.id}
                     person={person}
                     profileSignals={profileSignals}
                     badges={badges}
                     mutual={inboundShowsMutual(signal, savedChampionRefs)}
+                    saved={false}
                     actions={actions}
                     onOpenDetails={onOpenDetails}
                   />

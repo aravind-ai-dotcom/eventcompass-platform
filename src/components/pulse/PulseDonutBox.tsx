@@ -193,9 +193,9 @@ export default function PulseDonutBox({
         className={[
           "pulse-donut-box__legend",
           useSplit ? " pulse-donut-box__legend--split" : "",
+          visible.length > 2 ? " pulse-donut-box__legend--dense" : "",
           embed ? " pulse-donut-box__legend--embed" : "",
         ].join("")}
-        style={{ ["--legend-cols" as string]: visible.length }}
       >
         {visible.map(segment => (
           <li key={segment.label}>
@@ -204,8 +204,10 @@ export default function PulseDonutBox({
               style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
               aria-hidden="true"
             />
-            <span className="pulse-donut-box__legend-label">{segment.label}</span>
-            <b className="pulse-donut-box__legend-pct">{pct(segment.value)}%</b>
+            <span className="pulse-donut-box__legend-copy">
+              <span className="pulse-donut-box__legend-label">{segment.label}</span>
+              <span className="pulse-donut-box__legend-pct">{pct(segment.value)}%</span>
+            </span>
           </li>
         ))}
       </ul>
@@ -229,7 +231,7 @@ export function championDonutSegments(
   return [
     { label: "IBM Champions", value: ibm, tone: "ibm-blue" as const },
     { label: "Former Champions", value: former, tone: "purple" as const },
-    { label: "Champion Nominees", value: nominee, tone: "teal" as const },
+    { label: "Nominees", value: nominee, tone: "teal" as const },
     { label: "Rising Champions", value: interested, tone: "green" as const },
   ].filter(s => s.value > 0);
 }
