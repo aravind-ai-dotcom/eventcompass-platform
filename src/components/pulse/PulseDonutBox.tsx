@@ -41,7 +41,7 @@ function DonutChart({
   size = 120,
   stroke = 16,
   split = false,
-  centerFill = "var(--panel)",
+  centerFill = "var(--donut-center, var(--bg))",
 }: {
   segments: DonutSegment[];
   size?: number;
@@ -77,7 +77,7 @@ function DonutChart({
           cy={cy}
           r={radius}
           fill="none"
-          stroke="var(--line)"
+          stroke="var(--donut-track, var(--line))"
           strokeWidth={stroke}
           opacity={0.45}
         />
@@ -122,7 +122,7 @@ function DonutChart({
         cy={cy}
         r={radius}
         fill="none"
-        stroke="var(--line)"
+        stroke="var(--donut-track, var(--line))"
         strokeWidth={stroke}
         opacity={0.55}
       />

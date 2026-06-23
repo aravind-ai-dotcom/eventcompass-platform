@@ -5,8 +5,19 @@
 
 import Link from "next/link";
 import IbmCommunityBrowser from "@/components/communities/IbmCommunityBrowser";
+import {
+  ForgeCatalogIcon,
+  ForgeMembersIcon,
+  ForgeUserGroupsIcon,
+} from "@/components/icons/ForgeIcons";
 import { IBM_COMMUNITIES, IBM_COMMUNITY_METRICS } from "@/data/ibmCommunities";
 import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
+
+const COMMUNITY_METRICS = [
+  { value: IBM_COMMUNITY_METRICS.members, label: "Members", Icon: ForgeMembersIcon, accent: "members" },
+  { value: String(IBM_COMMUNITIES.length), label: "In catalog", Icon: ForgeCatalogIcon, accent: "catalog" },
+  { value: IBM_COMMUNITY_METRICS.userGroups, label: "User groups", Icon: ForgeUserGroupsIcon, accent: "groups" },
+] as const;
 
 export default function CommunitiesPage() {
   return (
@@ -22,18 +33,15 @@ export default function CommunitiesPage() {
 
       <section className="section no-top-border">
         <div className="ibm-community-metrics" aria-label="Community scale">
-          <article>
-            <b>{IBM_COMMUNITY_METRICS.members}</b>
-            <span>members</span>
-          </article>
-          <article>
-            <b>{IBM_COMMUNITIES.length}</b>
-            <span>in catalog</span>
-          </article>
-          <article>
-            <b>{IBM_COMMUNITY_METRICS.userGroups}</b>
-            <span>user groups</span>
-          </article>
+          {COMMUNITY_METRICS.map(({ value, label, Icon, accent }) => (
+            <article key={label}>
+              <span className={`ibm-community-metrics__icon ibm-community-metrics__icon--${accent}`}>
+                <Icon size={24} />
+              </span>
+              <b>{value}</b>
+              <span>{label}</span>
+            </article>
+          ))}
         </div>
       </section>
 

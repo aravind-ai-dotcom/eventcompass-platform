@@ -1,14 +1,19 @@
 "use client";
 
 import HomeJourneyTile from "@/components/home/HomeJourneyTile";
+import {
+  ForgeCommunitiesIcon,
+  ForgeGuidesIcon,
+  ForgeSessionsIcon,
+} from "@/components/icons/ForgeIcons";
 import { alumniDonutSegments } from "@/components/pulse/PulseDonutBox";
 import { FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import { proofCountLabel, useEventProofCounts } from "@/hooks/useEventProofCounts";
 
 const STATS = [
-  { key: "sessions" as const, label: "Sessions" },
-  { key: "champions" as const, label: FORGE_LABELS.expertGuides },
-  { key: "communities" as const, label: FORGE_LABELS.communities },
+  { key: "sessions" as const, label: "Sessions", Icon: ForgeSessionsIcon, accent: "sessions" },
+  { key: "champions" as const, label: FORGE_LABELS.expertGuides, Icon: ForgeGuidesIcon, accent: "guides" },
+  { key: "communities" as const, label: FORGE_LABELS.communities, Icon: ForgeCommunitiesIcon, accent: "communities" },
 ] as const;
 
 const FALLBACK = {
@@ -44,12 +49,15 @@ export default function HomeProofStrip() {
   return (
     <section className="home-proof-strip" aria-label="FORGE scale">
       <ul className="home-proof-strip__list home-proof-strip__list--with-journey">
-        {STATS.map(item => (
-          <li key={item.key} className="home-proof-strip__item">
-            <span className="home-proof-strip__value" aria-busy={counts.loading}>
-              {proofCountLabel(counts[item.key], FALLBACK[item.key], counts.isLive)}
+        {STATS.map(({ key, label, Icon, accent }) => (
+          <li key={key} className="home-proof-strip__item">
+            <span className={`home-proof-strip__icon home-proof-strip__icon--${accent}`}>
+              <Icon size={24} />
             </span>
-            <span className="home-proof-strip__label">{item.label}</span>
+            <span className="home-proof-strip__value" aria-busy={counts.loading}>
+              {proofCountLabel(counts[key], FALLBACK[key], counts.isLive)}
+            </span>
+            <span className="home-proof-strip__label">{label}</span>
           </li>
         ))}
 

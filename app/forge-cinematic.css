@@ -1,9 +1,58 @@
 /* =============================================================================
-   FORGE 2027 — Cinematic technology design system
-   Dark foundation · neon halos · engineered geometry · premium event platform
+   FORGE 2027 — Photonic Technology Design System
+   Volumetric light · laser edges · mission-control precision
 ============================================================================= */
 
-/* ── Shell & ambient field ─────────────────────────────────────────────────── */
+/* ── Photonic primitives ────────────────────────────────────────────────────── */
+.forge-glow {
+  box-shadow: var(--forge-glow);
+}
+
+.forge-halo {
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgb(124 58 237 / 0.35) 0%,
+    rgb(79 140 255 / 0.12) 35%,
+    transparent 70%
+  );
+  filter: blur(40px);
+}
+
+.forge-beam {
+  position: absolute;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgb(34 211 238 / 0.5) 30%,
+    rgb(124 58 237 / 0.6) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.forge-photon {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--forge-laser);
+  box-shadow: 0 0 12px var(--forge-laser), 0 0 24px rgb(124 58 237 / 0.4);
+}
+
+.forge-laser {
+  border-color: var(--forge-laser) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(34 211 238 / 0.15),
+    0 0 20px rgb(34 211 238 / 0.12);
+}
+
+.forge-prism {
+  filter: drop-shadow(var(--forge-glow));
+}
+
+/* ── Shell & field ──────────────────────────────────────────────────────────── */
 .forge-shell {
   position: relative;
   min-height: 100vh;
@@ -18,9 +67,9 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 50% at 70% -10%, rgb(99 102 241 / 0.14), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 10% 20%, rgb(34 211 238 / 0.06), transparent 50%),
-    radial-gradient(ellipse 50% 30% at 90% 80%, rgb(168 85 247 / 0.08), transparent 45%);
+    radial-gradient(ellipse 70% 45% at 75% 0%, rgb(124 58 237 / 0.1), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 15% 25%, rgb(79 140 255 / 0.06), transparent 50%),
+    radial-gradient(ellipse 40% 25% at 85% 85%, rgb(34 211 238 / 0.04), transparent 45%);
 }
 
 .forge-grid {
@@ -28,12 +77,12 @@
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.35;
+  opacity: 0.22;
   background-image:
-    linear-gradient(rgb(99 102 241 / 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(99 102 241 / 0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black, transparent);
+    linear-gradient(rgb(79 140 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(79 140 255 / 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 85% 65% at 50% 25%, black, transparent);
 }
 
 .compass-main {
@@ -41,16 +90,15 @@
   z-index: 1;
 }
 
-/* ── Typography ────────────────────────────────────────────────────────────── */
+/* ── Typography ───────────────────────────────────────────────────────────── */
 body {
-  font-family: var(--font-sans), "Inter", system-ui, sans-serif;
+  font-family: var(--font-sans), "Space Grotesk", system-ui, sans-serif;
   font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.55;
 }
 
 h1, h2, h3, h4,
-.forge-hero-title,
 .home-hero-title,
 .hero-copy h1,
 .section h2,
@@ -68,7 +116,27 @@ h1, h2, h3, h4,
   letter-spacing: -0.03em;
 }
 
-/* ── Kickers & labels ─────────────────────────────────────────────────────── */
+/* Mission wordmark */
+.forge-wordmark,
+.forge-hero-title__brand {
+  font-family: var(--font-wordmark), "Syncopate", "Space Grotesk", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.forge-hero-title__year {
+  font-family: var(--font-wordmark), "Syncopate", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  background: linear-gradient(180deg, #4F8CFF 0%, #7C3AED 52%, #A855F7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 20px rgb(79 140 255 / 0.28));
+}
+
+/* ── Kickers ────────────────────────────────────────────────────────────────── */
 .forge-kicker,
 .eyebrow,
 .section-kicker,
@@ -76,62 +144,89 @@ h1, h2, h3, h4,
 .home-compass-preview__kicker {
   color: var(--accent-2);
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-/* ── Panels & cards ───────────────────────────────────────────────────────── */
-.forge-panel,
-.forge-card,
-.home-compass-preview,
-.home-proof-strip__item,
-.home-lifecycle-rotator-panel,
-.final-band,
-.signal-panel,
-.session-card,
-.champion-card,
-.connection-card,
-.compass-panel,
-.voice-companion-card,
-.explore-journey-panel,
-.explore-preview-card,
-.pulse-donut-box,
-.cert-panel {
+/* ── Instrument cards (dark photonic default) ───────────────────────────────── */
+[data-theme="dark"] .forge-panel,
+[data-theme="dark"] .forge-card,
+[data-theme="dark"] .home-compass-preview,
+[data-theme="dark"] .home-proof-strip__item,
+[data-theme="dark"] .home-lifecycle-rotator-panel,
+[data-theme="dark"] .final-band,
+[data-theme="dark"] .signal-panel,
+[data-theme="dark"] .session-card,
+[data-theme="dark"] .champion-card,
+[data-theme="dark"] .connection-card,
+[data-theme="dark"] .compass-panel,
+[data-theme="dark"] .voice-companion-card,
+[data-theme="dark"] .explore-journey-panel,
+[data-theme="dark"] .explore-preview-card,
+[data-theme="dark"] .pulse-donut-box,
+[data-theme="dark"] .cert-panel {
   background: var(--forge-glass);
   border: 1px solid var(--forge-border);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(16px);
   box-shadow: var(--shadow-sm);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Light mode — clean white surfaces, not grey glass */
+[data-theme="light"] .forge-panel,
+[data-theme="light"] .forge-card,
+[data-theme="light"] .home-compass-preview,
+[data-theme="light"] .home-proof-strip__item,
+[data-theme="light"] .home-lifecycle-rotator-panel,
+[data-theme="light"] .final-band,
+[data-theme="light"] .signal-panel,
+[data-theme="light"] .compass-panel,
+[data-theme="light"] .voice-companion-card,
+[data-theme="light"] .pulse-donut-box {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.forge-panel:hover,
+.forge-card:hover,
+.session-card:hover,
+.champion-card:hover,
+.explore-preview-card:hover,
+.home-compass-preview:hover {
+  border-color: rgb(34 211 238 / 0.28);
+  box-shadow:
+    inset 0 1px 0 rgb(34 211 238 / 0.08),
+    0 0 24px rgb(124 58 237 / 0.1);
 }
 
 .forge-border {
   border: 1px solid var(--forge-border);
 }
 
-.forge-glow {
-  box-shadow: var(--forge-glow);
-}
-
-/* ── Header ───────────────────────────────────────────────────────────────── */
+/* ── Header ─────────────────────────────────────────────────────────────────── */
 .site-header {
   border-bottom: 1px solid var(--forge-border);
   background: var(--header-bg);
-  backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(24px) saturate(1.2);
 }
 
 .brand-word {
   font-family: var(--font-display), "Space Grotesk", sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.9375rem;
 }
 
 .site-nav-link {
   font-size: 0.8125rem;
   font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -145,171 +240,252 @@ h1, h2, h3, h4,
   border-bottom-color: var(--accent-2);
 }
 
-/* ── Buttons ──────────────────────────────────────────────────────────────── */
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
 .btn {
   border-radius: var(--radius-sm);
+  font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.01em;
-  text-transform: none;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .btn-primary {
   background: var(--forge-gradient);
   color: #fff;
-  border: 1px solid transparent;
-  box-shadow: 0 4px 24px rgb(99 102 241 / 0.35);
+  border: 1px solid rgb(124 58 237 / 0.4);
+  box-shadow: 0 0 24px rgb(124 58 237 / 0.25);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 6px 32px rgb(99 102 241 / 0.45);
+  box-shadow: 0 0 36px rgb(124 58 237 / 0.38);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: var(--forge-glass);
+  background: transparent;
   border: 1px solid var(--forge-border);
   color: var(--text);
-  backdrop-filter: blur(8px);
 }
 
 .btn-secondary:hover {
-  border-color: rgb(34 211 238 / 0.4);
-  background: rgb(99 102 241 / 0.08);
+  border-color: var(--forge-laser);
+  box-shadow: 0 0 20px rgb(34 211 238 / 0.12);
 }
 
 .btn-ghost {
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
 }
 
 .btn-ghost:hover {
   color: var(--accent-2);
-  background: transparent;
 }
 
-/* ── Hero ─────────────────────────────────────────────────────────────────── */
+/* ── Hero ───────────────────────────────────────────────────────────────────── */
 .forge-hero {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 2.5rem;
-  padding: clamp(2.5rem, 5vw, 4.5rem) 0 clamp(2rem, 4vw, 3rem);
+  padding: clamp(3rem, 6vw, 5rem) 0 clamp(2rem, 4vw, 3rem);
   align-items: center;
   overflow: hidden;
 }
 
 @media (min-width: 960px) {
-  .forge-hero--with-preview {
-    grid-template-columns: minmax(0, 1.05fr) minmax(280px, 400px);
-    gap: clamp(2rem, 4vw, 3rem);
+  .forge-hero--visual {
+    grid-template-columns: minmax(0, 0.68fr) minmax(380px, 1.32fr);
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: center;
   }
 }
 
-.forge-hero::after {
-  content: "";
-  position: absolute;
-  right: -10%;
-  top: 10%;
-  width: 55%;
-  height: 70%;
-  background: radial-gradient(ellipse at center, rgb(99 102 241 / 0.12), transparent 70%);
-  pointer-events: none;
+.forge-hero__copy {
+  max-width: 26rem;
 }
 
 .forge-hero-title {
-  font-size: clamp(3.25rem, 8vw, 5.75rem);
-  line-height: 0.92;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
+  font-size: clamp(2.35rem, 5.8vw, 4.75rem);
+  line-height: 0.86;
+  margin: 0;
+}
+
+.forge-hero-eyebrow {
+  margin: 0 0 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.65rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(168 85 247 / 0.85);
+}
+
+.forge-hero-eyebrow__sep {
+  opacity: 0.45;
 }
 
 .forge-hero-title__brand {
   display: block;
   color: var(--text);
+  text-shadow:
+    0 0 40px rgb(255 255 255 / 0.08),
+    0 0 80px rgb(124 58 237 / 0.12);
 }
 
 .forge-hero-title__year {
   display: block;
-  background: var(--forge-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  margin-top: 0.02em;
 }
 
 .forge-hero-tagline {
-  margin: 0 0 1rem;
-  font-family: var(--font-display), "Space Grotesk", sans-serif;
-  font-size: clamp(0.875rem, 1.2vw, 1rem);
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  margin: 1rem 0 0;
+  font-family: var(--font-wordmark), "Syncopate", "Space Grotesk", sans-serif;
+  font-size: clamp(0.6875rem, 0.95vw, 0.8125rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: var(--soft);
+  color: rgb(255 255 255 / 0.72);
 }
 
 .forge-hero__lede {
-  margin: 0;
-  font-size: clamp(1rem, 1.15vw, 1.125rem);
-  line-height: 1.65;
+  margin: 0.875rem 0 0;
+  font-size: clamp(0.9375rem, 1vw, 1rem);
+  line-height: 1.6;
   color: var(--muted);
-  max-width: 34rem;
+  max-width: 28rem;
 }
 
 .forge-hero-meta {
-  margin: 1.25rem 0 0;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.forge-hero-meta--venue {
+  margin-top: 1rem;
+}
+
+.forge-hero-meta--venue span {
   color: var(--muted);
+}
+
+.forge-hero-meta__dates {
+  color: rgb(168 85 247 / 0.95);
 }
 
 .forge-hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 2rem;
+  gap: 10px;
+  margin-top: 1.75rem;
 }
 
-/* ── Orb / geometric light field ──────────────────────────────────────────── */
-.forge-orb,
+.forge-hero__beams {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.35;
+}
+
+/* ── Photonic visual — transparent artwork dominates ───────────────────────── */
 .forge-hero-visual {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 280px;
+  min-height: clamp(320px, 52vw, 720px);
+  margin: -1rem 0;
+  background: transparent;
 }
 
-.forge-hero-visual__glow,
-.forge-orb__halo {
-  position: absolute;
-  width: 75%;
-  height: 75%;
-  background: radial-gradient(circle, rgb(168 85 247 / 0.35) 0%, rgb(99 102 241 / 0.15) 40%, transparent 70%);
-  filter: blur(48px);
-  pointer-events: none;
-}
-
-.forge-hero-visual__shape {
-  width: min(100%, 400px);
-  filter: drop-shadow(var(--forge-glow));
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .forge-hero-visual__shape {
-    animation: forge-float 9s ease-in-out infinite;
+@media (min-width: 960px) {
+  .forge-hero-visual {
+    min-height: clamp(420px, 58vh, 780px);
+    margin: -2rem -1rem -2rem 0;
+    justify-content: flex-end;
   }
 }
 
-@keyframes forge-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(0.5deg); }
+.forge-hero-visual__glow {
+  position: absolute;
+  inset: 15% 0 8%;
+  background: radial-gradient(
+    ellipse 50% 42% at 52% 58%,
+    rgb(124 58 237 / 0.14),
+    transparent 68%
+  );
+  filter: blur(32px);
+  pointer-events: none;
+}
+
+.forge-hero-visual__art {
+  position: relative;
+  z-index: 2;
+  width: min(128%, 760px);
+  max-width: none;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  background: transparent !important;
+  filter: brightness(1.06) contrast(1.04);
+}
+
+[data-theme="light"] .forge-hero-visual {
+  background: transparent;
+}
+
+[data-theme="light"] .forge-hero-visual__art--beam {
+  mix-blend-mode: screen;
+  filter: brightness(1.12) contrast(1.1);
+}
+
+[data-theme="light"] .forge-hero-visual__glow {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .forge-hero-visual__art {
+    width: min(135%, 820px);
+    transform: translateX(4%);
+  }
+}
+
+.forge-hero-visual__art--beam {
+  animation: forge-beam-float 10s ease-in-out infinite alternate;
+}
+
+@keyframes forge-beam-float {
+  from { transform: translateX(4%) translateY(0); }
+  to   { transform: translateX(4%) translateY(-10px); }
+}
+
+@media (max-width: 959px) {
+  @keyframes forge-beam-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-10px); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forge-hero-visual__art--beam {
+    animation: none;
+  }
 }
 
 /* ── Stats instrumentation ──────────────────────────────────────────────────── */
 .home-proof-strip {
-  margin: 0 0 2rem;
+  margin: 0 0 2.5rem;
   padding: 0;
   border: none;
   background: transparent;
@@ -332,27 +508,69 @@ h1, h2, h3, h4,
 }
 
 .home-proof-strip__item {
-  background: var(--forge-glass);
+  background: var(--panel);
   border: none;
   border-radius: 0;
-  padding: 1.25rem 1.5rem;
-  min-height: 88px;
+  padding: 1.35rem 1.5rem;
+  min-height: 108px;
   box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.home-proof-strip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--forge-border);
+  background: rgb(124 58 237 / 0.06);
+  color: var(--accent-3);
+}
+
+.home-proof-strip__icon--sessions {
+  color: #4F8CFF;
+  box-shadow: 0 0 16px rgb(79 140 255 / 0.15);
+}
+
+.home-proof-strip__icon--guides {
+  color: #A855F7;
+  box-shadow: 0 0 16px rgb(168 85 247 / 0.15);
+}
+
+.home-proof-strip__icon--communities {
+  color: #22D3EE;
+  box-shadow: 0 0 16px rgb(34 211 238 / 0.15);
 }
 
 .home-proof-strip__value {
   font-family: var(--font-display), "Space Grotesk", sans-serif;
   font-weight: 700;
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
-  letter-spacing: -0.03em;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
 }
 
-/* ── Lifecycle & sections ───────────────────────────────────────────────────── */
+.home-proof-strip__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────────── */
 .home-lifecycle-tab {
   border-radius: var(--radius-sm);
   border: 1px solid var(--forge-border);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .home-lifecycle-tab.is-active {
@@ -372,16 +590,18 @@ h1, h2, h3, h4,
 .explore-hero h1,
 .compact-hero h1 {
   font-size: clamp(2rem, 4vw, 3.25rem);
-  font-weight: 700;
-  line-height: 1.05;
+  font-weight: 600;
+  line-height: 1.04;
 }
 
 .explore-journey-chip {
   border-radius: var(--radius-sm);
   border: 1px solid var(--forge-border);
   background: transparent;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .explore-journey-chip.is-active {
@@ -390,43 +610,47 @@ h1, h2, h3, h4,
   color: #fff;
 }
 
-.final-band h2 {
-  font-weight: 600;
+/* ── Compass intelligence layer ─────────────────────────────────────────────── */
+.voice-companion-card,
+.compass-section-body .voice-companion-card {
+  border: 1px solid var(--forge-border);
+  background: var(--panel);
+  border-radius: var(--radius-md);
 }
 
-/* ── Compass AI — intelligence layer ───────────────────────────────────────── */
 .ask-compass-trigger {
-  background: var(--forge-glass) !important;
+  background: var(--panel) !important;
   border: 1px solid var(--forge-border) !important;
   border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-sm) !important;
+  box-shadow: none !important;
 }
 
 .ask-compass-trigger:hover {
-  border-color: rgb(34 211 238 / 0.45) !important;
-  box-shadow: 0 0 32px rgb(99 102 241 / 0.25) !important;
+  border-color: var(--forge-laser) !important;
+  box-shadow: 0 0 28px rgb(34 211 238 / 0.15) !important;
 }
 
 .ask-compass-trigger-title {
   font-family: var(--font-display), "Space Grotesk", sans-serif !important;
-  font-size: 1.2rem !important;
+  font-size: 1.125rem !important;
   font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
   color: var(--text) !important;
 }
 
 .voice-assistant-response-kicker {
   color: var(--accent-2);
   font-family: var(--font-mono), monospace;
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .vcb-btn-companion {
   border-radius: 50% !important;
   background: var(--forge-gradient) !important;
-  border: none !important;
-  box-shadow: 0 4px 24px rgb(99 102 241 / 0.4) !important;
+  border: 1px solid rgb(124 58 237 / 0.5) !important;
+  box-shadow: 0 0 28px rgb(124 58 237 / 0.35) !important;
 }
 
 .chip.is-selected,
@@ -441,19 +665,17 @@ h1, h2, h3, h4,
 .site-footer {
   border-top: 1px solid var(--forge-border);
   color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-/* ── Focus states ───────────────────────────────────────────────────────────── */
-:focus-visible {
-  outline: 1px solid var(--accent-2);
-  outline-offset: 2px;
-}
-
-/* ── Override editorial / light remnants ────────────────────────────────────── */
+/* ── Cards detail ───────────────────────────────────────────────────────────── */
 .home-compass-preview__card,
 .explore-preview-card {
   border-radius: var(--radius-sm);
-  background: rgb(0 0 0 / 0.25);
+  background: rgb(5 6 10 / 0.5);
+  border: 1px solid var(--forge-border);
 }
 
 .home-compass-preview__card--session,
@@ -468,5 +690,27 @@ h1, h2, h3, h4,
 }
 
 .cert-panel__hero {
-  background: var(--forge-glass) !important;
+  background: var(--panel) !important;
+}
+
+/* ── Focus & motion ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .forge-halo {
+    animation: forge-halo-pulse 8s ease-in-out infinite;
+  }
+}
+
+@keyframes forge-photon-drift {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-8px); opacity: 0.92; }
+}
+
+@keyframes forge-halo-pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
 }

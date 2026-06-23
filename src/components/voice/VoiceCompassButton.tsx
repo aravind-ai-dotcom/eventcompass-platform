@@ -873,9 +873,9 @@ export default function VoiceCompassButton({
           <>
             {!embedInCommandCenter && (
               <CompassModuleHead
-                kicker={FORGE_PRODUCT.askCompassAi}
-                title={`Sessions. People. ${FORGE_LABELS.learningPaths}. ${FORGE_LABELS.communities}.`}
-                description="Your concierge for the week ahead."
+                kicker={FORGE_PRODUCT.compassIntelligence}
+                title={`Sessions · Guides · ${FORGE_LABELS.learningPaths} · ${FORGE_LABELS.communities}`}
+                description="Navigation and signals for your week at FORGE."
               />
             )}
             <p className="compass-live-signal" aria-live="polite">
@@ -931,7 +931,7 @@ export default function VoiceCompassButton({
                   <p className="voice-assistant-prompt-text">&ldquo;{transcript}&rdquo;</p>
                 ) : (
                   <p className="voice-assistant-prompt-text">
-                    {isListening ? "Listening…" : "What would you like to discover?"}
+                    {isListening ? "Listening…" : "What should Compass prioritize?"}
                   </p>
                 )}
                 <p className="voice-assistant-prompt-hint">
@@ -941,7 +941,7 @@ export default function VoiceCompassButton({
 
               {/* Right — response panel */}
               <div className="voice-assistant-response" aria-live="polite">
-                <p className="voice-assistant-response-kicker">Compass suggests</p>
+                <p className="voice-assistant-response-kicker">Compass guidance</p>
                 {showError && (
                   <p className="voice-assistant-response-body" style={{ color: "#DC2626" }}>{errorMsg}</p>
                 )}
@@ -952,7 +952,7 @@ export default function VoiceCompassButton({
                   <p className="voice-assistant-response-body">{response.display}</p>
                 )}
                 {!showResult && !showError && !isProcessing && (
-                  <p className="voice-assistant-response-idle">Tap the microphone to start.</p>
+                  <p className="voice-assistant-response-idle">Activate guidance to begin.</p>
                 )}
               </div>
             </div>

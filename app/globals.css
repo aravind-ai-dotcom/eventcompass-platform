@@ -1,44 +1,49 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Compass — Global Styles
-   FORGE 2027: cinematic technology event platform.
+   FORGE 2027: Photonic Technology Design System
 ───────────────────────────────────────────────────────────────────────────── */
 
-/* ── Theme: dark (default — FORGE cinematic) ──────────────────────────────── */
+/* ── Theme: dark (default — FORGE photonic) ─────────────────────────────────── */
 :root {
   --site-header-height: 72px;
-  --bg:           #030308;
-  --header-bg:    rgb(3 3 8 / 0.82);
-  --surface:      #0A0A12;
-  --panel:        #0D0D16;
-  --final-bg:     #080810;
-  --text:         #F2F2F7;
-  --soft:         #B8B8C8;
-  --muted:        #72728A;
-  --line:         rgb(99 102 241 / 0.14);
-  --line-strong:  rgb(139 92 246 / 0.28);
-  --accent:       #6366F1;
-  --accent-rgb:   99 102 241;
-  --accent-hover: #818CF8;
+  --bg:           #05060A;
+  --header-bg:    rgb(5 6 10 / 0.88);
+  --surface:      #0B0F16;
+  --panel:        #121826;
+  --final-bg:     #0B0F16;
+  --text:         #FFFFFF;
+  --soft:         #D1D5DB;
+  --muted:        #9CA3AF;
+  --line:         rgb(124 58 237 / 0.12);
+  --line-strong:  rgb(79 140 255 / 0.28);
+  --accent:       #7C3AED;
+  --accent-rgb:   124 58 237;
+  --accent-hover: #9333EA;
   --accent-text:  #FFFFFF;
   --accent-2:     #22D3EE;
-  --accent-3:     #3B82F6;
+  --accent-3:     #4F8CFF;
   --accent-4:     #A855F7;
+  --success:      #10B981;
+  --warning:      #F59E0B;
   --purple:       var(--accent-4);
-  --purple-soft:  #A78BFA;
-  --purple-bg:    rgb(99 102 241 / 0.1);
-  --purple-border:rgb(99 102 241 / 0.32);
+  --purple-soft:  #C084FC;
+  --purple-bg:    rgb(124 58 237 / 0.08);
+  --purple-border:rgb(124 58 237 / 0.24);
   --hover:        rgb(255 255 255 / 0.04);
-  --chip:         rgb(255 255 255 / 0.06);
+  --chip:         rgb(255 255 255 / 0.05);
   --ink:          var(--text);
-  --shadow-sm:    0 0 24px rgb(99 102 241 / 0.12);
-  --shadow-md:    0 0 48px rgb(99 102 241 / 0.18);
-  --radius-sm:    6px;
-  --radius-md:    10px;
+  --shadow-sm:    0 0 20px rgb(124 58 237 / 0.08);
+  --shadow-md:    0 0 40px rgb(79 140 255 / 0.12);
+  --radius-sm:    2px;
+  --radius-md:    4px;
   --editorial-spacing: clamp(3.5rem, 7vw, 6rem);
-  --forge-glow:   0 0 80px rgb(99 102 241 / 0.35);
-  --forge-gradient: linear-gradient(135deg, #3B82F6 0%, #6366F1 45%, #A855F7 100%);
-  --forge-glass:  rgb(255 255 255 / 0.03);
-  --forge-border: rgb(99 102 241 / 0.22);
+  --forge-glow:   0 0 100px rgb(124 58 237 / 0.28);
+  --forge-gradient: linear-gradient(135deg, #4F8CFF 0%, #7C3AED 50%, #A855F7 100%);
+  --forge-glass:  rgb(18 24 38 / 0.72);
+  --forge-border: rgb(79 140 255 / 0.18);
+  --forge-laser:  rgb(34 211 238 / 0.55);
+  --donut-center: var(--bg);
+  --donut-track:  rgb(79 140 255 / 0.14);
 }
 
 /* ── Theme: light (alternate) ─────────────────────────────────────────────── */
@@ -69,36 +74,43 @@
   --shadow-sm:    0 2px 16px rgb(10 10 15 / 0.06);
   --shadow-md:    0 8px 32px rgb(10 10 15 / 0.1);
   --forge-glow:   none;
+  --forge-glass:  #FFFFFF;
+  --forge-border: rgb(10 10 15 / 0.1);
+  --final-bg:     #FFFFFF;
+  --donut-center: #FFFFFF;
+  --donut-track:  rgb(10 10 15 / 0.1);
 }
 
 /* ── Theme: dark (explicit) ───────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:           #030308;
-  --header-bg:    rgb(3 3 8 / 0.82);
-  --surface:      #0A0A12;
-  --panel:        #0D0D16;
-  --final-bg:     #080810;
-  --text:         #F2F2F7;
-  --soft:         #B8B8C8;
-  --muted:        #72728A;
-  --line:         rgb(99 102 241 / 0.14);
-  --line-strong:  rgb(139 92 246 / 0.28);
-  --accent:       #6366F1;
-  --accent-rgb:   99 102 241;
-  --accent-hover: #818CF8;
+  --bg:           #05060A;
+  --header-bg:    rgb(5 6 10 / 0.88);
+  --surface:      #0B0F16;
+  --panel:        #121826;
+  --final-bg:     #0B0F16;
+  --text:         #FFFFFF;
+  --soft:         #D1D5DB;
+  --muted:        #9CA3AF;
+  --line:         rgb(124 58 237 / 0.12);
+  --line-strong:  rgb(79 140 255 / 0.28);
+  --accent:       #7C3AED;
+  --accent-rgb:   124 58 237;
+  --accent-hover: #9333EA;
   --accent-text:  #FFFFFF;
   --accent-2:     #22D3EE;
-  --accent-3:     #3B82F6;
+  --accent-3:     #4F8CFF;
   --accent-4:     #A855F7;
   --purple:       var(--accent-4);
-  --purple-soft:  #A78BFA;
-  --purple-bg:    rgb(99 102 241 / 0.1);
-  --purple-border:rgb(99 102 241 / 0.32);
+  --purple-soft:  #C084FC;
+  --purple-bg:    rgb(124 58 237 / 0.08);
+  --purple-border:rgb(124 58 237 / 0.24);
   --hover:        rgb(255 255 255 / 0.04);
-  --chip:         rgb(255 255 255 / 0.06);
-  --shadow-sm:    0 0 24px rgb(99 102 241 / 0.12);
-  --shadow-md:    0 0 48px rgb(99 102 241 / 0.18);
-  --forge-glow:   0 0 80px rgb(99 102 241 / 0.35);
+  --chip:         rgb(255 255 255 / 0.05);
+  --shadow-sm:    0 0 20px rgb(124 58 237 / 0.08);
+  --shadow-md:    0 0 40px rgb(79 140 255 / 0.12);
+  --forge-glow:   0 0 100px rgb(124 58 237 / 0.28);
+  --donut-center: var(--bg);
+  --donut-track:  rgb(79 140 255 / 0.14);
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
@@ -10029,14 +10041,31 @@ img { max-width: 100%; display: block; }
   background: var(--panel);
   padding: 20px 18px;
   min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
+.ibm-community-metrics__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 0.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--forge-border, var(--line));
+  background: rgb(124 58 237 / 0.06);
+}
+.ibm-community-metrics__icon--members { color: #4F8CFF; box-shadow: 0 0 16px rgb(79 140 255 / 0.12); }
+.ibm-community-metrics__icon--catalog { color: #A855F7; box-shadow: 0 0 16px rgb(168 85 247 / 0.12); }
+.ibm-community-metrics__icon--groups  { color: #22D3EE; box-shadow: 0 0 16px rgb(34 211 238 / 0.12); }
 .ibm-community-metrics b {
   display: block;
   font-size: clamp(2rem, 5vw, 2.75rem);
   line-height: 1;
-  margin: 0 0 10px;
-  color: var(--accent);
-  font-weight: 520;
+  margin: 0 0 6px;
+  color: var(--text);
+  font-weight: 700;
   letter-spacing: -0.04em;
 }
 .ibm-community-metrics span {

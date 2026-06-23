@@ -65,11 +65,11 @@ export default function HomeCompassPreview() {
   return (
     <aside className="home-compass-preview" aria-label="Compass preview">
       <div className="home-compass-preview__head">
-        <span className="home-compass-preview__kicker">{FORGE_PRODUCT.compassAi}</span>
+        <span className="home-compass-preview__kicker">{FORGE_PRODUCT.compassIntelligence}</span>
         <p className="home-compass-preview__note">
           {user && enrolled
-            ? `${FORGE_PRODUCT.myJourney} is composed around your interests.`
-            : "Compass holds your recommendations until you arrive — sign in and share what matters to you."}
+            ? `Signals aligned to your profile — recommendations live in ${FORGE_PRODUCT.myJourney}.`
+            : "Opportunities appear once Compass understands your goals. Build your journey to activate guidance."}
         </p>
       </div>
       <ul className="home-compass-preview__list">

@@ -10,23 +10,31 @@ import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
 export default function HomePage() {
   return (
     <>
-      <section className="forge-hero forge-hero--with-preview">
+      <section className="forge-hero forge-hero--visual">
+        <div className="forge-hero__beams" aria-hidden="true">
+          <span className="forge-beam" style={{ left: "8%", top: 0, height: "100%", opacity: 0.2 }} />
+          <span className="forge-beam" style={{ left: "92%", top: 0, height: "100%", opacity: 0.15 }} />
+        </div>
         <div className="forge-hero__copy">
-          <span className="forge-kicker">{FORGE_EVENT.name}</span>
+          <p className="forge-hero-eyebrow">
+            <span className="forge-hero-meta__dates">{FORGE_EVENT.dates}</span>
+            <span className="forge-hero-eyebrow__sep" aria-hidden="true">·</span>
+            <span>{FORGE_EVENT.city}</span>
+          </p>
           <h1 className="forge-hero-title" aria-label={`${FORGE_EVENT.name} — ${FORGE_EVENT.tagline}`}>
-            <span className="forge-hero-title__brand">FORGE</span>
+            <span className="forge-hero-title__brand forge-wordmark">FORGE</span>
             <span className="forge-hero-title__year">2027</span>
           </h1>
           <p className="forge-hero-tagline">{FORGE_EVENT.tagline}</p>
           <p className="forge-hero__lede">
-            The builders&apos; destination. An intelligent event system that guides every attendee —
-            technology, people, and opportunity aligned by Compass.
+            The operating system for a world-class technology gathering.
+            Intelligence, precision, and human connection — powered by Compass.
           </p>
-          <p className="forge-hero-meta">
-            {FORGE_EVENT.dates} · {FORGE_EVENT.locationLine}
-          </p>
+          <div className="forge-hero-meta forge-hero-meta--venue">
+            <span>{FORGE_EVENT.venue}</span>
+          </div>
           <div className="forge-hero-actions">
-            <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
+            <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney}</Link>
             <Link href="/txc/sessions" className="btn-secondary">Explore Sessions</Link>
             <Link href="/txc/experience#compass-ai" className="btn-ghost">{FORGE_PRODUCT.askCompassAi}</Link>
           </div>
@@ -40,14 +48,14 @@ export default function HomePage() {
         <HomeLifecycleRotator />
       </section>
 
-      <section className="forge-panel" style={{ padding: "1.25rem", marginBottom: "2rem" }}>
+      <section className="forge-panel forge-laser" style={{ padding: "1.25rem", marginBottom: "2rem" }}>
         <HomeCompassPreview />
       </section>
 
       <section className="final-band forge-card">
         <div>
-          <h2>Your week, engineered.</h2>
-          <p>Tell Compass what you&apos;re building. Walk into FORGE with a plan shaped for you.</p>
+          <h2>Opportunities aligned.</h2>
+          <p>Compass maps your week before you arrive — sessions, guides, and signals engineered for you.</p>
         </div>
         <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
       </section>

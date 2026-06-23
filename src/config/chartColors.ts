@@ -1,17 +1,15 @@
-/**
- * Chart palette — cinematic FORGE (indigo, violet, cyan).
- */
+/** Chart palette — photonic FORGE system */
 export const CHART_COLORS = {
-  primary: "#6366F1",
-  primaryLight: "#818CF8",
+  primary: "#7C3AED",
+  primaryLight: "#A855F7",
   purple: "#A855F7",
   cyan: "#22D3EE",
-  green: "#3B82F6",
+  green: "#10B981",
   red: "#F87171",
-  yellow: "#FBBF24",
+  yellow: "#F59E0B",
   orange: "#F97316",
-  maroon: "#7C3AED",
-  teal: "#14B8A6",
+  maroon: "#4F8CFF",
+  teal: "#22D3EE",
 } as const;
 
 export const THEME_VARS = {

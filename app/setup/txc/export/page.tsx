@@ -152,7 +152,7 @@ export default function TxcExportSetupPage() {
       <section className="setup-export-section">
         <h2>Legacy knowledgeBase</h2>
         <p style={{ margin: "0 0 14px", color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.5, maxWidth: "42rem" }}>
-          Champion, Event Logistics, and Compass Q&amp;A records from <code>knowledgeBase</code> ({records.length} records).
+          Guide, Event Logistics, and Compass Q&amp;A records from <code>knowledgeBase</code> ({records.length} records).
         </p>
         <div className="setup-toolbar">
           <button type="button" className="setup-btn setup-btn--secondary" onClick={downloadJson}>Export JSON</button>

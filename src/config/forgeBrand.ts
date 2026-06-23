@@ -14,7 +14,10 @@ export const FORGE_EVENT = {
 
 export const FORGE_PRODUCT = {
   name: "Compass",
-  tagline: "The intelligence layer for your event",
+  tagline: "Event intelligence and navigation",
+  compassIntelligence: "Compass Intelligence",
+  compassGuidance: "Compass Guidance",
+  poweredByCompass: "Powered by Compass",
   myJourney: "My Journey",
   buildMyJourney: "Build My Journey",
   forgeJourney: "FORGE Journey",
@@ -65,21 +68,21 @@ export const FORGE_EDGE = [
     title: "Engineering Excellence",
     body: "Deep technical sessions from practitioners building production systems at scale.",
     href: "/txc/sessions",
-    accent: "#6366F1",
+    accent: "#7C3AED",
   },
   {
     id: "systems",
     title: "Future Systems",
     body: "Explore architectures, platforms, and infrastructure shaping the next decade.",
     href: "/txc/explore",
-    accent: "#3B82F6",
+    accent: "#4F8CFF",
   },
   {
     id: "builders",
     title: "Builder Community",
     body: "Connect with engineers, architects, and technical leaders who ship.",
     href: "/txc/champions",
-    accent: "#3B82F6",
+    accent: "#4F8CFF",
   },
   {
     id: "innovation",

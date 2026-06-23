@@ -38,7 +38,7 @@ const CATEGORIES = [
   { id: "Security",            label: "Security",             kicker: "Security practitioners"        },
   { id: "First-Time",          label: "First-Time Attendees", kicker: `New to ${FORGE_EVENT.name}`    },
   { id: "Community Leaders",   label: "Community Leaders",    kicker: "Driving the community"         },
-  { id: "Champions",           label: FORGE_LABELS.guides,    kicker: "Ask them anything"             },
+  { id: "Champions",           label: FORGE_LABELS.guides,    kicker: "Expert signals"                },
 ];
 
 function PersonMiniCard({ person }: { person: RecommendedPerson }) {

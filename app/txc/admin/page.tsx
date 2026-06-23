@@ -1467,7 +1467,7 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
                 fontSize: "0.76rem", fontFamily: "inherit", cursor: loading ? "default" : "pointer" }}>
               {loading ? "Loading…" : "↻ Refresh"}
             </button>
-            <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0 }}>Atlanta · Oct 26–30</p>
+            <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0 }}>{FORGE_EVENT.dates} · {FORGE_EVENT.city}</p>
           </div>
         </div>
         <main style={{ flex: 1, overflowY: "auto", padding: "32px" }}>{children}</main>

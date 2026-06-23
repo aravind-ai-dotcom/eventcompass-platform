@@ -1,22 +1,29 @@
 // =============================================================================
-// Compass — Root Layout
-// FORGE 2027 cinematic technology shell on /txc/* routes.
+// Compass — Root Layout · FORGE 2027 Photonic Technology
 // =============================================================================
 
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk, Syncopate } from "next/font/google";
 import "./globals.css";
 import "./forge-cinematic.css";
 import RouteChrome from "@/components/layout/RouteChrome";
 
+/** Mission-designation wordmark — Monument/Eurostile equivalent */
+const wordmark = Syncopate({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-wordmark",
+  display: "swap",
+});
+
 const display = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
 });
 
-const sans = Inter({
+const sans = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
@@ -35,7 +42,8 @@ export const metadata: Metadata = {
     default: "Compass",
     template: "%s · Compass",
   },
-  description: "FORGE 2027 — the builders' destination. Technology, people, and opportunity aligned by Compass.",
+  description:
+    "FORGE 2027 — the operating system for a world-class technology gathering. Powered by Compass intelligence.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -56,7 +64,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#030308",
+  themeColor: "#05060A",
 };
 
 export default function RootLayout({
@@ -67,9 +75,9 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${display.variable} ${sans.variable} ${jetbrainsMono.variable}`}
+        className={`${wordmark.variable} ${display.variable} ${sans.variable} ${jetbrainsMono.variable}`}
         style={{
-          fontFamily: "var(--font-sans, Inter, system-ui, sans-serif)",
+          fontFamily: "var(--font-sans, Space Grotesk, system-ui, sans-serif)",
         }}
       >
         <RouteChrome>{children}</RouteChrome>
