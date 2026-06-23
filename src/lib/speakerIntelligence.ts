@@ -393,7 +393,7 @@ export function speakerToRecommendedPerson(speaker: ScoredSpeaker): RecommendedP
     },
     compass_reasons: speaker.whyMeet,
     is_speaker: true,
-    roles: speaker.isChampion ? ["IBM Champion"] : undefined,
+    roles: speaker.isChampion ? ["Guide"] : undefined,
   };
 }
 

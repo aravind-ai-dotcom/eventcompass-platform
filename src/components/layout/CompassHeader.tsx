@@ -56,7 +56,7 @@ function CloseIcon() {
 export default function CompassHeader() {
   const pathname = usePathname();
   const { user, enrolled } = useAuth();
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [menuOpen, setMenuOpen] = useState(false);
 
   const applyTheme = useCallback((t: Theme) => {
@@ -69,7 +69,7 @@ export default function CompassHeader() {
   useEffect(() => {
     const stored = localStorage.getItem("compass_theme") as Theme | null;
     const current = document.documentElement.getAttribute("data-theme") as Theme | null;
-    const resolved = stored === "light" || stored === "dark" ? stored : current === "dark" ? "dark" : "light";
+    const resolved = stored === "light" || stored === "dark" ? stored : current === "light" ? "light" : "dark";
     applyTheme(resolved);
   }, [applyTheme]);
 

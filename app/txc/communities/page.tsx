@@ -13,10 +13,10 @@ export default function CommunitiesPage() {
     <>
       <section className="compact-hero">
         <div className="section-kicker">{FORGE_LABELS.communities}</div>
-        <h1>{FORGE_LABELS.communities}</h1>
+        <h1>Communities that endure.</h1>
         <p>
-          Browse {IBM_COMMUNITIES.length} {FORGE_EVENT.name} communities — filter by category and keyword to find your group.
-          In production this catalog scales to hundreds of community destinations.
+          Browse {IBM_COMMUNITIES.length} {FORGE_EVENT.name} communities — filter by category and keyword to find your people.
+          The conversation continues long after the week ends.
         </p>
       </section>
 

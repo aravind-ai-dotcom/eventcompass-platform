@@ -19,9 +19,9 @@ export default function ExplorePage() {
     <>
       <section className="story-hero story-hero--strong story-hero--spacious explore-hero">
         <div className="section-kicker">Explore</div>
-        <h1>What do you want to accomplish?</h1>
+        <h1>What are you building?</h1>
         <p className="explore-hero-lead">
-          Pick your intent. See how Compass helps — specific sessions and people unlock after you build your profile.
+          Define your intent. Compass maps sessions, guides, and moments to your goals.
         </p>
       </section>
 

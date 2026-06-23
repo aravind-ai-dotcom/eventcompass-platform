@@ -97,12 +97,12 @@ export default function TxcExportSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="TechXchange Compass"
+      eventLabel="FORGE 2027 Compass"
       title="Export Documentation"
-      subtitle="Download Voice Compass knowledge for study and review, plus legacy knowledgeBase exports"
+      subtitle="Download Compass AI knowledge for study and review, plus legacy knowledgeBase exports"
     >
       <section className="setup-export-section" style={{ marginBottom: "32px" }}>
-        <h2>Voice Compass knowledge (canonical)</h2>
+        <h2>Compass AI knowledge (canonical)</h2>
         <p style={{ margin: "0 0 14px", color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.5, maxWidth: "42rem" }}>
           Unified voice knowledge for study and editorial review — {voiceLoading ? "loading…" : `${voiceSummary.total} records`}
           {" "}from <code>voice_knowledge</code>. Excel includes Voice Knowledge, Categories, Review Notes, and Needs Review sheets.

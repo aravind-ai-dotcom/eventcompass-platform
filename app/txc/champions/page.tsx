@@ -568,11 +568,11 @@ export default function ChampionsPage() {
   return (
     <>
       <section className="compact-hero champions-hero">
-        <div className="section-kicker">People intelligence</div>
-        <h1>Find your people before you arrive.</h1>
+        <div className="section-kicker">{FORGE_LABELS.guides}</div>
+        <h1>Guides worth your time.</h1>
         <p>
-          Compass helps identify experts, mentors, peers, and community leaders
-          based on your interests, goals, and experience.
+          Compass surfaces experts, mentors, and technical leaders
+          aligned to what you build and where you&apos;re headed.
         </p>
       </section>
 

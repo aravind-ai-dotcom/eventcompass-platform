@@ -79,7 +79,7 @@ export default function TxcKnowledgeSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="TechXchange Compass"
+      eventLabel="FORGE 2027 Compass"
       title="Knowledge Base"
       subtitle="Firestore source of truth — organizations/ibm/events/txc2026/knowledgeBase"
     >

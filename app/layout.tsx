@@ -1,14 +1,22 @@
 // =============================================================================
-// Compass — Root Layout (product-neutral shell)
-// FORGE 2027 demo chrome is selected in RouteChrome by pathname.
+// Compass — Root Layout
+// FORGE 2027 cinematic technology shell on /txc/* routes.
 // =============================================================================
 
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import "./forge-cinematic.css";
 import RouteChrome from "@/components/layout/RouteChrome";
 
-const inter = Inter({
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const sans = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
@@ -27,12 +35,12 @@ export const metadata: Metadata = {
     default: "Compass",
     template: "%s · Compass",
   },
-  description: "AI-powered event intelligence — sessions, guides, communities, and your personalized journey.",
+  description: "FORGE 2027 — the builders' destination. Technology, people, and opportunity aligned by Compass.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     title: "Compass",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   icons: {
     icon: [
@@ -48,7 +56,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#7c3aed",
+  themeColor: "#030308",
 };
 
 export default function RootLayout({
@@ -57,9 +65,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning>
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable}`}
+        className={`${display.variable} ${sans.variable} ${jetbrainsMono.variable}`}
         style={{
           fontFamily: "var(--font-sans, Inter, system-ui, sans-serif)",
         }}

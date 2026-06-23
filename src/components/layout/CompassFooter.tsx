@@ -10,8 +10,8 @@ export default function CompassFooter() {
   }
   return (
     <footer className="site-footer">
-      <span>EventCompass · {FORGE_EVENT.name}</span>
-      <span>Networking · Learning · Fun</span>
+      <span>Compass · {FORGE_EVENT.name}</span>
+      <span>Technology · People · Opportunity</span>
     </footer>
   );
 }

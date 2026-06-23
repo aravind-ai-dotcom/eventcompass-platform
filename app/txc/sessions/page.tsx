@@ -1090,12 +1090,12 @@ function SessionsPageContent() {
           </>
         ) : (
           <>
-            <div className="section-kicker">Session intelligence</div>
-            <h1>Sessions that fit your week.</h1>
+            <div className="section-kicker">Sessions</div>
+            <h1>Sessions engineered for your week.</h1>
             <p>
               {isLoggedIn
-                ? "Compass reads sessions against your profile and surfaces what to prioritize: recommended matches, room momentum, and seats filling fast."
-                : `Browse the full ${FORGE_EVENT.name} catalog below. Sign in or build your Compass to unlock personalized match scores.`}
+                ? "Compass maps the program against your profile — priority matches, momentum, and seats filling fast."
+                : `Browse the full ${FORGE_EVENT.name} program. Sign in or build your journey to unlock match scores.`}
             </p>
           </>
         )}

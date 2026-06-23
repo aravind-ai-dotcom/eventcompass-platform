@@ -1,21 +1,19 @@
 /**
- * Neutral chart palette for admin analytics (dark surfaces).
- * Use THEME_VARS in attendee-facing inline styles.
+ * Chart palette — cinematic FORGE (indigo, violet, cyan).
  */
 export const CHART_COLORS = {
-  primary: "#7c3aed",
-  primaryLight: "#a78bfa",
-  purple: "#8b5cf6",
-  cyan: "#14b8a6",
-  green: "#10b981",
-  red: "#f87171",
-  yellow: "#fbbf24",
-  orange: "#fb923c",
-  maroon: "#c026d3",
-  teal: "#2dd4bf",
+  primary: "#6366F1",
+  primaryLight: "#818CF8",
+  purple: "#A855F7",
+  cyan: "#22D3EE",
+  green: "#3B82F6",
+  red: "#F87171",
+  yellow: "#FBBF24",
+  orange: "#F97316",
+  maroon: "#7C3AED",
+  teal: "#14B8A6",
 } as const;
 
-/** CSS variable references for component inline styles */
 export const THEME_VARS = {
   accent: "var(--accent)",
   text: "var(--text)",

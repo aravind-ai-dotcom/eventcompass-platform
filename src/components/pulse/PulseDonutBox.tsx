@@ -16,9 +16,9 @@ export interface DonutSegment {
 
 const TONE_VAR: Record<DonutTone, string> = {
   accent: "var(--accent)",
-  teal: "#14b8a6",
-  purple: "#8b5cf6",
-  green: "#10b981",
+  teal: "#22D3EE",
+  purple: "#A855F7",
+  green: "#6366F1",
   gray: "#6f6f6f",
   muted: "var(--line-strong)",
 };

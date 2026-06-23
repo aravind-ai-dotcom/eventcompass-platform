@@ -854,11 +854,11 @@ export default function VoiceCompassButton({
         .vcb-btn-results { background: var(--panel);   border-color: var(--accent);  color: var(--accent); }
         .vcb-btn-error   { background: var(--panel);   border-color: #DC2626;        color: #DC2626; }
         .compass-beacon-btn:hover .beacon-glow-radial { opacity:.7!important; }
-        .compass-beacon-btn:hover .beacon-star-group  { filter:drop-shadow(0 0 2px rgba(69,137,255,.9)); }
+        .compass-beacon-btn:hover .beacon-star-group  { filter:drop-shadow(0 0 2px rgb(var(--accent-rgb) / 0.5)); }
         .vcb-btn-companion {
           width: 72px; height: 72px; border-radius: 50%; padding: 0;
           justify-content: center; flex-shrink: 0;
-          box-shadow: 0 0 0 6px rgba(120, 169, 255, 0.08);
+          box-shadow: 0 0 0 6px rgb(var(--accent-rgb) / 0.08);
         }
         .vcb-btn-companion .vcb-btn-label { display: none; }
         @media(max-width:480px){ .vcb-btn:not(.vcb-btn-companion){width:100%;justify-content:center;} }
@@ -875,7 +875,7 @@ export default function VoiceCompassButton({
               <CompassModuleHead
                 kicker={FORGE_PRODUCT.askCompassAi}
                 title={`Sessions. People. ${FORGE_LABELS.learningPaths}. ${FORGE_LABELS.communities}.`}
-                description="What would you like help with?"
+                description="Your concierge for the week ahead."
               />
             )}
             <p className="compass-live-signal" aria-live="polite">
@@ -919,7 +919,7 @@ export default function VoiceCompassButton({
                         : isProcessing ? "Thinking…"
                         : showResult ? "Tap to ask again"
                         : showError ? "Tap to try again"
-                        : "Prioritize your next move."}
+                        : "Sessions, guides, and your next moment."}
                     </span>
                   </button>
                 )}
@@ -931,7 +931,7 @@ export default function VoiceCompassButton({
                   <p className="voice-assistant-prompt-text">&ldquo;{transcript}&rdquo;</p>
                 ) : (
                   <p className="voice-assistant-prompt-text">
-                    {isListening ? "Listening…" : "What should I do next?"}
+                    {isListening ? "Listening…" : "What would you like to discover?"}
                   </p>
                 )}
                 <p className="voice-assistant-prompt-hint">
@@ -941,7 +941,7 @@ export default function VoiceCompassButton({
 
               {/* Right — response panel */}
               <div className="voice-assistant-response" aria-live="polite">
-                <p className="voice-assistant-response-kicker">Compass says</p>
+                <p className="voice-assistant-response-kicker">Compass suggests</p>
                 {showError && (
                   <p className="voice-assistant-response-body" style={{ color: "#DC2626" }}>{errorMsg}</p>
                 )}

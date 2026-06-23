@@ -14,7 +14,7 @@ export const FORGE_EVENT = {
 
 export const FORGE_PRODUCT = {
   name: "Compass",
-  tagline: "AI-powered event intelligence",
+  tagline: "The intelligence layer for your event",
   myJourney: "My Journey",
   buildMyJourney: "Build My Journey",
   forgeJourney: "FORGE Journey",
@@ -55,6 +55,38 @@ export const FORGE_PILLARS = [
     body: "Participate in moments that create lasting value — sessions, showcases, and hands-on experiences.",
     href: "/txc/experience",
     cta: "Open My Journey",
+  },
+] as const;
+
+/** Home capability grid — builder-focused destinations */
+export const FORGE_EDGE = [
+  {
+    id: "engineering",
+    title: "Engineering Excellence",
+    body: "Deep technical sessions from practitioners building production systems at scale.",
+    href: "/txc/sessions",
+    accent: "#6366F1",
+  },
+  {
+    id: "systems",
+    title: "Future Systems",
+    body: "Explore architectures, platforms, and infrastructure shaping the next decade.",
+    href: "/txc/explore",
+    accent: "#3B82F6",
+  },
+  {
+    id: "builders",
+    title: "Builder Community",
+    body: "Connect with engineers, architects, and technical leaders who ship.",
+    href: "/txc/champions",
+    accent: "#3B82F6",
+  },
+  {
+    id: "innovation",
+    title: "Innovation Showcase",
+    body: "See emerging products, prototypes, and platform demos from the frontier.",
+    href: "/txc/communities",
+    accent: "#22D3EE",
   },
 ] as const;
 

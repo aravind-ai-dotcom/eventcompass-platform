@@ -11,8 +11,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, CSSProperties } from "react";
-import { tryGetDb } from "@/lib/firebase";
+import { tryGetDb, auth, firebaseConfigured } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import {
   VOICE_TONE_OPTIONS,
@@ -233,7 +234,7 @@ const ACTIVITY_SEED: { id: number; time: string; event: string; type: ActivityTy
   { id: 6,  time: "58 sec ago", event: "Amy L. saved Kubernetes Platform Lab",        type: "session",  persona: "Architect"  },
   { id: 7,  time: "1 min ago",  event: "Rajesh P. built his Compass profile",       type: "profile",  persona: "Developer"  },
   { id: 8,  time: "1 min ago",  event: "Elena K. requested a Guide 1:1",         type: "champion", persona: "Student"    },
-  { id: 9,  time: "2 min ago",  event: "David C. used Voice Compass",               type: "voice",    persona: "Executive"  },
+  { id: 9,  time: "2 min ago",  event: "David C. used Compass AI",                  type: "voice",    persona: "Executive"  },
   { id: 10, time: "2 min ago",  event: "Mei L. built her Compass profile",          type: "profile",  persona: "Partner"    },
 ];
 
@@ -539,6 +540,7 @@ interface AttendancePlanTimeBucket {
 interface AdminData {
   loading: boolean;
   error: string | null;
+  loadWarnings: string[];
   lastRefresh: Date | null;
   // Participants
   totalParticipants: number;
@@ -594,7 +596,7 @@ interface AdminData {
 
 function emptyData(): AdminData {
   return {
-    loading: false, error: null, lastRefresh: null,
+    loading: false, error: null, loadWarnings: [], lastRefresh: null,
     totalParticipants: 0, compassBuilt: 0,
     consentCounts: { public_profile: 0, linkedin: 0, alumni: 0, employer: 0, university: 0, sms: 0, intro: 0 },
     personaCounts: {}, roleCounts: {},
@@ -1040,7 +1042,7 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
   const identitySignals = aggregateIdentitySignals(partData);
 
   return {
-    loading: false, error: null, lastRefresh: new Date(),
+    loading: false, error: null, loadWarnings: [], lastRefresh: new Date(),
     totalParticipants, compassBuilt, consentCounts: cc,
     personaCounts, roleCounts,
     totalSessionsSaved: ss_total, totalSessionsHidden: hs_total,
@@ -1066,12 +1068,32 @@ function computeMetrics(parts: RawDoc[], sessions: RawDoc[], champions: RawDoc[]
 // useAdminData hook
 // ─────────────────────────────────────────────────────────────────────────────
 
+const ADMIN_COLLECTIONS = ["participants", "sessions", "champions"] as const;
+type AdminCollection = (typeof ADMIN_COLLECTIONS)[number];
+
+function isFirestorePermissionError(err: unknown): boolean {
+  const code = (err as { code?: string })?.code;
+  return code === "permission-denied" || code === "PERMISSION_DENIED";
+}
+
+function collectionLoadWarning(col: AdminCollection, err: unknown): string {
+  if (col === "participants" && isFirestorePermissionError(err)) {
+    return (
+      "Participant metrics require Firebase sign-in (Firestore rules). " +
+      "Sign in at /txc/login, then refresh this page. Sessions and guides still load without sign-in."
+    );
+  }
+  const code = (err as { code?: string })?.code;
+  const message = (err as { message?: string })?.message ?? String(err);
+  return `${col}: ${code ? `(${code}) ` : ""}${message}`;
+}
+
 function useAdminData(enabled: boolean) {
   const [data, setData] = useState<AdminData>({ ...emptyData(), loading: false });
 
   const load = useCallback(async () => {
     if (!enabled) return;
-    setData(d => ({ ...d, loading: true, error: null }));
+    setData(d => ({ ...d, loading: true, error: null, loadWarnings: [] }));
     try {
       const db = tryGetDb();
       if (!db) {
@@ -1082,18 +1104,61 @@ function useAdminData(enabled: boolean) {
         }));
         return;
       }
-      const [pSnap, sSnap, cSnap] = await Promise.all([
-        getDocs(collection(db, BASE + "/participants")),
-        getDocs(collection(db, BASE + "/sessions")),
-        getDocs(collection(db, BASE + "/champions")),
-      ]);
-      setData(computeMetrics(pSnap.docs, sSnap.docs, cSnap.docs));
+
+      const results = await Promise.allSettled(
+        ADMIN_COLLECTIONS.map(col => getDocs(collection(db, `${BASE}/${col}`))),
+      );
+
+      const docs: Record<AdminCollection, RawDoc[]> = {
+        participants: [],
+        sessions: [],
+        champions: [],
+      };
+      const warnings: string[] = [];
+
+      results.forEach((result, index) => {
+        const col = ADMIN_COLLECTIONS[index];
+        if (result.status === "fulfilled") {
+          docs[col] = result.value.docs;
+          return;
+        }
+        warnings.push(collectionLoadWarning(col, result.reason));
+      });
+
+      const anyLoaded = results.some(r => r.status === "fulfilled");
+      const metrics = computeMetrics(docs.participants, docs.sessions, docs.champions);
+
+      if (!anyLoaded) {
+        setData({
+          ...metrics,
+          loading: false,
+          error: warnings.join(" ") || "Could not load Firestore collections.",
+          loadWarnings: [],
+          lastRefresh: new Date(),
+        });
+        return;
+      }
+
+      setData({
+        ...metrics,
+        loading: false,
+        error: null,
+        loadWarnings: warnings,
+        lastRefresh: new Date(),
+      });
     } catch (err) {
       setData(d => ({ ...d, loading: false, error: String(err) }));
     }
   }, [enabled]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // Reload when Firebase auth becomes available (unlocks participants per security rules).
+  useEffect(() => {
+    if (!enabled || !firebaseConfigured) return;
+    const unsub = onAuthStateChanged(auth, () => { void load(); });
+    return unsub;
+  }, [enabled, load]);
 
   return { data, reload: load };
 }
@@ -2623,7 +2688,7 @@ function ActivityView() {
       ["saved a session",               "session"],
       ["added a Guide",              "champion"],
       ["accepted recommendations",      "reco"],
-      ["used Voice Compass",            "voice"],
+      ["used Compass AI",               "voice"],
       ["refined Compass profile",       "profile"],
     ];
     const personas = ["Developer","Architect","Executive","Guide","Student","Partner","Client","Attendee"];
@@ -3443,7 +3508,7 @@ function ExportsView() {
             Voice Knowledge
           </p>
           <p style={{ margin: 0, color: S.soft, fontSize: "0.9rem", fontWeight: 550 }}>
-            Study and review unified Voice Compass knowledge (83 records) as Excel.
+            Study and review unified Compass AI knowledge (83 records) as Excel.
           </p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
@@ -4668,6 +4733,16 @@ export default function AdminPage() {
           <p style={{ color: "#ff8389", fontSize: "0.82rem", margin: 0 }}>
             Firestore error: {data.error}
           </p>
+        </div>
+      )}
+      {data.loadWarnings.length > 0 && (
+        <div style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.35)",
+          padding: "10px 16px", marginBottom: "20px" }}>
+          {data.loadWarnings.map(w => (
+            <p key={w} style={{ color: CHART_COLORS.yellow, fontSize: "0.82rem", margin: "0 0 6px" }}>
+              {w}
+            </p>
+          ))}
         </div>
       )}
       {VIEW_MAP[view]}
