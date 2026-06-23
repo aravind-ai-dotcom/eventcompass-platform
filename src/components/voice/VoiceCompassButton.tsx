@@ -59,6 +59,7 @@ import {
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
 import CompassModuleHead from "@/components/experience/CompassModuleHead";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 /** Tiny silent WAV — unlocks audio playback during the user gesture. */
 const SILENT_WAV =
@@ -83,9 +84,9 @@ interface ActivityItem {
 }
 
 const DEMO_ACTIVITIES: ActivityItem[] = [
-  { id:"arcade",    title:"TechXchange Arcade",         type:"fun",            time:"9:00 AM – 4:00 PM", location:"Expo / Experience Zone", tags:["fun","community","networking"], demoFallback:true, primaryAction:{label:"View activity",href:"/txc/explore"},   secondaryAction:{label:"Add reminder",href:"/txc/enroll"} },
-  { id:"community", title:"Community Day",              type:"special_program",                           location:"Main Hall",              tags:["community","learning"],         demoFallback:true, primaryAction:{label:"View program", href:"/txc/communities"},secondaryAction:{label:"Explore",href:"/txc/experience"} },
-  { id:"partner",   title:"Partner Day",                type:"special_program",                           location:"Partner Pavilion",        tags:["partner","business","ecosystem"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/explore"},   secondaryAction:{label:"Explore",href:"/txc/experience"} },
+  { id:"arcade",    title:"FORGE Arcade",               type:"fun",            time:"9:00 AM – 4:00 PM", location:"Expo / Experience Zone", tags:["fun","community","networking"], demoFallback:true, primaryAction:{label:"View activity",href:"/txc/explore"},   secondaryAction:{label:"Add reminder",href:"/txc/enroll"} },
+  { id:"community", title:FORGE_LABELS.builderDay,    type:"special_program",                           location:"Main Hall",              tags:["community","learning"],         demoFallback:true, primaryAction:{label:"View program", href:"/txc/communities"},secondaryAction:{label:"Explore",href:"/txc/experience"} },
+  { id:"partner",   title:FORGE_LABELS.innovationDay, type:"special_program",                           location:"Innovation Pavilion",     tags:["partner","business","ecosystem"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/explore"},   secondaryAction:{label:"Explore",href:"/txc/experience"} },
   { id:"data",      title:"Data Technical Summit",      type:"special_program",                           tags:["data","technical","learning"],demoFallback:true, primaryAction:{label:"View summit",  href:"/txc/sessions"}, secondaryAction:{label:"Explore",href:"/txc/sessions"} },
   { id:"student",   title:"Student Dev Day",            type:"special_program",                           tags:["student","career","learning"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/sessions"}, secondaryAction:{label:"Connect",href:"/txc/champions"} },
   { id:"expert",    title:"Meet the Expert",            type:"expert_access",                             tags:["expert","learning","networking"],demoFallback:true, primaryAction:{label:"Find experts",href:"/txc/champions"}, secondaryAction:{label:"View sessions",href:"/txc/sessions"} },
@@ -742,7 +743,7 @@ export default function VoiceCompassButton({
     : isGenerating  ? "Generating…"
     : showResult    ? "↻  Ask Again"
     : showError     ? "↻  Try Again"
-    : "Ask Compass";
+    : FORGE_PRODUCT.askCompassAi;
 
   function handleButtonClick() {
     if (isProcessing) return;
@@ -872,8 +873,8 @@ export default function VoiceCompassButton({
           <>
             {!embedInCommandCenter && (
               <CompassModuleHead
-                kicker="Ask Compass"
-                title="Sessions. People. Certifications. IBM Community."
+                kicker={FORGE_PRODUCT.askCompassAi}
+                title={`Sessions. People. ${FORGE_LABELS.learningPaths}. ${FORGE_LABELS.communities}.`}
                 description="What would you like help with?"
               />
             )}
@@ -912,7 +913,7 @@ export default function VoiceCompassButton({
                     ) : (
                       <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={48} />
                     )}
-                    <span className="ask-compass-trigger-title">Ask Compass</span>
+                    <span className="ask-compass-trigger-title">{FORGE_PRODUCT.askCompassAi}</span>
                     <span className="ask-compass-trigger-sub">
                       {isListening ? "Listening…"
                         : isProcessing ? "Thinking…"
@@ -1000,8 +1001,8 @@ export default function VoiceCompassButton({
                 )}
                 {showChampionCard && topChampion && (
                   <CompactCard
-                    title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
-                    type="Champion"
+                    title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? FORGE_LABELS.guide}
+                    type={FORGE_LABELS.guide}
                     meta={champMeta || undefined}
                     why={champWhy}
                     infoHref="/txc/champions"
@@ -1028,12 +1029,12 @@ export default function VoiceCompassButton({
                     )}
                     {response.action === "show_champions" && (
                       <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                        View Champions →
+                        View {FORGE_LABELS.guides} →
                       </a>
                     )}
                     {response.action === "show_communities" && (
                       <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                        IBM Community →
+                        {FORGE_LABELS.communities} →
                       </a>
                     )}
                   </div>
@@ -1106,7 +1107,7 @@ export default function VoiceCompassButton({
         {/* ── Idle hint — minimal one-liner ─────────────────────────────────── */}
         {voiceState === "idle" && !unsupported && (
           <p style={{ color: "var(--muted)", fontSize: "0.73rem", margin: "7px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
-            Try: &ldquo;What is TechXchange?&rdquo; &middot; &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Anything fun tonight?&rdquo;
+            Try: &ldquo;What is {FORGE_EVENT.name}?&rdquo; &middot; &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Anything fun tonight?&rdquo;
           </p>
         )}
 
@@ -1159,8 +1160,8 @@ export default function VoiceCompassButton({
 
             {showChampionCard && topChampion && (
               <CompactCard
-                title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
-                type="Champion"
+                title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? FORGE_LABELS.guide}
+                type={FORGE_LABELS.guide}
                 meta={champMeta || undefined}
                 why={champWhy}
                 infoHref="/txc/champions"
@@ -1192,12 +1193,12 @@ export default function VoiceCompassButton({
                 )}
                 {response.action === "show_champions" && (
                   <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                    View Champions →
+                    View {FORGE_LABELS.guides} →
                   </a>
                 )}
                 {response.action === "show_communities" && (
                   <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                    IBM Community →
+                    {FORGE_LABELS.communities} →
                   </a>
                 )}
                 {response.action === "show_day" && (

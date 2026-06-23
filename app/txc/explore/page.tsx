@@ -8,6 +8,7 @@ import { useState } from "react";
 import ExploreJourneyPanel from "@/components/explore/ExploreJourneyPanel";
 import { EXPLORE_JOURNEYS } from "@/data/exploreJourneys";
 import { useAuth } from "@/context/AuthContext";
+import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export default function ExplorePage() {
   const { user, enrolled } = useAuth();
@@ -57,7 +58,7 @@ export default function ExplorePage() {
           {user && enrolled ? (
             <>
               <h2>Your path is taking shape.</h2>
-              <p>Open My Compass to see recommendations matched to your goals.</p>
+              <p>Open {FORGE_PRODUCT.myJourney} to see recommendations matched to your goals.</p>
             </>
           ) : (
             <>
@@ -67,9 +68,9 @@ export default function ExplorePage() {
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} →</Link>
         ) : (
-          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
+          <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
         )}
       </section>
     </>

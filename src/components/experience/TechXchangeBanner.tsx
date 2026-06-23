@@ -2,9 +2,11 @@
 // EventCompass — TechXchange Banner
 // src/components/experience/TechXchangeBanner.tsx
 //
-// Bridge back to the main TechXchange experience.
+// Bridge back to the main FORGE experience.
 // All links configurable via props — never hardcoded.
 // =============================================================================
+
+import { FORGE_EVENT } from "@/config/forgeBrand";
 
 export interface BannerLinks {
   website?:  string;
@@ -17,9 +19,9 @@ interface Props {
 }
 
 const DEFAULT_LINKS: BannerLinks = {
-  website:  "https://www.ibm.com/community/ibm-techxchange-conference/",
-  keynotes: "https://www.ibm.com/community/ibm-techxchange-conference/",
-  agenda:   "https://www.ibm.com/community/ibm-techxchange-conference/",
+  website:  "#",
+  keynotes: "#",
+  agenda:   "#",
 };
 
 export default function TechXchangeBanner({ links = DEFAULT_LINKS }: Props) {
@@ -37,13 +39,13 @@ export default function TechXchangeBanner({ links = DEFAULT_LINKS }: Props) {
     >
       <div>
         <p style={{ color: "var(--accent)", fontSize: "0.72rem", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 4px" }}>
-          IBM TechXchange 2026
+          {FORGE_EVENT.name}
         </p>
         <p style={{ color: "var(--text)", fontSize: "1.1rem", fontWeight: 560, margin: "0 0 2px", letterSpacing: "-0.02em" }}>
-          Atlanta, Georgia
+          {FORGE_EVENT.city}
         </p>
         <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: 0, fontFamily: "var(--font-mono, ui-monospace)" }}>
-          October 26–29, 2026
+          {FORGE_EVENT.dates}
         </p>
       </div>
 

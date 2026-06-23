@@ -2,14 +2,14 @@ import type { ConnectionBadgeId } from "@/types/connectionSignals";
 import { humanizeScoringReason } from "@/lib/sessionRecommendationLine";
 
 export const CONNECTION_BADGE_LABELS: Record<ConnectionBadgeId, string> = {
-  champion: "Champion",
+  champion: "Guide",
   speaker: "Speaker",
   alumni: "Alumni",
   peer: "Peer",
-  partner: "Partner",
+  partner: "Ecosystem",
   mentor: "Mentor",
-  "community-leader": "IBM Community Leader",
-  "certification-guide": "Certification Mentor",
+  "community-leader": "Community Leader",
+  "certification-guide": "Learning Path Mentor",
 };
 
 interface PersonBadgeInput {
@@ -119,7 +119,7 @@ export function deriveConnectionBadges(
     badges.push("community-leader");
   }
 
-  if (/business partner|\bpartner\b|ibm partner/.test(blob)) {
+  if (/business partner|\bpartner\b|ecosystem/.test(blob)) {
     badges.push("partner");
   }
 

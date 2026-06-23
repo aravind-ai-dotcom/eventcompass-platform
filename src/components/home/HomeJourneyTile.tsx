@@ -13,9 +13,10 @@ const TONE_VAR: Record<NonNullable<DonutSegment["tone"]>, string> = {
 
 interface HomeJourneyTileProps {
   segments: DonutSegment[];
+  title?: string;
 }
 
-export default function HomeJourneyTile({ segments }: HomeJourneyTileProps) {
+export default function HomeJourneyTile({ segments, title = "FORGE Journey" }: HomeJourneyTileProps) {
   const visible = segments.filter(s => s.value > 0);
   const total = visible.reduce((sum, s) => sum + s.value, 0);
   if (total <= 0) return null;
@@ -49,7 +50,7 @@ export default function HomeJourneyTile({ segments }: HomeJourneyTileProps) {
           ))}
         </dl>
       </div>
-      <p className="home-proof-strip__label home-journey-tile__title">TechXchange Journey</p>
+      <p className="home-proof-strip__label home-journey-tile__title">{title}</p>
     </div>
   );
 }

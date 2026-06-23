@@ -4,6 +4,7 @@ import CompassSignalCompact from "@/components/experience/CompassSignalCompact";
 import EnergyIndicator from "@/components/experience/EnergyIndicator";
 import IdentitySignalBadges from "@/components/experience/IdentitySignalBadges";
 import WeekInBalance from "@/components/experience/WeekInBalance";
+import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 type RawDoc = Record<string, unknown>;
 
@@ -43,7 +44,7 @@ export default function FocusCompassHero({
   return (
     <header className="focus-command-center focus-compass-hero section no-top-border">
       <div className="focus-compass-hero__toolbar">
-        <div className="section-kicker">My Compass</div>
+        <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
         <div className="focus-compass-hero__links">
           {onCustomize && (
             <button
@@ -59,7 +60,7 @@ export default function FocusCompassHero({
             Edit profile
           </Link>
           <Link href="/txc/enroll?mode=edit&focus=intent" className="focus-compass-refine-btn">
-            Refine My Compass →
+            Refine {FORGE_PRODUCT.myJourney} →
           </Link>
         </div>
       </div>
@@ -93,7 +94,7 @@ export default function FocusCompassHero({
         </div>
 
         {voicePanel && (
-          <div className="focus-command-center__voice" aria-label="Ask Compass">
+          <div className="focus-command-center__voice" aria-label={FORGE_PRODUCT.askCompassAi}>
             {voicePanel}
           </div>
         )}

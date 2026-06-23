@@ -46,8 +46,8 @@ const field: CSSProperties = {
 };
 
 const PILLAR_ROWS: Array<{ key: keyof PillarWeights; label: string; hint: string }> = [
-  { key: "learning", label: "Learning weight", hint: "Sessions, labs, breakouts, certifications" },
-  { key: "people", label: "People weight", hint: "Champions, experts, networking matches" },
+  { key: "learning", label: "Learning weight", hint: "Sessions, labs, breakouts, learning paths" },
+  { key: "people", label: "People weight", hint: "Guides, experts, networking matches" },
   { key: "community", label: "Community weight", hint: "Meetups, huddles, roundtables" },
   { key: "fun", label: "Fun weight", hint: "Social moments, keynotes, celebrations" },
 ];

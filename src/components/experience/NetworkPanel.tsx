@@ -13,6 +13,7 @@ import {
   type NetworkMatchResult,
 } from "@/services/networkSignalService";
 import { isOpenToAlumniConnections } from "@/lib/networkingIdentity";
+import { FORGE_EVENT } from "@/config/forgeBrand";
 
 type RawDoc = Record<string, unknown>;
 
@@ -50,7 +51,7 @@ function MatchCard({ match }: { match: MatchWithPhoto }) {
   const anonRole    = match.job_title  ?? (match.reasons.find(r => r.toLowerCase().includes("career")) ? "Career professional" : null);
   const anonIndustry= match.industry   ?? null;
   const anonTeaser  = [anonRole, anonIndustry].filter(Boolean).join(" · ") ||
-    (match.reasons.length > 0 ? "Attendee at TechXchange" : "Anonymous match");
+    (match.reasons.length > 0 ? `Attendee at ${FORGE_EVENT.name}` : "Anonymous match");
 
   return (
     <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -220,7 +221,7 @@ export default function NetworkPanel({ participant, allParticipants }: Props) {
         <div style={{ marginTop: "16px", border: "1px dashed var(--line)", padding: "28px 24px", textAlign: "center" }}>
           <p style={{ color: "var(--text)", fontWeight: 520, fontSize: "1rem", margin: "0 0 6px", letterSpacing: "-0.02em" }}>Find your hidden network.</p>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", margin: "0 0 18px", lineHeight: 1.55, maxWidth: "480px", marginLeft: "auto", marginRight: "auto" }}>
-            Add your school, past employers, and career interests to unlock alumni, past-colleague, and career-path connections at TechXchange.
+            Add your school, past employers, and career interests to unlock alumni, past-colleague, and career-path connections at {FORGE_EVENT.name}.
           </p>
           <a href="/txc/enroll" className="btn-secondary" style={{ fontSize: "0.88rem" }}>Update my profile</a>
         </div>

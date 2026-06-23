@@ -8,6 +8,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import CompassModuleHead from "@/components/experience/CompassModuleHead";
+import { FORGE_EVENT, FORGE_LABELS } from "@/config/forgeBrand";
 
 type Champion = {
   id: string;
@@ -43,7 +44,7 @@ function LinkedInIcon() {
 
 function ChampionAvatar({ champion, size = 64 }: { champion: Champion; size?: number }) {
   const [imgError, setImgError] = useState(false);
-  const name = champion.display_name ?? "Champion";
+  const name = champion.display_name ?? FORGE_LABELS.guide;
   const initial = name.charAt(0).toUpperCase();
 
   if (champion.photo_url && !imgError) {
@@ -83,7 +84,7 @@ function ChampionAvatar({ champion, size = 64 }: { champion: Champion; size?: nu
 }
 
 function ChampionVoiceCard({ champion }: { champion: Champion }) {
-  const name = champion.display_name ?? "Featured Champion";
+  const name = champion.display_name ?? `Featured ${FORGE_LABELS.guide}`;
   const org = champion.organization ?? champion.company ?? "";
   const title = champion.title ?? champion.job_title ?? "";
   const topics = champion.topics ?? champion.profile?.domains ?? [];
@@ -208,9 +209,9 @@ export default function CommunityVoices({ champions, maxVisible = 6 }: Props) {
   return (
     <section>
       <CompassModuleHead
-        kicker="IBM Community voices"
-        title="Champions who make TechXchange extraordinary."
-        description="IBM Champions who have opted in to connect with attendees throughout the event."
+        kicker={`${FORGE_LABELS.communities} voices`}
+        title={`${FORGE_LABELS.guides} who make ${FORGE_EVENT.name} extraordinary.`}
+        description={`${FORGE_LABELS.guides} who have opted in to connect with attendees throughout the event.`}
       />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
@@ -221,7 +222,7 @@ export default function CommunityVoices({ champions, maxVisible = 6 }: Props) {
 
       {!showAll && champions.length > maxVisible && (
         <button type="button" onClick={() => setShowAll(true)} className="btn-secondary" style={{ marginTop: "16px", fontSize: "0.88rem" }}>
-          Show all {champions.length} champions
+          Show all {champions.length} {FORGE_LABELS.guides.toLowerCase()}
         </button>
       )}
     </section>

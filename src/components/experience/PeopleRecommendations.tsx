@@ -9,6 +9,8 @@
 
 "use client";
 
+import { FORGE_EVENT, FORGE_LABELS } from "@/config/forgeBrand";
+
 export interface RecommendedPerson {
   id:           string;
   display_name: string;
@@ -34,9 +36,9 @@ const CATEGORIES = [
   { id: "Cloud",               label: "Cloud",                kicker: "Cloud practitioners"           },
   { id: "Data",                label: "Data",                 kicker: "Data & analytics"              },
   { id: "Security",            label: "Security",             kicker: "Security practitioners"        },
-  { id: "First-Time",          label: "First-Time Attendees", kicker: "New to TechXchange"            },
+  { id: "First-Time",          label: "First-Time Attendees", kicker: `New to ${FORGE_EVENT.name}`    },
   { id: "Community Leaders",   label: "Community Leaders",    kicker: "Driving the community"         },
-  { id: "Champions",           label: "IBM Champions",        kicker: "Ask them anything"             },
+  { id: "Champions",           label: FORGE_LABELS.guides,    kicker: "Ask them anything"             },
 ];
 
 function PersonMiniCard({ person }: { person: RecommendedPerson }) {
@@ -72,7 +74,7 @@ function PersonMiniCard({ person }: { person: RecommendedPerson }) {
           </p>
           {person.is_champion && (
             <span style={{ fontSize: "0.65rem", padding: "1px 6px", border: "1px solid var(--accent)", color: "var(--accent)", fontWeight: 680, textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
-              Champion
+              {FORGE_LABELS.guide}
             </span>
           )}
           {person.is_first_timer && (
@@ -129,7 +131,7 @@ export default function PeopleRecommendations({ people, currentUserId, maxPerCat
       <div style={{ marginBottom: "20px" }}>
         <div className="section-kicker">People to meet</div>
         <h2 style={{ fontSize: "clamp(1.6rem, 2.8vw, 2.2rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "4px 0 0", color: "var(--text)" }}>
-          TechXchange is better when you find your people.
+          {FORGE_EVENT.name} is better when you find your people.
         </h2>
       </div>
 

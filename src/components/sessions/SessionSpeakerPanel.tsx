@@ -6,6 +6,7 @@ import {
 } from "@/types/speaker";
 import { displayFirstName } from "@/lib/personCardHelpers";
 import type { SessionSpeakerSource } from "@/lib/speakerIntelligence";
+import { FORGE_LABELS } from "@/config/forgeBrand";
 
 interface SessionSpeakerPanelProps {
   speaker: ScoredSpeaker;
@@ -38,7 +39,7 @@ export default function SessionSpeakerPanel({
           </p>
         )}
         {speaker.isChampion && (
-          <span className="session-speaker-panel__badge">IBM Champion</span>
+          <span className="session-speaker-panel__badge">{FORGE_LABELS.guide}</span>
         )}
       </header>
 

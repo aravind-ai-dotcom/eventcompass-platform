@@ -1,4 +1,5 @@
 import { humanizeMatchReasons, humanizeScoringReason } from "@/lib/sessionRecommendationLine";
+import { FORGE_LABELS } from "@/config/forgeBrand";
 
 export type PersonSignalId = "technology" | "industry" | "goal" | "networking" | "certification";
 
@@ -62,8 +63,8 @@ export function buildPersonMatchReasons(
     if (/champion|ibm champion/i.test(t)) {
       const domain = person.profile?.domains?.[0] ?? person.profile?.products?.[0];
       line = domain
-        ? `Champion in ${domain}`
-        : "Champion in your area of interest";
+        ? `${FORGE_LABELS.guide} in ${domain}`
+        : `${FORGE_LABELS.guide} in your area of interest`;
     } else if (/speaker|presenting|session speaker/i.test(t)) {
       line = "Speaker on a recommended session";
     } else if (/certif|exam|credential/i.test(t)) {
@@ -73,7 +74,7 @@ export function buildPersonMatchReasons(
     } else if (/industry|sector|vertical/i.test(t)) {
       line = "Similar industry focus";
     } else if (/former ibm|ex-ibm|past employer.*ibm/i.test(t)) {
-      line = "Former IBM employee";
+      line = "Shared former employer";
     } else if (/alumni|university|nc state/i.test(t)) {
       const uni = person.education?.[0];
       const name = typeof uni === "string" ? uni : uni?.institution;
@@ -81,7 +82,7 @@ export function buildPersonMatchReasons(
     } else if (/shared expertise|shared interest|technology|track|domain|product|watsonx|agentic|data govern/i.test(t)) {
       const domain = person.profile?.domains?.[0] ?? person.profile?.products?.[0];
       if (/agentic/i.test(t) || /agentic/i.test(domain ?? "")) {
-        line = "Champion in Agentic AI";
+        line = `${FORGE_LABELS.guide} in Agentic AI`;
       } else if (/data govern/i.test(t) || /data govern/i.test(domain ?? "")) {
         line = "Data governance expertise";
       } else if (domain && profileSignals.some(s => domain.toLowerCase().includes(s.toLowerCase()))) {

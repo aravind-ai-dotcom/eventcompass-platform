@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import { getFeaturedChampions } from "@/services/firestoreService";
 
 type Champion = {
@@ -37,7 +38,7 @@ function LinkedInIcon() {
 
 function ChampionAvatar({ champion }: { champion: Champion }) {
   const [imgError, setImgError] = useState(false);
-  const name = champion.display_name ?? "Champion";
+  const name = champion.display_name ?? FORGE_LABELS.guide;
   const initial = name.charAt(0).toUpperCase();
 
   if (champion.photo_url && !imgError) {
@@ -90,7 +91,7 @@ function ChampionAvatar({ champion }: { champion: Champion }) {
 }
 
 function ChampionCard({ champion }: { champion: Champion }) {
-  const name = champion.display_name ?? "Featured Champion";
+  const name = champion.display_name ?? `Featured ${FORGE_LABELS.guide}`;
   const org = champion.organization ?? champion.company ?? "";
   const title = champion.title ?? champion.job_title ?? "";
   const topics = champion.topics ?? champion.profile?.domains ?? [];
@@ -211,10 +212,10 @@ export default function HomeCommunityVoices() {
       <div className="section-head">
         <div>
           <div className="section-kicker">Community voices</div>
-          <h2>The people who make TechXchange extraordinary.</h2>
+          <h2>The people who make {FORGE_EVENT.name} extraordinary.</h2>
         </div>
         <p>
-          IBM Champions who have chosen to share their knowledge and connect with attendees throughout the event. Reach out — they are here for you.
+          {FORGE_LABELS.guides} who have chosen to share their knowledge and connect with attendees throughout the event. Reach out — they are here for you.
         </p>
       </div>
 
@@ -231,9 +232,9 @@ export default function HomeCommunityVoices() {
       </div>
 
       <p style={{ marginTop: "20px", color: "var(--muted)", fontSize: "0.88rem" }}>
-        More Champion connections are available inside{" "}
-        <a href="/experience" style={{ color: "var(--accent)" }}>
-          My Experience
+        More {FORGE_LABELS.guide.toLowerCase()} connections are available inside{" "}
+        <a href="/txc/experience" style={{ color: "var(--accent)" }}>
+          {FORGE_PRODUCT.myJourney}
         </a>{" "}
         once your Compass is built.
       </p>

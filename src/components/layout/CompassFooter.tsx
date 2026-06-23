@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { FORGE_EVENT } from "@/config/forgeBrand";
 
 export default function CompassFooter() {
   const pathname = usePathname();
@@ -9,7 +10,7 @@ export default function CompassFooter() {
   }
   return (
     <footer className="site-footer">
-      <span>EventCompass · IBM TechXchange 2026</span>
+      <span>EventCompass · {FORGE_EVENT.name}</span>
       <span>Networking · Learning · Fun</span>
     </footer>
   );

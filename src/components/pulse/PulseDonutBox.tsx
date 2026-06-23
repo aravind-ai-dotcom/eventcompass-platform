@@ -260,10 +260,10 @@ export function championDonutSegments(
   nominee: number,
 ): DonutSegment[] {
   return [
-    { label: "IBM Champions", value: ibm, tone: "ibm-blue" as const },
-    { label: "Former Champions", value: former, tone: "purple" as const },
+    { label: "Guides", value: ibm, tone: "ibm-blue" as const },
+    { label: "Former Guides", value: former, tone: "purple" as const },
     { label: "Nominees", value: nominee, tone: "teal" as const },
-    { label: "Rising Champions", value: interested, tone: "green" as const },
+    { label: "Rising Guides", value: interested, tone: "green" as const },
   ].filter(s => s.value > 0);
 }
 

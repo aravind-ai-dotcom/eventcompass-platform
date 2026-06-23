@@ -3,6 +3,7 @@
 import RecommendedConnectionCard, {
   type RecommendedPerson,
 } from "@/components/people/RecommendedConnectionCard";
+import { FORGE_EVENT } from "@/config/forgeBrand";
 
 export interface TrackedConnection {
   person: RecommendedPerson;
@@ -36,7 +37,7 @@ export default function PeopleTrackingSection({
           <h2>Connections you want to follow up with.</h2>
         </div>
         <p className="section-head-note">
-          Track people you meet or want to reconnect with during TechXchange.
+          Track people you meet or want to reconnect with during {FORGE_EVENT.name}.
         </p>
       </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 type RawDoc = Record<string, unknown>;
 
@@ -117,7 +118,7 @@ export default function CompassSignalCompact({
       </div>
 
       {pct < 100 && (
-        <span className="compass-refine-chip">Refine My Compass →</span>
+        <span className="compass-refine-chip">Refine {FORGE_PRODUCT.myJourney} →</span>
       )}
     </Link>
   );

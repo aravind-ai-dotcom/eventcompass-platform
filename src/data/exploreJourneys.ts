@@ -27,12 +27,12 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     title: "Earn a certification",
     image: "/event/ibm_txc_banner_4.jpg",
     accent: "#a56eff",
-    outcome: "Walk into your exam with a focused study plan built around TechXchange.",
+    outcome: "Walk into your learning path with a focused plan built around FORGE.",
     helps: [
       "Recommend learning sessions aligned to your certification goal",
       "Identify labs and prep opportunities at the event",
       "Connect you with practitioners who teach the material",
-      "Suggest IBM Communities for ongoing study support",
+      "Suggest communities for ongoing study support",
     ],
     anonymousPreviews: [
       {
@@ -43,7 +43,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "certification",
-        kicker: "Certification path",
+        kicker: "Learning path",
         title: "A prep path shaped around your target credential",
         meta: "Sessions, labs, and study moments in one plan",
       },
@@ -63,7 +63,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "certification",
-        kicker: "Certification path",
+        kicker: "Learning path",
         title: "Opportunities mapped to your enrolled credentials",
         meta: "Labs and study blocks added to your week",
       },
@@ -139,7 +139,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "community",
-        kicker: "IBM Community",
+        kicker: "Community",
         title: "Groups aligned to your technology focus",
         meta: "Continue conversations after the event",
       },
@@ -153,7 +153,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "community",
-        kicker: "IBM Community",
+        kicker: "Community",
         title: "Communities recommended from your interests",
         meta: "Join paths surfaced in your plan",
       },
@@ -211,7 +211,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     helps: [
       "Prioritize sessions on technologies you want to evaluate",
       "Surface labs and demos with limited capacity early",
-      "Connect interests to IBM Community groups",
+      "Connect interests to community groups",
       "Balance depth sessions with expo discovery time",
     ],
     anonymousPreviews: [
@@ -223,7 +223,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "community",
-        kicker: "IBM Community",
+        kicker: "Community",
         title: "Topic groups for ongoing learning",
         meta: "Matched to the domains you care about",
       },
@@ -237,7 +237,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "community",
-        kicker: "IBM Community",
+        kicker: "Community",
         title: "Groups connected to your learning path",
         meta: "See recommendations in My Compass",
       },
@@ -280,7 +280,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       {
         kind: "community",
         kicker: "Community programs",
-        title: "Champion and community moments in your plan",
+        title: "Guide and community moments in your plan",
         meta: "Details and links in My Compass — not on this page",
       },
     ],

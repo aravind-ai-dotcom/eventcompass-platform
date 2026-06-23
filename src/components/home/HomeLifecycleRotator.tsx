@@ -3,49 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { FORGE_PILLARS } from "@/config/forgeBrand";
 
-const LIFECYCLE = [
-  {
-    id: "prepare",
-    kicker: "Prepare",
-    title: "Shape your goals before you arrive.",
-    body: "Tell Compass what matters — learning paths, certification targets, and connection intent.",
-    image: "/event/learning-lab.jpg",
-    objectPosition: "center top",
-    href: "/txc/enroll",
-    cta: "Build My Compass",
-  },
-  {
-    id: "meet",
-    kicker: "Meet",
-    title: "Find your people in the room.",
-    body: "Experts, mentors, peers, and community leaders matched to your interests and experience.",
-    image: "/event/people-v2.jpg",
-    objectPosition: "center 55%",
-    href: "/txc/champions",
-    cta: "Explore people",
-  },
-  {
-    id: "experience",
-    kicker: "Experience",
-    title: "Live TechXchange with clarity.",
-    body: "An AI-powered week plan — sessions prioritized, conflicts resolved, every day intentional.",
-    image: "/event/ibm_txc_banner_B.jpg",
-    objectPosition: "center center",
-    href: "/txc/experience",
-    cta: "Open My Compass",
-  },
-  {
-    id: "continue",
-    kicker: "Continue",
-    title: "Take it home.",
-    body: "Certification progress, connections, and learning paths that extend beyond the event.",
-    image: "/event/ibm_txc_banner_A.jpg",
-    objectPosition: "center top",
-    href: "/txc/explore",
-    cta: "See how Compass works",
-  },
-] as const;
+const LIFECYCLE = FORGE_PILLARS.map((pillar, index) => ({
+  ...pillar,
+  image: ["/event/learning-lab.jpg", "/event/people-v2.jpg", "/event/ibm_txc_banner_B.jpg"][index],
+  objectPosition: ["center top", "center 55%", "center center"][index],
+}));
 
 const ROTATE_MS = 7000;
 
@@ -81,7 +45,7 @@ export default function HomeLifecycleRotator() {
         }
       }}
     >
-      <div className="home-lifecycle-rotator-tabs" role="tablist" aria-label="Compass lifecycle">
+      <div className="home-lifecycle-rotator-tabs" role="tablist" aria-label="Journey pillars">
         {LIFECYCLE.map((item, index) => (
           <button
             key={item.id}
@@ -153,7 +117,7 @@ export default function HomeLifecycleRotator() {
           <button
             type="button"
             className="home-lifecycle-nav-btn"
-            aria-label="Previous phase"
+            aria-label="Previous pillar"
             onClick={() => goTo(active - 1)}
           >
             ←
@@ -161,7 +125,7 @@ export default function HomeLifecycleRotator() {
           <button
             type="button"
             className="home-lifecycle-nav-btn"
-            aria-label="Next phase"
+            aria-label="Next pillar"
             onClick={() => goTo(active + 1)}
           >
             →

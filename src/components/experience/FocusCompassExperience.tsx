@@ -22,6 +22,7 @@ import { useExperiencePageData } from "@/hooks/useExperiencePageData";
 import { useFocusCompassGroups } from "@/hooks/useFocusCompassGroups";
 import { useFocusCompassUiPreferences } from "@/hooks/useFocusCompassUiPreferences";
 import type { ScoredSession, ScoredChampion } from "@/types";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export default function FocusCompassExperience() {
   const data = useExperiencePageData();
@@ -48,7 +49,7 @@ export default function FocusCompassExperience() {
   if (data.status === "loading") {
     return (
       <section className="focus-compass-page section no-top-border">
-        <div className="section-kicker">My Compass</div>
+        <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
         <h1 className="focus-compass-hero__title">Building your plan…</h1>
         <p className="focus-compass-hero__subtitle">Compass is shaping a focused path for your week.</p>
       </section>
@@ -58,7 +59,7 @@ export default function FocusCompassExperience() {
   if (data.status === "error" || !data.participant) {
     return (
       <section className="focus-compass-page section no-top-border">
-        <div className="section-kicker">My Compass</div>
+        <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
         <h1 className="focus-compass-hero__title">Could not load Compass</h1>
         <p className="focus-compass-hero__subtitle">{data.errorMsg}</p>
         {!data.participantId && (
@@ -207,7 +208,7 @@ export default function FocusCompassExperience() {
           icon="moments"
           label="Event"
           title="Don't miss these moments"
-          description="Defining TechXchange experiences — shared by everyone, not session recommendations."
+          description={`Defining ${FORGE_EVENT.name} experiences — shared by everyone, not session recommendations.`}
           expanded={isGroupExpanded("moments")}
           onToggle={() => toggleGroup("moments")}
         >
@@ -221,7 +222,7 @@ export default function FocusCompassExperience() {
           icon="connections"
           label="My People"
           title="People to meet"
-          description="Who Compass recommends — champions, speakers, and peers matched to your goals."
+          description="Who Compass recommends — guides, speakers, and peers matched to your goals."
           expanded={isGroupExpanded("people")}
           onToggle={() => toggleGroup("people")}
         >
@@ -248,9 +249,9 @@ export default function FocusCompassExperience() {
         <FocusCompassGroup
           id="certifications"
           icon="certifications"
-          label="My Certifications"
-          title="Working Toward a Certification"
-          description="Great choice. Compass can help you identify learning opportunities, experts, study groups, and certification-related sessions throughout TechXchange."
+          label={FORGE_LABELS.learningPaths}
+          title="Working Toward a Learning Path"
+          description={`Great choice. Compass can help you identify learning opportunities, experts, study groups, and learning-path sessions throughout ${FORGE_EVENT.name}.`}
           expanded={isGroupExpanded("certifications")}
           onToggle={() => toggleGroup("certifications")}
         >
@@ -271,8 +272,8 @@ export default function FocusCompassExperience() {
           id="community"
           icon="community"
           label="My Community"
-          title="Recommended IBM Communities"
-          description="Where to continue learning, discussion, and participation after TechXchange — official IBM Community destinations only."
+          title={`Recommended ${FORGE_LABELS.communities}`}
+          description={`Where to continue learning, discussion, and participation after ${FORGE_EVENT.name} — persistent community destinations matched to your interests.`}
           expanded={isGroupExpanded("community")}
           onToggle={() => toggleGroup("community")}
         >

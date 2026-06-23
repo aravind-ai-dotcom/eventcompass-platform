@@ -3,18 +3,20 @@
 // src/components/experience/EventHighlights.tsx
 //
 // Always visible. Never mixed with the recommendation engine.
-// Shows premium TechXchange shared moments separately.
+// Shows premium FORGE shared moments separately.
 // Status: upcoming | live | completed
 // Future: replay_url, livestream_url
 // =============================================================================
 
 "use client";
 
+import { FORGE_EVENT, FORGE_HIGHLIGHTS } from "@/config/forgeBrand";
+
 export interface EventHighlight {
   id:          string;
   title:       string;
   description: string;
-  day:         string;         // e.g. "Monday, October 27"
+  day:         string;         // e.g. "Monday, February 16"
   time:        string;         // e.g. "9:00 AM"
   location:    string;
   status:      "upcoming" | "live" | "completed";
@@ -22,16 +24,30 @@ export interface EventHighlight {
   livestream_url?: string;
 }
 
-// Default highlights — override via props for production data
-const DEFAULT_HIGHLIGHTS: EventHighlight[] = [
-  { id: "community-day",    title: "Community Day",                day: "Sunday, October 26",    time: "All Day",    location: "Georgia World Congress Center", status: "upcoming",   description: "The kickoff day for IBM Champions, communities, and first-time attendees." },
-  { id: "partner-day",      title: "Partner Day",                  day: "Sunday, October 26",    time: "All Day",    location: "Georgia World Congress Center", status: "upcoming",   description: "Dedicated programming for IBM Business Partners and ecosystem members." },
-  { id: "keynote-tuesday",  title: "Tuesday Keynote",              day: "Tuesday, October 28",   time: "8:30 AM",    location: "Ballroom A",                    status: "upcoming",   description: "The main stage moment that sets the direction for the week." },
-  { id: "keynote-wednesday",title: "Wednesday Keynote",            day: "Wednesday, October 29", time: "8:30 AM",    location: "Ballroom A",                    status: "upcoming",   description: "Day two main stage with product announcements and IBM leadership." },
-  { id: "sandbox",          title: "Sandbox Block Party",          day: "Tuesday, October 28",   time: "6:00 PM",    location: "Exhibit Hall",                  status: "upcoming",   description: "The unmissable evening social experience with demos, music, and networking." },
-  { id: "tuesday-night",    title: "Tuesday Night Experience",     day: "Tuesday, October 28",   time: "8:00 PM",    location: "TBA",                           status: "upcoming",   description: "The signature evening event of TechXchange 2026." },
-  { id: "closing",          title: "Closing Session & Awards",     day: "Thursday, October 30",  time: "3:00 PM",    location: "Ballroom A",                    status: "upcoming",   description: "Celebrate the week, recognise excellence, and close TechXchange 2026." },
-];
+const HIGHLIGHT_SCHEDULE: Record<string, { day: string; time: string }> = {
+  keynote:              { day: "Monday, February 16",    time: "9:00 AM" },
+  "builder-day":        { day: "Sunday, February 15",    time: "All Day" },
+  "innovation-showcase":{ day: "Tuesday, February 17",   time: "10:00 AM" },
+  "future-tech":        { day: "Tuesday, February 17",   time: "2:00 PM" },
+  "startup-pavilion":   { day: "Wednesday, February 18", time: "11:00 AM" },
+  "women-building":     { day: "Wednesday, February 18", time: "1:00 PM" },
+  "ai-leadership":      { day: "Thursday, February 19",  time: "10:00 AM" },
+  "innovation-awards":  { day: "Thursday, February 19",  time: "2:00 PM" },
+  closing:              { day: "Thursday, February 19",  time: "4:00 PM" },
+};
+
+const DEFAULT_HIGHLIGHTS: EventHighlight[] = FORGE_HIGHLIGHTS.map(h => {
+  const schedule = HIGHLIGHT_SCHEDULE[h.id];
+  return {
+    id: h.id,
+    title: h.title,
+    description: h.description,
+    day: schedule?.day ?? FORGE_EVENT.dates,
+    time: schedule?.time ?? "See schedule",
+    location: FORGE_EVENT.venue,
+    status: "upcoming" as const,
+  };
+});
 
 const STATUS_CONFIG = {
   live:      { dot: "#EF4444", label: "Live now",  bg: "#FEE2E2", text: "#DC2626" },
@@ -125,7 +141,7 @@ export default function EventHighlights({ highlights = DEFAULT_HIGHLIGHTS }: { h
           </h2>
         </div>
         <p style={{ color: "var(--muted)", fontSize: "0.88rem", maxWidth: "360px", margin: 0, lineHeight: 1.5 }}>
-          These are the anchor experiences of TechXchange 2026 — always visible, separate from your personalized plan.
+          These are the anchor experiences of {FORGE_EVENT.name} — always visible, separate from your personalized plan.
         </p>
       </div>
 

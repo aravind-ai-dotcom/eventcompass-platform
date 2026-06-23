@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { TXC_EVENT_ID } from "@/lib/compassEventPaths";
+import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
 import {
   createVoiceDictionaryRecord,
   getCachedVoiceDictionaryRecords,
@@ -156,7 +157,7 @@ export function VoicePronunciationAdminView() {
     setError("");
     try {
       const count = await seedVoiceDictionaryIfEmpty(TXC_EVENT_ID);
-      setMessage(count ? `Seeded ${count} TechXchange pronunciation entries.` : "Dictionary already populated.");
+      setMessage(count ? `Seeded ${count} ${FORGE_EVENT.name} pronunciation entries.` : "Dictionary already populated.");
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Seed failed.");
@@ -184,7 +185,7 @@ export function VoicePronunciationAdminView() {
     <div>
       <SectionHead
         title="Voice pronunciation"
-        sub="Map display text → spoken text for Ask Compass TTS (TechXchange only). Firestore: organizations/ibm/events/txc2026/voiceDictionary"
+        sub={`Map display text → spoken text for ${FORGE_PRODUCT.askCompassAi} TTS. Firestore: organizations/ibm/events/txc2026/voiceDictionary`}
       />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
@@ -233,13 +234,13 @@ export function VoicePronunciationAdminView() {
             color: S.muted, fontSize: "0.68rem", fontWeight: 700,
             textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px",
           }}>
-            TechXchange dictionary ({txcRecords.length})
+            {FORGE_EVENT.name} dictionary ({txcRecords.length})
           </p>
           {loading ? (
             <p style={{ color: S.dim, fontSize: "0.84rem", margin: 0 }}>Loading…</p>
           ) : txcRecords.length === 0 ? (
             <p style={{ color: S.dim, fontSize: "0.84rem", margin: 0 }}>
-              No entries yet. Use &ldquo;Seed if empty&rdquo; to load TechXchange defaults (TechXchange, watsonx, IBM Z, etc.).
+              No entries yet. Use &ldquo;Seed if empty&rdquo; to load {FORGE_EVENT.name} defaults (event name, product terms, acronyms).
             </p>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -344,7 +345,7 @@ function VoiceEditor({
         <input
           style={field}
           value={draft.displayText}
-          placeholder="e.g. TechXchange"
+          placeholder={`e.g. ${FORGE_EVENT.name}`}
           onChange={e => setDraft({ ...draft, displayText: e.target.value })}
         />
       </label>

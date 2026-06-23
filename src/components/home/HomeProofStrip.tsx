@@ -2,12 +2,13 @@
 
 import HomeJourneyTile from "@/components/home/HomeJourneyTile";
 import { alumniDonutSegments } from "@/components/pulse/PulseDonutBox";
+import { FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import { proofCountLabel, useEventProofCounts } from "@/hooks/useEventProofCounts";
 
 const STATS = [
   { key: "sessions" as const, label: "Sessions" },
-  { key: "champions" as const, label: "Expert Champions" },
-  { key: "communities" as const, label: "IBM Communities" },
+  { key: "champions" as const, label: FORGE_LABELS.expertGuides },
+  { key: "communities" as const, label: FORGE_LABELS.communities },
 ] as const;
 
 const FALLBACK = {
@@ -41,7 +42,7 @@ export default function HomeProofStrip() {
   const alumniSegments = homeJourneySegments(counts.alumniReturning, counts.alumniFirstTime);
 
   return (
-    <section className="home-proof-strip" aria-label="TechXchange scale">
+    <section className="home-proof-strip" aria-label="FORGE scale">
       <ul className="home-proof-strip__list home-proof-strip__list--with-journey">
         {STATS.map(item => (
           <li key={item.key} className="home-proof-strip__item">
@@ -53,7 +54,7 @@ export default function HomeProofStrip() {
         ))}
 
         <li className="home-proof-strip__item home-proof-strip__item--journey" aria-busy={counts.loading}>
-          <HomeJourneyTile segments={alumniSegments} />
+          <HomeJourneyTile segments={alumniSegments} title={FORGE_PRODUCT.forgeJourney} />
         </li>
       </ul>
     </section>

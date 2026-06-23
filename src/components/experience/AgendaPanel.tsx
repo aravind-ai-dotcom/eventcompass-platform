@@ -11,18 +11,19 @@ import {
   detectAgendaConflicts, findOpenTimeSlots, getAgendaSection, nowMinutes,
 } from "@/services/agendaService";
 import type { Agenda, AgendaItem, AgendaConflict, OpenTimeSlot } from "@/types/agenda";
+import { FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 // ── Demo seed shown when agenda is empty ──────────────────────────────────────
 
 const DEMO_ITEMS: Omit<AgendaItem, "addedAt">[] = [
-  { id:"d1", type:"session",          sourceCollection:"sessions",  sourceId:"s1",     title:"AI on IBM Z — Technical Breakout",      startTime:"09:00", endTime:"10:00", location:"Room 14B",          day:"Monday", status:"planned", track:"AI",    score:85, reason:"Top track match: AI" },
-  { id:"d2", type:"champion_meeting", sourceCollection:"champions", sourceId:"c1",     title:"Meet Roy Boxwell — IBM Z Architect",    startTime:"12:00", endTime:"12:30", location:"Networking Lounge", day:"Monday", status:"planned",               reason:"Shared keywords: IBM Z, Architecture" },
+  { id:"d1", type:"session",          sourceCollection:"sessions",  sourceId:"s1",     title:"Building Production AI Agents",      startTime:"09:00", endTime:"10:00", location:"Room 14B",          day:"Monday", status:"planned", track:"AI",    score:85, reason:"Top track match: AI" },
+  { id:"d2", type:"champion_meeting", sourceCollection:"champions", sourceId:"c1",     title:"Meet Alex Rivera — Platform Architect",    startTime:"12:00", endTime:"12:30", location:"Networking Lounge", day:"Monday", status:"planned",               reason:"Shared focus: platform engineering" },
   { id:"d3", type:"session",          sourceCollection:"sessions",  sourceId:"s2",     title:"Cloud Modernization Deep Dive",         startTime:"14:00", endTime:"15:00", location:"Hall A",            day:"Monday", status:"planned", track:"Cloud", score:72 },
-  { id:"d4", type:"fun",              sourceCollection:"demo",      sourceId:"arcade", title:"TechXchange Arcade & Community Lounge", startTime:"17:30", endTime:"18:30", location:"Expo Zone",         day:"Monday", status:"planned",               reason:"Open slot — make it fun" },
+  { id:"d4", type:"fun",              sourceCollection:"demo",      sourceId:"arcade", title:"FORGE Arcade & Community Lounge", startTime:"17:30", endTime:"18:30", location:"Expo Zone",         day:"Monday", status:"planned",               reason:"Open slot — make it fun" },
 ];
 
 const GAP_LINKS = [
-  { label:"Meet a Champion",        href:"/champions",   icon:"◈" },
+  { label:`Meet a ${FORGE_LABELS.guide}`,        href:"/champions",   icon:"◈" },
   { label:"Community Lounge",       href:"/communities", icon:"◉" },
   { label:"Meet the Expert",        href:"/champions",   icon:"◆" },
   { label:"Explore Sessions",       href:"/sessions",    icon:"▶" },
@@ -186,7 +187,7 @@ export default function AgendaPanel({ participantId, selectedDay = "Monday" }: P
       {isDemo && (
         <div style={{ padding:"10px 14px", border:"1px solid var(--accent)", background:"var(--panel)" }}>
           <p style={{ color:"var(--accent)", fontSize:"0.78rem", margin:0 }}>
-            Demo agenda. <a href="/txc/enroll" style={{ color:"var(--accent)", fontWeight:650 }}>Build your real Compass</a> to save a personal plan.
+            Demo agenda. <a href="/txc/enroll" style={{ color:"var(--accent)", fontWeight:650 }}>{FORGE_PRODUCT.buildMyJourney}</a> to save a personal plan.
           </p>
         </div>
       )}
@@ -201,9 +202,9 @@ export default function AgendaPanel({ participantId, selectedDay = "Monday" }: P
       {items.length === 0 && (
         <div style={{ padding:"32px 0", textAlign:"center" }}>
           <p style={{ color:"var(--text)", fontSize:"1.1rem", fontWeight:520, margin:"0 0 8px" }}>Build your first Compass plan.</p>
-          <p style={{ color:"var(--muted)", fontSize:"0.9rem", margin:"0 0 20px" }}>Add sessions, schedule champion meetings, and join community events.</p>
+          <p style={{ color:"var(--muted)", fontSize:"0.9rem", margin:"0 0 20px" }}>Add sessions, schedule {FORGE_LABELS.guide.toLowerCase()} meetings, and join community events.</p>
           <div style={{ display:"flex", gap:"10px", justifyContent:"center", flexWrap:"wrap" }}>
-            {[["Explore Sessions","/sessions"],["Meet Champions","/champions"],["Join Communities","/communities"]].map(([l,h]) => (
+            {[["Explore Sessions","/sessions"],[`Meet ${FORGE_LABELS.guides}`,"/champions"],[`Join ${FORGE_LABELS.communities}`,"/communities"]].map(([l,h]) => (
               <a key={h} href={h} className="btn-secondary" style={{ fontSize:"0.88rem" }}>{l}</a>
             ))}
           </div>

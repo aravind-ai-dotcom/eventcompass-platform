@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export const metadata: Metadata = {
-  title: "Compass | IBM TechXchange 2026",
+  title: `${FORGE_PRODUCT.name} | ${FORGE_EVENT.name}`,
   description:
-    "Prepare, meet, experience, and continue your momentum at IBM TechXchange 2026.",
+    `${FORGE_EVENT.tagline} — ${FORGE_PRODUCT.tagline} for ${FORGE_EVENT.name}.`,
 };
 
 export default function TxcLayout({ children }: { children: React.ReactNode }) {

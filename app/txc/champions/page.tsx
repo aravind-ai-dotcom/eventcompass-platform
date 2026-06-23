@@ -28,6 +28,7 @@ import {
   vaultPersistPayload,
 } from "@/lib/connectionVault";
 import type { ConnectionVaultRecord } from "@/types/connectionVault";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 const BASE     = "organizations/ibm/events/txc2026";
 const IBM_BLUE = "#0f62fe";
@@ -372,11 +373,11 @@ export default function ChampionsPage() {
         const e = err as { code?: string; message?: string };
         if (isFirestorePermissionError(err) && !user) {
           setLoadError(
-            "Sign in to browse the Champion guide. Public catalog access may also require updated Firestore rules on the server.",
+            "Sign in to browse the guide directory. Public catalog access may also require updated Firestore rules on the server.",
           );
         } else if (isFirestorePermissionError(err)) {
           setLoadError(
-            "Firestore denied access to the Champion guide. Confirm security rules allow reads on organizations/ibm/events/txc2026/champions.",
+            "Firestore denied access to the guide directory. Confirm security rules allow reads on organizations/ibm/events/txc2026/champions.",
           );
         } else {
           setLoadError(`${e.code ? `(${e.code}) ` : ""}${e.message ?? String(err)}`);
@@ -591,7 +592,7 @@ export default function ChampionsPage() {
             className="btn-secondary"
             style={{ fontSize: "0.88rem" }}
           >
-            {user && enrolled ? "See my matched champions" : "Build My Compass to match"}
+            {user && enrolled ? `See my matched ${FORGE_LABELS.guides.toLowerCase()}` : `${FORGE_PRODUCT.buildMyJourney} to match`}
           </Link>
         </div>
 
@@ -602,7 +603,7 @@ export default function ChampionsPage() {
               placeholder="Search by name, organization, or expertise…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              aria-label="Search champions"
+              aria-label={`Search ${FORGE_LABELS.guides.toLowerCase()}`}
               style={{
                 width: "100%", maxWidth: "400px", height: "40px", padding: "0 12px",
                 border: "1px solid var(--line-strong)", background: "var(--panel)",
@@ -624,18 +625,18 @@ export default function ChampionsPage() {
 
       {loading || authLoading ? (
         <section className="section">
-          <p style={{ color: "var(--muted)" }}>Loading champions from Firestore…</p>
+          <p style={{ color: "var(--muted)" }}>Loading {FORGE_LABELS.guides.toLowerCase()} from Firestore…</p>
         </section>
       ) : loadError ? (
         <section className="section no-top-border">
           <div className="section-kicker" style={{ color: "var(--accent)" }}>Error</div>
-          <h2>Could not load champions</h2>
+          <h2>Could not load {FORGE_LABELS.guides.toLowerCase()}</h2>
           <p style={{ color: "var(--muted)", maxWidth: "640px" }}>{loadError}</p>
           {!user && (
             <p style={{ marginTop: "16px" }}>
               <Link href="/txc/login" className="btn-primary">Sign in</Link>
               {" "}
-              <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>Build My Compass</Link>
+              <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>{FORGE_PRODUCT.buildMyJourney}</Link>
             </p>
           )}
         </section>
@@ -643,7 +644,7 @@ export default function ChampionsPage() {
         <section className="section">
           {filtered.length === 0 ? (
             <div style={{ padding: "48px 0", textAlign: "center" }}>
-              <p style={{ color: "var(--muted)", marginBottom: "16px" }}>No champions match your search.</p>
+              <p style={{ color: "var(--muted)", marginBottom: "16px" }}>No {FORGE_LABELS.guides.toLowerCase()} match your search.</p>
               <button onClick={() => setSearch("")} className="btn-secondary">Clear search</button>
             </div>
           ) : (
@@ -660,7 +661,7 @@ export default function ChampionsPage() {
             <section className="section intelligence-band intelligence-band--clusters">
               <div className="champion-band-head">
                 <span className="narrative-kicker">In the room</span>
-                <p className="champion-band-desc">Expertise clusters forming across the Champion guide.</p>
+                <p className="champion-band-desc">Expertise clusters forming across the {FORGE_LABELS.guide} directory.</p>
               </div>
               <div className="domain-cluster-row">
                 {domainClusters.map(([domain, count]) => (
@@ -675,7 +676,7 @@ export default function ChampionsPage() {
 
           <PeopleIntelligenceBand
             kicker="Recommended"
-            desc="Experts and mentors aligned to common TechXchange interests."
+            desc={`Experts and mentors aligned to common ${FORGE_EVENT.name} interests.`}
             champions={recommendedExperts}
             pState={pState}
             anonymous={!user}
@@ -685,7 +686,7 @@ export default function ChampionsPage() {
           {user && profileSignals.length > 0 && (
             <PeopleIntelligenceBand
               kicker="Shared interests"
-              desc="Champions in domains that overlap your tracks and goals."
+              desc={`${FORGE_LABELS.guides} in domains that overlap your tracks and goals.`}
               champions={sharedInterestChampions}
               pState={pState}
               anonymous={false}
@@ -704,7 +705,7 @@ export default function ChampionsPage() {
 
           <PeopleIntelligenceBand
             kicker="Community leaders"
-            desc="Guides shaping community conversations across TechXchange."
+            desc={`${FORGE_LABELS.guides} shaping community conversations across ${FORGE_EVENT.name}.`}
             champions={communityLeaders}
             pState={pState}
             anonymous={!user}
@@ -718,7 +719,7 @@ export default function ChampionsPage() {
             </div>
             {visibleChampions.length === 0 ? (
               <div style={{ padding: "48px 0", textAlign: "center" }}>
-                <p style={{ color: "var(--muted)", margin: 0 }}>No champions are available in the guide yet.</p>
+                <p style={{ color: "var(--muted)", margin: 0 }}>No {FORGE_LABELS.guides.toLowerCase()} are available in the directory yet.</p>
               </div>
             ) : (
               <div className="champion-grid three-champions">
@@ -735,19 +736,19 @@ export default function ChampionsPage() {
         <div>
           {user && enrolled ? (
             <>
-              <h2>See which Champions match your profile.</h2>
-              <p>My Experience scores Champions against your keywords, tracks, and goals — and shows exactly why each match was made.</p>
+              <h2>See which {FORGE_LABELS.guides.toLowerCase()} match your profile.</h2>
+              <p>My Experience scores {FORGE_LABELS.guides.toLowerCase()} against your keywords, tracks, and goals — and shows exactly why each match was made.</p>
             </>
           ) : (
             <>
-              <h2>Compass matches Champions to your profile.</h2>
-              <p>Build your Compass to see which Champions align with your goals, tracks, and career interests.</p>
+              <h2>Compass matches {FORGE_LABELS.guides.toLowerCase()} to your profile.</h2>
+              <p>{FORGE_PRODUCT.buildMyJourney} to see which {FORGE_LABELS.guides.toLowerCase()} align with your goals, tracks, and career interests.</p>
             </>
           )}
         </div>
         {user && enrolled
-          ? <Link href="/experience" className="btn-primary">Open My Compass &#8594;</Link>
-          : <Link href="/txc/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
+          ? <Link href="/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} &#8594;</Link>
+          : <Link href="/txc/enroll"     className="btn-primary">{FORGE_PRODUCT.buildMyJourney} &#8594;</Link>
         }
       </section>
 

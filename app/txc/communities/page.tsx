@@ -1,26 +1,27 @@
 // =============================================================================
-// EventCompass — IBM Community  /txc/communities
-// Connect attendee interests to official IBM Community destinations.
+// EventCompass — Communities  /txc/communities
+// Connect attendee interests to persistent community destinations.
 // =============================================================================
 
 import Link from "next/link";
 import IbmCommunityBrowser from "@/components/communities/IbmCommunityBrowser";
 import { IBM_COMMUNITIES, IBM_COMMUNITY_METRICS } from "@/data/ibmCommunities";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export default function CommunitiesPage() {
   return (
     <>
       <section className="compact-hero">
-        <div className="section-kicker">IBM Community</div>
-        <h1>IBM Community</h1>
+        <div className="section-kicker">{FORGE_LABELS.communities}</div>
+        <h1>{FORGE_LABELS.communities}</h1>
         <p>
-          Browse {IBM_COMMUNITIES.length} TechXchange communities — filter by category and keyword to find your group.
-          In production this catalog scales to hundreds of IBM Community destinations.
+          Browse {IBM_COMMUNITIES.length} {FORGE_EVENT.name} communities — filter by category and keyword to find your group.
+          In production this catalog scales to hundreds of community destinations.
         </p>
       </section>
 
       <section className="section no-top-border">
-        <div className="ibm-community-metrics" aria-label="IBM Community scale">
+        <div className="ibm-community-metrics" aria-label="Community scale">
           <article>
             <b>{IBM_COMMUNITY_METRICS.members}</b>
             <span>members</span>
@@ -43,8 +44,8 @@ export default function CommunitiesPage() {
             <h2>Topic groups, user groups, and programs.</h2>
           </div>
           <p>
-            IBM Community is the persistent home for learning and peer connection after the event.
-            Live Huddles on My Compass are for in-the-moment TechXchange conversations — IBM Communities are where the conversation continues.
+            Communities are the persistent home for learning and peer connection after the event.
+            Live Huddles on {FORGE_PRODUCT.myJourney} are for in-the-moment {FORGE_EVENT.name} conversations — communities are where the conversation continues.
           </p>
         </div>
 
@@ -55,32 +56,27 @@ export default function CommunitiesPage() {
         <div className="section-head narrow">
           <div>
             <div className="section-kicker">Personalized</div>
-            <h2>Recommended on My Compass.</h2>
+            <h2>Recommended on {FORGE_PRODUCT.myJourney}.</h2>
           </div>
           <p>
-            When your tracks and topic interests overlap IBM Community groups, Compass surfaces recommended destinations in the IBM Community section of My Experience — never mixed with live Huddles.
+            When your tracks and topic interests overlap community groups, Compass surfaces recommended destinations in the Communities section of My Experience — never mixed with live Huddles.
           </p>
         </div>
         <Link href="/txc/experience" className="action-chip">
-          Open My Compass →
+          Open {FORGE_PRODUCT.myJourney} →
         </Link>
       </section>
 
       <section className="final-band">
         <div>
-          <h2>Keep learning after TechXchange.</h2>
+          <h2>Keep learning after {FORGE_EVENT.name}.</h2>
           <p>
-            Join IBM topic groups and user groups to stay connected with practitioners, Champions, and IBM experts year-round.
+            Join topic groups and user groups to stay connected with practitioners, {FORGE_LABELS.guides.toLowerCase()}, and experts year-round.
           </p>
         </div>
-        <a
-          href="https://community.ibm.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary"
-        >
-          Visit IBM Community →
-        </a>
+        <Link href="/txc/communities" className="btn-primary">
+          Explore {FORGE_LABELS.communities} →
+        </Link>
       </section>
     </>
   );

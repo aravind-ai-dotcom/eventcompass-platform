@@ -43,8 +43,8 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
         width:          "100%",
         height:         "48px",
         padding:        "0 20px",
-        border:         "1.5px solid #0F62FE",
-        background:     loading ? "#0F62FE22" : "#0F62FE",
+        border:         "1.5px solid var(--accent, #7c3aed)",
+        background:     loading ? "rgba(124,58,237,0.12)" : "var(--accent, #7c3aed)",
         color:          "#FFFFFF",
         fontSize:       "0.95rem",
         fontWeight:     650,
@@ -54,14 +54,11 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
         opacity:        loading ? 0.8 : 1,
         transition:     "background 0.15s, opacity 0.15s",
       }}
-      aria-label="Continue with IBMid"
+      aria-label="Continue with enterprise SSO"
     >
-      {/* IBM logo mark — inline SVG, no external dep */}
       {!loading && (
-        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <rect width="32" height="32" fill="transparent"/>
-          {/* IBM 8-bar logo simplified */}
-          <path d="M4 7h24v2H4zM4 11h24v2H4zM8 15h16v2H8zM8 19h16v2H8zM4 23h24v2H4zM4 27h24v2H4z" fill="#FFFFFF"/>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 2a7 7 0 110 14 7 7 0 010-14zm-1 3h2v5h-2V8zm0 6h2v2h-2v-2z" fill="#FFFFFF"/>
         </svg>
       )}
       {loading ? (
@@ -76,7 +73,7 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
           Connecting…
         </span>
       ) : (
-        "Continue with IBMid"
+        "Continue with SSO"
       )}
     </button>
   );

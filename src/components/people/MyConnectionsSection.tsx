@@ -3,6 +3,7 @@
 import ConnectionVaultCard from "@/components/people/ConnectionVaultCard";
 import CompassPanel from "@/components/experience/CompassPanel";
 import type { ConnectionVaultRecord } from "@/types/connectionVault";
+import { FORGE_EVENT } from "@/config/forgeBrand";
 
 interface MyConnectionsSectionProps {
   records: ConnectionVaultRecord[];
@@ -29,7 +30,7 @@ export default function MyConnectionsSection({
           <p className="people-follow-up-split__kicker">My Connections</p>
           <h2 className="people-follow-up-split__title">People you want to remember and follow up with.</h2>
           <p className="people-follow-up-split__note">
-            Your relationship vault — context, notes, and quick actions for after TechXchange.
+            Your relationship vault — context, notes, and quick actions for after {FORGE_EVENT.name}.
           </p>
         </header>
       )}
@@ -60,7 +61,7 @@ export default function MyConnectionsSection({
         icon="connections"
         kicker="My Connections"
         title="People you want to remember and follow up with."
-        description="Your relationship vault — context, notes, and quick actions for after TechXchange."
+        description={`Your relationship vault — context, notes, and quick actions for after ${FORGE_EVENT.name}.`}
         className="people-panel-box"
       >
         {content}

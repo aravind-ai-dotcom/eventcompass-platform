@@ -30,6 +30,7 @@ import {
   type SpeakerParticipantContext,
 } from "@/lib/speakerIntelligence";
 import type { SpeakerProfile } from "@/types/speaker";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import {
   addSessionToBothLists,
   mergeSavedSessionIds,
@@ -1065,7 +1066,7 @@ function SessionsPageContent() {
           <p style={{ marginTop: "16px" }}>
             <Link href="/txc/login" className="btn-primary">Sign in</Link>
             {" "}
-            <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>Build My Compass</Link>
+            <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>{FORGE_PRODUCT.buildMyJourney}</Link>
           </p>
         )}
       </section>
@@ -1077,7 +1078,7 @@ function SessionsPageContent() {
       <section className="compact-hero story-hero--strong">
         {isCertificationView ? (
           <>
-            <div className="section-kicker">Certification journeys</div>
+            <div className="section-kicker">{FORGE_LABELS.learningPaths}</div>
             <h1>{learningPathCount} learning paths available.</h1>
             <p>{CERTIFICATION_JOURNEY_COPY.pathsSupporting}</p>
             {certLabel && (
@@ -1094,7 +1095,7 @@ function SessionsPageContent() {
             <p>
               {isLoggedIn
                 ? "Compass reads sessions against your profile and surfaces what to prioritize: recommended matches, room momentum, and seats filling fast."
-                : "Browse the full TechXchange catalog below. Sign in or build your Compass to unlock personalized match scores."}
+                : `Browse the full ${FORGE_EVENT.name} catalog below. Sign in or build your Compass to unlock personalized match scores.`}
             </p>
           </>
         )}
@@ -1215,7 +1216,7 @@ function SessionsPageContent() {
       <section className="section">
         <div className="section-head">
           <div>
-            <div className="section-kicker">{isCertificationView ? "Certification catalog" : isFiltered ? "Filtered results" : "Browse all"}</div>
+            <div className="section-kicker">{isCertificationView ? `${FORGE_LABELS.learningPaths} catalog` : isFiltered ? "Filtered results" : "Browse all"}</div>
             <h2>
               {isCertificationView
                 ? `${catalogSessions.length} certification journey${catalogSessions.length !== 1 ? "s" : ""}`
@@ -1226,7 +1227,7 @@ function SessionsPageContent() {
           </div>
           <p>
             {isCertificationView
-              ? "One source of truth — certification journeys live in the session catalog alongside everything else at TechXchange."
+              ? `One source of truth — learning paths live in the session catalog alongside everything else at ${FORGE_EVENT.name}.`
               : "Sorted by day and time — match score breaks ties."}
           </p>
         </div>
@@ -1267,8 +1268,8 @@ function SessionsPageContent() {
           )}
         </div>
         {user && enrolled
-          ? <Link href="/experience" className="btn-primary">Open My Compass &#8594;</Link>
-          : <Link href="/txc/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
+          ? <Link href="/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} &#8594;</Link>
+          : <Link href="/txc/enroll"     className="btn-primary">{FORGE_PRODUCT.buildMyJourney} &#8594;</Link>
         }
       </section>
 

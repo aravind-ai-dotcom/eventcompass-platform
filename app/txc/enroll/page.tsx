@@ -35,6 +35,7 @@ import {
   TXC_HISTORY_EVENTS,
   type ChampionStatus,
 } from "@/lib/identitySignals";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 const BASE = "organizations/ibm/events/txc2026";
 
@@ -92,7 +93,7 @@ const LEGACY_GOAL_LABELS: Record<string, string> = {
   "Explore AI":                "Explore products",
   "Network with peers":        "Join communities",
   "Discover customer stories": "Experience the event",
-  "Understand IBM roadmap":    "Explore products",
+  "Understand product roadmap":    "Explore products",
   "Grow my career":            "Grow my career",
 };
 
@@ -108,12 +109,12 @@ function goalIdsFromStoredLabels(labels: string[]): string[] {
 
 const TRACKS = [
   "AI", "Cloud", "Data", "Security", "Automation",
-  "Storage", "IBM Z", "Red Hat", "App Development",
+  "Storage", "Cybersecurity", "App Development",
   "IT Optimization", "Power", "FinOps",
 ];
 
 const COMMUNITY = [
-  { id: "champions",   label: "Meet IBM Champions"    },
+  { id: "champions",   label: `Meet ${FORGE_LABELS.guides}`    },
   { id: "customers",   label: "Meet Customers"        },
   { id: "architects",  label: "Meet Architects"       },
   { id: "find-mentor", label: "Find a Mentor"         },
@@ -281,13 +282,13 @@ function ConfirmScreen({
             : `Your Compass is ready${firstName ? `, ${firstName}` : ""}.`}
         </h1>
         <p>
-          Sessions, champions, and your Next Best Move are now personalized for you.
-          Open My Experience to see your TechXchange plan.
+          Sessions, {FORGE_LABELS.guides.toLowerCase()}, and your Next Best Move are now personalized for you.
+          Open My Experience to see your {FORGE_EVENT.name} plan.
         </p>
       </section>
       <section className="section no-top-border">
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} →</Link>
           <button onClick={onEdit} className="btn-secondary">
             {isEditMode ? "Make more changes" : "Edit my signal"}
           </button>
@@ -564,14 +565,14 @@ export default function EnrollPage() {
     return (
       <>
         <section className="compact-hero enroll-hero">
-          <div className="section-kicker">Build My Compass</div>
+          <div className="section-kicker">{FORGE_PRODUCT.buildMyJourney}</div>
           <h1>Tell Compass what matters to you.</h1>
           <p>
             Sign in or create an account to start. A few strong signals are enough —
-            you can always update your profile from My Compass.
+            you can always update your profile from {FORGE_PRODUCT.myJourney}.
           </p>
           <Link href="#compass-account" className="btn-primary enroll-hero-cta">
-            Create account / Build My Compass →
+            Create account / {FORGE_PRODUCT.buildMyJourney} →
           </Link>
         </section>
         <section className="section no-top-border" id="compass-account">
@@ -767,8 +768,8 @@ export default function EnrollPage() {
       <section className="compact-hero enroll-hero">
         <div className="section-kicker">
           {isEditMode
-            ? (editFocus === "profile" ? "Edit profile" : "Refine My Compass")
-            : "Build My Compass"}
+            ? (editFocus === "profile" ? "Edit profile" : `Refine ${FORGE_PRODUCT.myJourney}`)
+            : FORGE_PRODUCT.buildMyJourney}
         </div>
         <h1>
           {isEditMode && editFocus === "profile"
@@ -872,7 +873,7 @@ export default function EnrollPage() {
           />
 
           <div style={{ marginBottom: "24px" }}>
-            <SubLabel title="Are you planning to attend TechXchange?" />
+            <SubLabel title={`Are you planning to attend ${FORGE_EVENT.name}?`} />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "10px" }}>
               {([
                 { id: "yes", label: "Yes" },
@@ -901,7 +902,7 @@ export default function EnrollPage() {
             <textarea
               value={hopeText}
               onChange={e => setHopeText(e.target.value)}
-              placeholder="I want to deepen my skills toward a watsonx certification journey."
+              placeholder="I want to deepen my skills toward an AI foundations learning path."
               rows={3}
               style={{
                 width: "100%", padding: "12px 14px", border: "1px solid var(--line)",
@@ -946,17 +947,17 @@ export default function EnrollPage() {
           </IntentSubsection>
         </section>
 
-        {/* ── 03 · TechXchange Identity ─────────────────────────────────── */}
+        {/* ── 03 · FORGE Identity ─────────────────────────────────────── */}
         <section id="enroll-identity" className="section">
           <StepLabel
-            step="03 · TechXchange Identity"
-            title="Your TechXchange story."
-            subtitle="Champion status and event history help Compass recognize you and shape follow-up after the event."
+            step={`03 · ${FORGE_EVENT.name} Identity`}
+            title={`Your ${FORGE_EVENT.name} story.`}
+            subtitle="Guide status and event history help Compass recognize you and shape follow-up after the event."
           />
 
           <div style={{ display: "grid", gap: "22px" }}>
             <div>
-              <SubLabel title="IBM Champion status (required)" />
+              <SubLabel title="Guide status (required)" />
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {CHAMPION_STATUS_OPTIONS.map(opt => (
                   <Chip
@@ -970,16 +971,16 @@ export default function EnrollPage() {
             </div>
 
             <div>
-              <SubLabel title="Have you attended TechXchange before?" />
+              <SubLabel title={`Have you attended ${FORGE_EVENT.name} before?`} />
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: attendedTxcBefore === true ? "12px" : 0 }}>
                 <Chip label="Yes" selected={attendedTxcBefore === true} onClick={() => setAttendedTxcBefore(true)} />
-                <Chip label="No, this is my first TechXchange" selected={attendedTxcBefore === false} onClick={() => { setAttendedTxcBefore(false); setTxcHistory([]); }} />
+                <Chip label={`No, this is my first ${FORGE_EVENT.name}`} selected={attendedTxcBefore === false} onClick={() => { setAttendedTxcBefore(false); setTxcHistory([]); }} />
                 <Chip label="Prefer not to answer" selected={attendedTxcBefore === null} onClick={() => { setAttendedTxcBefore(null); setTxcHistory([]); }} />
               </div>
               {attendedTxcBefore === true && (
                 <div>
                   <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5 }}>
-                    Select every TechXchange you have attended.
+                    Select every {FORGE_EVENT.name} you have attended.
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {TXC_HISTORY_EVENTS.map(event => (
@@ -996,9 +997,9 @@ export default function EnrollPage() {
             </div>
 
             <div>
-              <SubLabel title="Remember your event journey after TechXchange?" />
+              <SubLabel title={`Remember your event journey after ${FORGE_EVENT.name}?`} />
               <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 10px", lineHeight: 1.5, maxWidth: "40rem" }}>
-                This helps Compass organize session resources, people you met, huddles that mattered, and follow-up opportunities after TechXchange.
+                This helps Compass organize session resources, people you met, huddles that mattered, and follow-up opportunities after {FORGE_EVENT.name}.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 <Chip
@@ -1018,13 +1019,13 @@ export default function EnrollPage() {
 
         {/* ── Improve My Compass (optional — refine after enrollment) ───── */}
         <details className="enroll-optional-block">
-          <summary>Improve My Compass — add background and professional details</summary>
+          <summary>Improve {FORGE_PRODUCT.myJourney} — add background and professional details</summary>
 
           <div style={{ paddingBottom: "8px" }}>
             <StepLabel
               step="Optional"
               title="Deepen your matches."
-              subtitle="School, employers, and role details unlock alumni and colleague connections. Add these now or refine later from My Compass."
+              subtitle="School, employers, and role details unlock alumni and colleague connections. Add these now or refine later from My Journey."
             />
 
             <div style={{ display: "grid", gap: "14px", marginBottom: "20px" }}>
@@ -1103,7 +1104,7 @@ export default function EnrollPage() {
                     type="text"
                     value={employerRows[i]}
                     onChange={e => setEmployerRow(i, e.target.value)}
-                    placeholder={i === 0 ? "e.g. IBM, Cisco" : "Additional employer (optional)"}
+                    placeholder={i === 0 ? "e.g. Acme Corp, Cisco" : "Additional employer (optional)"}
                     style={iS}
                   />
                 </label>
@@ -1134,7 +1135,7 @@ export default function EnrollPage() {
             <ConsentGroup label="Profile visibility">
               <ConsentItem
                 label="Make my profile visible to other attendees"
-                description="Your name, role, and goals are shown to other registered TechXchange attendees. Your contact details are never exposed."
+                description={`Your name, role, and goals are shown to other registered ${FORGE_EVENT.name} attendees. Your contact details are never exposed.`}
                 checked={consentPublicProfile}
                 onChange={setConsentPublicProfile}
               />
@@ -1182,7 +1183,7 @@ export default function EnrollPage() {
               />
               <ConsentItem
                 label="Receive event notifications"
-                description="Get email or push notifications for TechXchange announcements, session updates, and Compass recommendations."
+                description={`Get email or push notifications for ${FORGE_EVENT.name} announcements, session updates, and Compass recommendations.`}
                 checked={consentAllowEventNotifications}
                 onChange={setConsentAllowEventNotifications}
               />
@@ -1197,7 +1198,7 @@ export default function EnrollPage() {
             <StepLabel
               step="Review"
               title="Your Compass at a glance."
-              subtitle="Here's what Compass will use to personalize your TechXchange experience. You can edit any section above before saving."
+              subtitle={`Here's what Compass will use to personalize your ${FORGE_EVENT.name} experience. You can edit any section above before saving.`}
             />
             <div style={{ border: "1px solid var(--line)", background: "var(--panel)", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
@@ -1279,16 +1280,16 @@ export default function EnrollPage() {
               )}
               {saving
                 ? (isEditMode ? "Updating your Compass…" : "Building your Compass…")
-                : (isEditMode ? "Update My Compass →"    : "Build My Compass →")}
+                : (isEditMode ? `Update ${FORGE_PRODUCT.myJourney} →`    : `${FORGE_PRODUCT.buildMyJourney} →`)}
             </button>
             {isEditMode
-              ? <Link href="/txc/experience" className="btn-secondary">Back to My Compass</Link>
+              ? <Link href="/txc/experience" className="btn-secondary">Back to {FORGE_PRODUCT.myJourney}</Link>
               : <Link href="/" className="btn-secondary">Back to home</Link>}
           </div>
           <p style={{ color: "var(--muted)", fontSize: "0.76rem", marginTop: "14px", lineHeight: 1.5 }}>
             Your Compass profile is saved to your account and used only to personalise
-            your TechXchange experience. Update it any time from your{" "}
-            <a href="/txc/experience" style={{ color: "var(--accent)" }}>My Compass</a>.
+            your {FORGE_EVENT.name} experience. Update it any time from your{" "}
+            <a href="/txc/experience" style={{ color: "var(--accent)" }}>{FORGE_PRODUCT.myJourney}</a>.
           </p>
         </section>
 
@@ -1311,7 +1312,7 @@ export default function EnrollPage() {
           >
             {saving
               ? (isEditMode ? "Updating…" : "Building…")
-              : (isEditMode ? "Update My Compass →" : "Build My Compass →")}
+              : (isEditMode ? `Update ${FORGE_PRODUCT.myJourney} →` : `${FORGE_PRODUCT.buildMyJourney} →`)}
           </button>
         </div>
       )}

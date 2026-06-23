@@ -28,6 +28,12 @@ import {
   IDENTITY_AGGREGATE_SEED,
   type IdentityAggregate,
 } from "@/lib/identitySignals";
+import {
+  FORGE_ADMIN_SECTIONS,
+  FORGE_EVENT,
+  FORGE_LABELS,
+  FORGE_PRODUCT,
+} from "@/config/forgeBrand";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -67,7 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     id: "event-status",
     label: "Event status",
-    description: "Monitor the live health and operating picture of TechXchange.",
+    description: `Monitor the live health and operating picture of ${FORGE_EVENT.name}.`,
     items: [
       { id: "dashboard",     label: "Dashboard"      },
       { id: "exec-snapshot", label: "Exec Snapshot"  },
@@ -106,11 +112,11 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     id: "champions",
-    label: "Champions",
+    label: FORGE_ADMIN_SECTIONS[4],
     description: "Manage expert, mentor, and community-leader intelligence.",
     items: [
-      { id: "champions",      label: "Champions"      },
-      { id: "champion-intel", label: "Champion Intel" },
+      { id: "champions",      label: FORGE_ADMIN_SECTIONS[4]      },
+      { id: "champion-intel", label: `${FORGE_LABELS.guide} Intel` },
     ],
   },
   {
@@ -234,12 +240,12 @@ type ActivityType = "profile" | "session" | "champion" | "reco" | "voice";
 const ACTIVITY_SEED: { id: number; time: string; event: string; type: ActivityType; persona: string }[] = [
   { id: 1,  time: "2 sec ago",  event: "Sarah K. built her Compass profile",        type: "profile",  persona: "Developer"  },
   { id: 2,  time: "8 sec ago",  event: "Michael T. saved AI Strategy Workshop",     type: "session",  persona: "Architect"  },
-  { id: 3,  time: "19 sec ago", event: "Priya S. connected with Champion match",    type: "champion", persona: "Executive"  },
-  { id: 4,  time: "31 sec ago", event: "Kevin M. refined Compass profile",          type: "profile",  persona: "IBMer"      },
+  { id: 3,  time: "19 sec ago", event: "Priya S. connected with Guide match",    type: "champion", persona: "Executive"  },
+  { id: 4,  time: "31 sec ago", event: "Kevin M. refined Compass profile",          type: "profile",  persona: "Attendee"   },
   { id: 5,  time: "45 sec ago", event: "John A. accepted 3 recommendations",        type: "reco",     persona: "Client"     },
-  { id: 6,  time: "58 sec ago", event: "Amy L. saved Red Hat Migration Lab",        type: "session",  persona: "Architect"  },
+  { id: 6,  time: "58 sec ago", event: "Amy L. saved Kubernetes Platform Lab",        type: "session",  persona: "Architect"  },
   { id: 7,  time: "1 min ago",  event: "Rajesh P. built his Compass profile",       type: "profile",  persona: "Developer"  },
-  { id: 8,  time: "1 min ago",  event: "Elena K. requested a Champion 1:1",         type: "champion", persona: "Student"    },
+  { id: 8,  time: "1 min ago",  event: "Elena K. requested a Guide 1:1",         type: "champion", persona: "Student"    },
   { id: 9,  time: "2 min ago",  event: "David C. used Voice Compass",               type: "voice",    persona: "Executive"  },
   { id: 10, time: "2 min ago",  event: "Mei L. built her Compass profile",          type: "profile",  persona: "Partner"    },
 ];
@@ -247,17 +253,17 @@ const ACTIVITY_SEED: { id: number; time: string; event: string; type: ActivityTy
 const AUDIT_LOG = [
   { time: "2026-10-28 14:32:11", user: "admin", action: "Content Updated",   before: "Old hero copy",              after: "New hero copy"                 },
   { time: "2026-10-28 13:18:44", user: "admin", action: "Session Ingested",  before: "0 sessions",                 after: "124 sessions imported"         },
-  { time: "2026-10-28 11:02:19", user: "admin", action: "Champion Ingested", before: "0 champions",                after: "486 champions imported"        },
+  { time: "2026-10-28 11:02:19", user: "admin", action: "Guide Ingested", before: "0 guides",                after: "486 guides imported"        },
   { time: "2026-10-28 09:44:01", user: "admin", action: "Snapshot Created",  before: "—",                          after: "Before Tuesday Keynote"        },
   { time: "2026-10-27 22:11:38", user: "admin", action: "Content Updated",   before: "Explore hero v1",            after: "Explore hero v2"               },
-  { time: "2026-10-27 18:08:54", user: "admin", action: "Snapshot Created",  before: "—",                          after: "Community Day Close"           },
+  { time: "2026-10-27 18:08:54", user: "admin", action: "Snapshot Created",  before: "—",                          after: "Builder Day Close"           },
   { time: "2026-10-27 16:41:22", user: "admin", action: "Export Generated",  before: "—",                          after: "Persona export (all personas)" },
   { time: "2026-10-27 12:24:10", user: "admin", action: "Session Ingested",  before: "124 sessions (capacity v1)", after: "124 sessions (capacity v2)"    },
 ];
 
 const SNAPSHOTS = [
   { name: "Day 0 — Pre-Event",       time: "Oct 26, 08:00", profiles: 7326, saved: 12481, reco: 89421,  active: 641  },
-  { name: "Community Day Close",     time: "Oct 26, 18:00", profiles: 7891, saved: 18234, reco: 121342, active: 2481 },
+  { name: "Builder Day Close",     time: "Oct 26, 18:00", profiles: 7891, saved: 18234, reco: 121342, active: 2481 },
   { name: "Before Tuesday Keynote",  time: "Oct 28, 08:00", profiles: 8124, saved: 21847, reco: 138492, active: 4812 },
   { name: "After Tuesday Keynote",   time: "Oct 28, 10:30", profiles: 8312, saved: 28491, reco: 162841, active: 6241 },
   { name: "Before Sandbox",          time: "Oct 28, 17:45", profiles: 8419, saved: 31284, reco: 178421, active: 5821 },
@@ -283,10 +289,10 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
   {
     page: "Home",
     pageId: "home",
-    kicker: "IBM TechXchange 2026",
+    kicker: FORGE_EVENT.name,
     title: "See who is here, what is moving, and where opportunities are forming.",
     body: "Compass starts before the event and continues after you return home — prepare, meet, experience, and continue your momentum.",
-    cta: "Build My Compass",
+    cta: FORGE_PRODUCT.buildMyJourney,
     dest: "/enroll",
     secondaryCta: "How Compass works",
     secondaryDest: "/explore",
@@ -296,10 +302,10 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
     pageId: "explore",
     kicker: "How Compass works",
     title: "How Compass helps you succeed.",
-    body: "Five paths through TechXchange — each mapped to sessions, people, and outcomes aligned to what you came to achieve.",
+    body: `Five paths through ${FORGE_EVENT.name} — each mapped to sessions, people, and outcomes aligned to what you came to achieve.`,
     cta: "Browse sessions",
     dest: "/sessions",
-    secondaryCta: "Build My Compass",
+    secondaryCta: FORGE_PRODUCT.buildMyJourney,
     secondaryDest: "/enroll",
   },
   {
@@ -318,10 +324,10 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
     pageId: "pulse",
     kicker: "Event pulse",
     title: "The room is taking shape.",
-    body: "Communities forming, conversations beginning, opportunities emerging across TechXchange.",
+    body: `Communities forming, conversations beginning, opportunities emerging across ${FORGE_EVENT.name}.`,
     cta: "View Pulse",
     dest: "/txc/pulse",
-    secondaryCta: "Build My Compass",
+    secondaryCta: FORGE_PRODUCT.buildMyJourney,
     secondaryDest: "/enroll",
   },
   {
@@ -332,18 +338,18 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
     body: "Compass reads sessions against your profile and surfaces what to prioritize.",
     cta: "Browse all sessions",
     dest: "/sessions",
-    secondaryCta: "Open My Compass",
+    secondaryCta: FORGE_PRODUCT.myJourney,
     secondaryDest: "/experience",
   },
   {
-    page: "Champions",
+    page: FORGE_ADMIN_SECTIONS[4],
     pageId: "champions",
     kicker: "People intelligence",
     title: "Find your people before you arrive.",
     body: "Experts, mentors, peers, and community leaders matched to your interests.",
-    cta: "See matched Champions",
+    cta: `See matched ${FORGE_LABELS.guides}`,
     dest: "/champions",
-    secondaryCta: "Build My Compass",
+    secondaryCta: FORGE_PRODUCT.buildMyJourney,
     secondaryDest: "/enroll",
   },
   {
@@ -352,20 +358,20 @@ const CONTENT_DEFAULTS: ContentPageData[] = [
     kicker: "Build your Compass",
     title: "Tell Compass what matters to you.",
     body: "Your goals, tracks, and background shape every session score and champion match.",
-    cta: "Build My Compass",
+    cta: FORGE_PRODUCT.buildMyJourney,
     dest: "/enroll",
     secondaryCta: "Sign in",
     secondaryDest: "/login",
   },
   {
-    page: "My Compass",
+    page: FORGE_PRODUCT.myJourney,
     pageId: "experience",
-    kicker: "My Compass",
-    title: "TechXchange, built for you.",
-    body: "Your personalized four-day plan, scored sessions, and Champion matches — all in one place.",
-    cta: "Open My Compass",
+    kicker: FORGE_PRODUCT.myJourney,
+    title: `${FORGE_EVENT.name}, built for you.`,
+    body: `Your personalized four-day plan, scored sessions, and ${FORGE_LABELS.guide.toLowerCase()} matches — all in one place.`,
+    cta: `Open ${FORGE_PRODUCT.myJourney}`,
     dest: "/experience",
-    secondaryCta: "Refine My Compass",
+    secondaryCta: `Refine ${FORGE_PRODUCT.myJourney}`,
     secondaryDest: "/enroll?mode=edit",
   },
 ];
@@ -423,10 +429,10 @@ const CREDITS_DEFAULTS: CreditsFormData = {
   productName: "Compass",
   productTagline: "AI-powered attendee intelligence platform",
   productCredit:
-    "Compass is an AI-powered attendee intelligence platform designed to help TechXchange participants discover relevant sessions, people, communities, certifications, and live opportunities.",
+    "Compass is an AI-powered attendee intelligence platform designed to help FORGE participants discover relevant sessions, people, communities, learning paths, and live opportunities.",
   createdBy: "Aravind Ragupathi",
   eventContext:
-    "Built for IBM TechXchange 2026 experience exploration and attendee journey personalization.",
+    `Built for ${FORGE_EVENT.name} experience exploration and attendee journey personalization.`,
   technologyCredits: [
     { id: "firebase", label: "Firebase", enabled: true },
     { id: "firestore", label: "Firestore", enabled: true },
@@ -434,11 +440,11 @@ const CREDITS_DEFAULTS: CreditsFormData = {
     { id: "typescript", label: "TypeScript", enabled: true },
     { id: "vercel", label: "Vercel", enabled: true },
     { id: "google-tts", label: "Google Cloud Text-to-Speech", enabled: true },
-    { id: "carbon", label: "IBM Carbon Design inspiration", enabled: true },
+    { id: "carbon", label: "Modern SaaS design system", enabled: true },
     { id: "elevenlabs", label: "Future Voice Evaluation: ElevenLabs", enabled: true },
   ],
   aiVoiceCredit:
-    "Ask Compass uses Google Cloud Text-to-Speech for spoken responses. Guide (Aoede) and Studio (Charon) voices are available for attendee selection.",
+    `${FORGE_PRODUCT.compassAi} uses Google Cloud Text-to-Speech for spoken responses. Guide (Aoede) and Studio (Charon) voices are available for attendee selection.`,
   copyrightNotice: "© 2026 Aravind Ragupathi. All rights reserved.",
   confidentiality:
     "Compass contains proprietary concepts, recommendation logic, attendee intelligence, and experience orchestration workflows.\n\nConfidential and proprietary.",
@@ -450,10 +456,10 @@ const CREDITS_DEFAULTS: CreditsFormData = {
 
 const PERSONA_COLORS: Record<string, string> = {
   Developer: IBM.blue, Architect: IBM.purple, Executive: IBM.maroon,
-  Champion: IBM.yellow, Student: IBM.cyan, Partner: IBM.red,
-  Client: IBM.blueLight, IBMer: IBM.teal,
+  Guide: IBM.yellow, Student: IBM.cyan, Partner: IBM.red,
+  Client: IBM.blueLight, Attendee: IBM.teal,
 };
-const PERSONA_ORDER = ["Developer","Architect","Executive","Champion","Student","Partner","Client","IBMer"];
+const PERSONA_ORDER = ["Developer","Architect","Executive","Guide","Student","Partner","Client","Attendee"];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AdminData types + empty state
@@ -728,7 +734,7 @@ function normalizeDomain(raw: string): string {
   const s = raw.toLowerCase().trim();
   if (s.includes("ai") || s.includes("ml") || s.includes("machine") || s.includes("watson")) return "AI & Machine Learning";
   if (s.includes("cloud") || s.includes("hybrid")) return "Cloud & Hybrid";
-  if (s.includes("red hat") || s.includes("openshift") || s.includes("open source") || s.includes("linux")) return "Red Hat & Open Source";
+  if (s.includes("red hat") || s.includes("openshift") || s.includes("open source") || s.includes("linux")) return "Cloud & Platform";
   if (s.includes("autom") || s.includes("rpa")) return "Automation";
   if (s.includes("data") || s.includes("analytic") || s.includes("sql")) return "Data & Analytics";
   if (s.includes("security") || s.includes("cyber") || s.includes("iam")) return "Security";
@@ -1257,7 +1263,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         padding: "40px 36px 36px" }}>
         <div style={{ marginBottom: "28px" }}>
           <p style={{ color: S.muted, fontSize: "0.72rem", fontWeight: 700,
-            letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 10px" }}>IBM</p>
+            letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 10px" }}>{FORGE_EVENT.name}</p>
           <h1 style={{ color: S.text, fontSize: "1.35rem", fontWeight: 600,
             letterSpacing: "-0.025em", margin: "0 0 4px" }}>Compass</h1>
           <p style={{ color: S.muted, fontSize: "0.88rem", margin: 0 }}>Event Intelligence Center</p>
@@ -1290,12 +1296,12 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         </form>
         <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: `1px solid ${S.line}` }}>
           <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0, lineHeight: 1.5 }}>
-            IBM SSO / IBMid access coming soon. Authorised event operations staff only.
+            Enterprise SSO access coming soon. Authorised event operations staff only.
           </p>
         </div>
       </div>
       <p style={{ color: S.dim, fontSize: "0.72rem", marginTop: "20px" }}>
-        Compass v{COMPASS_VERSION} · IBM TechXchange 2026
+        Compass v{COMPASS_VERSION} · {FORGE_EVENT.name}
       </p>
     </div>
   );
@@ -1312,7 +1318,7 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
 }) {
   return (
     <div style={{ display: "flex", height: "100vh", background: S.bg,
-      overflow: "hidden", fontFamily: "IBM Plex Sans, system-ui, sans-serif" }}>
+      overflow: "hidden", fontFamily: "Inter, system-ui, sans-serif" }}>
 
       {/* Sidebar — grouped operator navigation */}
       <aside style={{ width: "248px", background: S.sideBg, borderRight: `1px solid ${S.line}`,
@@ -1322,7 +1328,7 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
             textTransform: "uppercase", letterSpacing: "0.14em", margin: "0 0 3px" }}>Compass</p>
           <p style={{ color: S.text, fontSize: "1rem", fontWeight: 650,
             margin: "0 0 2px", letterSpacing: "-0.02em" }}>Operator Console</p>
-          <p style={{ color: S.dim, fontSize: "0.72rem", margin: "0 0 10px" }}>IBM TechXchange 2026</p>
+          <p style={{ color: S.dim, fontSize: "0.72rem", margin: "0 0 10px" }}>{FORGE_EVENT.name}</p>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "5px",
             fontSize: "0.62rem", color: IBM.green, fontWeight: 650,
             letterSpacing: "0.08em", textTransform: "uppercase" }}>
@@ -1435,7 +1441,7 @@ function DashboardView({ data }: { data: AdminData }) {
     { label: "Sessions Saved",         value: data.hasUsageData ? data.totalSessionsSaved.toLocaleString() : "—", warn: false },
     { label: "People Saved",           value: data.hasUsageData ? data.totalPeopleSaved.toLocaleString()   : "—", warn: false },
     { label: "Meet Requested",         value: data.hasUsageData ? data.totalMeetRequests.toLocaleString()  : "—", warn: false },
-    { label: "Champions",              value: data.totalChampions.toLocaleString(),  warn: false },
+    { label: FORGE_LABELS.guides,              value: data.totalChampions.toLocaleString(),  warn: false },
   ];
 
   const cc = data.consentCounts;
@@ -1463,14 +1469,14 @@ function DashboardView({ data }: { data: AdminData }) {
     { label: "Views (sessions)",          value: data.hasUsageData ? data.totalViewedSessions.toLocaleString() : "—"               },
     { label: "Views (people)",            value: data.hasUsageData ? data.totalViewedPeople.toLocaleString()   : "—"               },
     { label: "Total Sessions in Catalog", value: data.totalSessions.toLocaleString()                                               },
-    { label: "Total Champions",           value: data.totalChampions.toLocaleString()                                              },
+    { label: `Total ${FORGE_LABELS.guides}`,           value: data.totalChampions.toLocaleString()                                              },
   ];
 
   const execInsights = [
     {
-      question: "How many Champions registered?",
+      question: `How many ${FORGE_LABELS.guides} registered?`,
       count: data.totalChampions > 0 ? data.totalChampions.toLocaleString() : "—",
-      note: data.totalChampions > 0 ? "Champions registered in program." : "Champions not yet loaded.",
+      note: data.totalChampions > 0 ? `${FORGE_LABELS.guides} registered in program.` : `${FORGE_LABELS.guides} not yet loaded.`,
       color: IBM.blue, live: false,
     },
     {
@@ -1486,7 +1492,7 @@ function DashboardView({ data }: { data: AdminData }) {
       color: IBM.blue, live: false,
     },
     {
-      question: "How many architects are interested in Red Hat?",
+      question: "How many architects are interested in cloud platforms?",
       count: data.personaCounts["Architect"] ? (data.personaCounts["Architect"]).toLocaleString() : "—",
       note: data.personaCounts["Architect"]
         ? `${data.personaCounts["Architect"]} architects registered. Domain interest requires session-tag filter.`
@@ -1640,7 +1646,7 @@ function DashboardView({ data }: { data: AdminData }) {
           {[
             { label: "Product Creator",          items: ["Aravind Ragupathi"],                              color: S.soft  },
             { label: "Status",                   items: ["Prototype · Internal Demo"],                     color: IBM.yellow },
-            { label: "Built Using",              items: ["IBM technologies including Bob","Firebase","Next.js","TypeScript"], color: S.muted },
+            { label: "Built Using",              items: ["Next.js","Firebase","TypeScript","Compass AI"], color: S.muted },
             { label: "AI Development Assistants",items: ["OpenAI ChatGPT","Anthropic Claude Sonnet"],      color: S.muted },
             { label: "Voice Services",           items: ["ElevenLabs (planned)"],                          color: S.muted },
           ].map(block => (
@@ -1657,7 +1663,7 @@ function DashboardView({ data }: { data: AdminData }) {
         </div>
         <p style={{ color: S.dim, fontSize: "0.72rem", margin: "18px 0 0",
           paddingTop: "14px", borderTop: `1px solid ${S.line}` }}>
-          Parts of Compass were accelerated using IBM Bob.
+          Parts of Compass were accelerated with modern AI-assisted development tools.
         </p>
       </Panel>
     </div>
@@ -1680,7 +1686,7 @@ function PersonasView({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <SectionHead kicker="Persona Intelligence" title="Who is at TechXchange 2026."
+      <SectionHead kicker="Persona Intelligence" title={`Who is at ${FORGE_EVENT.name}.`}
         sub="Registered attendees broken down by persona — computed from Firestore participants." />
 
       {activePersonas.length === 0 && (
@@ -1767,7 +1773,7 @@ function ChampionsView({ data }: { data: AdminData }) {
   const notUsing = total > 0 ? total - data.championsAttending : 0;
 
   const championMetrics = [
-    { label: "Champions Registered",  value: total,                        color: IBM.blue   },
+    { label: `${FORGE_LABELS.guides} Registered`,  value: total,                        color: IBM.blue   },
     { label: "Attending",             value: data.championsAttending,      color: IBM.green  },
     { label: "Available for 1:1",     value: data.championsAvailableMeet,  color: IBM.purple },
     { label: "Not Using Compass",     value: notUsing,                     color: IBM.yellow },
@@ -1779,8 +1785,8 @@ function ChampionsView({ data }: { data: AdminData }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      <SectionHead kicker="Champion Intelligence"
-        title="The people who make TechXchange extraordinary."
+      <SectionHead kicker={`${FORGE_LABELS.guide} Intelligence`}
+        title={`The people who make ${FORGE_EVENT.name} extraordinary.`}
         sub="Registrations, availability, and expertise breakdown — from Firestore champions collection." />
 
       <div style={{ display: "grid",
@@ -1802,7 +1808,7 @@ function ChampionsView({ data }: { data: AdminData }) {
         {[
           { q: "How many attending?",           v: data.championsAttending, sub: `of ${total} registered`,       color: IBM.blue   },
           { q: "Available for 1:1 meeting?",    v: data.championsAvailableMeet, sub: "open_to_meeting = true",   color: IBM.purple },
-          { q: "Champions not using Compass?",  v: notUsing, sub: total > 0 ? `${Math.round((notUsing / Math.max(total, 1)) * 100)}% gap` : "—", color: IBM.yellow },
+          { q: `${FORGE_LABELS.guides} not using Compass?`,  v: notUsing, sub: total > 0 ? `${Math.round((notUsing / Math.max(total, 1)) * 100)}% gap` : "—", color: IBM.yellow },
           { q: "Total in program?",             v: total, sub: "from champions collection",                       color: IBM.cyan   },
         ].map(item => (
           <Panel key={item.q} style={{ borderTop: `3px solid ${item.color}` }}>
@@ -1831,7 +1837,7 @@ function ChampionsView({ data }: { data: AdminData }) {
         </Panel>
 
         <Panel>
-          <PanelLabel>Champions</PanelLabel>
+          <PanelLabel>{FORGE_LABELS.guides}</PanelLabel>
           {data.topChampions.length > 0 ? (
             <>
               <div style={{ display: "grid", gap: "1px", background: S.line, marginBottom: "16px" }}>
@@ -1871,7 +1877,7 @@ function ChampionsView({ data }: { data: AdminData }) {
       {/* Champion drilldown table */}
       {data.championRows.length > 0 && (
         <div>
-          <PanelLabel>All Champions</PanelLabel>
+          <PanelLabel>All {FORGE_LABELS.guides}</PanelLabel>
           <div style={{ overflowX: "auto", border: `1px solid ${S.line}` }}>
             <table style={{ borderCollapse: "collapse", width: "100%", minWidth: "760px",
               background: S.panel }}>
@@ -2170,7 +2176,7 @@ function DataQualityView({ data }: { data: AdminData }) {
       fix: "Add a room (or location) field to session documents.",
     },
     {
-      label: "Champions missing domains",
+      label: `${FORGE_LABELS.guides} missing domains`,
       count: dq.championsMissingDomains,
       total: totalChampions,
       color: IBM.yellow,
@@ -2344,7 +2350,7 @@ function SnapshotsView({ data }: { data: AdminData }) {
               }
             </div>
             <div>
-              <PanelLabel>Top Champion Domains</PanelLabel>
+              <PanelLabel>Top {FORGE_LABELS.guide} Domains</PanelLabel>
               {topDomains.length > 0
                 ? topDomains.map(([d, n]) => (
                     <div key={d} style={{ display: "flex", justifyContent: "space-between",
@@ -2551,7 +2557,7 @@ function ConsentView({ data }: { data: AdminData }) {
 
   return (
     <div>
-      <SectionHead kicker="Consent & Trust" title="Privacy adoption at TechXchange 2026."
+      <SectionHead kicker="Consent & Trust" title={`Privacy adoption at ${FORGE_EVENT.name}.`}
         sub="Opt-in rates across all consent dimensions — computed from participant records." />
 
       {data.totalParticipants === 0 && (
@@ -2628,12 +2634,12 @@ function ActivityView() {
     const actions: [string, ActivityType][] = [
       ["built Compass profile",         "profile"],
       ["saved a session",               "session"],
-      ["added a Champion",              "champion"],
+      ["added a Guide",              "champion"],
       ["accepted recommendations",      "reco"],
       ["used Voice Compass",            "voice"],
       ["refined Compass profile",       "profile"],
     ];
-    const personas = ["Developer","Architect","Executive","Champion","Student","Partner","Client","IBMer"];
+    const personas = ["Developer","Architect","Executive","Guide","Student","Partner","Client","Attendee"];
 
     const timer = setInterval(() => {
       const name = names[Math.floor(Math.random() * names.length)];
@@ -2651,7 +2657,7 @@ function ActivityView() {
     profile: IBM.blue, session: IBM.cyan, champion: IBM.purple, reco: IBM.green, voice: IBM.orange,
   };
   const typeLabel: Record<ActivityType, string> = {
-    profile: "Profile", session: "Session", champion: "Champion", reco: "Recommendation", voice: "Voice",
+    profile: "Profile", session: "Session", champion: FORGE_LABELS.guide, reco: "Recommendation", voice: "Voice",
   };
 
   return (
@@ -2861,7 +2867,7 @@ function AccessAdminView() {
   const accessLevels = ["Owner", "Event Admin", "Content Editor", "Read Only"] as const;
 
   const credentials = [
-    { label: "Authentication method", value: "Email / IBMid-ready" },
+    { label: "Authentication method", value: "Email / SSO-ready" },
     { label: "SSO readiness", value: "Planned" },
     { label: "Admin role model", value: "Demo mode" },
     { label: "Data access", value: "Scoped by event" },
@@ -2981,7 +2987,7 @@ function VoiceAdminView() {
     <div>
       <SectionHead
         kicker="Experience"
-        title="Ask Compass voice configuration."
+        title={`${FORGE_PRODUCT.compassAi} voice configuration.`}
         sub="Default voice, TTS connectivity, and last test status for demo confidence."
       />
 
@@ -3086,7 +3092,7 @@ function SignalsAdminView({ data }: { data: AdminData }) {
   const metrics = [
     { label: "Attendee profiles", value: data.totalParticipants.toLocaleString(), note: "Enrolled Compass profiles" },
     { label: "Session intelligence", value: data.totalSessions.toLocaleString(), note: "Scored against attendee signals" },
-    { label: "Champion matches", value: data.totalChampions.toLocaleString(), note: "People intelligence index" },
+    { label: `${FORGE_LABELS.guide} matches`, value: data.totalChampions.toLocaleString(), note: "People intelligence index" },
     { label: "Connection signals", value: "14", note: "New mutual-interest signals today" },
     { label: "Live huddles", value: "6", note: "Conversations forming nearby" },
     { label: "Last refresh", value: data.lastRefresh ? data.lastRefresh.toLocaleTimeString() : "Moments ago", note: "Platform sync status" },
@@ -3361,7 +3367,7 @@ function IngestView({ data }: { data: AdminData }) {
 
   const TYPES = [
     { id: "sessions",    label: "Sessions",    count: data.totalSessions,  schema: "title, type, day, start_time, room, tracks[], capacity"           },
-    { id: "champions",   label: "Champions",   count: data.totalChampions, schema: "display_name, title, organization, domains[], available_for_meet"  },
+    { id: "champions",   label: FORGE_LABELS.guides,   count: data.totalChampions, schema: "display_name, title, organization, domains[], available_for_meet"  },
     { id: "communities", label: "Communities", count: 0,                   schema: "name, type, lead, description, session_ids[]"                      },
     { id: "sponsors",    label: "Sponsors",    count: 0,                   schema: "name, tier, logo_url, booth, session_ids[]"                        },
   ];
@@ -3431,12 +3437,12 @@ function ExportsView() {
 
   const EXPORTS = [
     { id: "sessions-csv",   format: "CSV",  label: "Session Catalog",        rows: "All sessions"      },
-    { id: "champions-csv",  format: "CSV",  label: "Champion Registry",      rows: "All Champions"     },
+    { id: "champions-csv",  format: "CSV",  label: `${FORGE_LABELS.guide} Registry`,      rows: `All ${FORGE_LABELS.guides}`     },
     { id: "personas-csv",   format: "CSV",  label: "Persona Breakdown",      rows: "8 personas"        },
     { id: "consent-csv",    format: "CSV",  label: "Consent Export",         rows: "All participants"  },
     { id: "snapshots-json", format: "JSON", label: "Snapshot Export",        rows: "6 snapshots"       },
     { id: "activity-json",  format: "JSON", label: "Activity Log",           rows: "All events"        },
-    { id: "champions-json", format: "JSON", label: "Champion Full Profile",  rows: "All Champions"     },
+    { id: "champions-json", format: "JSON", label: `${FORGE_LABELS.guide} Full Profile`,  rows: `All ${FORGE_LABELS.guides}`     },
     { id: "full-json",      format: "JSON", label: "Full Platform Export",   rows: "Complete dataset"  },
   ];
 
@@ -3729,7 +3735,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
       {/* Hotspots */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         <Panel>
-          <PanelLabel>🔥 Networking Hotspots — Top Champion Domains</PanelLabel>
+          <PanelLabel>🔥 Networking Hotspots — Top {FORGE_LABELS.guide} Domains</PanelLabel>
           {topNetworkingDomains.length === 0 ? (
             <EmptyNote>No champion domain data yet.</EmptyNote>
           ) : (
@@ -3775,15 +3781,15 @@ function ChampionIntelView({ data }: { data: AdminData }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      <SectionHead kicker="Champion Intel"
+      <SectionHead kicker={`${FORGE_LABELS.guide} Intel`}
         title="Coverage, gaps, and expertise."
-        sub="Champion domain coverage with risk detection. <3 champions = coverage risk." />
+        sub={`${FORGE_LABELS.guide} domain coverage with risk detection. <3 guides = coverage risk.`} />
 
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px",
         background: S.line, border: `1px solid ${S.line}` }}>
         {[
-          { label: "Total Champions",    value: data.totalChampions,         color: IBM.blueLight },
+          { label: `Total ${FORGE_LABELS.guides}`,    value: data.totalChampions,         color: IBM.blueLight },
           { label: "Attending",          value: data.championsAttending,      color: IBM.green     },
           { label: "Available for Meet", value: data.championsAvailableMeet,  color: IBM.cyan      },
           { label: "Coverage Risks",     value: coverageRisks.length,         color: coverageRisks.length > 0 ? IBM.red : IBM.green },
@@ -3825,7 +3831,7 @@ function ChampionIntelView({ data }: { data: AdminData }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         {/* Top domains */}
         <Panel>
-          <PanelLabel>Top Champion Domains / Expertise</PanelLabel>
+          <PanelLabel>Top {FORGE_LABELS.guide} Domains / Expertise</PanelLabel>
           {topDomains.length === 0
             ? <EmptyNote>No domain data — add domains[] or expertise[] to champion documents.</EmptyNote>
             : topDomains.map(([d, n]) => (
@@ -3836,7 +3842,7 @@ function ChampionIntelView({ data }: { data: AdminData }) {
 
         {/* Data completeness */}
         <Panel>
-          <PanelLabel>Champion Profile Completeness</PanelLabel>
+          <PanelLabel>{FORGE_LABELS.guide} Profile Completeness</PanelLabel>
           {data.totalChampions > 0 ? (
             <>
               <div style={{ marginBottom: "20px" }}>
@@ -4103,7 +4109,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       field: "room",
     },
     {
-      label: "Champions missing domains",
+      label: `${FORGE_LABELS.guides} missing domains`,
       count: dq.championsMissingDomains,
       total: data.totalChampions,
       color: IBM.yellow,
@@ -4167,7 +4173,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
               {[
                 { label: "Participants", n: data.totalParticipants },
                 { label: "Sessions",    n: data.totalSessions     },
-                { label: "Champions",   n: data.totalChampions    },
+                { label: FORGE_LABELS.guides,   n: data.totalChampions    },
               ].map(c => (
                 <div key={c.label}>
                   <p style={{ color: S.dim, fontSize: "0.66rem", textTransform: "uppercase",
@@ -4340,7 +4346,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
     { label: "Compass Profiles",      value: data.compassBuilt.toLocaleString(),       sub: `${profileRate}% enrollment rate`,    color: IBM.green     },
     { label: "Active Attendees",      value: activeN.toLocaleString(),                 sub: `${activeRate}% of registered`,       color: IBM.cyan      },
     { label: "Sessions in Catalog",   value: data.totalSessions.toLocaleString(),      sub: "from Firestore sessions collection", color: IBM.blue      },
-    { label: "Champions Available",   value: data.championsAvailableMeet.toLocaleString(), sub: `of ${data.totalChampions.toLocaleString()} total`,  color: IBM.purple  },
+    { label: `${FORGE_LABELS.guides} Available`,   value: data.championsAvailableMeet.toLocaleString(), sub: `of ${data.totalChampions.toLocaleString()} total`,  color: IBM.purple  },
     { label: "Networking Engaged",    value: data.participantWithNetworking.toLocaleString(), sub: `${networkRate}% have networking signals`, color: IBM.teal },
     { label: "Meet Requests",         value: data.hasUsageData ? data.totalMeetRequests.toLocaleString() : "—", sub: "total across all attendees", color: IBM.green },
     { label: "Consent Opt-in",        value: `${consentRate}%`,                        sub: `${consentN.toLocaleString()} participants`, color: IBM.yellow },
@@ -4356,7 +4362,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
       <SectionHead kicker="Executive Snapshot"
-        title="Leadership-level summary — TechXchange 2026."
+        title={`Leadership-level summary — ${FORGE_EVENT.name}.`}
         sub={`One-page view for leadership. Refreshed ${data.lastRefresh?.toLocaleTimeString() ?? "—"}.`} />
 
       {/* KPI grid */}
@@ -4382,7 +4388,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
           <strong style={{ color: IBM.green }}>{pctYes}% plan to attend</strong>,{" "}
           <strong style={{ color: IBM.yellow }}>{pctDeciding}% are still deciding</strong>, and{" "}
           <strong style={{ color: IBM.red }}>{pctNo}% are not attending</strong>.
-          {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the TechXchange brand
+          {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the {FORGE_EVENT.name} brand
           but have not confirmed they will be at the event — a key signal for digital follow-up and nurture.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px" }}>
@@ -4449,7 +4455,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
         <Panel>
           <PanelLabel>Event Intelligence Summary</PanelLabel>
           <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 16px" }}>
-            TechXchange 2026 has{" "}
+            {FORGE_EVENT.name} has{" "}
             <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered participants</strong>
             , of whom{" "}
             <strong style={{ color: IBM.green }}>{data.compassBuilt.toLocaleString()} ({profileRate}%)</strong>
@@ -4462,7 +4468,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
           </p>
           <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>
             The champion network has{" "}
-            <strong style={{ color: IBM.purple }}>{data.totalChampions.toLocaleString()} champions</strong>
+            <strong style={{ color: IBM.purple }}>{data.totalChampions.toLocaleString()} {FORGE_LABELS.guides.toLowerCase()}</strong>
             , with{" "}
             <strong style={{ color: IBM.cyan }}>{data.championsAvailableMeet.toLocaleString()} available for 1:1 meetings</strong>.
             {" "}Consent opt-in across participants stands at{" "}
@@ -4486,7 +4492,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
             {topPersonas.length === 0 && <EmptyNote>No persona data.</EmptyNote>}
           </Panel>
           <Panel>
-            <PanelLabel>Top Champion Domains</PanelLabel>
+            <PanelLabel>Top {FORGE_LABELS.guide} Domains</PanelLabel>
             {topDomains.map(([d, n]) => (
               <div key={d} style={{ display: "flex", justifyContent: "space-between",
                 alignItems: "baseline", marginBottom: "6px" }}>
@@ -4533,11 +4539,11 @@ function RightNowView({ data }: { data: AdminData }) {
   const topTrackName   = topTracks[0]?.[0] ?? "—";
   const topDomainName  = topDomains[0]?.[0] ?? "—";
   const brief = data.totalParticipants > 0 ? [
-    `TechXchange 2026 Compass has ${data.totalParticipants.toLocaleString()} registered participants with a ${profileRate}% profile completion rate.`,
+    `${FORGE_EVENT.name} Compass has ${data.totalParticipants.toLocaleString()} registered participants with a ${profileRate}% profile completion rate.`,
     `${pctYes}% plan to attend in person; ${brandOnlyPct}% are engaging with the brand but have not confirmed attendance (Maybe + No).`,
     `The event is ${hs >= 70 ? "healthy" : hs >= 40 ? "at risk" : "in critical health"} with a platform health score of ${hs}/100.`,
     `The dominant attendee persona is ${topPersonaName}. The most-requested topic area is ${topTrackName}.`,
-    `${data.totalChampions} IBM Champions are in the network — ${data.championsAvailableMeet} available for 1:1 meetings. Top domain: ${topDomainName}.`,
+    `${data.totalChampions} ${FORGE_LABELS.guides.toLowerCase()} are in the network — ${data.championsAvailableMeet} available for 1:1 meetings. Top domain: ${topDomainName}.`,
     `${networkRate}% of attendees have activated networking signals. ${data.totalMeetRequests > 0 ? `${data.totalMeetRequests} meet requests have been made.` : "No meet request data yet."}`,
     data.topGoals.length > 0 ? `Top learning goal: "${data.topGoals[0][0]}" (${data.topGoals[0][1]} attendees).` : "",
   ].filter(Boolean).join(" ") : "No participant data loaded yet — load Firestore data first.";
@@ -4575,9 +4581,9 @@ function RightNowView({ data }: { data: AdminData }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-      <SectionHead kicker="If TechXchange Started Right Now"
+      <SectionHead kicker={`If ${FORGE_EVENT.name} Started Right Now`}
         title="Top 10 lists + Compass Executive Brief."
-        sub="Snapshot of the current state of TechXchange 2026 — based on live Firestore data." />
+        sub={`Snapshot of the current state of ${FORGE_EVENT.name} — based on live Firestore data.`} />
 
       {/* Executive Brief */}
       <Panel style={{ borderLeft: `3px solid ${IBM.blue}` }}>
@@ -4594,7 +4600,7 @@ function RightNowView({ data }: { data: AdminData }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
         <Top10Panel title="Top 10 Attendee Personas"  items={topPersonas}        color={IBM.blue}   />
         <Top10Panel title="Top 10 Session Tracks"     items={topTracks}          color={IBM.cyan}   />
-        <Top10Panel title="Top 10 Champion Domains"   items={topDomains}         color={IBM.purple} />
+        <Top10Panel title={`Top 10 ${FORGE_LABELS.guide} Domains`}   items={topDomains}         color={IBM.purple} />
         <Top10Panel title="Top 10 Learning Goals"     items={data.topGoals}      color={IBM.green}  />
         <Top10Panel title="Top 10 Attendee Needs"     items={data.topNeeds}      color={IBM.teal}   />
         <Top10Panel title="Top 10 Sessions in Catalog" items={topSessionPairs}   color={IBM.orange} />

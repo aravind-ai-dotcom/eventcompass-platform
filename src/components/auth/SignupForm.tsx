@@ -6,11 +6,12 @@
 
 import { useState } from "react";
 import { signUpWithEmail, friendlyAuthError } from "@/lib/auth";
+import { FORGE_LABELS } from "@/config/forgeBrand";
 
 const ROLES = [
   "Client / Customer", "Developer", "Architect", "Data Scientist",
   "Security Professional", "IT Operations", "Business Leader",
-  "Student", "IBM Champion", "IBMer", "Partner",
+  "Student", FORGE_LABELS.guide, FORGE_LABELS.attendees.replace(/s$/, ""), "Partner",
 ];
 const PERSONAS = [
   "Technical Practitioner", "Architect", "Business Decision Maker",

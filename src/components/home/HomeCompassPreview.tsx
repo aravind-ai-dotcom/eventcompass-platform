@@ -2,25 +2,26 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 const ANONYMOUS_ITEMS = [
   {
     kind: "session",
-    kicker: "Learning sessions",
+    kicker: "Sessions",
     title: "Labs and breakouts matched to your goals",
-    meta: "Unlocked after you build your Compass profile",
+    meta: `Unlocked after you ${FORGE_PRODUCT.buildMyJourney.toLowerCase()}`,
   },
   {
     kind: "expert",
-    kicker: "Expert access",
-    title: "Practitioners in your technology areas",
+    kicker: "Guide access",
+    title: "Experts in your technology areas",
     meta: "Names and context stay private until you enroll",
   },
   {
     kind: "certification",
-    kicker: "Certification path",
-    title: "A study plan around your credential targets",
-    meta: "Prep sessions and labs added to your week",
+    kicker: "Learning path",
+    title: "A plan around your professional learning goals",
+    meta: "Sessions and experiences added to your week",
   },
   {
     kind: "networking",
@@ -35,48 +36,45 @@ const ENROLLED_ITEMS = [
     kind: "session",
     kicker: "Your learning plan",
     title: "Sessions ranked for your profile",
-    meta: "See titles, times, and scores in My Compass",
+    meta: `See titles, times, and scores in ${FORGE_PRODUCT.myJourney}`,
   },
   {
     kind: "expert",
     kicker: "People to meet",
-    title: "Experts and peers matched to you",
-    meta: "Profiles and reasons live in My Compass",
+    title: "Guides and peers matched to you",
+    meta: `Profiles and reasons live in ${FORGE_PRODUCT.myJourney}`,
   },
   {
     kind: "certification",
-    kicker: "Certification path",
-    title: "Prep opportunities in your plan",
+    kicker: "Learning path",
+    title: "Professional learning in your plan",
     meta: "Labs and study blocks personalized for you",
   },
   {
     kind: "networking",
-    kicker: "Networking",
-    title: "Connections with mutual intent signals",
-    meta: "Open My Compass for full detail",
+    kicker: "Communities",
+    title: "Groups aligned with your interests",
+    meta: "Continue conversations beyond the event",
   },
 ] as const;
 
 export default function HomeCompassPreview() {
   const { user, enrolled } = useAuth();
-  const isPersonalized = Boolean(user && enrolled);
-  const items = isPersonalized ? ENROLLED_ITEMS : ANONYMOUS_ITEMS;
+  const items = user && enrolled ? ENROLLED_ITEMS : ANONYMOUS_ITEMS;
 
   return (
-    <aside className="home-compass-preview" aria-label="How Compass recommendations work">
-      <header className="home-compass-preview__head">
-        <span className="home-compass-preview__kicker">
-          {isPersonalized ? "Your Compass" : "How Compass works"}
-        </span>
+    <aside className="home-compass-preview" aria-label="Compass preview">
+      <div className="home-compass-preview__head">
+        <span className="home-compass-preview__kicker">{FORGE_PRODUCT.name} preview</span>
         <p className="home-compass-preview__note">
-          {isPersonalized
-            ? "Your real sessions and matches are in My Compass — this is the shape of what you will see."
+          {user && enrolled
+            ? `${FORGE_PRODUCT.myJourney} is tuned to your profile.`
             : "Compass does not show specific sessions or people until you sign in and build your profile."}
         </p>
-      </header>
+      </div>
       <ul className="home-compass-preview__list">
         {items.map(item => (
-          <li key={item.title} className={`home-compass-preview__card home-compass-preview__card--${item.kind}`}>
+          <li key={item.kind} className="home-compass-preview__card">
             <div className="home-compass-preview__card-top">
               <span className="home-compass-preview__card-kicker">{item.kicker}</span>
             </div>
@@ -85,12 +83,10 @@ export default function HomeCompassPreview() {
           </li>
         ))}
       </ul>
-      {isPersonalized && (
-        <div className="home-compass-preview__foot">
-          <Link href="/txc/experience" className="action-chip">
-            Open My Compass →
-          </Link>
-        </div>
+      {!user && (
+        <Link href="/txc/enroll" className="home-compass-preview__cta">
+          {FORGE_PRODUCT.buildMyJourney} →
+        </Link>
       )}
     </aside>
   );

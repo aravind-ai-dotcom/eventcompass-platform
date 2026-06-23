@@ -6,6 +6,7 @@ import {
   TXC_HISTORY_LABEL_BY_ID,
   type IdentityAggregate,
 } from "@/lib/identitySignals";
+import { FORGE_EVENT, FORGE_LABELS } from "@/config/forgeBrand";
 
 const IBM = {
   text: "#f4f4f4",
@@ -81,13 +82,13 @@ export default function IdentitySignalsAdminView({
           Identity Signals
         </h1>
         <p style={{ color: IBM.muted, fontSize: "0.9rem", margin: 0, maxWidth: "52rem", lineHeight: 1.5 }}>
-          Champion status, TechXchange alumni history, and attendance memory preferences — raw counts for operators.
+          {FORGE_LABELS.guide} status, {FORGE_EVENT.name} alumni history, and attendance memory preferences — raw counts for operators.
         </p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
         <Card
-          title="TechXchange Alumni Status"
+          title={`${FORGE_EVENT.name} Alumni Status`}
           total={total}
           rows={[
             { label: "Returning", count: identitySignals.alumni.returning },
@@ -105,12 +106,12 @@ export default function IdentitySignalsAdminView({
           }
         />
         <Card
-          title="Champion Status"
+          title={`${FORGE_LABELS.guide} Status`}
           total={total}
           rows={[
-            { label: "IBM Champion", count: identitySignals.champion.ibm_champion },
-            { label: "Former Champion", count: identitySignals.champion.former_champion },
-            { label: "Nominee", count: identitySignals.champion.champion_nominee },
+            { label: FORGE_LABELS.guide, count: identitySignals.champion.ibm_champion },
+            { label: `Former ${FORGE_LABELS.guide}`, count: identitySignals.champion.former_champion },
+            { label: `${FORGE_LABELS.guide} Nominee`, count: identitySignals.champion.champion_nominee },
             { label: "Interested", count: identitySignals.champion.interested },
             { label: "Not Applicable", count: identitySignals.champion.not_applicable },
             { label: "No Response", count: identitySignals.champion.no_response },

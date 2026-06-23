@@ -73,6 +73,22 @@ export const IBM_COMMUNITY_METRICS = {
   userGroups: "250+",
 } as const;
 
+/** Demo display names when seed catalog is shown */
+export const FORGE_COMMUNITY_DISPLAY_NAMES = [
+  "AI Builders Guild",
+  "Cloud Architects Network",
+  "Data Innovators Forum",
+  "Security Collective",
+  "Platform Engineering Community",
+  "Product Leaders Exchange",
+  "Women Building Technology",
+  "Startup Founders Circle",
+  "Future Technologies Network",
+  "Developer Experience Guild",
+  "Modern Infrastructure Forum",
+  "Digital Transformation Network",
+] as const;
+
 export const IBM_TECHXCHANGE_COMMUNITIES: IbmTechXchangeCommunity[] =
   seedCatalog as IbmTechXchangeCommunity[];
 
@@ -99,7 +115,7 @@ function communityUrl(category: string): string {
 
 function buildDescription(c: IbmTechXchangeCommunity): string {
   const focus = c.domains.length > 0 ? c.domains.join(", ") : c.category;
-  return `${c.name} — ${c.primary_product} community focused on ${focus}. Continue the conversation on IBM Community after TechXchange.`;
+  return `${c.name} — practitioners focused on ${focus}. Continue the conversation in your community after FORGE.`;
 }
 
 function toIbmCommunity(c: IbmTechXchangeCommunity): IbmCommunity {

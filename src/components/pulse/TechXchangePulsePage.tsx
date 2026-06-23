@@ -17,6 +17,7 @@ import PulseDonutBox, {
   championDonutSegments,
   hasChampionCommunityMix,
 } from "@/components/pulse/PulseDonutBox";
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 function pct(count: number, total: number): number {
   if (total <= 0) return 0;
@@ -70,7 +71,7 @@ function NostalgiaBox({
 }
 
 const JOURNEY_LEAD = "Veterans and newcomers shaping the same week.";
-const CHAMPION_LEAD = "Expert voices already in the room.";
+const GUIDE_LEAD = "Expert voices already in the room.";
 
 export default function TechXchangePulsePage() {
   const { user, enrolled } = useAuth();
@@ -162,12 +163,12 @@ export default function TechXchangePulsePage() {
           <section className="story-section">
             <span className="narrative-kicker">Audience snapshot</span>
             <p className="pulse-snapshot-lead">
-              Intent, identity, and momentum in one view. See what people are building toward, where they come from, and who is returning to TechXchange.
+              Intent, identity, and momentum in one view. See what people are building toward, where they come from, and who is returning to {FORGE_EVENT.name}.
             </p>
             <div className="nostalgia-grid nostalgia-grid--pulse">
               {showJourney && (
                 <PulseDonutBox
-                  title="TechXchange Journey"
+                  title={`${FORGE_EVENT.name} Journey`}
                   lead={JOURNEY_LEAD}
                   segments={alumniSegments}
                   split
@@ -175,8 +176,8 @@ export default function TechXchangePulsePage() {
               )}
               {showChampionCommunity && (
                 <PulseDonutBox
-                  title="Champion Community"
-                  lead={CHAMPION_LEAD}
+                  title={`${FORGE_LABELS.guides} Community`}
+                  lead={GUIDE_LEAD}
                   segments={championSegments}
                 />
               )}
@@ -207,7 +208,7 @@ export default function TechXchangePulsePage() {
         <section className="story-section story-section--spacious">
           <span className="narrative-kicker">Connection intent</span>
           <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
-            Who is open to the conversations that make TechXchange personal: alumni ties, colleagues, careers, and mentoring.
+            Who is open to the conversations that make {FORGE_EVENT.name} personal: alumni ties, colleagues, careers, and mentoring.
           </p>
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (
@@ -230,14 +231,14 @@ export default function TechXchangePulsePage() {
           ) : (
             <>
               <h2>Add your signal to the room.</h2>
-              <p>Build My Compass to share your intent and discover who is here for the same reasons you are.</p>
+              <p>{FORGE_PRODUCT.buildMyJourney} to share your intent and discover who is here for the same reasons you are.</p>
             </>
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} →</Link>
         ) : (
-          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
+          <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
         )}
       </section>
     </>

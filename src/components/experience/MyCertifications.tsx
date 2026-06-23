@@ -201,7 +201,7 @@ function CertificationPanel({
             <PlanTile
               label="Community"
               items={communityItems}
-              emptyCopy="IBM Communities supporting this path will appear here."
+              emptyCopy="Communities supporting this path will appear here."
             />
           </div>
         )}
@@ -213,7 +213,7 @@ function CertificationPanel({
             rel="noopener noreferrer"
             className="cert-panel__btn cert-panel__btn--primary cert-panel__btn--compact"
           >
-            IBM Training ↗
+            Learning resources ↗
           </a>
           <Link href="/txc/sessions?view=learning-paths" className="cert-panel__btn cert-panel__btn--compact">
             {CERTIFICATION_JOURNEY_COPY.viewAllSessions}

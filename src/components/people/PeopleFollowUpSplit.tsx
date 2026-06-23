@@ -6,6 +6,7 @@ import RecommendedConnectionCard, {
 import type { InboundConnectionSignal } from "@/types/connectionSignals";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
 import { inboundShowsMutual } from "@/lib/sampleConnectionSignals";
+import { FORGE_EVENT, FORGE_LABELS } from "@/config/forgeBrand";
 
 export interface TrackedConnection {
   person: RecommendedPerson;
@@ -82,7 +83,7 @@ export default function PeopleFollowUpSplit({
             <p className="people-follow-up-split__kicker">People I&apos;m tracking</p>
             <h2 className="people-follow-up-split__title">Connections you want to follow up with.</h2>
             <p className="people-follow-up-split__note">
-              People you saved or want to reconnect with during TechXchange.
+              People you saved or want to reconnect with during {FORGE_EVENT.name}.
             </p>
           </header>
           {tracked.length > 0 ? (
@@ -100,7 +101,7 @@ export default function PeopleFollowUpSplit({
             </div>
           ) : (
             <p className="people-follow-up-split__empty">
-              Save champions from Recommended Connections to track follow-ups here.
+              Save {FORGE_LABELS.guides.toLowerCase()} from Recommended Connections to track follow-ups here.
             </p>
           )}
         </div>
