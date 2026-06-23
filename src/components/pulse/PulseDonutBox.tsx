@@ -32,6 +32,8 @@ interface PulseDonutBoxProps {
   split?: boolean;
   /** Nested inside another stat column (Home proof strip). */
   embed?: boolean;
+  /** Compact inline ring + legend for Home proof strip. */
+  mini?: boolean;
 }
 
 function DonutChart({
@@ -156,15 +158,59 @@ export default function PulseDonutBox({
   compact = false,
   split = false,
   embed = false,
+  mini = false,
 }: PulseDonutBoxProps) {
   const visible = segments.filter(s => s.value > 0);
   const total = visible.reduce((sum, s) => sum + s.value, 0);
   if (total <= 0) return null;
 
   const pct = (value: number) => Math.round((value / total) * 100);
-  const chartSize = embed ? 64 : compact ? 88 : 120;
-  const chartStroke = embed ? 9 : compact ? 12 : 16;
+  const chartSize = mini ? 52 : embed ? 64 : compact ? 88 : 120;
+  const chartStroke = mini ? 7 : embed ? 9 : compact ? 12 : 16;
   const useSplit = split && visible.length === 2;
+
+  const legend = (
+    <ul
+      className={[
+        "pulse-donut-box__legend",
+        useSplit ? " pulse-donut-box__legend--split" : "",
+        visible.length > 2 ? " pulse-donut-box__legend--dense" : "",
+        embed ? " pulse-donut-box__legend--embed" : "",
+        mini ? " pulse-donut-box__legend--mini" : "",
+      ].join("")}
+    >
+      {visible.map(segment => (
+        <li key={segment.label}>
+          <span
+            className="pulse-donut-box__swatch"
+            style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
+            aria-hidden="true"
+          />
+          <span className="pulse-donut-box__legend-copy">
+            <span className="pulse-donut-box__legend-label">{segment.label}</span>
+            <span className="pulse-donut-box__legend-pct">{pct(segment.value)}%</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const chart = (
+    <div
+      className={[
+        "pulse-donut-box__chart-wrap",
+        embed ? " pulse-donut-box__chart-wrap--embed" : "",
+        mini ? " pulse-donut-box__chart-wrap--mini" : "",
+      ].join("")}
+    >
+      <DonutChart
+        segments={visible}
+        size={chartSize}
+        stroke={chartStroke}
+        split={useSplit}
+      />
+    </div>
+  );
 
   return (
     <article
@@ -173,6 +219,7 @@ export default function PulseDonutBox({
         compact ? " pulse-donut-box--compact" : "",
         useSplit ? " pulse-donut-box--split" : "",
         embed ? " pulse-donut-box--embed" : "",
+        mini ? " pulse-donut-box--mini" : "",
       ].join("")}
     >
       <div className={`pulse-donut-box__head${embed ? " pulse-donut-box__head--embed" : ""}`}>
@@ -180,37 +227,17 @@ export default function PulseDonutBox({
         {lead && !embed && <p className="pulse-donut-box__lead">{lead}</p>}
       </div>
 
-      <div className={`pulse-donut-box__chart-wrap${embed ? " pulse-donut-box__chart-wrap--embed" : ""}`}>
-        <DonutChart
-          segments={visible}
-          size={chartSize}
-          stroke={chartStroke}
-          split={useSplit}
-        />
-      </div>
-
-      <ul
-        className={[
-          "pulse-donut-box__legend",
-          useSplit ? " pulse-donut-box__legend--split" : "",
-          visible.length > 2 ? " pulse-donut-box__legend--dense" : "",
-          embed ? " pulse-donut-box__legend--embed" : "",
-        ].join("")}
-      >
-        {visible.map(segment => (
-          <li key={segment.label}>
-            <span
-              className="pulse-donut-box__swatch"
-              style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
-              aria-hidden="true"
-            />
-            <span className="pulse-donut-box__legend-copy">
-              <span className="pulse-donut-box__legend-label">{segment.label}</span>
-              <span className="pulse-donut-box__legend-pct">{pct(segment.value)}%</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+      {mini ? (
+        <div className="pulse-donut-box__inline">
+          {chart}
+          {legend}
+        </div>
+      ) : (
+        <>
+          {chart}
+          {legend}
+        </>
+      )}
     </article>
   );
 }

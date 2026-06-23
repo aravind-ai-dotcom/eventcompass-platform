@@ -16,18 +16,32 @@ const FALLBACK = {
   attendees: 10000,
 };
 
+const JOURNEY_FALLBACK = {
+  returning: 47,
+  firstTime: 53,
+};
+
+function homeJourneySegments(returning: number | null, firstTime: number | null) {
+  const ret = returning != null && returning > 0 ? returning : JOURNEY_FALLBACK.returning;
+  const first = firstTime != null && firstTime > 0 ? firstTime : JOURNEY_FALLBACK.firstTime;
+  return alumniDonutSegments(ret, first).map(segment => ({
+    ...segment,
+    label:
+      segment.label === "Returning Attendees"
+        ? "Returning"
+        : segment.label === "First-Time Attendees"
+          ? "First-time"
+          : segment.label,
+  }));
+}
+
 export default function HomeProofStrip() {
   const counts = useEventProofCounts();
-
-  const alumniSegments =
-    counts.alumniReturning != null && counts.alumniFirstTime != null
-      ? alumniDonutSegments(counts.alumniReturning, counts.alumniFirstTime)
-      : [];
-  const showAlumniJourney = alumniSegments.length >= 2;
+  const alumniSegments = homeJourneySegments(counts.alumniReturning, counts.alumniFirstTime);
 
   return (
     <section className="home-proof-strip" aria-label="TechXchange scale">
-      <ul className="home-proof-strip__list">
+      <ul className="home-proof-strip__list home-proof-strip__list--with-journey">
         {STATS.map(item => (
           <li key={item.key} className="home-proof-strip__item">
             <span className="home-proof-strip__value" aria-busy={counts.loading}>
@@ -37,16 +51,15 @@ export default function HomeProofStrip() {
           </li>
         ))}
 
-        {showAlumniJourney && !counts.loading && (
-          <li className="home-proof-strip__item home-proof-strip__item--journey">
-            <PulseDonutBox
-              embed
-              split
-              title="TechXchange Journey"
-              segments={alumniSegments}
-            />
-          </li>
-        )}
+        <li className="home-proof-strip__item home-proof-strip__item--journey" aria-busy={counts.loading}>
+          <PulseDonutBox
+            embed
+            mini
+            split
+            title="TechXchange Journey"
+            segments={alumniSegments}
+          />
+        </li>
       </ul>
     </section>
   );
