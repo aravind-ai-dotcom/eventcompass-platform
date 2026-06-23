@@ -20,7 +20,7 @@ export default function EnergyIndicator({
   const openW = Math.max(0, 100 - learnW - commW - funW);
 
   const segments = [
-    { label: "Learning", w: learnW, color: "#0f62fe" },
+    { label: "Learning", w: learnW, color: "var(--accent)" },
     { label: "Networking", w: commW, color: "var(--purple-soft)" },
     { label: "Fun", w: funW, color: "#009d9a" },
     { label: "Open", w: openW, color: "var(--line-strong)" },

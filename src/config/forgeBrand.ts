@@ -172,3 +172,16 @@ export const FORGE_LABELS = {
 
 /** Demo Firestore namespace (prepared, not wired by default) */
 export const FORGE_DEMO_FIRESTORE_BASE = "organizations/demo/events/forge2027";
+
+/**
+ * Optional external event links — hidden from UI unless set via env.
+ * Set in .env.local for demos / behind-the-scenes sharing only:
+ *   NEXT_PUBLIC_FORGE_EVENT_WEBSITE=https://…
+ *   NEXT_PUBLIC_FORGE_KEYNOTES_URL=https://…
+ *   NEXT_PUBLIC_FORGE_AGENDA_URL=https://…
+ */
+export const FORGE_EXTERNAL_LINKS = {
+  website: process.env.NEXT_PUBLIC_FORGE_EVENT_WEBSITE?.trim() || "",
+  keynotes: process.env.NEXT_PUBLIC_FORGE_KEYNOTES_URL?.trim() || "",
+  agenda: process.env.NEXT_PUBLIC_FORGE_AGENDA_URL?.trim() || "",
+} as const;

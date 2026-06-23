@@ -1,12 +1,12 @@
 // =============================================================================
-// EventCompass — TechXchange Banner
+// EventCompass — Event banner (FORGE 2027)
 // src/components/experience/TechXchangeBanner.tsx
 //
 // Bridge back to the main FORGE experience.
-// All links configurable via props — never hardcoded.
+// External links are optional — set NEXT_PUBLIC_FORGE_* env vars to show them.
 // =============================================================================
 
-import { FORGE_EVENT } from "@/config/forgeBrand";
+import { FORGE_EVENT, FORGE_EXTERNAL_LINKS } from "@/config/forgeBrand";
 
 export interface BannerLinks {
   website?:  string;
@@ -18,13 +18,21 @@ interface Props {
   links?: BannerLinks;
 }
 
-const DEFAULT_LINKS: BannerLinks = {
-  website:  "#",
-  keynotes: "#",
-  agenda:   "#",
-};
+function resolveLinks(overrides?: BannerLinks): BannerLinks {
+  const merged = {
+    website: overrides?.website ?? FORGE_EXTERNAL_LINKS.website,
+    keynotes: overrides?.keynotes ?? FORGE_EXTERNAL_LINKS.keynotes,
+    agenda: overrides?.agenda ?? FORGE_EXTERNAL_LINKS.agenda,
+  };
+  return Object.fromEntries(
+    Object.entries(merged).filter(([, url]) => typeof url === "string" && url.length > 0),
+  ) as BannerLinks;
+}
 
-export default function TechXchangeBanner({ links = DEFAULT_LINKS }: Props) {
+export default function TechXchangeBanner({ links }: Props) {
+  const activeLinks = resolveLinks(links);
+  const hasLinks = Boolean(activeLinks.website || activeLinks.keynotes || activeLinks.agenda);
+
   return (
     <div
       style={{
@@ -32,7 +40,7 @@ export default function TechXchangeBanner({ links = DEFAULT_LINKS }: Props) {
         border:      "1px solid var(--line)",
         padding:     "20px 24px",
         display:     "grid",
-        gridTemplateColumns: "minmax(0,1fr) auto",
+        gridTemplateColumns: hasLinks ? "minmax(0,1fr) auto" : "1fr",
         gap:         "20px",
         alignItems:  "center",
       }}
@@ -49,26 +57,28 @@ export default function TechXchangeBanner({ links = DEFAULT_LINKS }: Props) {
         </p>
       </div>
 
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-        {links.website && (
-          <a href={links.website} target="_blank" rel="noopener noreferrer" className="btn-secondary"
-            style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
-            Event website ↗
-          </a>
-        )}
-        {links.keynotes && (
-          <a href={links.keynotes} target="_blank" rel="noopener noreferrer" className="btn-secondary"
-            style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
-            Keynotes
-          </a>
-        )}
-        {links.agenda && (
-          <a href={links.agenda} target="_blank" rel="noopener noreferrer" className="btn-secondary"
-            style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
-            Full agenda
-          </a>
-        )}
-      </div>
+      {hasLinks && (
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {activeLinks.website && (
+            <a href={activeLinks.website} target="_blank" rel="noopener noreferrer" className="btn-secondary"
+              style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
+              Event website ↗
+            </a>
+          )}
+          {activeLinks.keynotes && (
+            <a href={activeLinks.keynotes} target="_blank" rel="noopener noreferrer" className="btn-secondary"
+              style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
+              Keynotes
+            </a>
+          )}
+          {activeLinks.agenda && (
+            <a href={activeLinks.agenda} target="_blank" rel="noopener noreferrer" className="btn-secondary"
+              style={{ fontSize: "0.82rem", minHeight: "34px", padding: "0 12px", display: "inline-flex", alignItems: "center", whiteSpace: "nowrap" }}>
+              Full agenda
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }

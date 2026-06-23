@@ -1,15 +1,9 @@
 "use client";
 // =============================================================================
-// EventCompass — Champions  /champions
+// EventCompass — Guides  /champions
 //
-// Wave 6: People actions (save/remove/do-not-suggest on champion cards)
-//   • Logged-in users: View profile, Save, Remove, Do not suggest
-//   • Anonymous users: View profile only
-//   • State written to participants/{uid}:
-//       saved_people[], removed_people[], do_not_suggest_people[]
-//   • Carbon-inspired card design (circular avatar, neutral surface, IBM Blue)
-//   • No email exposed. LinkedIn gated by logged-in state + existing URL.
-//   • No Firestore champion schema changes.
+// Wave 6: People actions (save/remove/do-not-suggest on guide cards)
+//   • Premium card design (circular avatar, neutral surface, accent highlight)
 // =============================================================================
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -29,9 +23,9 @@ import {
 } from "@/lib/connectionVault";
 import type { ConnectionVaultRecord } from "@/types/connectionVault";
 import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
+import { THEME_VARS } from "@/config/chartColors";
 
 const BASE     = "organizations/ibm/events/txc2026";
-const IBM_BLUE = "#0f62fe";
 
 type RawDoc = Record<string, unknown>;
 
@@ -64,7 +58,7 @@ interface PeopleState {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Carbon atom — circular avatar
+// Circular avatar
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PersonAvatar({ initial }: { initial: string }) {
@@ -73,10 +67,10 @@ function PersonAvatar({ initial }: { initial: string }) {
       aria-hidden="true"
       style={{
         width: "36px", height: "36px", borderRadius: "50%",
-        background: "rgba(15, 98, 254, 0.06)",
-        border: "1px solid rgba(15, 98, 254, 0.20)",
+        background: "rgb(var(--accent-rgb) / 0.06)",
+        border: "1px solid rgb(var(--accent-rgb) / 0.20)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "0.82rem", fontWeight: 500, color: IBM_BLUE,
+        fontSize: "0.82rem", fontWeight: 500, color: THEME_VARS.accent,
         letterSpacing: "0.02em", flexShrink: 0,
       }}
     >
@@ -112,8 +106,8 @@ function PeopleActionBar({ id, linkedinUrl, showLinkedIn, pState }: {
     letterSpacing: "0.01em", whiteSpace: "nowrap" as const, textDecoration: "none",
   };
   const savedBtn: React.CSSProperties = {
-    ...base, border: "1px solid rgba(15, 98, 254, 0.35)",
-    color: IBM_BLUE, background: "rgba(15, 98, 254, 0.04)",
+    ...base, border: THEME_VARS.accentBorder,
+    color: THEME_VARS.accent, background: THEME_VARS.accentBg,
   };
   const badge: React.CSSProperties = {
     fontSize: "0.68rem", color: "var(--muted)", padding: "2px 7px",
@@ -149,7 +143,7 @@ function PeopleActionBar({ id, linkedinUrl, showLinkedIn, pState }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ChampionCard  (Carbon style)
+// GuideCard
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {

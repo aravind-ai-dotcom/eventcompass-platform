@@ -370,7 +370,7 @@ export default function EnrollPage() {
   const [openColleague,  setOpenColleague]  = useState(false);
   const [openCareer,     setOpenCareer]     = useState(false);
 
-  // ── 04 · Your TechXchange Intent ────────────────────────────────────────────
+  // ── 04 · Your FORGE intent ────────────────────────────────────────────
   const [goals,      setGoals]      = useState<string[]>([]);
   const [tracks,     setTracks]     = useState<string[]>([]);
   const [community,  setCommunity]  = useState<string[]>([]);
@@ -386,7 +386,7 @@ export default function EnrollPage() {
   const [consentAllowSmsUpdates,         setConsentAllowSmsUpdates]         = useState(false);
   const [consentAllowEventNotifications, setConsentAllowEventNotifications] = useState(true);
 
-  // ── TechXchange Identity ────────────────────────────────────────────────────
+  // ── FORGE identity (Firestore: champion_status field) ─────────────────
   const [championStatus, setChampionStatus] = useState<ChampionStatus | "">("");
   const [attendedTxcBefore, setAttendedTxcBefore] = useState<boolean | null>(null);
   const [txcHistory, setTxcHistory] = useState<string[]>([]);

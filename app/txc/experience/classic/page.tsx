@@ -111,6 +111,7 @@ import type { ScoredSpeaker } from "@/types/speaker";
 import type { ConnectionVaultRecord, SaveReason } from "@/types/connectionVault";
 import type { HuddleParticipantPreview } from "@/types/huddleDataModel";
 import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT, FORGE_HIGHLIGHTS } from "@/config/forgeBrand";
+import { THEME_VARS } from "@/config/chartColors";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
   const names = new Set<string>();
@@ -154,7 +155,6 @@ function toRecommendedPerson(
 
 const BASE            = "organizations/ibm/events/txc2026";
 const DEV_FALLBACK_ID = "ATT-0001";
-const IBM_BLUE        = "#0f62fe";
 
 const W = {
   track:     25,
@@ -552,7 +552,7 @@ function ExpSessionActionBar({ id, sched }: { id: string; sched: ExpScheduleStat
     cursor: "pointer", fontFamily: "inherit",
     letterSpacing: "0.01em", whiteSpace: "nowrap" as const, textDecoration: "none",
   };
-  const activeBtn = { ...base, border: "1px solid rgba(15,98,254,0.35)", color: IBM_BLUE, background: "rgba(15,98,254,0.04)" };
+  const activeBtn = { ...base, border: THEME_VARS.accentBorder, color: THEME_VARS.accent, background: THEME_VARS.accentBg };
   const badge = {
     fontSize: "0.68rem", color: "var(--muted)", padding: "2px 7px",
     border: "1px solid var(--line)", letterSpacing: "0.06em", textTransform: "uppercase" as const,
@@ -720,8 +720,8 @@ function ExportPanel({ participantId, sessions }: { participantId: string; sessi
   };
   const primary = {
     ...base,
-    border: `1px solid ${IBM_BLUE}`, color: IBM_BLUE,
-    background: "rgba(15,98,254,0.04)",
+    border: `1px solid ${THEME_VARS.accent}`, color: THEME_VARS.accent,
+    background: THEME_VARS.accentBg,
   };
 
   return (
@@ -776,8 +776,8 @@ function HighlightActionCard({ h }: { h: typeof HIGHLIGHT_DATA[number] }) {
   };
   const addedBtn = {
     ...btn,
-    border: `1px solid rgba(15,98,254,0.35)`, color: IBM_BLUE,
-    background: "rgba(15,98,254,0.04)",
+    border: THEME_VARS.accentBorder, color: THEME_VARS.accent,
+    background: THEME_VARS.accentBg,
   };
 
   return (
@@ -1288,7 +1288,7 @@ export default function ClassicExperiencePage() {
     persistPrefs({ hidden_sessions: next });
   }, [hiddenSessions, persistPrefs]);
 
-  // ── Champion action handlers ────────────────────────────────────────────────
+  // ── Guide action handlers ────────────────────────────────────────────────
 
   const savedPeople = useMemo(
     () => connectionVault.map(r => r.personId),

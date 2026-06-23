@@ -4,7 +4,7 @@
 //
 // Phase 7: Category-based people discovery. 3-5 people per category.
 // RULE: Never recommends the current user (currentUserId exclusion).
-// Categories: AI, Cloud, Data, Security, First-Time, Community Leaders, Champions
+// Categories: AI, Cloud, Data, Security, First-Time, Community Leaders, Guides
 // =============================================================================
 
 "use client";

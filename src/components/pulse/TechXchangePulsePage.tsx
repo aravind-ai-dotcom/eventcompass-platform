@@ -1,5 +1,5 @@
 "use client";
-// TechXchange participant pulse — preserved for /explore and admin references.
+// FORGE participant pulse — preserved for /explore and admin references.
 // SKO sellers use /pulse (SkoPulseView).
 
 import { useEffect, useState } from "react";

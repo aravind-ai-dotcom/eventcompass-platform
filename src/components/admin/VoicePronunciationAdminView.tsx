@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { TXC_EVENT_ID } from "@/lib/compassEventPaths";
 import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
+import { CHART_COLORS } from "@/config/chartColors";
 import {
   createVoiceDictionaryRecord,
   getCachedVoiceDictionaryRecords,
@@ -23,10 +24,8 @@ const S = {
   muted: "#a8a8a8",
   dim: "#6f6f6f",
   line: "#393939",
-  accent: "#78a9ff",
+  accent: CHART_COLORS.primaryLight,
 };
-
-const IBM = { blue: "#0f62fe", green: "#24a148", red: "#da1e28" };
 
 const fieldLabel: CSSProperties = {
   color: S.muted,
@@ -193,7 +192,7 @@ export function VoicePronunciationAdminView() {
           type="button"
           onClick={startAddWord}
           style={{
-            padding: "7px 14px", background: IBM.blue, border: "none",
+            padding: "7px 14px", background: CHART_COLORS.primary, border: "none",
             color: "#fff", fontSize: "0.82rem", fontFamily: "inherit", cursor: "pointer",
             fontWeight: 650,
           }}
@@ -221,10 +220,10 @@ export function VoicePronunciationAdminView() {
           Seed if empty
         </button>
         {message && (
-          <span style={{ color: IBM.green, fontSize: "0.82rem" }}>{message}</span>
+          <span style={{ color: CHART_COLORS.green, fontSize: "0.82rem" }}>{message}</span>
         )}
         {error && (
-          <span style={{ color: IBM.red, fontSize: "0.82rem" }}>{error}</span>
+          <span style={{ color: CHART_COLORS.red, fontSize: "0.82rem" }}>{error}</span>
         )}
       </div>
 
@@ -266,12 +265,12 @@ export function VoicePronunciationAdminView() {
                       style={{
                         borderBottom: `1px solid ${S.line}`,
                         cursor: "pointer",
-                        background: selected?.id === r.id ? "rgba(15,98,254,0.1)" : "transparent",
+                        background: selected?.id === r.id ? "rgb(var(--accent-rgb) / 0.1)" : "transparent",
                       }}
                     >
                       <td style={{ padding: "10px", color: S.text }}>{r.displayText}</td>
                       <td style={{ padding: "10px", color: S.soft }}>{r.spokenText}</td>
-                      <td style={{ padding: "10px", color: r.active ? IBM.green : S.dim }}>
+                      <td style={{ padding: "10px", color: r.active ? CHART_COLORS.green : S.dim }}>
                         {r.active ? "yes" : "no"}
                       </td>
                     </tr>
@@ -380,7 +379,7 @@ function VoiceEditor({
           disabled={saving || !canSave}
           onClick={() => onSave(draft)}
           style={{
-            padding: "8px 16px", background: saving || !canSave ? S.dim : IBM.blue, border: "none",
+            padding: "8px 16px", background: saving || !canSave ? S.dim : CHART_COLORS.primary, border: "none",
             color: "#fff", fontSize: "0.82rem", fontFamily: "inherit",
             cursor: saving || !canSave ? "default" : "pointer",
             fontWeight: 650,

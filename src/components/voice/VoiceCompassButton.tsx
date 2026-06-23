@@ -264,7 +264,7 @@ function CompactCard({
 
   const accentChip: React.CSSProperties = {
     ...chipBase,
-    background: "rgba(15,98,254,0.08)",
+    background: "var(--purple-bg)",
     color: "var(--accent)",
     borderColor: "var(--accent)",
     cursor: "default",
@@ -283,7 +283,7 @@ function CompactCard({
         <p className="voice-compact-why">{why}</p>
       )}
       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", paddingTop: "2px" }}>
-        <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "rgba(15,98,254,0.35)" }}>
+        <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "var(--purple-border)" }}>
           Info ↗
         </a>
         {sessionId && !scheduled && (
@@ -974,7 +974,7 @@ export default function VoiceCompassButton({
                 style={{
                   marginTop: "14px",
                   border: "1px solid var(--accent)",
-                  background: "rgba(15,98,254,0.06)",
+                  background: "var(--purple-bg)",
                   color: "var(--accent)",
                   padding: "8px 12px",
                   fontSize: "0.84rem",
@@ -1134,7 +1134,7 @@ export default function VoiceCompassButton({
                 style={{
                   marginTop: "10px",
                   border: "1px solid var(--accent)",
-                  background: "rgba(15,98,254,0.06)",
+                  background: "var(--purple-bg)",
                   color: "var(--accent)",
                   padding: "8px 12px",
                   fontSize: "0.84rem",

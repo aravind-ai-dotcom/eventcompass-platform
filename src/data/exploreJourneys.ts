@@ -80,7 +80,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     id: "experts",
     title: "Meet the right experts",
     image: "/event/ibm_txc_banner_1.jpg",
-    accent: "#0f62fe",
+    accent: "#7c3aed",
     outcome: "Spend your time with practitioners who match your technology and role.",
     helps: [
       "Surface speakers and technical leaders aligned to your interests",
@@ -248,7 +248,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     id: "champions",
     title: "Inspire and connect",
     image: "/event/ibm-champion-journey.png",
-    accent: "#0f62fe",
+    accent: "#7c3aed",
     outcome: "Find attendees and community members who benefit from your experience — and vice versa.",
     helps: [
       "Highlight people seeking guidance in your domains",

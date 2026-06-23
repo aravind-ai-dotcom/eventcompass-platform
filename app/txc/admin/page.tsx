@@ -1,7 +1,7 @@
 "use client";
 // =============================================================================
 // EventCompass — Admin Console   /admin
-// Event Intelligence Center · IBM TechXchange 2026
+// Event Intelligence Center · FORGE 2027
 //
 // Route:   /admin  (direct URL only — never in attendee navigation)
 // Auth:    sessionStorage  (admin / Compass1234!)
@@ -34,6 +34,7 @@ import {
   FORGE_LABELS,
   FORGE_PRODUCT,
 } from "@/config/forgeBrand";
+import { CHART_COLORS } from "@/config/chartColors";
 
 // ─── Version ──────────────────────────────────────────────────────────────────
 const COMPASS_VERSION = "1.0.4";
@@ -156,20 +157,6 @@ function findNavGroup(view: AdminView): NavGroup | undefined {
   return NAV_GROUPS.find(g => g.items.some(i => i.id === view));
 }
 
-// ─── IBM colours ──────────────────────────────────────────────────────────────
-const IBM = {
-  blue:      "#0f62fe",
-  blueLight: "#78a9ff",
-  purple:    "#6929c4",
-  cyan:      "#009d9a",
-  green:     "#24a148",
-  red:       "#da1e28",
-  yellow:    "#f1c21b",
-  orange:    "#ff832b",
-  maroon:    "#9f1853",
-  teal:      "#007d79",
-};
-
 // ─── Style tokens ─────────────────────────────────────────────────────────────
 const S = {
   bg:     "#161616",
@@ -180,10 +167,10 @@ const S = {
   muted:  "#a8a8a8",
   dim:    "#6f6f6f",
   line:   "#393939",
-  accent: "#78a9ff",
+  accent: CHART_COLORS.primaryLight,
 };
 
-/** Shared form + surface tokens — single Carbon-inspired admin surface. */
+/** Shared form + surface tokens — admin dark surface. */
 const A = {
   field: {
     width: "100%",
@@ -455,9 +442,9 @@ const CREDITS_DEFAULTS: CreditsFormData = {
 };
 
 const PERSONA_COLORS: Record<string, string> = {
-  Developer: IBM.blue, Architect: IBM.purple, Executive: IBM.maroon,
-  Guide: IBM.yellow, Student: IBM.cyan, Partner: IBM.red,
-  Client: IBM.blueLight, Attendee: IBM.teal,
+  Developer: CHART_COLORS.primary, Architect: CHART_COLORS.purple, Executive: CHART_COLORS.maroon,
+  Guide: CHART_COLORS.yellow, Student: CHART_COLORS.cyan, Partner: CHART_COLORS.red,
+  Client: CHART_COLORS.primaryLight, Attendee: CHART_COLORS.teal,
 };
 const PERSONA_ORDER = ["Developer","Architect","Executive","Guide","Student","Partner","Client","Attendee"];
 
@@ -1259,7 +1246,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
     <div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex",
       flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px" }}>
       <div style={{ width: "100%", maxWidth: "400px", background: S.panel,
-        border: `1px solid ${S.line}`, borderTop: `3px solid ${IBM.blue}`,
+        border: `1px solid ${S.line}`, borderTop: `3px solid ${CHART_COLORS.primary}`,
         padding: "40px 36px 36px" }}>
         <div style={{ marginBottom: "28px" }}>
           <p style={{ color: S.muted, fontSize: "0.72rem", fontWeight: 700,
@@ -1288,7 +1275,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
             background: "rgba(218,30,40,0.08)", border: "1px solid rgba(218,30,40,0.3)",
             padding: "8px 12px" }}>{error}</p>}
           <button type="submit" disabled={loading} style={{ height: "44px",
-            background: loading ? "#4c4c4c" : IBM.blue, color: "#fff", border: "none",
+            background: loading ? "#4c4c4c" : CHART_COLORS.primary, color: "#fff", border: "none",
             fontSize: "0.92rem", fontWeight: 650, fontFamily: "inherit",
             cursor: loading ? "default" : "pointer", marginTop: "8px" }}>
             {loading ? "Signing in…" : "Sign In"}
@@ -1330,10 +1317,10 @@ function AdminLayout({ children, view, setView, onLogout, onRefresh, lastRefresh
             margin: "0 0 2px", letterSpacing: "-0.02em" }}>Operator Console</p>
           <p style={{ color: S.dim, fontSize: "0.72rem", margin: "0 0 10px" }}>{FORGE_EVENT.name}</p>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "5px",
-            fontSize: "0.62rem", color: IBM.green, fontWeight: 650,
+            fontSize: "0.62rem", color: CHART_COLORS.green, fontWeight: 650,
             letterSpacing: "0.08em", textTransform: "uppercase" }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%",
-              background: IBM.green, display: "inline-block" }} />
+              background: CHART_COLORS.green, display: "inline-block" }} />
             Live
           </span>
         </div>
@@ -1446,18 +1433,18 @@ function DashboardView({ data }: { data: AdminData }) {
 
   const cc = data.consentCounts;
   const consentSnap = [
-    { label: "Public profile",   pct: Math.round((cc.public_profile / base) * 100), color: IBM.blue     },
-    { label: "LinkedIn",         pct: Math.round((cc.linkedin        / base) * 100), color: IBM.purple   },
-    { label: "Alumni matching",  pct: Math.round((cc.alumni          / base) * 100), color: IBM.cyan     },
-    { label: "Employer match",   pct: Math.round((cc.employer        / base) * 100), color: IBM.teal     },
-    { label: "University match", pct: Math.round((cc.university      / base) * 100), color: IBM.blueLight },
-    { label: "SMS opt-in",       pct: Math.round((cc.sms             / base) * 100), color: IBM.yellow   },
-    { label: "Intro request",    pct: Math.round((cc.intro           / base) * 100), color: IBM.green    },
+    { label: "Public profile",   pct: Math.round((cc.public_profile / base) * 100), color: CHART_COLORS.primary     },
+    { label: "LinkedIn",         pct: Math.round((cc.linkedin        / base) * 100), color: CHART_COLORS.purple   },
+    { label: "Alumni matching",  pct: Math.round((cc.alumni          / base) * 100), color: CHART_COLORS.cyan     },
+    { label: "Employer match",   pct: Math.round((cc.employer        / base) * 100), color: CHART_COLORS.teal     },
+    { label: "University match", pct: Math.round((cc.university      / base) * 100), color: CHART_COLORS.primaryLight },
+    { label: "SMS opt-in",       pct: Math.round((cc.sms             / base) * 100), color: CHART_COLORS.yellow   },
+    { label: "Intro request",    pct: Math.round((cc.intro           / base) * 100), color: CHART_COLORS.green    },
   ];
 
   const personaSnap = PERSONA_ORDER
     .filter(p => (data.personaCounts[p] ?? 0) > 0)
-    .map(p => ({ label: p, value: data.personaCounts[p] ?? 0, color: PERSONA_COLORS[p] ?? IBM.blue }));
+    .map(p => ({ label: p, value: data.personaCounts[p] ?? 0, color: PERSONA_COLORS[p] ?? CHART_COLORS.primary }));
   const personaMax = personaSnap.reduce((m, p) => Math.max(m, p.value), 0);
 
   const compassValueRows = [
@@ -1477,19 +1464,19 @@ function DashboardView({ data }: { data: AdminData }) {
       question: `How many ${FORGE_LABELS.guides} registered?`,
       count: data.totalChampions > 0 ? data.totalChampions.toLocaleString() : "—",
       note: data.totalChampions > 0 ? `${FORGE_LABELS.guides} registered in program.` : `${FORGE_LABELS.guides} not yet loaded.`,
-      color: IBM.blue, live: false,
+      color: CHART_COLORS.primary, live: false,
     },
     {
       question: "How many have not built Compass?",
       count: (total - data.compassBuilt).toLocaleString(),
       note: total > 0 ? `${Math.round(((total - data.compassBuilt) / base) * 100)}% yet to activate.` : "No participants yet.",
-      color: IBM.yellow, live: false,
+      color: CHART_COLORS.yellow, live: false,
     },
     {
       question: "How many clients want AI roadmap sessions?",
       count: "—",
       note: "Requires session-preference tag filter. Not yet computed.",
-      color: IBM.blue, live: false,
+      color: CHART_COLORS.primary, live: false,
     },
     {
       question: "How many architects are interested in cloud platforms?",
@@ -1497,7 +1484,7 @@ function DashboardView({ data }: { data: AdminData }) {
       note: data.personaCounts["Architect"]
         ? `${data.personaCounts["Architect"]} architects registered. Domain interest requires session-tag filter.`
         : "Requires session-preference cross-reference.",
-      color: IBM.red, live: false,
+      color: CHART_COLORS.red, live: false,
     },
     {
       question: "How many students want mentoring?",
@@ -1505,7 +1492,7 @@ function DashboardView({ data }: { data: AdminData }) {
       note: data.personaCounts["Student"]
         ? `${data.personaCounts["Student"]} students registered. Mentoring intent requires goal filter.`
         : "Requires goal-tag filter.",
-      color: IBM.purple, live: false,
+      color: CHART_COLORS.purple, live: false,
     },
     {
       question: "How many partners want customer stories?",
@@ -1513,7 +1500,7 @@ function DashboardView({ data }: { data: AdminData }) {
       note: data.personaCounts["Partner"]
         ? `${data.personaCounts["Partner"]} partners registered.`
         : "Requires goal-tag filter.",
-      color: IBM.cyan, live: false,
+      color: CHART_COLORS.cyan, live: false,
     },
     {
       question: "Total registered participants?",
@@ -1521,7 +1508,7 @@ function DashboardView({ data }: { data: AdminData }) {
       note: total > 0
         ? `${data.compassBuilt} have built Compass (${Math.round((data.compassBuilt / base) * 100)}% adoption).`
         : "No participants yet.",
-      color: IBM.green, live: true,
+      color: CHART_COLORS.green, live: true,
     },
   ];
 
@@ -1543,7 +1530,7 @@ function DashboardView({ data }: { data: AdminData }) {
               </p>
               <span style={{ fontSize: "2.2rem", fontWeight: 520,
                 letterSpacing: "-0.04em",
-                color: k.warn ? IBM.yellow : S.text,
+                color: k.warn ? CHART_COLORS.yellow : S.text,
                 lineHeight: 1, display: "block" }}>
                 {k.value}
               </span>
@@ -1574,9 +1561,9 @@ function DashboardView({ data }: { data: AdminData }) {
                 </span>
                 {ins.live && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "4px",
-                    fontSize: "0.68rem", color: IBM.green, fontWeight: 650 }}>
+                    fontSize: "0.68rem", color: CHART_COLORS.green, fontWeight: 650 }}>
                     <span style={{ width: 5, height: 5, borderRadius: "50%",
-                      background: IBM.green, display: "inline-block" }} />
+                      background: CHART_COLORS.green, display: "inline-block" }} />
                     LIVE
                   </span>
                 )}
@@ -1635,7 +1622,7 @@ function DashboardView({ data }: { data: AdminData }) {
       </div>
 
       {/* Build Info */}
-      <Panel style={{ borderLeft: `3px solid ${IBM.blue}` }}>
+      <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.primary}` }}>
         <PanelLabel>Build Information</PanelLabel>
         <div style={{ display: "flex", alignItems: "baseline", gap: "10px", marginBottom: "16px" }}>
           <span style={{ fontSize: "1.2rem", fontWeight: 650, color: S.text, letterSpacing: "-0.02em" }}>Compass</span>
@@ -1645,7 +1632,7 @@ function DashboardView({ data }: { data: AdminData }) {
           gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "14px 32px" }}>
           {[
             { label: "Product Creator",          items: ["Aravind Ragupathi"],                              color: S.soft  },
-            { label: "Status",                   items: ["Prototype · Internal Demo"],                     color: IBM.yellow },
+            { label: "Status",                   items: ["Prototype · Internal Demo"],                     color: CHART_COLORS.yellow },
             { label: "Built Using",              items: ["Next.js","Firebase","TypeScript","Compass AI"], color: S.muted },
             { label: "AI Development Assistants",items: ["OpenAI ChatGPT","Anthropic Claude Sonnet"],      color: S.muted },
             { label: "Voice Services",           items: ["ElevenLabs (planned)"],                          color: S.muted },
@@ -1700,7 +1687,7 @@ function PersonasView({ data }: { data: AdminData }) {
         {activePersonas.map(label => {
           const registered = data.personaCounts[label] ?? 0;
           if (registered === 0) return null;
-          const color = PERSONA_COLORS[label] ?? IBM.blue;
+          const color = PERSONA_COLORS[label] ?? CHART_COLORS.primary;
           const pctOfTotal = total > 0 ? Math.round((registered / total) * 100) : 0;
           return (
             <Panel key={label} style={{ borderTop: `3px solid ${color}` }}>
@@ -1753,7 +1740,7 @@ function PersonasView({ data }: { data: AdminData }) {
               .map(([role, count]) => (
                 <HBar key={role} label={role} value={count}
                   maxVal={Object.values(data.roleCounts).reduce((m, v) => Math.max(m, v), 0)}
-                  color={IBM.blueLight} />
+                  color={CHART_COLORS.primaryLight} />
               ))}
           </Panel>
         </div>
@@ -1763,7 +1750,7 @@ function PersonasView({ data }: { data: AdminData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Champions view — Firestore-powered
+// Guides view — Firestore-powered
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ChampionsView({ data }: { data: AdminData }) {
@@ -1773,15 +1760,15 @@ function ChampionsView({ data }: { data: AdminData }) {
   const notUsing = total > 0 ? total - data.championsAttending : 0;
 
   const championMetrics = [
-    { label: `${FORGE_LABELS.guides} Registered`,  value: total,                        color: IBM.blue   },
-    { label: "Attending",             value: data.championsAttending,      color: IBM.green  },
-    { label: "Available for 1:1",     value: data.championsAvailableMeet,  color: IBM.purple },
-    { label: "Not Using Compass",     value: notUsing,                     color: IBM.yellow },
+    { label: `${FORGE_LABELS.guides} Registered`,  value: total,                        color: CHART_COLORS.primary   },
+    { label: "Attending",             value: data.championsAttending,      color: CHART_COLORS.green  },
+    { label: "Available for 1:1",     value: data.championsAvailableMeet,  color: CHART_COLORS.purple },
+    { label: "Not Using Compass",     value: notUsing,                     color: CHART_COLORS.yellow },
   ];
 
   const expertiseSorted = Object.entries(data.expertiseCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const expertiseMax = expertiseSorted.reduce((m, [, v]) => Math.max(m, v), 0);
-  const expertiseColors = [IBM.blue, IBM.blueLight, IBM.red, IBM.purple, IBM.cyan, IBM.maroon, IBM.teal, IBM.orange];
+  const expertiseColors = [CHART_COLORS.primary, CHART_COLORS.primaryLight, CHART_COLORS.red, CHART_COLORS.purple, CHART_COLORS.cyan, CHART_COLORS.maroon, CHART_COLORS.teal, CHART_COLORS.orange];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -1806,10 +1793,10 @@ function ChampionsView({ data }: { data: AdminData }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "12px" }}>
         {[
-          { q: "How many attending?",           v: data.championsAttending, sub: `of ${total} registered`,       color: IBM.blue   },
-          { q: "Available for 1:1 meeting?",    v: data.championsAvailableMeet, sub: "open_to_meeting = true",   color: IBM.purple },
-          { q: `${FORGE_LABELS.guides} not using Compass?`,  v: notUsing, sub: total > 0 ? `${Math.round((notUsing / Math.max(total, 1)) * 100)}% gap` : "—", color: IBM.yellow },
-          { q: "Total in program?",             v: total, sub: "from champions collection",                       color: IBM.cyan   },
+          { q: "How many attending?",           v: data.championsAttending, sub: `of ${total} registered`,       color: CHART_COLORS.primary   },
+          { q: "Available for 1:1 meeting?",    v: data.championsAvailableMeet, sub: "open_to_meeting = true",   color: CHART_COLORS.purple },
+          { q: `${FORGE_LABELS.guides} not using Compass?`,  v: notUsing, sub: total > 0 ? `${Math.round((notUsing / Math.max(total, 1)) * 100)}% gap` : "—", color: CHART_COLORS.yellow },
+          { q: "Total in program?",             v: total, sub: "from champions collection",                       color: CHART_COLORS.cyan   },
         ].map(item => (
           <Panel key={item.q} style={{ borderTop: `3px solid ${item.color}` }}>
             <p style={{ color: S.muted, fontSize: "0.78rem", margin: "0 0 12px", lineHeight: 1.4 }}>
@@ -1858,9 +1845,9 @@ function ChampionsView({ data }: { data: AdminData }) {
                 ))}
               </div>
               <PanelLabel>Adoption Funnel</PanelLabel>
-              <HBar label="Total"        value={total}                       maxVal={total} color={IBM.blue}   />
-              <HBar label="Attending"    value={data.championsAttending}     maxVal={total} color={IBM.green}  />
-              <HBar label="Avail. 1:1"   value={data.championsAvailableMeet} maxVal={total} color={IBM.purple} />
+              <HBar label="Total"        value={total}                       maxVal={total} color={CHART_COLORS.primary}   />
+              <HBar label="Attending"    value={data.championsAttending}     maxVal={total} color={CHART_COLORS.green}  />
+              <HBar label="Avail. 1:1"   value={data.championsAvailableMeet} maxVal={total} color={CHART_COLORS.purple} />
             </>
           ) : (
             <EmptyNote>No champions loaded yet. Check champions collection path.</EmptyNote>
@@ -1874,7 +1861,7 @@ function ChampionsView({ data }: { data: AdminData }) {
         </Panel>
       </div>
 
-      {/* Champion drilldown table */}
+      {/* Guide drilldown table */}
       {data.championRows.length > 0 && (
         <div>
           <PanelLabel>All {FORGE_LABELS.guides}</PanelLabel>
@@ -1908,26 +1895,26 @@ function ChampionsView({ data }: { data: AdminData }) {
                       borderBottom: `1px solid ${S.line}`, maxWidth: "160px",
                       overflow: "hidden", textOverflow: "ellipsis",
                       whiteSpace: "nowrap" as const }}>{c.organization || "—"}</td>
-                    <td style={{ fontSize: "0.76rem", padding: "9px 12px", color: IBM.blueLight,
+                    <td style={{ fontSize: "0.76rem", padding: "9px 12px", color: CHART_COLORS.primaryLight,
                       borderBottom: `1px solid ${S.line}`, maxWidth: "200px",
                       overflow: "hidden", textOverflow: "ellipsis",
                       whiteSpace: "nowrap" as const }}>{c.domains}</td>
                     <td style={{ fontSize: "0.8rem", padding: "9px 12px",
                       borderBottom: `1px solid ${S.line}`, textAlign: "center" as const }}>
                       {c.attending
-                        ? <span style={{ color: IBM.green, fontWeight: 600 }}>✓</span>
+                        ? <span style={{ color: CHART_COLORS.green, fontWeight: 600 }}>✓</span>
                         : <span style={{ color: S.dim }}>—</span>}
                     </td>
                     <td style={{ fontSize: "0.8rem", padding: "9px 12px",
                       borderBottom: `1px solid ${S.line}`, textAlign: "center" as const }}>
                       {c.availableMeet
-                        ? <span style={{ color: IBM.green, fontWeight: 600 }}>✓</span>
+                        ? <span style={{ color: CHART_COLORS.green, fontWeight: 600 }}>✓</span>
                         : <span style={{ color: S.dim }}>—</span>}
                     </td>
                     <td style={{ fontSize: "0.8rem", padding: "9px 12px",
                       borderBottom: `1px solid ${S.line}`, textAlign: "center" as const }}>
                       {c.hasLinkedIn
-                        ? <span style={{ color: IBM.blueLight, fontWeight: 600 }}>✓</span>
+                        ? <span style={{ color: CHART_COLORS.primaryLight, fontWeight: 600 }}>✓</span>
                         : <span style={{ color: S.dim }}>—</span>}
                     </td>
                   </tr>
@@ -1971,10 +1958,10 @@ function ParticipantsTableView({ data }: { data: AdminData }) {
     borderBottom: `1px solid ${S.line}`, whiteSpace: "nowrap" as const,
   };
   const bool = (v: boolean) => v
-    ? <span style={{ color: IBM.green, fontWeight: 600 }}>✓</span>
+    ? <span style={{ color: CHART_COLORS.green, fontWeight: 600 }}>✓</span>
     : <span style={{ color: S.dim }}>—</span>;
 
-  const sigColor: Record<string, string> = { Active: IBM.green, Enrolled: IBM.blue, Pending: S.dim };
+  const sigColor: Record<string, string> = { Active: CHART_COLORS.green, Enrolled: CHART_COLORS.primary, Pending: S.dim };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -2012,7 +1999,7 @@ function ParticipantsTableView({ data }: { data: AdminData }) {
                   <td style={{ ...td, color: S.text, fontWeight: 500 }}>{r.name || <span style={{ color: S.dim }}>—</span>}</td>
                   <td style={{ ...td }}>
                     {r.persona
-                      ? <span style={{ color: PERSONA_COLORS[r.persona] ?? IBM.blueLight, fontWeight: 550 }}>{r.persona}</span>
+                      ? <span style={{ color: PERSONA_COLORS[r.persona] ?? CHART_COLORS.primaryLight, fontWeight: 550 }}>{r.persona}</span>
                       : <span style={{ color: S.dim }}>—</span>}
                   </td>
                   <td style={{ ...td, maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -2037,7 +2024,7 @@ function ParticipantsTableView({ data }: { data: AdminData }) {
                   </td>
                   <td style={{ ...td, textAlign: "right" as const, fontVariantNumeric: "tabular-nums" }}>
                     {r.meetRequests > 0
-                      ? <span style={{ color: IBM.green, fontWeight: 600 }}>{r.meetRequests}</span>
+                      ? <span style={{ color: CHART_COLORS.green, fontWeight: 600 }}>{r.meetRequests}</span>
                       : <span style={{ color: S.dim }}>0</span>}
                   </td>
                 </tr>
@@ -2121,7 +2108,7 @@ function SessionsTableView({ data }: { data: AdminData }) {
                   </td>
                   <td style={{ ...td }}>
                     {r.type
-                      ? <span style={{ color: IBM.cyan }}>{r.type}</span>
+                      ? <span style={{ color: CHART_COLORS.cyan }}>{r.type}</span>
                       : <span style={{ color: S.dim }}>—</span>}
                   </td>
                   <td style={{ ...td, maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -2135,7 +2122,7 @@ function SessionsTableView({ data }: { data: AdminData }) {
                   </td>
                   <td style={{ ...td, textAlign: "right" as const, fontVariantNumeric: "tabular-nums" }}>
                     {r.capacity != null
-                      ? <span style={{ color: IBM.blueLight }}>{r.capacity.toLocaleString()}</span>
+                      ? <span style={{ color: CHART_COLORS.primaryLight }}>{r.capacity.toLocaleString()}</span>
                       : <span style={{ color: S.dim }}>—</span>}
                   </td>
                 </tr>
@@ -2165,42 +2152,42 @@ function DataQualityView({ data }: { data: AdminData }) {
       label: "Sessions missing date/time",
       count: dq.sessionsMissingDateTime,
       total: totalSessions,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: "Add day and start_time fields to session documents.",
     },
     {
       label: "Sessions missing room",
       count: dq.sessionsMissingRoom,
       total: totalSessions,
-      color: IBM.orange,
+      color: CHART_COLORS.orange,
       fix: "Add a room (or location) field to session documents.",
     },
     {
       label: `${FORGE_LABELS.guides} missing domains`,
       count: dq.championsMissingDomains,
       total: totalChampions,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: "Add a domains[] or expertise[] field to champion documents.",
     },
     {
       label: "Participants missing persona",
       count: dq.participantsMissingPersona,
       total: totalParticipants,
-      color: IBM.red,
+      color: CHART_COLORS.red,
       fix: "These attendees have not completed Compass enrollment.",
     },
     {
       label: "Participants with no consent recorded",
       count: dq.participantsMissingConsent,
       total: totalParticipants,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: "Attendees who have not opted in to public_profile or LinkedIn.",
     },
     {
       label: "Duplicate session titles",
       count: dq.duplicateSessionTitles,
       total: totalSessions,
-      color: IBM.red,
+      color: CHART_COLORS.red,
       fix: "Multiple sessions share the same title — check for import duplicates.",
     },
   ];
@@ -2213,8 +2200,8 @@ function DataQualityView({ data }: { data: AdminData }) {
         sub="Warnings computed from live Firestore data. No writes. Refresh to re-run." />
 
       {!hasIssues && totalSessions + totalChampions + totalParticipants > 0 && (
-        <Panel style={{ borderLeft: `3px solid ${IBM.green}` }}>
-          <p style={{ color: IBM.green, fontWeight: 650, fontSize: "0.9rem", margin: "0 0 4px" }}>
+        <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.green}` }}>
+          <p style={{ color: CHART_COLORS.green, fontWeight: 650, fontSize: "0.9rem", margin: "0 0 4px" }}>
             ✓ No issues detected
           </p>
           <p style={{ color: S.dim, fontSize: "0.8rem", margin: 0 }}>
@@ -2234,7 +2221,7 @@ function DataQualityView({ data }: { data: AdminData }) {
           const ok = w.count === 0;
           return (
             <Panel key={w.label} style={{
-              borderLeft: `3px solid ${ok ? IBM.green : w.color}`,
+              borderLeft: `3px solid ${ok ? CHART_COLORS.green : w.color}`,
             }}>
               <div style={{ display: "flex", alignItems: "flex-start",
                 justifyContent: "space-between", marginBottom: "10px" }}>
@@ -2243,7 +2230,7 @@ function DataQualityView({ data }: { data: AdminData }) {
                   {w.label}
                 </p>
                 <span style={{ fontSize: "1.8rem", fontWeight: 520,
-                  letterSpacing: "-0.04em", color: ok ? IBM.green : w.color, lineHeight: 1, flexShrink: 0 }}>
+                  letterSpacing: "-0.04em", color: ok ? CHART_COLORS.green : w.color, lineHeight: 1, flexShrink: 0 }}>
                   {ok ? "✓" : w.count.toLocaleString()}
                 </span>
               </div>
@@ -2308,8 +2295,8 @@ function SnapshotsView({ data }: { data: AdminData }) {
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%",
-            background: IBM.green, display: "inline-block" }} />
-          <span style={{ color: IBM.green, fontSize: "0.78rem", fontWeight: 650,
+            background: CHART_COLORS.green, display: "inline-block" }} />
+          <span style={{ color: CHART_COLORS.green, fontSize: "0.78rem", fontWeight: 650,
             letterSpacing: "0.06em", textTransform: "uppercase" }}>Current Live View</span>
           {data.lastRefresh && (
             <span style={{ color: S.dim, fontSize: "0.74rem" }}>
@@ -2317,7 +2304,7 @@ function SnapshotsView({ data }: { data: AdminData }) {
             </span>
           )}
         </div>
-        <Panel style={{ borderTop: `3px solid ${IBM.green}` }}>
+        <Panel style={{ borderTop: `3px solid ${CHART_COLORS.green}` }}>
           <div style={{ display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
             gap: "1px", background: S.line, marginBottom: "20px" }}>
@@ -2342,7 +2329,7 @@ function SnapshotsView({ data }: { data: AdminData }) {
                       <span style={{ color: S.soft, fontSize: "0.8rem",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
                         maxWidth: "120px" }}>{t}</span>
-                      <span style={{ color: IBM.blueLight, fontSize: "0.8rem",
+                      <span style={{ color: CHART_COLORS.primaryLight, fontSize: "0.8rem",
                         fontWeight: 600, flexShrink: 0 }}>{n}</span>
                     </div>
                   ))
@@ -2358,7 +2345,7 @@ function SnapshotsView({ data }: { data: AdminData }) {
                       <span style={{ color: S.soft, fontSize: "0.8rem",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
                         maxWidth: "120px" }}>{d}</span>
-                      <span style={{ color: IBM.purple, fontSize: "0.8rem",
+                      <span style={{ color: CHART_COLORS.purple, fontSize: "0.8rem",
                         fontWeight: 600, flexShrink: 0 }}>{n}</span>
                     </div>
                   ))
@@ -2372,21 +2359,21 @@ function SnapshotsView({ data }: { data: AdminData }) {
                   <div style={{ display: "flex", justifyContent: "space-between",
                     alignItems: "baseline", marginBottom: "6px" }}>
                     <span style={{ color: S.soft, fontSize: "0.8rem" }}>Public profile</span>
-                    <span style={{ color: IBM.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
+                    <span style={{ color: CHART_COLORS.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
                       {Math.round((data.consentCounts.public_profile / base) * 100)}%
                     </span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between",
                     alignItems: "baseline", marginBottom: "6px" }}>
                     <span style={{ color: S.soft, fontSize: "0.8rem" }}>LinkedIn</span>
-                    <span style={{ color: IBM.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
+                    <span style={{ color: CHART_COLORS.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
                       {Math.round((data.consentCounts.linkedin / base) * 100)}%
                     </span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between",
                     alignItems: "baseline" }}>
                     <span style={{ color: S.soft, fontSize: "0.8rem" }}>Intro request</span>
-                    <span style={{ color: IBM.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
+                    <span style={{ color: CHART_COLORS.cyan, fontSize: "0.8rem", fontWeight: 600 }}>
                       {Math.round((data.consentCounts.intro / base) * 100)}%
                     </span>
                   </div>
@@ -2514,10 +2501,10 @@ function CapacityView({ data }: { data: AdminData }) {
                 borderRadius: "1px", overflow: "hidden" }}>
                 <div style={{ position: "absolute", left: 0, top: 0, bottom: 0,
                   width: Math.min(100, savedPct) + "%",
-                  background: c.risk === "HIGH" ? IBM.red
-                    : c.risk === "MED" ? IBM.yellow
-                    : c.risk === "WATCH" ? IBM.orange
-                    : IBM.green,
+                  background: c.risk === "HIGH" ? CHART_COLORS.red
+                    : c.risk === "MED" ? CHART_COLORS.yellow
+                    : c.risk === "WATCH" ? CHART_COLORS.orange
+                    : CHART_COLORS.green,
                   transition: "width 0.5s" }} />
               </div>
               <div style={{ display: "flex", gap: "16px", marginTop: "6px" }}>
@@ -2544,13 +2531,13 @@ function ConsentView({ data }: { data: AdminData }) {
   const cc = data.consentCounts;
 
   const consentItems = [
-    { label: "Public profile opt-in",  pct: Math.round((cc.public_profile / base) * 100), n: cc.public_profile, color: IBM.blue     },
-    { label: "LinkedIn opt-in",        pct: Math.round((cc.linkedin        / base) * 100), n: cc.linkedin,        color: IBM.purple   },
-    { label: "Alumni matching",        pct: Math.round((cc.alumni          / base) * 100), n: cc.alumni,          color: IBM.cyan     },
-    { label: "Employer matching",      pct: Math.round((cc.employer        / base) * 100), n: cc.employer,        color: IBM.teal     },
-    { label: "University matching",    pct: Math.round((cc.university      / base) * 100), n: cc.university,      color: IBM.blueLight },
-    { label: "SMS opt-in",             pct: Math.round((cc.sms             / base) * 100), n: cc.sms,             color: IBM.yellow   },
-    { label: "Intro request opt-in",   pct: Math.round((cc.intro           / base) * 100), n: cc.intro,           color: IBM.green    },
+    { label: "Public profile opt-in",  pct: Math.round((cc.public_profile / base) * 100), n: cc.public_profile, color: CHART_COLORS.primary     },
+    { label: "LinkedIn opt-in",        pct: Math.round((cc.linkedin        / base) * 100), n: cc.linkedin,        color: CHART_COLORS.purple   },
+    { label: "Alumni matching",        pct: Math.round((cc.alumni          / base) * 100), n: cc.alumni,          color: CHART_COLORS.cyan     },
+    { label: "Employer matching",      pct: Math.round((cc.employer        / base) * 100), n: cc.employer,        color: CHART_COLORS.teal     },
+    { label: "University matching",    pct: Math.round((cc.university      / base) * 100), n: cc.university,      color: CHART_COLORS.primaryLight },
+    { label: "SMS opt-in",             pct: Math.round((cc.sms             / base) * 100), n: cc.sms,             color: CHART_COLORS.yellow   },
+    { label: "Intro request opt-in",   pct: Math.round((cc.intro           / base) * 100), n: cc.intro,           color: CHART_COLORS.green    },
   ];
 
   const totalConsentOptIns = Object.values(cc).reduce((a, b) => a + b, 0);
@@ -2568,7 +2555,7 @@ function ConsentView({ data }: { data: AdminData }) {
 
       {data.totalParticipants > 0 && totalConsentOptIns === 0 && (
         <Panel style={{ marginBottom: "20px" }}>
-          <p style={{ color: IBM.yellow, fontSize: "0.86rem", fontWeight: 600, margin: "0 0 6px" }}>
+          <p style={{ color: CHART_COLORS.yellow, fontSize: "0.86rem", fontWeight: 600, margin: "0 0 6px" }}>
             Consent fields not detected
           </p>
           <p style={{ color: S.dim, fontSize: "0.82rem", margin: 0, lineHeight: 1.5 }}>
@@ -2654,7 +2641,7 @@ function ActivityView() {
   }, []);
 
   const typeColor: Record<ActivityType, string> = {
-    profile: IBM.blue, session: IBM.cyan, champion: IBM.purple, reco: IBM.green, voice: IBM.orange,
+    profile: CHART_COLORS.primary, session: CHART_COLORS.cyan, champion: CHART_COLORS.purple, reco: CHART_COLORS.green, voice: CHART_COLORS.orange,
   };
   const typeLabel: Record<ActivityType, string> = {
     profile: "Profile", session: "Session", champion: FORGE_LABELS.guide, reco: "Recommendation", voice: "Voice",
@@ -2666,8 +2653,8 @@ function ActivityView() {
         sub="Simulated real-time stream — wire to Firestore onSnapshot for production telemetry." />
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
         <span style={{ width: 8, height: 8, borderRadius: "50%",
-          background: IBM.green, display: "inline-block" }} />
-        <span style={{ color: IBM.green, fontSize: "0.78rem", fontWeight: 650,
+          background: CHART_COLORS.green, display: "inline-block" }} />
+        <span style={{ color: CHART_COLORS.green, fontSize: "0.78rem", fontWeight: 650,
           letterSpacing: "0.06em", textTransform: "uppercase" }}>Live — updating</span>
         <span style={{ color: S.dim, fontSize: "0.78rem" }}>Showing last 30 actions</span>
       </div>
@@ -2735,8 +2722,8 @@ function ContentView() {
             onClick={() => { setSelected(i); setSaved(false); }}
             style={{
               padding: "6px 12px",
-              border: `1px solid ${selected === i ? IBM.blue : S.line}`,
-              background: selected === i ? "rgba(15,98,254,0.10)" : "transparent",
+              border: `1px solid ${selected === i ? CHART_COLORS.primary : S.line}`,
+              background: selected === i ? "rgb(var(--accent-rgb) / 0.10)" : "transparent",
               color: selected === i ? S.accent : S.muted,
               fontSize: "0.8rem",
               fontFamily: "inherit",
@@ -2763,13 +2750,13 @@ function ContentView() {
             </div>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               {saved && (
-                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+                <span style={{ color: CHART_COLORS.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
               )}
               <button
                 type="button"
                 onClick={() => setSaved(true)}
                 style={{
-                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  padding: "6px 14px", background: CHART_COLORS.primary, border: "none",
                   color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
                   cursor: "pointer", fontWeight: 600,
                 }}
@@ -2840,7 +2827,7 @@ function ContentView() {
               {page.body || "Body copy"}
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 16px", background: IBM.blue, color: "#fff", fontSize: "0.84rem", fontWeight: 600 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 16px", background: CHART_COLORS.primary, color: "#fff", fontSize: "0.84rem", fontWeight: 600 }}>
                 {page.cta || "Primary CTA"}
               </span>
               {page.secondaryCta && (
@@ -2904,7 +2891,7 @@ function AccessAdminView() {
                     <td style={{ padding: "12px 16px", color: S.muted }}>{user.email}</td>
                     <td style={{ padding: "12px 16px", color: S.soft }}>{user.role}</td>
                     <td style={{ padding: "12px 16px", color: S.accent }}>{user.accessLevel}</td>
-                    <td style={{ padding: "12px 16px", color: user.status === "Active" ? IBM.green : S.muted }}>{user.status}</td>
+                    <td style={{ padding: "12px 16px", color: user.status === "Active" ? CHART_COLORS.green : S.muted }}>{user.status}</td>
                     <td style={{ padding: "12px 16px", color: S.dim }}>{user.lastActive}</td>
                   </tr>
                 ))}
@@ -2999,13 +2986,13 @@ function VoiceAdminView() {
             </p>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               {saved && (
-                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+                <span style={{ color: CHART_COLORS.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
               )}
               <button
                 type="button"
                 onClick={() => setSaved(true)}
                 style={{
-                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  padding: "6px 14px", background: CHART_COLORS.primary, border: "none",
                   color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
                   cursor: "pointer", fontWeight: 600,
                 }}
@@ -3023,8 +3010,8 @@ function VoiceAdminView() {
                 onClick={() => { setDefaultTone(option.id); setSaved(false); }}
                 style={{
                   padding: "8px 16px",
-                  border: `1px solid ${defaultTone === option.id ? IBM.blue : S.line}`,
-                  background: defaultTone === option.id ? "rgba(15,98,254,0.12)" : "transparent",
+                  border: `1px solid ${defaultTone === option.id ? CHART_COLORS.primary : S.line}`,
+                  background: defaultTone === option.id ? "rgb(var(--accent-rgb) / 0.12)" : "transparent",
                   color: defaultTone === option.id ? S.accent : S.soft,
                   fontSize: "0.88rem",
                   fontFamily: "inherit",
@@ -3048,12 +3035,12 @@ function VoiceAdminView() {
           <div>
             <div style={statusRow}>
               <span style={{ color: S.soft, fontSize: "0.88rem" }}>Google TTS</span>
-              <span style={{ color: IBM.green, fontSize: "0.88rem", fontWeight: 650 }}>Connected ✓</span>
+              <span style={{ color: CHART_COLORS.green, fontSize: "0.88rem", fontWeight: 650 }}>Connected ✓</span>
             </div>
             <div style={{ ...statusRow, borderBottom: "none" }}>
               <span style={{ color: S.soft, fontSize: "0.88rem" }}>Last voice test</span>
               <span style={{
-                color: lastTest === "Successful" ? IBM.green : lastTest === "Failed" ? IBM.red : S.muted,
+                color: lastTest === "Successful" ? CHART_COLORS.green : lastTest === "Failed" ? CHART_COLORS.red : S.muted,
                 fontSize: "0.88rem",
                 fontWeight: 650,
               }}>
@@ -3171,13 +3158,13 @@ function CreditsView() {
             </p>
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               {saved && (
-                <span style={{ color: IBM.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
+                <span style={{ color: CHART_COLORS.green, fontSize: "0.76rem", fontWeight: 650 }}>✓ Saved</span>
               )}
               <button
                 type="button"
                 onClick={() => setSaved(true)}
                 style={{
-                  padding: "6px 14px", background: IBM.blue, border: "none",
+                  padding: "6px 14px", background: CHART_COLORS.primary, border: "none",
                   color: "#fff", fontSize: "0.8rem", fontFamily: "inherit",
                   cursor: "pointer", fontWeight: 600,
                 }}
@@ -3386,16 +3373,16 @@ function IngestView({ data }: { data: AdminData }) {
                   {t.label}
                 </p>
                 <p style={{ color: S.dim, fontSize: "0.76rem", margin: "0 0 12px",
-                  fontFamily: "IBM Plex Mono, monospace", lineHeight: 1.4 }}>
+                  fontFamily: "ui-monospace, monospace", lineHeight: 1.4 }}>
                   Schema: {t.schema}
                 </p>
-                <span style={{ color: t.count > 0 ? IBM.green : S.dim, fontSize: "0.78rem", fontWeight: 650 }}>
+                <span style={{ color: t.count > 0 ? CHART_COLORS.green : S.dim, fontSize: "0.78rem", fontWeight: 650 }}>
                   {t.count > 0 ? `✓ ${t.count} records in Firestore` : "No records yet"}
                 </span>
               </div>
               <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                 {status[t.id] === "done" && (
-                  <span style={{ color: IBM.green, fontSize: "0.8rem", fontWeight: 650, alignSelf: "center" }}>
+                  <span style={{ color: CHART_COLORS.green, fontSize: "0.8rem", fontWeight: 650, alignSelf: "center" }}>
                     ✓ Uploaded
                   </span>
                 )}
@@ -3410,8 +3397,8 @@ function IngestView({ data }: { data: AdminData }) {
                   Upload {t.label}
                 </button>
                 <button type="button"
-                  style={{ padding: "7px 16px", border: `1px solid ${IBM.blue}`,
-                    background: "transparent", color: IBM.blueLight,
+                  style={{ padding: "7px 16px", border: `1px solid ${CHART_COLORS.primary}`,
+                    background: "transparent", color: CHART_COLORS.primaryLight,
                     fontSize: "0.82rem", fontFamily: "inherit", cursor: "pointer" }}>
                   Preview
                 </button>
@@ -3452,7 +3439,7 @@ function ExportsView() {
         sub="Export Compass data as CSV or JSON. All exports include a timestamp and version header." />
       <Panel style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "14px" }}>
         <div>
-          <p style={{ margin: "0 0 4px", color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <p style={{ margin: "0 0 4px", color: CHART_COLORS.primaryLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
             Voice Knowledge
           </p>
           <p style={{ margin: 0, color: S.soft, fontSize: "0.9rem", fontWeight: 550 }}>
@@ -3460,7 +3447,7 @@ function ExportsView() {
           </p>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-          <Link href="/setup/txc/export" style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 14px", border: `1px solid ${IBM.blue}`, color: IBM.blueLight, textDecoration: "none", fontSize: "0.82rem" }}>
+          <Link href="/setup/txc/export" style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 14px", border: `1px solid ${CHART_COLORS.primary}`, color: CHART_COLORS.primaryLight, textDecoration: "none", fontSize: "0.82rem" }}>
             Export Knowledge XLSX
           </Link>
           <Link href="/txc/admin/knowledge" style={{ display: "inline-flex", alignItems: "center", height: "36px", padding: "0 14px", border: `1px solid ${S.line}`, color: S.soft, textDecoration: "none", fontSize: "0.82rem" }}>
@@ -3477,8 +3464,8 @@ function ExportsView() {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                 <span style={{ padding: "1px 7px",
-                  border: `1px solid ${ex.format === "CSV" ? IBM.cyan : IBM.purple}`,
-                  color: ex.format === "CSV" ? IBM.cyan : IBM.purple,
+                  border: `1px solid ${ex.format === "CSV" ? CHART_COLORS.cyan : CHART_COLORS.purple}`,
+                  color: ex.format === "CSV" ? CHART_COLORS.cyan : CHART_COLORS.purple,
                   fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.06em" }}>
                   {ex.format}
                 </span>
@@ -3490,7 +3477,7 @@ function ExportsView() {
               disabled={downloading === ex.id}
               style={{ padding: "6px 14px", flexShrink: 0, border: `1px solid ${S.line}`,
                 background: downloading === ex.id ? "rgba(36,161,72,0.1)" : "transparent",
-                color: downloading === ex.id ? IBM.green : S.muted,
+                color: downloading === ex.id ? CHART_COLORS.green : S.muted,
                 fontSize: "0.8rem", fontFamily: "inherit", cursor: "pointer" }}>
               {downloading === ex.id ? "↓ Preparing…" : "↓ Download"}
             </button>
@@ -3527,18 +3514,18 @@ function AuditView() {
             borderBottom: `1px solid ${S.line}`,
             background: i % 2 === 0 ? S.panel : "#1a1a1a" }}>
             <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0,
-              fontFamily: "IBM Plex Mono, monospace" }}>{row.time}</p>
-            <p style={{ color: IBM.blueLight, fontSize: "0.78rem", fontWeight: 600, margin: 0 }}>
+              fontFamily: "ui-monospace, monospace" }}>{row.time}</p>
+            <p style={{ color: CHART_COLORS.primaryLight, fontSize: "0.78rem", fontWeight: 600, margin: 0 }}>
               {row.user}
             </p>
             <p style={{ color: S.soft, fontSize: "0.78rem", fontWeight: 550, margin: 0 }}>
               {row.action}
             </p>
             <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0,
-              fontFamily: "IBM Plex Mono, monospace", overflow: "hidden",
+              fontFamily: "ui-monospace, monospace", overflow: "hidden",
               textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{row.before}</p>
             <p style={{ color: S.muted, fontSize: "0.76rem", margin: 0,
-              fontFamily: "IBM Plex Mono, monospace", overflow: "hidden",
+              fontFamily: "ui-monospace, monospace", overflow: "hidden",
               textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{row.after}</p>
           </div>
         ))}
@@ -3555,7 +3542,7 @@ function CompassHealthView({ data }: { data: AdminData }) {
   if (data.loading) return <LoadingShimmer />;
 
   const hs = data.healthScore;
-  const color = hs >= 70 ? IBM.green : hs >= 40 ? IBM.yellow : IBM.red;
+  const color = hs >= 70 ? CHART_COLORS.green : hs >= 40 ? CHART_COLORS.yellow : CHART_COLORS.red;
   const grade = hs >= 70 ? "Healthy" : hs >= 40 ? "At Risk" : "Critical";
 
   const base = Math.max(data.totalParticipants, 1);
@@ -3566,10 +3553,10 @@ function CompassHealthView({ data }: { data: AdminData }) {
   const goalsPct    = Math.round((data.participantWithGoals / base) * 100);
 
   const dimensions = [
-    { label: "Profile Completion",   weight: "40%", pct: profilePct,  score: Math.round(profilePct * 0.4),  color: IBM.blue   },
-    { label: "Consent Participation", weight: "20%", pct: consentPct,  score: Math.round(consentPct * 0.2),  color: IBM.purple },
-    { label: "Networking Signals",    weight: "20%", pct: networkPct,  score: Math.round(networkPct * 0.2),  color: IBM.cyan   },
-    { label: "Goals & Tracks Set",    weight: "20%", pct: goalsPct,    score: Math.round(goalsPct   * 0.2),  color: IBM.teal   },
+    { label: "Profile Completion",   weight: "40%", pct: profilePct,  score: Math.round(profilePct * 0.4),  color: CHART_COLORS.primary   },
+    { label: "Consent Participation", weight: "20%", pct: consentPct,  score: Math.round(consentPct * 0.2),  color: CHART_COLORS.purple },
+    { label: "Networking Signals",    weight: "20%", pct: networkPct,  score: Math.round(networkPct * 0.2),  color: CHART_COLORS.cyan   },
+    { label: "Goals & Tracks Set",    weight: "20%", pct: goalsPct,    score: Math.round(goalsPct   * 0.2),  color: CHART_COLORS.teal   },
   ];
 
   return (
@@ -3606,14 +3593,14 @@ function CompassHealthView({ data }: { data: AdminData }) {
                   letterSpacing: "0.08em", margin: "0 0 8px", fontWeight: 700 }}>Top reasons</p>
                 {data.healthReasons.map(r => (
                   <div key={r} style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginBottom: "5px" }}>
-                    <span style={{ color: IBM.yellow, flexShrink: 0, marginTop: "1px" }}>▲</span>
+                    <span style={{ color: CHART_COLORS.yellow, flexShrink: 0, marginTop: "1px" }}>▲</span>
                     <span style={{ color: S.soft, fontSize: "0.84rem" }}>{r}</span>
                   </div>
                 ))}
               </div>
             )}
             {data.healthReasons.length === 0 && data.totalParticipants > 0 && (
-              <p style={{ color: IBM.green, fontSize: "0.86rem", fontWeight: 600 }}>
+              <p style={{ color: CHART_COLORS.green, fontSize: "0.86rem", fontWeight: 600 }}>
                 ✓ All health dimensions are strong
               </p>
             )}
@@ -3672,7 +3659,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
       {/* Engagement tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
         {/* High engagement */}
-        <Panel style={{ borderTop: `3px solid ${IBM.green}` }}>
+        <Panel style={{ borderTop: `3px solid ${CHART_COLORS.green}` }}>
           <PanelLabel>⬆ High Engagement — Top 10</PanelLabel>
           {data.highEngagementRows.length === 0 ? (
             <EmptyNote>No usage data yet.</EmptyNote>
@@ -3681,7 +3668,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
               <div key={r.id} style={{ display: "flex", alignItems: "center",
                 gap: "10px", marginBottom: "10px",
                 paddingBottom: "10px", borderBottom: i < data.highEngagementRows.length - 1 ? `1px solid ${S.line}` : "none" }}>
-                <span style={{ color: IBM.green, fontSize: "0.72rem", fontWeight: 700,
+                <span style={{ color: CHART_COLORS.green, fontSize: "0.72rem", fontWeight: 700,
                   minWidth: "18px", textAlign: "right" as const }}>#{i+1}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ color: S.text, fontSize: "0.86rem", fontWeight: 550, margin: "0 0 2px",
@@ -3693,7 +3680,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
                   </p>
                 </div>
                 <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
-                  <p style={{ color: IBM.green, fontSize: "0.78rem", fontWeight: 600, margin: "0 0 1px" }}>
+                  <p style={{ color: CHART_COLORS.green, fontSize: "0.78rem", fontWeight: 600, margin: "0 0 1px" }}>
                     {r.savedSessions}s · {r.savedPeople}p · {r.meetRequests}m
                   </p>
                   <p style={{ color: S.dim, fontSize: "0.66rem", margin: 0 }}>sessions · people · meets</p>
@@ -3704,7 +3691,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
         </Panel>
 
         {/* Low engagement */}
-        <Panel style={{ borderTop: `3px solid ${IBM.yellow}` }}>
+        <Panel style={{ borderTop: `3px solid ${CHART_COLORS.yellow}` }}>
           <PanelLabel>⬇ Low Engagement — Enrolled but Inactive</PanelLabel>
           {data.lowEngagementRows.length === 0 ? (
             <EmptyNote>No enrolled-but-inactive participants, or no usage data yet.</EmptyNote>
@@ -3722,8 +3709,8 @@ function CommandCenterView({ data }: { data: AdminData }) {
                     {r.persona || "—"} · {r.organization || "—"}
                   </p>
                 </div>
-                <span style={{ color: IBM.yellow, fontSize: "0.74rem", fontWeight: 600,
-                  padding: "2px 8px", border: `1px solid ${IBM.yellow}44`, flexShrink: 0 }}>
+                <span style={{ color: CHART_COLORS.yellow, fontSize: "0.74rem", fontWeight: 600,
+                  padding: "2px 8px", border: `1px solid ${CHART_COLORS.yellow}44`, flexShrink: 0 }}>
                   Inactive
                 </span>
               </div>
@@ -3740,7 +3727,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
             <EmptyNote>No champion domain data yet.</EmptyNote>
           ) : (
             topNetworkingDomains.map(([domain, count]) => (
-              <HBar key={domain} label={domain} value={count} maxVal={maxDomain} color={IBM.purple} />
+              <HBar key={domain} label={domain} value={count} maxVal={maxDomain} color={CHART_COLORS.purple} />
             ))
           )}
         </Panel>
@@ -3750,7 +3737,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
             <EmptyNote>No session track data yet.</EmptyNote>
           ) : (
             topLearningTracks.map(([track, count]) => (
-              <HBar key={track} label={track} value={count} maxVal={maxTrack} color={IBM.cyan} />
+              <HBar key={track} label={track} value={count} maxVal={maxTrack} color={CHART_COLORS.cyan} />
             ))
           )}
         </Panel>
@@ -3760,7 +3747,7 @@ function CommandCenterView({ data }: { data: AdminData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Champion Intel
+// 3. Guide Intel
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ChampionIntelView({ data }: { data: AdminData }) {
@@ -3789,10 +3776,10 @@ function ChampionIntelView({ data }: { data: AdminData }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px",
         background: S.line, border: `1px solid ${S.line}` }}>
         {[
-          { label: `Total ${FORGE_LABELS.guides}`,    value: data.totalChampions,         color: IBM.blueLight },
-          { label: "Attending",          value: data.championsAttending,      color: IBM.green     },
-          { label: "Available for Meet", value: data.championsAvailableMeet,  color: IBM.cyan      },
-          { label: "Coverage Risks",     value: coverageRisks.length,         color: coverageRisks.length > 0 ? IBM.red : IBM.green },
+          { label: `Total ${FORGE_LABELS.guides}`,    value: data.totalChampions,         color: CHART_COLORS.primaryLight },
+          { label: "Attending",          value: data.championsAttending,      color: CHART_COLORS.green     },
+          { label: "Available for Meet", value: data.championsAvailableMeet,  color: CHART_COLORS.cyan      },
+          { label: "Coverage Risks",     value: coverageRisks.length,         color: coverageRisks.length > 0 ? CHART_COLORS.red : CHART_COLORS.green },
         ].map(c => (
           <div key={c.label} style={{ background: S.bg, padding: "16px 20px" }}>
             <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
@@ -3807,12 +3794,12 @@ function ChampionIntelView({ data }: { data: AdminData }) {
 
       {/* Coverage risk */}
       {coverageRisks.length > 0 && (
-        <Panel style={{ borderLeft: `3px solid ${IBM.red}` }}>
+        <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.red}` }}>
           <PanelLabel>⚠ Coverage Risk — tracks with fewer than 3 champions</PanelLabel>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {coverageRisks.map(([track, n]) => (
               <span key={track} style={{ padding: "4px 12px",
-                background: "rgba(218,30,40,0.08)", border: `1px solid ${IBM.red}44`,
+                background: "rgba(218,30,40,0.08)", border: `1px solid ${CHART_COLORS.red}44`,
                 color: "#ff8389", fontSize: "0.8rem" }}>
                 {track} ({n})
               </span>
@@ -3821,8 +3808,8 @@ function ChampionIntelView({ data }: { data: AdminData }) {
         </Panel>
       )}
       {coverageRisks.length === 0 && trackCoverage.length > 0 && (
-        <Panel style={{ borderLeft: `3px solid ${IBM.green}` }}>
-          <p style={{ color: IBM.green, fontWeight: 650, fontSize: "0.9rem", margin: 0 }}>
+        <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.green}` }}>
+          <p style={{ color: CHART_COLORS.green, fontWeight: 650, fontSize: "0.9rem", margin: 0 }}>
             ✓ All covered tracks have 3+ champions
           </p>
         </Panel>
@@ -3835,7 +3822,7 @@ function ChampionIntelView({ data }: { data: AdminData }) {
           {topDomains.length === 0
             ? <EmptyNote>No domain data — add domains[] or expertise[] to champion documents.</EmptyNote>
             : topDomains.map(([d, n]) => (
-                <HBar key={d} label={d} value={n} maxVal={maxDomain} color={IBM.purple} />
+                <HBar key={d} label={d} value={n} maxVal={maxDomain} color={CHART_COLORS.purple} />
               ))
           }
         </Panel>
@@ -3847,9 +3834,9 @@ function ChampionIntelView({ data }: { data: AdminData }) {
             <>
               <div style={{ marginBottom: "20px" }}>
                 {[
-                  { label: "Missing domain/expertise",  count: noProfile,   color: IBM.yellow },
-                  { label: "Missing LinkedIn URL",      count: noLinkedIn,  color: IBM.orange },
-                  { label: "Not available for meeting", count: unavailable, color: IBM.red    },
+                  { label: "Missing domain/expertise",  count: noProfile,   color: CHART_COLORS.yellow },
+                  { label: "Missing LinkedIn URL",      count: noLinkedIn,  color: CHART_COLORS.orange },
+                  { label: "Not available for meeting", count: unavailable, color: CHART_COLORS.red    },
                 ].map(item => {
                   const pct = Math.round((item.count / data.totalChampions) * 100);
                   return (
@@ -3857,7 +3844,7 @@ function ChampionIntelView({ data }: { data: AdminData }) {
                       <div style={{ display: "flex", justifyContent: "space-between",
                         alignItems: "baseline", marginBottom: "5px" }}>
                         <span style={{ color: S.soft, fontSize: "0.84rem" }}>{item.label}</span>
-                        <span style={{ color: item.count > 0 ? item.color : IBM.green,
+                        <span style={{ color: item.count > 0 ? item.color : CHART_COLORS.green,
                           fontWeight: 600, fontSize: "0.88rem" }}>
                           {item.count > 0 ? item.count : "✓"}
                         </span>
@@ -3875,8 +3862,8 @@ function ChampionIntelView({ data }: { data: AdminData }) {
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 {coverageGood.slice(0, 12).map(([track, n]) => (
                   <span key={track} style={{ padding: "3px 10px",
-                    background: "rgba(36,161,72,0.08)", border: `1px solid ${IBM.green}33`,
-                    color: IBM.green, fontSize: "0.76rem" }}>
+                    background: "rgba(36,161,72,0.08)", border: `1px solid ${CHART_COLORS.green}33`,
+                    color: CHART_COLORS.green, fontSize: "0.76rem" }}>
                     {track} ({n})
                   </span>
                 ))}
@@ -3903,12 +3890,12 @@ function ConsentIntelView({ data }: { data: AdminData }) {
   const cc = data.consentCounts;
 
   const dimensions = [
-    { id: "public_profile", label: "Public Profile",  n: cc.public_profile, color: IBM.blue,     rec: "Promote profile visibility during onboarding" },
-    { id: "linkedin",       label: "LinkedIn",         n: cc.linkedin,       color: IBM.purple,   rec: "Add LinkedIn opt-in prompt at event check-in" },
-    { id: "intro",          label: "Intro Request",    n: cc.intro,          color: IBM.green,    rec: "Highlight peer-to-peer value of intro requests" },
-    { id: "alumni",         label: "Alumni Matching",  n: cc.alumni,         color: IBM.cyan,     rec: "Surface alumni connections during session browse" },
-    { id: "employer",       label: "Employer Matching",n: cc.employer,       color: IBM.teal,     rec: "Explain employer matching benefits in Compass" },
-    { id: "sms",            label: "SMS Opt-in",       n: cc.sms,            color: IBM.yellow,   rec: "SMS opt-in is low — consider post-event nudge" },
+    { id: "public_profile", label: "Public Profile",  n: cc.public_profile, color: CHART_COLORS.primary,     rec: "Promote profile visibility during onboarding" },
+    { id: "linkedin",       label: "LinkedIn",         n: cc.linkedin,       color: CHART_COLORS.purple,   rec: "Add LinkedIn opt-in prompt at event check-in" },
+    { id: "intro",          label: "Intro Request",    n: cc.intro,          color: CHART_COLORS.green,    rec: "Highlight peer-to-peer value of intro requests" },
+    { id: "alumni",         label: "Alumni Matching",  n: cc.alumni,         color: CHART_COLORS.cyan,     rec: "Surface alumni connections during session browse" },
+    { id: "employer",       label: "Employer Matching",n: cc.employer,       color: CHART_COLORS.teal,     rec: "Explain employer matching benefits in Compass" },
+    { id: "sms",            label: "SMS Opt-in",       n: cc.sms,            color: CHART_COLORS.yellow,   rec: "SMS opt-in is low — consider post-event nudge" },
   ];
 
   const allOptin = data.participantRows.filter(p => p.publicProfile || p.linkedinOptIn).length;
@@ -3925,8 +3912,8 @@ function ConsentIntelView({ data }: { data: AdminData }) {
         background: S.line, border: `1px solid ${S.line}` }}>
         {[
           { label: "Participants",       value: data.totalParticipants.toLocaleString(), color: S.text    },
-          { label: "Any Consent",        value: allOptin.toLocaleString(),               color: IBM.green  },
-          { label: "No Consent at All",  value: zeroOptin.toLocaleString(),              color: zeroOptin > 0 ? IBM.red : IBM.green },
+          { label: "Any Consent",        value: allOptin.toLocaleString(),               color: CHART_COLORS.green  },
+          { label: "No Consent at All",  value: zeroOptin.toLocaleString(),              color: zeroOptin > 0 ? CHART_COLORS.red : CHART_COLORS.green },
         ].map(c => (
           <div key={c.label} style={{ background: S.bg, padding: "16px 20px" }}>
             <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
@@ -3943,7 +3930,7 @@ function ConsentIntelView({ data }: { data: AdminData }) {
           const pct = Math.round((d.n / base) * 100);
           const isLow = pct < 30;
           return (
-            <Panel key={d.id} style={{ borderLeft: `3px solid ${isLow ? IBM.yellow : d.color}` }}>
+            <Panel key={d.id} style={{ borderLeft: `3px solid ${isLow ? CHART_COLORS.yellow : d.color}` }}>
               <div style={{ display: "flex", justifyContent: "space-between",
                 alignItems: "flex-start", marginBottom: "12px" }}>
                 <div>
@@ -3963,14 +3950,14 @@ function ConsentIntelView({ data }: { data: AdminData }) {
               </div>
               {isLow && (
                 <div style={{ display: "flex", gap: "6px", alignItems: "flex-start" }}>
-                  <span style={{ color: IBM.yellow, fontSize: "0.72rem", flexShrink: 0 }}>→</span>
+                  <span style={{ color: CHART_COLORS.yellow, fontSize: "0.72rem", flexShrink: 0 }}>→</span>
                   <p style={{ color: S.dim, fontSize: "0.76rem", margin: 0, lineHeight: 1.4 }}>
                     {d.rec}
                   </p>
                 </div>
               )}
               {!isLow && (
-                <p style={{ color: IBM.green, fontSize: "0.76rem", margin: 0 }}>✓ Healthy opt-in rate</p>
+                <p style={{ color: CHART_COLORS.green, fontSize: "0.76rem", margin: 0 }}>✓ Healthy opt-in rate</p>
               )}
             </Panel>
           );
@@ -4009,7 +3996,7 @@ function HeatMapView({ data }: { data: AdminData }) {
           {topTracks.length === 0
             ? <EmptyNote>No track data — add tracks[] to session documents.</EmptyNote>
             : topTracks.map(([t, n]) => (
-                <HBar key={t} label={t} value={n} maxVal={maxTrack} color={IBM.blue} />
+                <HBar key={t} label={t} value={n} maxVal={maxTrack} color={CHART_COLORS.primary} />
               ))
           }
         </Panel>
@@ -4018,7 +4005,7 @@ function HeatMapView({ data }: { data: AdminData }) {
           {data.topGoals.length === 0
             ? <EmptyNote>No goals data — add goals[] to participant documents.</EmptyNote>
             : data.topGoals.map(([g, n]) => (
-                <HBar key={g} label={g} value={n} maxVal={maxGoal} color={IBM.green} />
+                <HBar key={g} label={g} value={n} maxVal={maxGoal} color={CHART_COLORS.green} />
               ))
           }
         </Panel>
@@ -4027,7 +4014,7 @@ function HeatMapView({ data }: { data: AdminData }) {
           {data.topNeeds.length === 0
             ? <EmptyNote>No needs data — add needs[] to participant documents.</EmptyNote>
             : data.topNeeds.map(([n, v]) => (
-                <HBar key={n} label={n} value={v} maxVal={maxNeed} color={IBM.cyan} />
+                <HBar key={n} label={n} value={v} maxVal={maxNeed} color={CHART_COLORS.cyan} />
               ))
           }
         </Panel>
@@ -4036,7 +4023,7 @@ function HeatMapView({ data }: { data: AdminData }) {
           {data.topCareerInterests.length === 0
             ? <EmptyNote>No career_interests data — add career_interests[] to participant documents.</EmptyNote>
             : data.topCareerInterests.map(([c, n]) => (
-                <HBar key={c} label={c} value={n} maxVal={maxCareer} color={IBM.purple} />
+                <HBar key={c} label={c} value={n} maxVal={maxCareer} color={CHART_COLORS.purple} />
               ))
           }
         </Panel>
@@ -4047,9 +4034,9 @@ function HeatMapView({ data }: { data: AdminData }) {
           <PanelLabel>Engagement Coverage</PanelLabel>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
             {[
-              { label: "Have Goals Set",        n: data.participantWithGoals,      color: IBM.green  },
-              { label: "Have Preferred Tracks", n: data.participantWithTracks,     color: IBM.blue   },
-              { label: "Networking Signals",    n: data.participantWithNetworking, color: IBM.purple },
+              { label: "Have Goals Set",        n: data.participantWithGoals,      color: CHART_COLORS.green  },
+              { label: "Have Preferred Tracks", n: data.participantWithTracks,     color: CHART_COLORS.primary   },
+              { label: "Networking Signals",    n: data.participantWithNetworking, color: CHART_COLORS.purple },
             ].map(item => {
               const pct = Math.round((item.n / Math.max(data.totalParticipants, 1)) * 100);
               return (
@@ -4094,7 +4081,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: "Sessions missing date/time",
       count: dq.sessionsMissingDateTime,
       total: data.totalSessions,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: 'Add day and start_time fields to session documents.',
       affectedView: "sessions-table" as AdminView,
       field: "day / start_time",
@@ -4103,7 +4090,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: "Sessions missing room",
       count: dq.sessionsMissingRoom,
       total: data.totalSessions,
-      color: IBM.orange,
+      color: CHART_COLORS.orange,
       fix: "Add a room or location field to session documents.",
       affectedView: "sessions-table" as AdminView,
       field: "room",
@@ -4112,7 +4099,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: `${FORGE_LABELS.guides} missing domains`,
       count: dq.championsMissingDomains,
       total: data.totalChampions,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: "Add domains[] or expertise[] to champion documents.",
       affectedView: "champions" as AdminView,
       field: "domains / expertise",
@@ -4121,7 +4108,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: "Participants missing persona",
       count: dq.participantsMissingPersona,
       total: data.totalParticipants,
-      color: IBM.red,
+      color: CHART_COLORS.red,
       fix: "These attendees have not completed Compass enrollment.",
       affectedView: "participants" as AdminView,
       field: "persona",
@@ -4130,7 +4117,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: "Participants with no consent",
       count: dq.participantsMissingConsent,
       total: data.totalParticipants,
-      color: IBM.yellow,
+      color: CHART_COLORS.yellow,
       fix: "No public_profile or LinkedIn consent recorded.",
       affectedView: "consent" as AdminView,
       field: "consent_public_profile / consent_linkedin",
@@ -4139,7 +4126,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       label: "Duplicate session titles",
       count: dq.duplicateSessionTitles,
       total: data.totalSessions,
-      color: IBM.red,
+      color: CHART_COLORS.red,
       fix: "Multiple sessions share the same title — check for import duplicates.",
       affectedView: "sessions-table" as AdminView,
       field: "title",
@@ -4158,13 +4145,13 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
         sub="Enhanced quality checks with affected record counts and direct links to fix views." />
 
       {/* Score header */}
-      <Panel style={{ borderLeft: `3px solid ${qualityScore >= 80 ? IBM.green : qualityScore >= 50 ? IBM.yellow : IBM.red}` }}>
+      <Panel style={{ borderLeft: `3px solid ${qualityScore >= 80 ? CHART_COLORS.green : qualityScore >= 50 ? CHART_COLORS.yellow : CHART_COLORS.red}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
           <div>
             <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase",
               letterSpacing: "0.08em", margin: "0 0 4px" }}>Data Quality Score</p>
             <p style={{ fontSize: "2.4rem", fontWeight: 600, margin: 0, lineHeight: 1,
-              color: qualityScore >= 80 ? IBM.green : qualityScore >= 50 ? IBM.yellow : IBM.red }}>
+              color: qualityScore >= 80 ? CHART_COLORS.green : qualityScore >= 50 ? CHART_COLORS.yellow : CHART_COLORS.red }}>
               {qualityScore}<span style={{ fontSize: "1rem", color: S.dim }}>/100</span>
             </p>
           </div>
@@ -4189,8 +4176,8 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
       </Panel>
 
       {!hasIssues && data.totalSessions + data.totalChampions + data.totalParticipants > 0 && (
-        <Panel style={{ borderLeft: `3px solid ${IBM.green}` }}>
-          <p style={{ color: IBM.green, fontWeight: 650, fontSize: "0.9rem", margin: "0 0 4px" }}>
+        <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.green}` }}>
+          <p style={{ color: CHART_COLORS.green, fontWeight: 650, fontSize: "0.9rem", margin: "0 0 4px" }}>
             ✓ No issues detected
           </p>
           <p style={{ color: S.dim, fontSize: "0.8rem", margin: 0 }}>
@@ -4204,7 +4191,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
           const pct = w.total > 0 ? Math.round((w.count / w.total) * 100) : 0;
           const ok = w.count === 0;
           return (
-            <Panel key={w.label} style={{ borderLeft: `3px solid ${ok ? IBM.green : w.color}` }}>
+            <Panel key={w.label} style={{ borderLeft: `3px solid ${ok ? CHART_COLORS.green : w.color}` }}>
               <div style={{ display: "flex", alignItems: "flex-start",
                 justifyContent: "space-between", marginBottom: "10px" }}>
                 <div>
@@ -4215,7 +4202,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
                   </p>
                 </div>
                 <span style={{ fontSize: "1.8rem", fontWeight: 600,
-                  color: ok ? IBM.green : w.color, lineHeight: 1, flexShrink: 0 }}>
+                  color: ok ? CHART_COLORS.green : w.color, lineHeight: 1, flexShrink: 0 }}>
                   {ok ? "✓" : w.count.toLocaleString()}
                 </span>
               </div>
@@ -4232,7 +4219,7 @@ function DataQualityCenterView({ data }: { data: AdminData }) {
                       {w.count.toLocaleString()} affected record{w.count !== 1 ? "s" : ""}
                     </span>
                     <span style={{ padding: "3px 10px", border: `1px solid ${S.line}`,
-                      color: IBM.blueLight, fontSize: "0.72rem", cursor: "default" }}>
+                      color: CHART_COLORS.primaryLight, fontSize: "0.72rem", cursor: "default" }}>
                       → View in {w.affectedView}
                     </span>
                   </div>
@@ -4260,10 +4247,10 @@ function AttendanceTrendChart({ buckets }: { buckets: AttendancePlanTimeBucket[]
     return (
       <p style={{ color: S.soft, fontSize: "0.86rem", margin: 0, lineHeight: 1.6 }}>
         Single period snapshot:{" "}
-        <strong style={{ color: IBM.green }}>{b.pctYes}% attending</strong>,{" "}
-        <strong style={{ color: IBM.yellow }}>{b.pctDeciding}% maybe</strong>,{" "}
-        <strong style={{ color: IBM.red }}>{b.pctNo}% not attending</strong>.{" "}
-        <strong style={{ color: IBM.cyan }}>{b.brandEngagementOnlyPct}%</strong> engaged with the brand but not confirmed for the event.
+        <strong style={{ color: CHART_COLORS.green }}>{b.pctYes}% attending</strong>,{" "}
+        <strong style={{ color: CHART_COLORS.yellow }}>{b.pctDeciding}% maybe</strong>,{" "}
+        <strong style={{ color: CHART_COLORS.red }}>{b.pctNo}% not attending</strong>.{" "}
+        <strong style={{ color: CHART_COLORS.cyan }}>{b.brandEngagementOnlyPct}%</strong> engaged with the brand but not confirmed for the event.
       </p>
     );
   }
@@ -4277,10 +4264,10 @@ function AttendanceTrendChart({ buckets }: { buckets: AttendancePlanTimeBucket[]
   const yAt = (pct: number) => pad.top + innerH - (pct / 100) * innerH;
 
   const series = [
-    { key: "pctYes" as const, label: "Yes — attending", color: IBM.green },
-    { key: "pctDeciding" as const, label: "Maybe", color: IBM.yellow },
-    { key: "pctNo" as const, label: "No — not attending", color: IBM.red },
-    { key: "brandEngagementOnlyPct" as const, label: "Brand-only (Maybe + No)", color: IBM.cyan },
+    { key: "pctYes" as const, label: "Yes — attending", color: CHART_COLORS.green },
+    { key: "pctDeciding" as const, label: "Maybe", color: CHART_COLORS.yellow },
+    { key: "pctNo" as const, label: "No — not attending", color: CHART_COLORS.red },
+    { key: "brandEngagementOnlyPct" as const, label: "Brand-only (Maybe + No)", color: CHART_COLORS.cyan },
   ];
 
   return (
@@ -4342,16 +4329,16 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
   const latestTrend = data.attendancePlanOverTime[data.attendancePlanOverTime.length - 1];
 
   const kpis = [
-    { label: "Total Participants",    value: data.totalParticipants.toLocaleString(), sub: "registered in Firestore",            color: IBM.blueLight },
-    { label: "Compass Profiles",      value: data.compassBuilt.toLocaleString(),       sub: `${profileRate}% enrollment rate`,    color: IBM.green     },
-    { label: "Active Attendees",      value: activeN.toLocaleString(),                 sub: `${activeRate}% of registered`,       color: IBM.cyan      },
-    { label: "Sessions in Catalog",   value: data.totalSessions.toLocaleString(),      sub: "from Firestore sessions collection", color: IBM.blue      },
-    { label: `${FORGE_LABELS.guides} Available`,   value: data.championsAvailableMeet.toLocaleString(), sub: `of ${data.totalChampions.toLocaleString()} total`,  color: IBM.purple  },
-    { label: "Networking Engaged",    value: data.participantWithNetworking.toLocaleString(), sub: `${networkRate}% have networking signals`, color: IBM.teal },
-    { label: "Meet Requests",         value: data.hasUsageData ? data.totalMeetRequests.toLocaleString() : "—", sub: "total across all attendees", color: IBM.green },
-    { label: "Consent Opt-in",        value: `${consentRate}%`,                        sub: `${consentN.toLocaleString()} participants`, color: IBM.yellow },
+    { label: "Total Participants",    value: data.totalParticipants.toLocaleString(), sub: "registered in Firestore",            color: CHART_COLORS.primaryLight },
+    { label: "Compass Profiles",      value: data.compassBuilt.toLocaleString(),       sub: `${profileRate}% enrollment rate`,    color: CHART_COLORS.green     },
+    { label: "Active Attendees",      value: activeN.toLocaleString(),                 sub: `${activeRate}% of registered`,       color: CHART_COLORS.cyan      },
+    { label: "Sessions in Catalog",   value: data.totalSessions.toLocaleString(),      sub: "from Firestore sessions collection", color: CHART_COLORS.primary      },
+    { label: `${FORGE_LABELS.guides} Available`,   value: data.championsAvailableMeet.toLocaleString(), sub: `of ${data.totalChampions.toLocaleString()} total`,  color: CHART_COLORS.purple  },
+    { label: "Networking Engaged",    value: data.participantWithNetworking.toLocaleString(), sub: `${networkRate}% have networking signals`, color: CHART_COLORS.teal },
+    { label: "Meet Requests",         value: data.hasUsageData ? data.totalMeetRequests.toLocaleString() : "—", sub: "total across all attendees", color: CHART_COLORS.green },
+    { label: "Consent Opt-in",        value: `${consentRate}%`,                        sub: `${consentN.toLocaleString()} participants`, color: CHART_COLORS.yellow },
     { label: "Platform Health",       value: `${data.healthScore}/100`,                sub: data.healthScore >= 70 ? "Healthy" : data.healthScore >= 40 ? "At Risk" : "Critical",
-      color: data.healthScore >= 70 ? IBM.green : data.healthScore >= 40 ? IBM.yellow : IBM.red },
+      color: data.healthScore >= 70 ? CHART_COLORS.green : data.healthScore >= 40 ? CHART_COLORS.yellow : CHART_COLORS.red },
   ];
 
   const topPersonas = Object.entries(data.personaCounts)
@@ -4381,46 +4368,46 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
       </div>
 
       {/* Attendance intent — brand engagement vs event attendance */}
-      <Panel style={{ borderLeft: `3px solid ${IBM.cyan}` }}>
+      <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.cyan}` }}>
         <PanelLabel>Registration &amp; Attendance Intent</PanelLabel>
         <p style={{ color: S.soft, fontSize: "0.88rem", lineHeight: 1.65, margin: "0 0 18px" }}>
-          Of <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered</strong>,{" "}
-          <strong style={{ color: IBM.green }}>{pctYes}% plan to attend</strong>,{" "}
-          <strong style={{ color: IBM.yellow }}>{pctDeciding}% are still deciding</strong>, and{" "}
-          <strong style={{ color: IBM.red }}>{pctNo}% are not attending</strong>.
-          {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the {FORGE_EVENT.name} brand
+          Of <strong style={{ color: CHART_COLORS.primaryLight }}>{data.totalParticipants.toLocaleString()} registered</strong>,{" "}
+          <strong style={{ color: CHART_COLORS.green }}>{pctYes}% plan to attend</strong>,{" "}
+          <strong style={{ color: CHART_COLORS.yellow }}>{pctDeciding}% are still deciding</strong>, and{" "}
+          <strong style={{ color: CHART_COLORS.red }}>{pctNo}% are not attending</strong>.
+          {" "}<strong style={{ color: CHART_COLORS.cyan }}>{brandOnlyPct}%</strong> are engaging with the {FORGE_EVENT.name} brand
           but have not confirmed they will be at the event — a key signal for digital follow-up and nurture.
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Donut pct={pctYes} color={IBM.green} size={72} />
+            <Donut pct={pctYes} color={CHART_COLORS.green} size={72} />
             <div>
               <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Yes — attending</p>
-              <p style={{ color: IBM.green, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.yes.toLocaleString()}</p>
+              <p style={{ color: CHART_COLORS.green, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.yes.toLocaleString()}</p>
               <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctYes}% of registered</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Donut pct={pctDeciding} color={IBM.yellow} size={72} />
+            <Donut pct={pctDeciding} color={CHART_COLORS.yellow} size={72} />
             <div>
               <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Maybe — deciding</p>
-              <p style={{ color: IBM.yellow, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.deciding.toLocaleString()}</p>
+              <p style={{ color: CHART_COLORS.yellow, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.deciding.toLocaleString()}</p>
               <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctDeciding}% of registered</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Donut pct={pctNo} color={IBM.red} size={72} />
+            <Donut pct={pctNo} color={CHART_COLORS.red} size={72} />
             <div>
               <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>No — not attending</p>
-              <p style={{ color: IBM.red, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.no.toLocaleString()}</p>
+              <p style={{ color: CHART_COLORS.red, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{ap.no.toLocaleString()}</p>
               <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{pctNo}% of registered</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-            <Donut pct={brandOnlyPct} color={IBM.cyan} size={72} />
+            <Donut pct={brandOnlyPct} color={CHART_COLORS.cyan} size={72} />
             <div>
               <p style={{ color: S.dim, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 4px" }}>Brand-only engagement</p>
-              <p style={{ color: IBM.cyan, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{(ap.deciding + ap.no).toLocaleString()}</p>
+              <p style={{ color: CHART_COLORS.cyan, fontSize: "1.4rem", fontWeight: 600, margin: 0 }}>{(ap.deciding + ap.no).toLocaleString()}</p>
               <p style={{ color: S.dim, fontSize: "0.76rem", margin: "2px 0 0" }}>{brandOnlyPct}% (Maybe + No)</p>
             </div>
           </div>
@@ -4443,10 +4430,10 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
           <AttendanceTrendChart buckets={data.attendancePlanOverTime} />
         </div>
         <div style={{ marginTop: "18px" }}>
-          <HBar label="Yes — attending" value={pctYes} maxVal={100} color={IBM.green} suffix="%" />
-          <HBar label="Maybe — still deciding" value={pctDeciding} maxVal={100} color={IBM.yellow} suffix="%" />
-          <HBar label="No — not attending" value={pctNo} maxVal={100} color={IBM.red} suffix="%" />
-          <HBar label="Brand engagement without confirmed attendance (Maybe + No)" value={brandOnlyPct} maxVal={100} color={IBM.cyan} suffix="%" />
+          <HBar label="Yes — attending" value={pctYes} maxVal={100} color={CHART_COLORS.green} suffix="%" />
+          <HBar label="Maybe — still deciding" value={pctDeciding} maxVal={100} color={CHART_COLORS.yellow} suffix="%" />
+          <HBar label="No — not attending" value={pctNo} maxVal={100} color={CHART_COLORS.red} suffix="%" />
+          <HBar label="Brand engagement without confirmed attendance (Maybe + No)" value={brandOnlyPct} maxVal={100} color={CHART_COLORS.cyan} suffix="%" />
         </div>
       </Panel>
 
@@ -4456,23 +4443,23 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
           <PanelLabel>Event Intelligence Summary</PanelLabel>
           <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: "0 0 16px" }}>
             {FORGE_EVENT.name} has{" "}
-            <strong style={{ color: IBM.blueLight }}>{data.totalParticipants.toLocaleString()} registered participants</strong>
+            <strong style={{ color: CHART_COLORS.primaryLight }}>{data.totalParticipants.toLocaleString()} registered participants</strong>
             , of whom{" "}
-            <strong style={{ color: IBM.green }}>{data.compassBuilt.toLocaleString()} ({profileRate}%)</strong>
+            <strong style={{ color: CHART_COLORS.green }}>{data.compassBuilt.toLocaleString()} ({profileRate}%)</strong>
             {" "}have completed a Compass profile and{" "}
-            <strong style={{ color: IBM.green }}>{pctYes}% plan to attend</strong>.
-            {" "}<strong style={{ color: IBM.cyan }}>{brandOnlyPct}%</strong> are engaging with the brand without confirmed attendance.
+            <strong style={{ color: CHART_COLORS.green }}>{pctYes}% plan to attend</strong>.
+            {" "}<strong style={{ color: CHART_COLORS.cyan }}>{brandOnlyPct}%</strong> are engaging with the brand without confirmed attendance.
             The platform health score is{" "}
-            <strong style={{ color: data.healthScore >= 70 ? IBM.green : IBM.yellow }}>{data.healthScore}/100</strong>.
+            <strong style={{ color: data.healthScore >= 70 ? CHART_COLORS.green : CHART_COLORS.yellow }}>{data.healthScore}/100</strong>.
             {" "}{activeN.toLocaleString()} attendees ({activeRate}%) are actively engaging with Compass.
           </p>
           <p style={{ color: S.soft, fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>
             The champion network has{" "}
-            <strong style={{ color: IBM.purple }}>{data.totalChampions.toLocaleString()} {FORGE_LABELS.guides.toLowerCase()}</strong>
+            <strong style={{ color: CHART_COLORS.purple }}>{data.totalChampions.toLocaleString()} {FORGE_LABELS.guides.toLowerCase()}</strong>
             , with{" "}
-            <strong style={{ color: IBM.cyan }}>{data.championsAvailableMeet.toLocaleString()} available for 1:1 meetings</strong>.
+            <strong style={{ color: CHART_COLORS.cyan }}>{data.championsAvailableMeet.toLocaleString()} available for 1:1 meetings</strong>.
             {" "}Consent opt-in across participants stands at{" "}
-            <strong style={{ color: IBM.yellow }}>{consentRate}%</strong>.
+            <strong style={{ color: CHART_COLORS.yellow }}>{consentRate}%</strong>.
             {data.hasUsageData && ` Attendees have made ${data.totalMeetRequests.toLocaleString()} meet requests.`}
           </p>
         </Panel>
@@ -4499,7 +4486,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
                 <span style={{ color: S.soft, fontSize: "0.84rem",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const,
                   maxWidth: "130px" }}>{d}</span>
-                <span style={{ color: IBM.purple, fontSize: "0.84rem",
+                <span style={{ color: CHART_COLORS.purple, fontSize: "0.84rem",
                   fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{n}</span>
               </div>
             ))}
@@ -4512,7 +4499,7 @@ function ExecSnapshotView({ data }: { data: AdminData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. "If TechXchange Started Right Now"
+// 8. "If FORGE Started Right Now"
 // ─────────────────────────────────────────────────────────────────────────────
 
 function RightNowView({ data }: { data: AdminData }) {
@@ -4586,8 +4573,8 @@ function RightNowView({ data }: { data: AdminData }) {
         sub={`Snapshot of the current state of ${FORGE_EVENT.name} — based on live Firestore data.`} />
 
       {/* Executive Brief */}
-      <Panel style={{ borderLeft: `3px solid ${IBM.blue}` }}>
-        <p style={{ color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700,
+      <Panel style={{ borderLeft: `3px solid ${CHART_COLORS.primary}` }}>
+        <p style={{ color: CHART_COLORS.primaryLight, fontSize: "0.68rem", fontWeight: 700,
           textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 10px" }}>
           Compass Executive Brief
         </p>
@@ -4598,12 +4585,12 @@ function RightNowView({ data }: { data: AdminData }) {
 
       {/* Top 10 grids */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
-        <Top10Panel title="Top 10 Attendee Personas"  items={topPersonas}        color={IBM.blue}   />
-        <Top10Panel title="Top 10 Session Tracks"     items={topTracks}          color={IBM.cyan}   />
-        <Top10Panel title={`Top 10 ${FORGE_LABELS.guide} Domains`}   items={topDomains}         color={IBM.purple} />
-        <Top10Panel title="Top 10 Learning Goals"     items={data.topGoals}      color={IBM.green}  />
-        <Top10Panel title="Top 10 Attendee Needs"     items={data.topNeeds}      color={IBM.teal}   />
-        <Top10Panel title="Top 10 Sessions in Catalog" items={topSessionPairs}   color={IBM.orange} />
+        <Top10Panel title="Top 10 Attendee Personas"  items={topPersonas}        color={CHART_COLORS.primary}   />
+        <Top10Panel title="Top 10 Session Tracks"     items={topTracks}          color={CHART_COLORS.cyan}   />
+        <Top10Panel title={`Top 10 ${FORGE_LABELS.guide} Domains`}   items={topDomains}         color={CHART_COLORS.purple} />
+        <Top10Panel title="Top 10 Learning Goals"     items={data.topGoals}      color={CHART_COLORS.green}  />
+        <Top10Panel title="Top 10 Attendee Needs"     items={data.topNeeds}      color={CHART_COLORS.teal}   />
+        <Top10Panel title="Top 10 Sessions in Catalog" items={topSessionPairs}   color={CHART_COLORS.orange} />
       </div>
 
       {data.totalParticipants === 0 && (

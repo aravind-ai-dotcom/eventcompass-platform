@@ -1,7 +1,7 @@
 "use client";
 
 export type DonutTone =
-  | "ibm-blue"
+  | "accent"
   | "teal"
   | "purple"
   | "green"
@@ -15,10 +15,10 @@ export interface DonutSegment {
 }
 
 const TONE_VAR: Record<DonutTone, string> = {
-  "ibm-blue": "#0f62fe",
-  teal: "#009d9a",
-  purple: "#8a3ffc",
-  green: "#24a148",
+  accent: "var(--accent)",
+  teal: "#14b8a6",
+  purple: "#8b5cf6",
+  green: "#10b981",
   gray: "#6f6f6f",
   muted: "var(--line-strong)",
 };
@@ -86,7 +86,7 @@ function DonutChart({
           cy={cy}
           r={radius}
           fill="none"
-          stroke={TONE_VAR[a.tone ?? "ibm-blue"]}
+          stroke={TONE_VAR[a.tone ?? "accent"]}
           strokeWidth={stroke}
           strokeDasharray={`${aDash} ${circumference - aDash}`}
           strokeLinecap="butt"
@@ -132,7 +132,7 @@ function DonutChart({
         const gap = circumference - dash;
         const startAngle = (segments.slice(0, index).reduce((sum, s) => sum + s.value, 0) / total) * 360;
         const rotation = -90 + startAngle;
-        const color = TONE_VAR[segment.tone ?? "ibm-blue"];
+        const color = TONE_VAR[segment.tone ?? "accent"];
 
         return (
           <circle
@@ -187,7 +187,7 @@ export default function PulseDonutBox({
         <li key={segment.label}>
           <span
             className="pulse-donut-box__swatch"
-            style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
+            style={{ background: TONE_VAR[segment.tone ?? "accent"] }}
             aria-hidden="true"
           />
           <span className="pulse-donut-box__legend-copy">
@@ -248,32 +248,32 @@ export default function PulseDonutBox({
 
 export function alumniDonutSegments(returning: number, firstTime: number): DonutSegment[] {
   return [
-    { label: "Returning Attendees", value: returning, tone: "ibm-blue" as const },
+    { label: "Returning Attendees", value: returning, tone: "accent" as const },
     { label: "First-Time Attendees", value: firstTime, tone: "teal" as const },
   ].filter(s => s.value > 0);
 }
 
 export function championDonutSegments(
-  ibm: number,
+  guides: number,
   former: number,
   interested: number,
   nominee: number,
 ): DonutSegment[] {
   return [
-    { label: "Guides", value: ibm, tone: "ibm-blue" as const },
+    { label: "Guides", value: guides, tone: "accent" as const },
     { label: "Former Guides", value: former, tone: "purple" as const },
     { label: "Nominees", value: nominee, tone: "teal" as const },
     { label: "Rising Guides", value: interested, tone: "green" as const },
   ].filter(s => s.value > 0);
 }
 
-/** Public pulse — only show when at least two champion buckets have signal. */
+/** Public pulse — only show when at least two guide buckets have signal. */
 export function hasChampionCommunityMix(
-  ibm: number,
+  guides: number,
   former: number,
   interested: number,
   nominee: number,
 ): boolean {
-  const buckets = [ibm, former, interested, nominee].filter(n => n > 0);
+  const buckets = [guides, former, interested, nominee].filter(n => n > 0);
   return buckets.length >= 2;
 }

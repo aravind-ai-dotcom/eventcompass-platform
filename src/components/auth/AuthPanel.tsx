@@ -244,7 +244,7 @@ export default function AuthPanel({ onAuthenticated }: Props) {
           </p>
         </div>
 
-        {/* IBM SSO — always visible on login/signup views */}
+        {/* Enterprise SSO — always visible on login/signup views */}
         {view !== "forgot" && (
           <>
             <IBMLoginButton

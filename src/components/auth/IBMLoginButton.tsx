@@ -1,6 +1,6 @@
 "use client";
 // =============================================================================
-// EventCompass — IBM Login Button
+// EventCompass — Enterprise SSO login button
 // src/components/auth/IBMLoginButton.tsx
 //
 // Calls signInWithIBM() from src/lib/auth.ts.

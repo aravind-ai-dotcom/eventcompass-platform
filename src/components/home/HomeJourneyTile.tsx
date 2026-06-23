@@ -3,10 +3,10 @@
 import { DonutChart, type DonutSegment } from "@/components/pulse/PulseDonutBox";
 
 const TONE_VAR: Record<NonNullable<DonutSegment["tone"]>, string> = {
-  "ibm-blue": "#0f62fe",
-  teal: "#009d9a",
-  purple: "#8a3ffc",
-  green: "#24a148",
+  accent: "var(--accent)",
+  teal: "#14b8a6",
+  purple: "#8b5cf6",
+  green: "#10b981",
   gray: "#6f6f6f",
   muted: "var(--line-strong)",
 };
@@ -41,7 +41,7 @@ export default function HomeJourneyTile({ segments, title = "FORGE Journey" }: H
               <dt className="home-journey-tile__label">
                 <span
                   className="home-journey-tile__dot"
-                  style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
+                  style={{ background: TONE_VAR[segment.tone ?? "accent"] }}
                 />
                 {segment.label}
               </dt>

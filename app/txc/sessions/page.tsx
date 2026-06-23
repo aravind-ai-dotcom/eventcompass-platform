@@ -31,6 +31,7 @@ import {
 } from "@/lib/speakerIntelligence";
 import type { SpeakerProfile } from "@/types/speaker";
 import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
+import { THEME_VARS } from "@/config/chartColors";
 import {
   addSessionToBothLists,
   mergeSavedSessionIds,
@@ -38,7 +39,6 @@ import {
 } from "@/lib/participantAgenda";
 
 const BASE = "organizations/ibm/events/txc2026";
-const IBM_BLUE = "#0f62fe";
 
 const W = {
   track: 25,
@@ -318,7 +318,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SessionActionBar — Carbon-styled action buttons for each session card
+// SessionActionBar — accent action buttons for each session card
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SessionActionBar({ session, sched, compact = false }: {
@@ -352,9 +352,9 @@ function SessionActionBar({ session, sched, compact = false }: {
 
   const savedBtn: React.CSSProperties = {
     ...baseBtn,
-    border: "1px solid rgba(15, 98, 254, 0.35)",
-    color: IBM_BLUE,
-    background: "rgba(15, 98, 254, 0.04)",
+    border: THEME_VARS.accentBorder,
+    color: THEME_VARS.accent,
+    background: THEME_VARS.accentBg,
   };
 
   const dnsLabel: React.CSSProperties = {
@@ -825,7 +825,7 @@ function SessionsPageContent() {
           const champSnap = await getDocs(collection(db, `${BASE}/champions`));
           setChampionSources(champSnap.docs.map(d => championFromRaw({ id: d.id, ...d.data() } as RawDoc)));
         } catch (champErr) {
-          console.warn("[SessionsPage] Champions catalog unavailable for speaker intel:", champErr);
+          console.warn("[SessionsPage] Guides catalog unavailable for speaker intel:", champErr);
         }
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string };
