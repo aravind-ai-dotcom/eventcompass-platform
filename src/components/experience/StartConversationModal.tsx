@@ -64,6 +64,23 @@ export default function StartConversationModal({
   const [certification, setCertification] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  function touch(field: string) {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  }
+
+  const titleError = touched.title && !title.trim() ? "Add a title for your invitation." : "";
+  const dateError = touched.date && !date ? "Pick a date." : "";
+  const startError = touched.startTime && !startTime ? "Pick a start time." : "";
+  const endError = touched.endTime && !endTime ? "Pick an end time." : "";
+  const locationError = touched.location && !location.trim() ? "Add a meeting location." : "";
+  const universityError = touched.university && classification === "alumni" && !university.trim()
+    ? "University name is required for alumni huddles."
+    : "";
+  const companyError = touched.company && classification === "past_employer" && !company.trim()
+    ? "Company name is required for past employer huddles."
+    : "";
 
   function toggleTopic(tag: string) {
     setTopics(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
@@ -193,11 +210,14 @@ export default function StartConversationModal({
           <label className="start-conversation-lead" htmlFor="huddle-title">Title</label>
           <input
             id="huddle-title"
-            className="start-conversation-input"
+            className={`start-conversation-input${titleError ? " start-conversation-input--error" : ""}`}
             value={title}
             onChange={e => setTitle(e.target.value)}
+            onBlur={() => touch("title")}
             placeholder="Alumni catch-up over coffee"
+            aria-invalid={!!titleError}
           />
+          {titleError && <p className="start-conversation-field-error">{titleError}</p>}
 
           <label className="start-conversation-lead" htmlFor="huddle-desc">Description</label>
           <textarea
@@ -228,11 +248,14 @@ export default function StartConversationModal({
               <label className="start-conversation-lead" htmlFor="huddle-uni">University</label>
               <input
                 id="huddle-uni"
-                className="start-conversation-input"
+                className={`start-conversation-input${universityError ? " start-conversation-input--error" : ""}`}
                 value={university}
                 onChange={e => setUniversity(e.target.value)}
+                onBlur={() => touch("university")}
                 placeholder="Your university name"
+                aria-invalid={!!universityError}
               />
+              {universityError && <p className="start-conversation-field-error">{universityError}</p>}
             </>
           )}
 
@@ -241,11 +264,14 @@ export default function StartConversationModal({
               <label className="start-conversation-lead" htmlFor="huddle-co">Past employer</label>
               <input
                 id="huddle-co"
-                className="start-conversation-input"
+                className={`start-conversation-input${companyError ? " start-conversation-input--error" : ""}`}
                 value={company}
                 onChange={e => setCompany(e.target.value)}
+                onBlur={() => touch("company")}
                 placeholder="Former company name"
+                aria-invalid={!!companyError}
               />
+              {companyError && <p className="start-conversation-field-error">{companyError}</p>}
             </>
           )}
 
@@ -293,10 +319,13 @@ export default function StartConversationModal({
           <input
             id="huddle-date"
             type="date"
-            className="start-conversation-input start-conversation-input--date"
+            className={`start-conversation-input start-conversation-input--date${dateError ? " start-conversation-input--error" : ""}`}
             value={date}
             onChange={e => setDate(e.target.value)}
+            onBlur={() => touch("date")}
+            aria-invalid={!!dateError}
           />
+          {dateError && <p className="start-conversation-field-error">{dateError}</p>}
 
           <div className="start-conversation-time-grid">
             <div>
@@ -304,20 +333,26 @@ export default function StartConversationModal({
               <input
                 id="huddle-start"
                 type="time"
-                className="start-conversation-input start-conversation-input--time"
+                className={`start-conversation-input start-conversation-input--time${startError ? " start-conversation-input--error" : ""}`}
                 value={startTime}
                 onChange={e => handleStartTimeChange(e.target.value)}
+                onBlur={() => touch("startTime")}
+                aria-invalid={!!startError}
               />
+              {startError && <p className="start-conversation-field-error">{startError}</p>}
             </div>
             <div>
               <label className="start-conversation-lead" htmlFor="huddle-end">End time</label>
               <input
                 id="huddle-end"
                 type="time"
-                className="start-conversation-input start-conversation-input--time"
+                className={`start-conversation-input start-conversation-input--time${endError ? " start-conversation-input--error" : ""}`}
                 value={endTime}
                 onChange={e => handleEndTimeChange(e.target.value)}
+                onBlur={() => touch("endTime")}
+                aria-invalid={!!endError}
               />
+              {endError && <p className="start-conversation-field-error">{endError}</p>}
               <p className="start-conversation-hint">Defaults to 30 min after start.</p>
             </div>
           </div>
@@ -325,11 +360,14 @@ export default function StartConversationModal({
           <label className="start-conversation-lead" htmlFor="huddle-location">Location</label>
           <input
             id="huddle-location"
-            className="start-conversation-input"
+            className={`start-conversation-input${locationError ? " start-conversation-input--error" : ""}`}
             value={location}
             onChange={e => setLocation(e.target.value)}
+            onBlur={() => touch("location")}
             placeholder="Where should people meet?"
+            aria-invalid={!!locationError}
           />
+          {locationError && <p className="start-conversation-field-error">{locationError}</p>}
           <div className="start-conversation-tags">
             {HUDDLE_LOCATION_SUGGESTIONS.map(loc => (
               <button

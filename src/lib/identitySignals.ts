@@ -256,6 +256,28 @@ export function aggregateIdentitySignals(participants: Record<string, unknown>[]
   return out;
 }
 
+/** Keep identity charts visible when live enrollment is still sparse. */
+export function resolvePulseIdentityDisplay(live: IdentityAggregate): IdentityAggregate {
+  const seed = IDENTITY_AGGREGATE_SEED;
+  const journeyOk = live.alumni.returning > 0 && live.alumni.firstTime > 0;
+  const championBuckets = [
+    live.champion.ibm_champion,
+    live.champion.former_champion,
+    live.champion.champion_nominee,
+    live.champion.interested,
+  ].filter(n => n > 0);
+  const championOk = championBuckets.length >= 2;
+
+  if (journeyOk && championOk) return live;
+
+  return {
+    ...live,
+    alumni: journeyOk ? live.alumni : seed.alumni,
+    champion: championOk ? live.champion : seed.champion,
+    respondents: Math.max(live.respondents, seed.respondents),
+  };
+}
+
 export function pctOf(count: number, total: number): number {
   if (total <= 0) return 0;
   return Math.round((count / total) * 100);

@@ -2,20 +2,28 @@
 
 import { useState } from "react";
 import {
+  buildPublicSessionReasons,
   buildSessionIntelligence,
+  resolvePublicSessionHighlight,
   SESSION_BADGE_LABELS,
   SESSION_SIGNAL_LABELS,
   type SessionIntelInput,
 } from "@/lib/sessionIntelligence";
 
+interface SessionIntelInputWithId extends SessionIntelInput {
+  id?: string;
+  title?: string;
+}
+
 interface SessionIntelligencePanelProps {
-  session: SessionIntelInput;
+  session: SessionIntelInputWithId;
   certLabel?: string | null;
   scoreSize?: "sm" | "md";
-  /** Show 3 reasons by default; expand for all (mobile-friendly). */
   collapsible?: boolean;
   showKeySignals?: boolean;
   initialVisible?: number;
+  /** Signed-out catalog — no match % or profile-based copy. */
+  anonymous?: boolean;
 }
 
 const DEFAULT_VISIBLE_REASONS = 3;
@@ -44,9 +52,40 @@ export default function SessionIntelligencePanel({
   collapsible = true,
   showKeySignals = true,
   initialVisible = DEFAULT_VISIBLE_REASONS,
+  anonymous = false,
 }: SessionIntelligencePanelProps) {
   const [expanded, setExpanded] = useState(false);
   const intel = buildSessionIntelligence(session, certLabel);
+
+  if (anonymous) {
+    const publicReasons = buildPublicSessionReasons(session);
+    const highlight = resolvePublicSessionHighlight(session);
+    return (
+      <div className="session-intelligence-panel session-intelligence-panel--public">
+        <p className="session-intelligence-kicker">{highlight}</p>
+        {publicReasons.length > 0 && (
+          <ul className="session-intelligence-reasons">
+            {publicReasons.map(reason => (
+              <li key={reason}>
+                <span className="session-intelligence-check" aria-hidden="true">✓</span>
+                {reason}
+              </li>
+            ))}
+          </ul>
+        )}
+        {intel.badges.length > 0 && (
+          <div className="session-badge-row">
+            {intel.badges.map(id => (
+              <span key={id} className={`session-badge session-badge--${id}`}>
+                {SESSION_BADGE_LABELS[id]}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const visibleReasons = collapsible && !expanded
     ? intel.reasons.slice(0, initialVisible)
     : intel.reasons;

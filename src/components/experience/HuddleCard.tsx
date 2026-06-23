@@ -51,7 +51,6 @@ export default function HuddleCard({
   const isMobileWalk = useMobileWalkLayout();
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<HuddleParticipantPreview | null>(null);
-  const [hostMenuOpen, setHostMenuOpen] = useState(false);
 
   const isLive = opp.displayStatus === "happening_now" || opp.displayStatus === "ending_soon";
   const isOnMyWay = huddles.responses[opp.id] === "on_my_way" || opp.userResponse === "on_my_way";
@@ -149,7 +148,7 @@ export default function HuddleCard({
 
   return (
     <>
-      <article className={`huddle-card huddle-card--premium${isLive ? " huddle-card--live" : ""}`}>
+      <article className={`huddle-card huddle-card--conversation${isLive ? " huddle-card--live" : ""}`}>
         <div className="huddle-card__meta">
           <div className="huddle-card__badges">
             <span className={`${classClass} huddle-badge--category`} title={`Category: ${classLabel}`}>
@@ -230,17 +229,10 @@ export default function HuddleCard({
             </>
           )}
           {userIsHost && (
-            <div className="huddle-host-controls">
-              <button type="button" className="action-chip action-chip--compact" onClick={() => setHostMenuOpen(v => !v)}>
-                Host
-              </button>
-              {hostMenuOpen && (
-                <div className="huddle-host-menu">
-                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.extendHuddle(opp.id)}>Extend</button>
-                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
-                  <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
-                </div>
-              )}
+            <div className="huddle-host-controls huddle-host-controls--visible">
+              <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.extendHuddle(opp.id)}>Extend</button>
+              <button type="button" className="action-chip action-chip--compact" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
+              <button type="button" className="action-chip action-chip--compact action-chip--destructive" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel huddle</button>
             </div>
           )}
           {isMobileWalk && (

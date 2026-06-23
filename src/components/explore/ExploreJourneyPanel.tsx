@@ -30,7 +30,10 @@ export default function ExploreJourneyPanel({ journey, enrolled = false }: Explo
           alt=""
           fill
           sizes="(max-width: 768px) 100vw, 420px"
-          style={{ objectFit: "cover" }}
+          style={{
+            objectFit: "cover",
+            objectPosition: journey.id === "certification" ? "72% center" : "center center",
+          }}
         />
       </div>
 

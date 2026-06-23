@@ -78,11 +78,19 @@ export function buildPersonMatchReasons(
       const uni = person.education?.[0];
       const name = typeof uni === "string" ? uni : uni?.institution;
       line = name ? `${name} alumni` : "Shared alumni network";
-    } else if (/shared expertise|shared interest|technology|track|domain|product|watsonx|agentic/i.test(t)) {
+    } else if (/shared expertise|shared interest|technology|track|domain|product|watsonx|agentic|data govern/i.test(t)) {
       const domain = person.profile?.domains?.[0] ?? person.profile?.products?.[0];
-      line = domain
-        ? `Shared ${domain} interests`
-        : "Shared technical interests";
+      if (/agentic/i.test(t) || /agentic/i.test(domain ?? "")) {
+        line = "Champion in Agentic AI";
+      } else if (/data govern/i.test(t) || /data govern/i.test(domain ?? "")) {
+        line = "Data governance expertise";
+      } else if (domain && profileSignals.some(s => domain.toLowerCase().includes(s.toLowerCase()))) {
+        line = `Works on ${domain}, matching your learning path`;
+      } else if (domain) {
+        line = `Deep ${domain} expertise`;
+      } else {
+        line = "Aligned technical focus";
+      }
     } else {
       line = humanizeScoringReason(raw);
     }
@@ -106,7 +114,7 @@ export function buildPersonMatchReasons(
       }),
     );
     for (const d of overlap.slice(0, 2)) {
-      const line = `Matches your technology interests (${d})`;
+      const line = `Works on ${d}, matching your learning path`;
       if (!seen.has(line)) {
         seen.add(line);
         lines.push(line);
@@ -139,8 +147,8 @@ export function buildPersonMatchReasons(
     return humanizeMatchReasons(person.compass_reasons);
   }
 
-  if (lines.length < 2) {
-    lines.push("Aligned with your Compass profile signals");
+  if (lines.length === 0 && domains.length > 0) {
+    lines.push(`Expertise in ${domains.slice(0, 2).join(" and ")}`);
   }
 
   return lines.slice(0, 8);

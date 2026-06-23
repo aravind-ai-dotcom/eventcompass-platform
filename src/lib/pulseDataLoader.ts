@@ -10,7 +10,7 @@ import {
   participantNetworkingIdentity,
 } from "@/lib/roomSignals";
 import { isOpenToAlumniConnections, isOpenToMentoringConversations } from "@/lib/networkingIdentity";
-import { aggregateIdentitySignals } from "@/lib/identitySignals";
+import { aggregateIdentitySignals, resolvePulseIdentityDisplay } from "@/lib/identitySignals";
 import { PULSE_AUDIENCE_SEED, type PulseAudienceData } from "@/lib/pulseAudienceSeed";
 
 const BASE = "organizations/ibm/events/txc2026";
@@ -60,7 +60,7 @@ function aggregateParticipants(docs: RawDoc[]): PulseAudienceData {
     openToColleague,
     openToCareer,
     openToMentoring,
-    identity: aggregateIdentitySignals(docs),
+    identity: resolvePulseIdentityDisplay(aggregateIdentitySignals(docs)),
   };
 }
 

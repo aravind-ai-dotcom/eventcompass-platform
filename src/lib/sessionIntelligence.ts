@@ -26,16 +26,78 @@ export type SessionBadgeId =
   | "executive";
 
 export const SESSION_BADGE_LABELS: Record<SessionBadgeId, string> = {
-  "hands-on": "Hands-On",
-  certification: "Essential for Certification",
+  "hands-on": "Hands-On Learning",
+  certification: "Editor's Pick",
   "certification-booster": "Supports Certification Goal",
-  "champion-led": "Champion-Led",
+  "champion-led": "Featured Session",
   "community-favorite": "Community Favorite",
-  popular: "Popular",
-  "limited-capacity": "Limited Capacity",
+  popular: "Popular Session",
+  "limited-capacity": "High Attendance Interest",
   networking: "Networking Opportunity",
-  executive: "Executive Relevant",
+  executive: "TechXchange Highlight",
 };
+
+/** Public catalog labels when no Compass profile exists. */
+export const PUBLIC_SESSION_HIGHLIGHTS = [
+  "Popular Session",
+  "Community Favorite",
+  "High Attendance Interest",
+  "Hands-On Learning",
+  "Featured Session",
+  "Networking Opportunity",
+  "Editor's Pick",
+  "TechXchange Highlight",
+] as const;
+
+const BADGE_TO_PUBLIC_HIGHLIGHT: Partial<Record<SessionBadgeId, string>> = {
+  "hands-on": "Hands-On Learning",
+  "community-favorite": "Community Favorite",
+  popular: "Popular Session",
+  "limited-capacity": "High Attendance Interest",
+  networking: "Networking Opportunity",
+  "champion-led": "Featured Session",
+  executive: "TechXchange Highlight",
+  certification: "Editor's Pick",
+  "certification-booster": "Editor's Pick",
+};
+
+function hashSessionId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+export function resolvePublicSessionHighlight(
+  session: SessionIntelInput & { id?: string; title?: string },
+): string {
+  const badges = deriveSessionBadges(session);
+  for (const badge of badges) {
+    const label = BADGE_TO_PUBLIC_HIGHLIGHT[badge];
+    if (label) return label;
+  }
+  const key = session.id ?? session.title ?? "session";
+  const idx = hashSessionId(key) % PUBLIC_SESSION_HIGHLIGHTS.length;
+  return PUBLIC_SESSION_HIGHLIGHTS[idx];
+}
+
+export function buildPublicSessionReasons(
+  session: SessionIntelInput & { id?: string; title?: string },
+): string[] {
+  const badges = deriveSessionBadges(session);
+  const lines: string[] = [];
+  for (const badge of badges) {
+    const label = BADGE_TO_PUBLIC_HIGHLIGHT[badge];
+    if (label && !lines.includes(label)) lines.push(label);
+  }
+  if (lines.length === 0) {
+    lines.push(resolvePublicSessionHighlight(session));
+  }
+  const track = session.tracks?.primary_track?.trim();
+  if (track && lines.length < 3) {
+    lines.push(`${track} track spotlight`);
+  }
+  return lines.slice(0, 3);
+}
 
 export const SESSION_SIGNAL_LABELS: Record<SessionSignalId, string> = {
   track_match: "Track match",

@@ -157,7 +157,7 @@ export default function HuddleDetailSheet({
             <>
               <button type="button" className="action-chip" onClick={() => void huddles.extendHuddle(opp.id)}>Extend time</button>
               <button type="button" className="action-chip" onClick={() => void huddles.duplicateHuddleById(opp.id)}>Duplicate</button>
-              <button type="button" className="action-chip" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel</button>
+              <button type="button" className="action-chip action-chip--destructive" onClick={() => void huddles.cancelHuddle(opp.id)}>Cancel huddle</button>
             </>
           )}
           <button type="button" className="action-chip action-chip--ghost" onClick={() => void huddles.hideHuddleById(opp.id)}>

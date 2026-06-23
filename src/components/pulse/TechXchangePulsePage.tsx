@@ -12,6 +12,11 @@ import {
 } from "@/lib/roomSignals";
 import { loadPulseAudience, type PulseDataSource } from "@/lib/pulseDataLoader";
 import type { PulseAudienceData } from "@/lib/pulseAudienceSeed";
+import PulseDonutBox, {
+  alumniDonutSegments,
+  championDonutSegments,
+  hasChampionCommunityMix,
+} from "@/components/pulse/PulseDonutBox";
 
 function pct(count: number, total: number): number {
   if (total <= 0) return 0;
@@ -64,6 +69,9 @@ function NostalgiaBox({
   );
 }
 
+const JOURNEY_LEAD = "Veterans and newcomers shaping the same week.";
+const CHAMPION_LEAD = "Expert voices already in the room.";
+
 export default function TechXchangePulsePage() {
   const { user, enrolled } = useAuth();
   const [data, setData] = useState<PulseAudienceData | null>(null);
@@ -88,6 +96,30 @@ export default function TechXchangePulsePage() {
   }, [user]);
 
   const total = data?.audienceTotal ?? 0;
+  const identity = data?.identity;
+
+  const alumniSegments = identity
+    ? alumniDonutSegments(identity.alumni.returning, identity.alumni.firstTime)
+    : [];
+  const showJourney = alumniSegments.length >= 2;
+
+  const championSegments = identity
+    ? championDonutSegments(
+        identity.champion.ibm_champion,
+        identity.champion.former_champion,
+        identity.champion.interested,
+        identity.champion.champion_nominee,
+      )
+    : [];
+  const showChampionCommunity = identity
+    ? hasChampionCommunityMix(
+        identity.champion.ibm_champion,
+        identity.champion.former_champion,
+        identity.champion.interested,
+        identity.champion.champion_nominee,
+      )
+    : false;
+
   const connectionItems = data
     ? [
         { label: "Open to alumni connections", val: data.openToAlumni, tone: "var(--accent)" },
@@ -106,7 +138,7 @@ export default function TechXchangePulsePage() {
         <div className="section-kicker">Event pulse</div>
         <h1>The room is taking shape.</h1>
         <p style={{ color: "var(--muted)", maxWidth: "640px", marginTop: "12px", lineHeight: 1.55 }}>
-          Communities forming, conversations beginning, opportunities emerging across TechXchange.
+          A living read on who is arriving, what they care about, and the conversations waiting to begin.
         </p>
       </section>
 
@@ -121,8 +153,8 @@ export default function TechXchangePulsePage() {
           {showAggregatedDisclaimer && (
             <section className="section no-top-border pulse-disclaimer">
               <p className="pulse-disclaimer__copy">
-                Aggregated audience signals from registrations and stated intent — trends only, no individual profiles.
-                Sign in to personalize your Compass and add your signal to the room.
+                Directional audience trends from enrollment and stated intent. Aggregated only, never individual profiles.
+                Sign in to add your signal and shape what Compass recommends for you.
               </p>
             </section>
           )}
@@ -130,17 +162,32 @@ export default function TechXchangePulsePage() {
           <section className="story-section">
             <span className="narrative-kicker">Audience snapshot</span>
             <p className="pulse-snapshot-lead">
-              What attendees are here for — drawn from goals, learning tracks, career interests, and connection intent.
+              Intent, identity, and momentum in one view. See what people are building toward, where they come from, and who is returning to TechXchange.
             </p>
-            <div className="nostalgia-grid">
+            <div className="nostalgia-grid nostalgia-grid--pulse">
+              {showJourney && (
+                <PulseDonutBox
+                  title="TechXchange Journey"
+                  lead={JOURNEY_LEAD}
+                  segments={alumniSegments}
+                  split
+                />
+              )}
+              {showChampionCommunity && (
+                <PulseDonutBox
+                  title="Champion Community"
+                  lead={CHAMPION_LEAD}
+                  segments={championSegments}
+                />
+              )}
               <NostalgiaBox
-                title="Trending topics"
+                title="Trending Topics"
                 rows={top(data.trendingTopics, 6)}
                 total={total}
                 withBars
               />
               <NostalgiaBox
-                title="Where people are joining from"
+                title="Joining From"
                 rows={top(data.topCountries, 6)}
                 total={total}
                 renderLabel={name => (
@@ -148,77 +195,11 @@ export default function TechXchangePulsePage() {
                 )}
                 withBars
               />
-              <NostalgiaBox title="Shared universities" rows={top(data.topUniversities, 6)} total={total} withBars />
-              <NostalgiaBox title="Shared past employers" rows={top(data.topPastEmployers, 6)} total={total} withBars />
-              <NostalgiaBox title="Communities forming" rows={topCommunities(data.communities, 6)} total={total} withBars />
+              <NostalgiaBox title="Shared Universities" rows={top(data.topUniversities, 6)} total={total} withBars />
+              <NostalgiaBox title="Shared Employers" rows={top(data.topPastEmployers, 6)} total={total} withBars />
+              <NostalgiaBox title="Communities Forming" rows={topCommunities(data.communities, 6)} total={total} withBars />
             </div>
           </section>
-
-          {data.identity && total > 0 && (
-            <section className="story-section story-section--spacious">
-              <span className="narrative-kicker">Identity signals</span>
-              <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
-                Champion status, TechXchange history, and event-journey preferences — aggregated percentages only.
-              </p>
-              <div className="pulse-intent-cards pulse-intent-cards--identity">
-                <article className="pulse-intent-card pulse-identity-card">
-                  <h3 className="pulse-identity-card__title">TechXchange Alumni</h3>
-                  <ul className="pulse-identity-card__list">
-                    <li>
-                      <span>Returning attendees</span>
-                      <b>{pct(data.identity.alumni.returning, total)}%</b>
-                    </li>
-                    <li>
-                      <span>First-time attendees</span>
-                      <b>{pct(data.identity.alumni.firstTime, total)}%</b>
-                    </li>
-                    <li>
-                      <span>No response</span>
-                      <b>{pct(data.identity.alumni.noResponse, total)}%</b>
-                    </li>
-                  </ul>
-                </article>
-                <article className="pulse-intent-card pulse-identity-card">
-                  <h3 className="pulse-identity-card__title">Champion Signal</h3>
-                  <ul className="pulse-identity-card__list">
-                    <li>
-                      <span>IBM Champion</span>
-                      <b>{pct(data.identity.champion.ibm_champion, total)}%</b>
-                    </li>
-                    <li>
-                      <span>Former Champion</span>
-                      <b>{pct(data.identity.champion.former_champion, total)}%</b>
-                    </li>
-                    <li>
-                      <span>Interested in becoming Champion</span>
-                      <b>{pct(data.identity.champion.interested + data.identity.champion.champion_nominee, total)}%</b>
-                    </li>
-                    <li>
-                      <span>Not applicable / no response</span>
-                      <b>{pct(data.identity.champion.not_applicable + data.identity.champion.no_response, total)}%</b>
-                    </li>
-                  </ul>
-                </article>
-                <article className="pulse-intent-card pulse-identity-card">
-                  <h3 className="pulse-identity-card__title">Attendance Memory Opt-In</h3>
-                  <ul className="pulse-identity-card__list">
-                    <li>
-                      <span>Enabled</span>
-                      <b>{pct(data.identity.memory.enabled, total)}%</b>
-                    </li>
-                    <li>
-                      <span>Not enabled</span>
-                      <b>{pct(data.identity.memory.disabled, total)}%</b>
-                    </li>
-                    <li>
-                      <span>No response</span>
-                      <b>{pct(data.identity.memory.noResponse, total)}%</b>
-                    </li>
-                  </ul>
-                </article>
-              </div>
-            </section>
-          )}
         </>
       )}
 
@@ -226,7 +207,7 @@ export default function TechXchangePulsePage() {
         <section className="story-section story-section--spacious">
           <span className="narrative-kicker">Connection intent</span>
           <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
-            Attendees signaling openness to a type of conversation — a directional read on who is in the room.
+            Who is open to the conversations that make TechXchange personal: alumni ties, colleagues, careers, and mentoring.
           </p>
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (
@@ -244,12 +225,12 @@ export default function TechXchangePulsePage() {
           {user && enrolled ? (
             <>
               <h2>Your plan is already taking shape.</h2>
-              <p>These room signals are personalized for your goals on My Experience.</p>
+              <p>These signals become a focused Compass on My Experience, tuned to your goals and your story.</p>
             </>
           ) : (
             <>
-              <h2>Join the conversation.</h2>
-              <p>Build My Compass to add your signal and discover who is here for the same reasons you are.</p>
+              <h2>Add your signal to the room.</h2>
+              <p>Build My Compass to share your intent and discover who is here for the same reasons you are.</p>
             </>
           )}
         </div>

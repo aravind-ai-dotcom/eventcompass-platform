@@ -18,7 +18,7 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import ChampionDetailModal from "@/components/people/ChampionDetailModal";
-import { displayFirstName, deriveIntentSnapshot, deriveMatchReasons } from "@/lib/personCardHelpers";
+import { displayFirstName, deriveIntentSnapshot, deriveMatchReasons, primaryMatchReason } from "@/lib/personCardHelpers";
 import { isMutualWithInbound, SAMPLE_INBOUND_SIGNALS } from "@/lib/sampleConnectionSignals";
 import {
   buildConnectionRecord,
@@ -169,6 +169,7 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
   const isRemoved = pState.removedPeople.includes(c.id);
   const shownName = anonymous ? displayFirstName(c.display_name) : c.display_name;
   const matchReasons = deriveMatchReasons(c, profileSignals);
+  const primaryWhy = primaryMatchReason(c, profileSignals);
   const intentSnapshot = deriveIntentSnapshot(c);
   const isMutual = !anonymous && pState.isLoggedIn
     && pState.savedPeople.includes(c.id)
@@ -187,6 +188,12 @@ function ChampionCard({ c, pState, anonymous = false, profileSignals = [] }: {
           {!anonymous && (c.title || org) && (
             <p className="champion-person-role">
               {[c.title, org].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {!anonymous && primaryWhy && (
+            <p className="champion-person-match-summary">
+              <span className="champion-person-match-summary-kicker">Why meet</span>
+              {primaryWhy}
             </p>
           )}
           {isMutual && (

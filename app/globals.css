@@ -1308,34 +1308,168 @@ img { max-width: 100%; display: block; }
   text-transform: uppercase;
   color: var(--muted);
 }
-.home-proof-strip__identity {
-  list-style: none;
-  margin: 16px 0 0;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px 28px;
+.home-proof-strip__item--attendees {
+  grid-row: span 1;
 }
-.home-proof-strip__identity-item {
+.home-proof-strip__journey-embed {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.pulse-donut-box--embed {
+  padding: 0;
+  border: none;
+  background: transparent;
+  height: auto;
+}
+.pulse-donut-box__head--embed {
+  min-height: 0;
+  margin-bottom: 6px;
+}
+.pulse-donut-box__head--embed .pulse-donut-box__title {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+}
+.pulse-donut-box__chart-wrap--embed {
+  padding: 0 0 8px;
+  justify-content: flex-start;
+}
+.pulse-donut-box__legend--embed {
+  padding-top: 0;
+  border-top: none;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.pulse-donut-box__legend--embed li {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+}
+.pulse-donut-box__legend--embed .pulse-donut-box__legend-label {
+  flex: 1;
+  text-transform: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  font-weight: 560;
+}
+.pulse-donut-box__legend--embed .pulse-donut-box__legend-pct {
+  font-size: 0.82rem;
+}
+
+/* Pulse — donut snapshot cards */
+.pulse-donut-box {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 20px 18px 16px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 0;
+  height: 100%;
+}
+.pulse-donut-box--compact {
+  padding: 14px 0 0;
+  border: none;
+  background: transparent;
+}
+.pulse-donut-box__head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 4.5rem;
+  margin-bottom: 8px;
+}
+.pulse-donut-box--compact .pulse-donut-box__head {
+  min-height: 3.75rem;
+  margin-bottom: 6px;
+}
+.pulse-donut-box__title {
+  font-size: 0.72rem;
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--accent);
+  margin: 0;
+}
+.pulse-donut-box__lead {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.pulse-donut-box__chart-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 14px;
+  flex: 1;
+}
+.pulse-donut-box--compact .pulse-donut-box__chart-wrap {
+  padding: 4px 0 10px;
+}
+.pulse-donut__svg {
+  display: block;
+}
+.pulse-donut-box__legend {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(var(--legend-cols, 2), minmax(0, 1fr));
+  width: 100%;
+}
+.pulse-donut-box__legend--split {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+.pulse-donut-box__legend li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
   min-width: 0;
 }
-.home-proof-strip__identity-value {
+.pulse-donut-box__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.pulse-donut-box__legend-label {
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  line-height: 1.25;
+}
+.pulse-donut-box__legend-pct {
   font-size: 1rem;
   font-weight: 560;
   letter-spacing: -0.02em;
-  color: var(--soft);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
-.home-proof-strip__identity-label {
-  font-size: 0.72rem;
-  font-weight: 560;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  color: var(--muted);
+.nostalgia-grid--pulse {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+@media (min-width: 640px) {
+  .nostalgia-grid--pulse {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .nostalgia-grid--pulse {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+  }
 }
 
 /* Identity signal badges — My Compass */
@@ -1388,38 +1522,6 @@ img { max-width: 100%; display: block; }
   border-color: var(--line);
   background: var(--panel);
   color: var(--soft);
-}
-
-/* Pulse — identity signal tiles */
-.pulse-intent-cards--identity {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-.pulse-identity-card__title {
-  margin: 0 0 12px;
-  font-size: 0.78rem;
-  font-weight: 680;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.pulse-identity-card__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-.pulse-identity-card__list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 0.88rem;
-  color: var(--soft);
-}
-.pulse-identity-card__list b {
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-  font-weight: 650;
 }
 
 /* Home — Compass preview panel */
@@ -5181,29 +5283,91 @@ img { max-width: 100%; display: block; }
   color: var(--muted);
   opacity: 0.75;
 }
-.huddle-card--premium {
+.huddle-card--premium,
+.huddle-card--conversation {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
-  padding: 14px 14px 12px;
-  border: 1px solid rgba(15, 98, 254, 0.14);
-  border-radius: 4px;
-  background: linear-gradient(
-    155deg,
-    rgba(255, 255, 255, 0.035) 0%,
-    rgba(15, 98, 254, 0.025) 45%,
-    var(--panel) 100%
-  );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface, var(--panel)));
+  box-shadow: none;
+  transition: border-color 0.15s, background 0.15s;
 }
-.huddle-card--premium:hover {
-  border-color: rgba(15, 98, 254, 0.28);
-  box-shadow: 0 4px 16px -8px rgba(0, 0, 0, 0.35);
+.huddle-card--conversation .huddle-card__actions,
+.huddle-card--conversation .huddle-host-controls--visible {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 10px;
+  margin-top: 4px;
+  border-top: 1px dashed color-mix(in srgb, var(--accent) 22%, var(--line));
 }
-.huddle-card--premium.huddle-card--live {
-  border-color: rgba(15, 98, 254, 0.32);
-  box-shadow: inset 3px 0 0 var(--accent), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+.huddle-card--premium:hover,
+.huddle-card--conversation:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface, var(--panel)));
+}
+.huddle-card--premium.huddle-card--live,
+.huddle-card--conversation.huddle-card--live {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.huddle-host-controls--visible {
+  position: static;
+}
+.action-chip--destructive {
+  border-color: color-mix(in srgb, #da1e28 45%, var(--line)) !important;
+  color: #fa4d56 !important;
+  background: color-mix(in srgb, #da1e28 8%, transparent) !important;
+}
+.action-chip--destructive:hover {
+  background: color-mix(in srgb, #da1e28 14%, transparent) !important;
+}
+.start-conversation-input--error {
+  border-color: color-mix(in srgb, #da1e28 55%, var(--line)) !important;
+}
+.start-conversation-field-error {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: #fa4d56;
+  line-height: 1.35;
+}
+.session-intelligence-panel--public .session-intelligence-kicker {
+  color: var(--accent);
+  font-weight: 640;
+}
+.champion-person-match-summary {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--soft);
+}
+.champion-person-match-summary-kicker {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.focus-person-card__why {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--soft);
+}
+.focus-person-card__why-kicker {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 680;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 3px;
 }
 .huddle-card__meta {
   display: flex;

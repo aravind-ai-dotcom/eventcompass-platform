@@ -155,6 +155,30 @@ export default function FocusCompassExperience() {
         </FocusCompassGroup>
         )}
 
+        {showGroup("conversations") && isBlockVisible("live_huddles") && (
+        <FocusCompassGroup
+          id="conversations"
+          icon="huddles"
+          label="Live"
+          title="Conversations around you"
+          description="Time-sensitive invitations nearby. Join in person while the moment is open."
+          expanded={isGroupExpanded("conversations")}
+          onToggle={() => toggleGroup("conversations")}
+        >
+          <LiveOpportunities
+            huddles={data.huddlesController}
+            speakerCatalog={data.speakerCatalog}
+            participantUid={data.participantId}
+            userDisplayName={data.userDisplayName}
+            userFirstName={data.userFirstName}
+            hostJobTitle={data.hostJobTitle}
+            hostOrganization={data.hostOrganization}
+            visibleLimit={6}
+            embedded
+          />
+        </FocusCompassGroup>
+        )}
+
         {showGroup("learning") && isBlockVisible("learning_plan") && (
         <FocusCompassGroup
           id="learning"
@@ -268,30 +292,6 @@ export default function FocusCompassExperience() {
               </p>
             )}
           </div>
-        </FocusCompassGroup>
-        )}
-
-        {showGroup("conversations") && isBlockVisible("live_huddles") && (
-        <FocusCompassGroup
-          id="conversations"
-          icon="huddles"
-          label="Live"
-          title="Live conversations around you"
-          description="Lightweight in-person invitations — right people, right place, right time."
-          expanded={isGroupExpanded("conversations")}
-          onToggle={() => toggleGroup("conversations")}
-        >
-          <LiveOpportunities
-            huddles={data.huddlesController}
-            speakerCatalog={data.speakerCatalog}
-            participantUid={data.participantId}
-            userDisplayName={data.userDisplayName}
-            userFirstName={data.userFirstName}
-            hostJobTitle={data.hostJobTitle}
-            hostOrganization={data.hostOrganization}
-            visibleLimit={6}
-            embedded
-          />
         </FocusCompassGroup>
         )}
 

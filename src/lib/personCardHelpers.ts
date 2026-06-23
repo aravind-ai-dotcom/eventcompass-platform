@@ -1,4 +1,5 @@
-import { humanizeMatchReasons, humanizeScoringReason } from "@/lib/sessionRecommendationLine";
+import { buildPersonMatchReasons } from "@/lib/personIntelligence";
+import { humanizeScoringReason } from "@/lib/sessionRecommendationLine";
 
 interface PersonLike {
   display_name?: string;
@@ -55,22 +56,7 @@ export function deriveMatchReasons(
   person: PersonLike,
   profileSignals: string[] = [],
 ): string[] {
-  if (person.compass_reasons?.length) {
-    return humanizeMatchReasons(person.compass_reasons.slice(0, 2));
-  }
-  const domains = person.profile?.domains ?? [];
-  if (profileSignals.length > 0 && domains.length > 0) {
-    const overlap = domains.filter(d =>
-      profileSignals.some(s => d.toLowerCase().includes(s) || s.includes(d.toLowerCase())),
-    );
-    if (overlap.length > 0) {
-      return overlap.slice(0, 2).map(d => `Shared interest in ${d}`);
-    }
-  }
-  if (domains.length > 0) {
-    return [`Expertise in ${domains.slice(0, 2).join(" and ")}`];
-  }
-  return [];
+  return buildPersonMatchReasons(person, profileSignals).slice(0, 3);
 }
 
 /** Single primary WHY line for people cards. */
@@ -78,7 +64,7 @@ export function primaryMatchReason(
   person: PersonLike,
   profileSignals: string[] = [],
 ): string | null {
-  const reasons = deriveMatchReasons(person, profileSignals);
+  const reasons = buildPersonMatchReasons(person, profileSignals);
   if (reasons[0]) return reasons[0];
   if (person.compass_reasons?.[0]) {
     return humanizeScoringReason(person.compass_reasons[0]);

@@ -13,7 +13,7 @@ import {
   isCertificationActivityType,
   listCertificationJourneys,
 } from "@/lib/certificationProfile";
-import { buildSessionRecommendationReasons } from "@/lib/sessionIntelligence";
+import { buildPublicSessionReasons, buildSessionRecommendationReasons, resolvePublicSessionHighlight } from "@/lib/sessionIntelligence";
 import SessionIntelligencePanel from "@/components/sessions/SessionIntelligencePanel";
 import SessionDetailModal from "@/components/sessions/SessionDetailModal";
 import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
@@ -538,7 +538,7 @@ function RecommendedCard({
       </div>
       <h3>{session.title}</h3>
       {meta && <p className="session-card-meta">{meta}</p>}
-      <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" />
+      <SessionIntelligencePanel session={session} certLabel={certLabel} scoreSize="sm" anonymous={anonymous} />
       {sessionSpeakers.length > 0 && (
         <SessionSpeakerIntel
           speakers={sessionSpeakers}
@@ -560,7 +560,17 @@ function RecommendedCard({
 // CatalogRow — list row with compact inline actions
 // ─────────────────────────────────────────────────────────────────────────────
 
-function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sched?: ScheduleState; certLabel?: string | null }) {
+function CatalogRow({
+  session,
+  sched,
+  certLabel,
+  anonymous = false,
+}: {
+  session: ScoredSession;
+  sched?: ScheduleState;
+  certLabel?: string | null;
+  anonymous?: boolean;
+}) {
   const type = sessionType(session);
   const track = primaryTrack(session);
   const isCert = isCertificationActivityType(session);
@@ -570,7 +580,10 @@ function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sch
   const capacity = session.capacity?.available_slots ?? 0;
   const status = session.capacity?.status ?? "";
   const isDns = sched ? sched.doNotSuggest.includes(session.id) : false;
-  const topReason = buildSessionRecommendationReasons(session, certLabel)[0];
+  const topReason = anonymous
+    ? resolvePublicSessionHighlight(session)
+    : buildSessionRecommendationReasons(session, certLabel)[0];
+  const publicReasons = anonymous ? buildPublicSessionReasons(session) : [];
 
   return (
     <article style={isDns ? { opacity: 0.5 } : undefined}>
@@ -581,11 +594,16 @@ function CatalogRow({ session, sched, certLabel }: { session: ScoredSession; sch
         <h3>{session.title}</h3>
         <p>
           {isCert ? "Certification testing areas — no fixed time" : room}
-          {session.compass_score > 0 && (
+          {!anonymous && session.compass_score > 0 && (
             <> · <span style={{ color: "var(--accent)", fontWeight: 600 }}>{session.compass_score}% match</span></>
           )}
           {topReason && <> · {topReason}</>}
         </p>
+        {anonymous && publicReasons.length > 1 && (
+          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "4px 0 0" }}>
+            {publicReasons.slice(1).join(" · ")}
+          </p>
+        )}
         {sched && (
           <SessionActionBar session={session} sched={sched} compact={true} />
         )}
@@ -1228,7 +1246,7 @@ function SessionsPageContent() {
         ) : (
           <div className="catalog-list">
             {catalogSessions.map((s) => (
-              <CatalogRow key={s.id} session={s} sched={schedState} certLabel={certLabel} />
+              <CatalogRow key={s.id} session={s} sched={schedState} certLabel={certLabel} anonymous={!isLoggedIn} />
             ))}
           </div>
         )}

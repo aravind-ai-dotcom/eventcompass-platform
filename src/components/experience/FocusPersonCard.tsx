@@ -10,7 +10,6 @@ import { enrichLinkedInForPerson } from "@/lib/demoLinkedInEnrichment";
 import { hasMeetSignal, sendCanWeMeetSignal } from "@/lib/meetSignals";
 import { buildPersonIntelligence } from "@/lib/personIntelligence";
 import { downloadPersonVCard } from "@/lib/personVcard";
-import PersonMatchPanel from "@/components/people/PersonMatchPanel";
 import LinkedInProfileLink from "@/components/icons/LinkedInProfileLink";
 import type { RecommendedPerson, PersonActionState } from "@/components/people/RecommendedConnectionCard";
 import type { ConnectionBadgeId } from "@/types/connectionSignals";
@@ -70,6 +69,7 @@ export default function FocusPersonCard({
   const resolvedBadges = badges ?? deriveConnectionBadges(person, badgeContext);
   const linkedIn = enrichLinkedInForPerson(person);
   const intel = buildPersonIntelligence(person, profileSignals);
+  const primaryWhy = intel.reasons[0];
   const isSaved = actions?.savedPeople.includes(person.id) ?? false;
   const isHidden = actions?.hiddenPeople.includes(person.id) ?? false;
 
@@ -103,11 +103,12 @@ export default function FocusPersonCard({
         )}
       </header>
 
-      <PersonMatchPanel
-        person={person}
-        profileSignals={profileSignals}
-        badges={resolvedBadges}
-      />
+      {primaryWhy && (
+        <p className="focus-person-card__why">
+          <span className="focus-person-card__why-kicker">Why meet</span>
+          {primaryWhy}
+        </p>
+      )}
 
       <ConnectionBadgeRow badges={resolvedBadges} />
 

@@ -1,0 +1,246 @@
+"use client";
+
+export type DonutTone =
+  | "ibm-blue"
+  | "teal"
+  | "purple"
+  | "green"
+  | "gray"
+  | "muted";
+
+export interface DonutSegment {
+  label: string;
+  value: number;
+  tone?: DonutTone;
+}
+
+const TONE_VAR: Record<DonutTone, string> = {
+  "ibm-blue": "#0f62fe",
+  teal: "#009d9a",
+  purple: "#8a3ffc",
+  green: "#24a148",
+  gray: "#6f6f6f",
+  muted: "var(--line-strong)",
+};
+
+interface PulseDonutBoxProps {
+  title: string;
+  lead?: string;
+  segments: DonutSegment[];
+  compact?: boolean;
+  /** Two-segment split ring — balanced yin-yang style layout. */
+  split?: boolean;
+  /** Nested inside another stat column (Home proof strip). */
+  embed?: boolean;
+}
+
+function DonutChart({
+  segments,
+  size = 120,
+  stroke = 16,
+  split = false,
+}: {
+  segments: DonutSegment[];
+  size?: number;
+  stroke?: number;
+  split?: boolean;
+}) {
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+  if (total <= 0) return null;
+
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  if (split && segments.length === 2) {
+    const [a, b] = segments;
+    const aPct = a.value / total;
+    const aDash = aPct * circumference;
+    const bDash = circumference - aDash;
+
+    return (
+      <svg
+        className="pulse-donut__svg pulse-donut__svg--split"
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-hidden="true"
+      >
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke="var(--line)"
+          strokeWidth={stroke}
+          opacity={0.45}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke={TONE_VAR[a.tone ?? "ibm-blue"]}
+          strokeWidth={stroke}
+          strokeDasharray={`${aDash} ${circumference - aDash}`}
+          strokeLinecap="butt"
+          transform={`rotate(-90 ${cx} ${cy})`}
+        />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke={TONE_VAR[b.tone ?? "teal"]}
+          strokeWidth={stroke}
+          strokeDasharray={`${bDash} ${circumference - bDash}`}
+          strokeLinecap="butt"
+          transform={`rotate(${-90 + aPct * 360} ${cx} ${cy})`}
+        />
+        <circle cx={cx} cy={cy} r={radius - stroke * 0.55} fill="var(--panel)" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      className="pulse-donut__svg"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-hidden="true"
+    >
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius}
+        fill="none"
+        stroke="var(--line)"
+        strokeWidth={stroke}
+        opacity={0.55}
+      />
+      {segments.map((segment, index) => {
+        const fraction = segment.value / total;
+        const dash = fraction * circumference;
+        const gap = circumference - dash;
+        const startAngle = (segments.slice(0, index).reduce((sum, s) => sum + s.value, 0) / total) * 360;
+        const rotation = -90 + startAngle;
+        const color = TONE_VAR[segment.tone ?? "ibm-blue"];
+
+        return (
+          <circle
+            key={`${segment.label}-${index}`}
+            cx={cx}
+            cy={cy}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke}
+            strokeDasharray={`${dash} ${gap}`}
+            strokeLinecap="butt"
+            transform={`rotate(${rotation} ${cx} ${cy})`}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+export default function PulseDonutBox({
+  title,
+  lead,
+  segments,
+  compact = false,
+  split = false,
+  embed = false,
+}: PulseDonutBoxProps) {
+  const visible = segments.filter(s => s.value > 0);
+  const total = visible.reduce((sum, s) => sum + s.value, 0);
+  if (total <= 0) return null;
+
+  const pct = (value: number) => Math.round((value / total) * 100);
+  const chartSize = embed ? 64 : compact ? 88 : 120;
+  const chartStroke = embed ? 9 : compact ? 12 : 16;
+  const useSplit = split && visible.length === 2;
+
+  return (
+    <article
+      className={[
+        "pulse-donut-box",
+        compact ? " pulse-donut-box--compact" : "",
+        useSplit ? " pulse-donut-box--split" : "",
+        embed ? " pulse-donut-box--embed" : "",
+      ].join("")}
+    >
+      <div className={`pulse-donut-box__head${embed ? " pulse-donut-box__head--embed" : ""}`}>
+        <h3 className="pulse-donut-box__title">{title}</h3>
+        {lead && !embed && <p className="pulse-donut-box__lead">{lead}</p>}
+      </div>
+
+      <div className={`pulse-donut-box__chart-wrap${embed ? " pulse-donut-box__chart-wrap--embed" : ""}`}>
+        <DonutChart
+          segments={visible}
+          size={chartSize}
+          stroke={chartStroke}
+          split={useSplit}
+        />
+      </div>
+
+      <ul
+        className={[
+          "pulse-donut-box__legend",
+          useSplit ? " pulse-donut-box__legend--split" : "",
+          embed ? " pulse-donut-box__legend--embed" : "",
+        ].join("")}
+        style={{ ["--legend-cols" as string]: visible.length }}
+      >
+        {visible.map(segment => (
+          <li key={segment.label}>
+            <span
+              className="pulse-donut-box__swatch"
+              style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
+              aria-hidden="true"
+            />
+            <span className="pulse-donut-box__legend-label">{segment.label}</span>
+            <b className="pulse-donut-box__legend-pct">{pct(segment.value)}%</b>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
+export function alumniDonutSegments(returning: number, firstTime: number): DonutSegment[] {
+  return [
+    { label: "Returning Attendees", value: returning, tone: "ibm-blue" as const },
+    { label: "First-Time Attendees", value: firstTime, tone: "teal" as const },
+  ].filter(s => s.value > 0);
+}
+
+export function championDonutSegments(
+  ibm: number,
+  former: number,
+  interested: number,
+  nominee: number,
+): DonutSegment[] {
+  return [
+    { label: "IBM Champions", value: ibm, tone: "ibm-blue" as const },
+    { label: "Former Champions", value: former, tone: "purple" as const },
+    { label: "Champion Nominees", value: nominee, tone: "teal" as const },
+    { label: "Rising Champions", value: interested, tone: "green" as const },
+  ].filter(s => s.value > 0);
+}
+
+/** Public pulse — only show when at least two champion buckets have signal. */
+export function hasChampionCommunityMix(
+  ibm: number,
+  former: number,
+  interested: number,
+  nominee: number,
+): boolean {
+  const buckets = [ibm, former, interested, nominee].filter(n => n > 0);
+  return buckets.length >= 2;
+}

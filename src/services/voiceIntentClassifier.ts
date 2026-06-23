@@ -745,12 +745,12 @@ function buildFunDiscoveryResponse(
   const spokenBody = formatFunDiscoverySpoken(activities, huddle?.title);
   const displayBody = formatFunDiscoveryDisplay(activities, huddle?.title);
   const spoken = baseOverride ? `${baseOverride} ${spokenBody}` : spokenBody + highlightHint;
-  const display = baseOverride ? `${baseOverride} · ${displayBody}` : displayBody;
+  const display = displayBody;
 
   if (knowledge && !knowledge.spoken.toLowerCase().includes("check your agenda")) {
     return {
       spoken: `${knowledge.spoken} ${spoken}`,
-      display: `${knowledge.display} · ${display}`,
+      display: knowledge.display?.trim() || display,
       action: "navigate_experience",
     };
   }
@@ -762,6 +762,7 @@ function buildPersonaResponse(
   persona: PersonaKey | string,
   ctx: VoiceResponseContext,
   overrideBase?: string,
+  displayOverride?: string,
 ): VoiceResponse {
   const base =
     overrideBase ??
@@ -773,7 +774,7 @@ function buildPersonaResponse(
   const spoken = hasProfile
     ? `${base} On My Compass, your ${track} profile can sharpen session and people matches further.`
     : base;
-  return { spoken, display: `${persona.replace(/_/g, " ")} · ${base}` };
+  return { spoken, display: displayOverride?.trim() || base };
 }
 
 function buildCompassConversationResponse(norm: string, topicOverride?: string): VoiceResponse {
@@ -794,7 +795,12 @@ function buildVoiceKnowledgeResponse(
     case "Fun & Social":
       return buildFunDiscoveryResponse(ctx, norm, record.response);
     case "Persona Guidance":
-      return buildPersonaResponse(record.topic_key ?? "developer", ctx, record.response);
+      return buildPersonaResponse(
+        record.topic_key ?? "developer",
+        ctx,
+        record.response,
+        record.display_response,
+      );
     case "Compass Personality":
       return buildCompassConversationResponse(norm, record.topic_key);
     case "Certifications":
@@ -1267,7 +1273,7 @@ export function buildVoiceResponse(
       });
       return {
         spoken,
-        display: `${session.title} · ${sessionWhen(session)} · score ${session.compass_score ?? "—"}`,
+        display: `${session.title} · ${sessionWhen(session)}`,
         action:  "show_sessions",
       };
     }
