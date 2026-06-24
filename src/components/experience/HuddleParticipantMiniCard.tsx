@@ -10,7 +10,7 @@ interface HuddleParticipantMiniCardProps {
 }
 
 const BADGE_LABELS: Record<string, string> = {
-  champion: "Guide",
+  champion: "Champion",
   community: "Community",
   certification: "Certification",
 };

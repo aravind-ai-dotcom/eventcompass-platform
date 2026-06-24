@@ -1,6 +1,6 @@
 "use client";
 // =============================================================================
-// EventCompass — Enterprise SSO login button
+// EventCompass — IBM Login Button
 // src/components/auth/IBMLoginButton.tsx
 //
 // Calls signInWithIBM() from src/lib/auth.ts.
@@ -43,8 +43,8 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
         width:          "100%",
         height:         "48px",
         padding:        "0 20px",
-        border:         "1.5px solid var(--accent)",
-        background:     loading ? "rgb(var(--accent-rgb) / 0.12)" : "var(--accent)",
+        border:         "1.5px solid #0F62FE",
+        background:     loading ? "#0F62FE22" : "#0F62FE",
         color:          "#FFFFFF",
         fontSize:       "0.95rem",
         fontWeight:     650,
@@ -54,11 +54,14 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
         opacity:        loading ? 0.8 : 1,
         transition:     "background 0.15s, opacity 0.15s",
       }}
-      aria-label="Continue with enterprise SSO"
+      aria-label="Continue with IBMid"
     >
+      {/* IBM logo mark — inline SVG, no external dep */}
       {!loading && (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3a9 9 0 100 18 9 9 0 000-18zm0 2a7 7 0 110 14 7 7 0 010-14zm-1 3h2v5h-2V8zm0 6h2v2h-2v-2z" fill="#FFFFFF"/>
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" fill="transparent"/>
+          {/* IBM 8-bar logo simplified */}
+          <path d="M4 7h24v2H4zM4 11h24v2H4zM8 15h16v2H8zM8 19h16v2H8zM4 23h24v2H4zM4 27h24v2H4z" fill="#FFFFFF"/>
         </svg>
       )}
       {loading ? (
@@ -73,7 +76,7 @@ export default function IBMLoginButton({ onSuccess, onError }: Props) {
           Connecting…
         </span>
       ) : (
-        "Continue with SSO"
+        "Continue with IBMid"
       )}
     </button>
   );

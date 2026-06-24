@@ -18,7 +18,6 @@ import {
   type VoiceKnowledgeCategory,
   type VoiceKnowledgeRecord,
 } from "@/types/voiceKnowledge";
-import { CHART_COLORS } from "@/config/chartColors";
 
 const S = {
   bg: "#161616",
@@ -28,8 +27,10 @@ const S = {
   muted: "#a8a8a8",
   dim: "#6f6f6f",
   line: "#393939",
-  accent: CHART_COLORS.primaryLight,
+  accent: "#78a9ff",
 };
+
+const IBM = { blue: "#0f62fe", green: "#24a148", red: "#da1e28" };
 
 const fieldLabel: CSSProperties = {
   color: S.muted,
@@ -181,8 +182,8 @@ export function VoiceIntelligenceAdminView() {
             onClick={() => { setTab(t); setSelected(null); }}
             style={{
               padding: "7px 14px",
-              border: `1px solid ${tab === t ? CHART_COLORS.primary : S.line}`,
-              background: tab === t ? "rgb(var(--accent-rgb) / 0.12)" : "transparent",
+              border: `1px solid ${tab === t ? IBM.blue : S.line}`,
+              background: tab === t ? "rgba(15,98,254,0.12)" : "transparent",
               color: tab === t ? S.accent : S.soft,
               fontSize: "0.82rem",
               fontFamily: "inherit",
@@ -217,7 +218,7 @@ export function VoiceIntelligenceAdminView() {
           Seed if empty
         </button>
         {message && (
-          <span style={{ color: CHART_COLORS.green, fontSize: "0.82rem", alignSelf: "center" }}>{message}</span>
+          <span style={{ color: IBM.green, fontSize: "0.82rem", alignSelf: "center" }}>{message}</span>
         )}
       </div>
 
@@ -237,7 +238,7 @@ export function VoiceIntelligenceAdminView() {
             type="button"
             onClick={runTest}
             style={{
-              padding: "8px 16px", background: CHART_COLORS.primary, border: "none",
+              padding: "8px 16px", background: IBM.blue, border: "none",
               color: "#fff", fontSize: "0.82rem", fontFamily: "inherit", cursor: "pointer", fontWeight: 600,
             }}
           >
@@ -302,12 +303,12 @@ export function VoiceIntelligenceAdminView() {
                         key={r.id}
                         style={{
                           borderBottom: `1px solid ${S.line}`,
-                          background: selected?.id === r.id ? "rgb(var(--accent-rgb) / 0.08)" : "transparent",
+                          background: selected?.id === r.id ? "rgba(15,98,254,0.08)" : "transparent",
                         }}
                       >
                         <td style={{ padding: "10px", color: S.soft }}>{r.category}</td>
                         <td style={{ padding: "10px", color: S.text }}>{r.title}</td>
-                        <td style={{ padding: "10px", color: r.enabled ? CHART_COLORS.green : S.dim }}>
+                        <td style={{ padding: "10px", color: r.enabled ? IBM.green : S.dim }}>
                           {r.enabled ? "Yes" : "No"}
                         </td>
                         <td style={{ padding: "10px", color: S.muted }}>{formatUpdatedAt(r.updated_at)}</td>
@@ -414,7 +415,7 @@ function VoiceKnowledgeEditor({
         disabled={saving}
         onClick={() => onSave(draft)}
         style={{
-          padding: "8px 16px", background: CHART_COLORS.primary, border: "none",
+          padding: "8px 16px", background: IBM.blue, border: "none",
           color: "#fff", fontSize: "0.82rem", fontFamily: "inherit",
           cursor: saving ? "wait" : "pointer", fontWeight: 600, alignSelf: "flex-start",
         }}

@@ -59,7 +59,6 @@ import {
   type VoiceToneId,
 } from "@/lib/voiceTtsOptions";
 import CompassModuleHead from "@/components/experience/CompassModuleHead";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 /** Tiny silent WAV — unlocks audio playback during the user gesture. */
 const SILENT_WAV =
@@ -83,10 +82,10 @@ interface ActivityItem {
   secondaryAction?: { label: string; href: string };
 }
 
-const FALLBACK_ACTIVITIES: ActivityItem[] = [
-  { id:"arcade",    title:"Innovation Showcase",        type:"fun",            time:"9:00 AM – 4:00 PM", location:"Expo / Experience Zone", tags:["fun","community","networking"], demoFallback:true, primaryAction:{label:"View activity",href:"/txc/explore"},   secondaryAction:{label:"Add reminder",href:"/txc/enroll"} },
-  { id:"community", title:FORGE_LABELS.builderDay,    type:"special_program",                           location:"Main Hall",              tags:["community","learning"],         demoFallback:true, primaryAction:{label:"View program", href:"/txc/communities"},secondaryAction:{label:"Explore",href:"/txc/experience"} },
-  { id:"partner",   title:FORGE_LABELS.innovationDay, type:"special_program",                           location:"Innovation Pavilion",     tags:["partner","business","ecosystem"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/explore"},   secondaryAction:{label:"Explore",href:"/txc/experience"} },
+const DEMO_ACTIVITIES: ActivityItem[] = [
+  { id:"arcade",    title:"TechXchange Arcade",         type:"fun",            time:"9:00 AM – 4:00 PM", location:"Expo / Experience Zone", tags:["fun","community","networking"], demoFallback:true, primaryAction:{label:"View activity",href:"/txc/explore"},   secondaryAction:{label:"Add reminder",href:"/txc/enroll"} },
+  { id:"community", title:"Community Day",              type:"special_program",                           location:"Main Hall",              tags:["community","learning"],         demoFallback:true, primaryAction:{label:"View program", href:"/txc/communities"},secondaryAction:{label:"Explore",href:"/txc/experience"} },
+  { id:"partner",   title:"Partner Day",                type:"special_program",                           location:"Partner Pavilion",        tags:["partner","business","ecosystem"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/explore"},   secondaryAction:{label:"Explore",href:"/txc/experience"} },
   { id:"data",      title:"Data Technical Summit",      type:"special_program",                           tags:["data","technical","learning"],demoFallback:true, primaryAction:{label:"View summit",  href:"/txc/sessions"}, secondaryAction:{label:"Explore",href:"/txc/sessions"} },
   { id:"student",   title:"Student Dev Day",            type:"special_program",                           tags:["student","career","learning"],demoFallback:true, primaryAction:{label:"View program", href:"/txc/sessions"}, secondaryAction:{label:"Connect",href:"/txc/champions"} },
   { id:"expert",    title:"Meet the Expert",            type:"expert_access",                             tags:["expert","learning","networking"],demoFallback:true, primaryAction:{label:"Find experts",href:"/txc/champions"}, secondaryAction:{label:"View sessions",href:"/txc/sessions"} },
@@ -170,18 +169,6 @@ function getSpeechRecognition(): SpeechRecognitionConstructor | null {
   );
 }
 
-function isMobileVoiceDevice(): boolean {
-  if (typeof navigator === "undefined") return false;
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-}
-
-function configurePlaybackAudio(audio: HTMLAudioElement): HTMLAudioElement {
-  audio.preload = "auto";
-  audio.setAttribute("playsinline", "true");
-  audio.setAttribute("webkit-playsinline", "true");
-  return audio;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Compass Beacon — inline SVG icon (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,39 +181,39 @@ function CompassBeacon({ state, size = 28 }: { state: "idle" | "thinking" | "res
   return (
     <span
       aria-hidden="true"
-      className="compass-beacon-icon"
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", width: size, height: size }}
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}
     >
       <span
-        className="beacon-glow-radial compass-beacon-glow"
+        className="beacon-glow-radial"
         style={{
           position: "absolute", width: size + 10, height: size + 10, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(69,137,255,0.4) 0%, rgba(69,137,255,0) 70%)",
           animation: "beacon-glow 2.4s ease-in-out infinite", pointerEvents: "none",
         }}
       />
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none"
         xmlns="http://www.w3.org/2000/svg" style={{ position: "relative", zIndex: 1 }}>
-        <circle className="compass-beacon-ring" cx={cx} cy={cy} r={12.5} strokeWidth="0.7"
+        <circle cx={cx} cy={cy} r={12.5} stroke="rgba(69,137,255,0.22)" strokeWidth="0.7"
           style={{ transformOrigin: `${cx}px ${cy}px`,
             animation: isThinking ? "beacon-think 1.1s linear infinite" : "beacon-ring-1 2s ease-in-out 0.15s infinite" }} />
-        <circle className="compass-beacon-ring compass-beacon-ring--mid" cx={cx} cy={cy} r={9.5} strokeWidth="0.85"
+        <circle cx={cx} cy={cy} r={9.5} stroke="rgba(69,137,255,0.38)" strokeWidth="0.85"
           style={{ transformOrigin: `${cx}px ${cy}px`,
             animation: isThinking ? "beacon-think 1.6s linear infinite reverse" : "beacon-ring-2 2.6s ease-in-out 0.3s infinite" }} />
-        <circle className="compass-beacon-ring compass-beacon-ring--inner" cx={cx} cy={cy} r={6.5} strokeWidth="0.95"
+        <circle cx={cx} cy={cy} r={6.5} stroke="rgba(69,137,255,0.6)" strokeWidth="0.95"
           style={{ transformOrigin: `${cx}px ${cy}px`,
             animation: isThinking ? "beacon-think 1.1s linear infinite" : "beacon-ring-1 2s ease-in-out infinite" }} />
-        <g className="beacon-star-group compass-beacon-star"
+        <g className="beacon-star-group"
           style={{ transformOrigin: `${cx}px ${cy}px`, animation: "beacon-star 2.8s ease-in-out infinite" }}>
-          <path d={`M${cx} ${cy-4.8}L${cx-.95} ${cy-1.4}L${cx} ${cy-2.4}L${cx+.95} ${cy-1.4}Z`} />
-          <path d={`M${cx} ${cy+4.8}L${cx-.95} ${cy+1.4}L${cx} ${cy+2.4}L${cx+.95} ${cy+1.4}Z`} />
-          <path d={`M${cx+4.8} ${cy}L${cx+1.4} ${cy-.95}L${cx+2.4} ${cy}L${cx+1.4} ${cy+.95}Z`} />
-          <path d={`M${cx-4.8} ${cy}L${cx-1.4} ${cy-.95}L${cx-2.4} ${cy}L${cx-1.4} ${cy+.95}Z`} />
-          <circle className="compass-beacon-core" cx={cx} cy={cy} r={1.4} />
-          <circle className="compass-beacon-halo" cx={cx} cy={cy} r={2.6} />
-          <path className="compass-beacon-spoke" d={`M${cx+2.8} ${cy-2.8}L${cx+1.2} ${cy-1.2}`} strokeWidth="0.7" strokeLinecap="round" />
-          <path className="compass-beacon-spoke" d={`M${cx-2.8} ${cy-2.8}L${cx-1.2} ${cy-1.2}`} strokeWidth="0.7" strokeLinecap="round" />
-          <path className="compass-beacon-spoke" d={`M${cx+2.8} ${cy+2.8}L${cx+1.2} ${cy+1.2}`} strokeWidth="0.7" strokeLinecap="round" />
-          <path className="compass-beacon-spoke" d={`M${cx-2.8} ${cy+2.8}L${cx-1.2} ${cy+1.2}`} strokeWidth="0.7" strokeLinecap="round" />
+          <path d={`M${cx} ${cy-4.8}L${cx-.95} ${cy-1.4}L${cx} ${cy-2.4}L${cx+.95} ${cy-1.4}Z`} fill="rgba(69,137,255,1)" />
+          <path d={`M${cx} ${cy+4.8}L${cx-.95} ${cy+1.4}L${cx} ${cy+2.4}L${cx+.95} ${cy+1.4}Z`} fill="rgba(69,137,255,1)" />
+          <path d={`M${cx+4.8} ${cy}L${cx+1.4} ${cy-.95}L${cx+2.4} ${cy}L${cx+1.4} ${cy+.95}Z`} fill="rgba(69,137,255,1)" />
+          <path d={`M${cx-4.8} ${cy}L${cx-1.4} ${cy-.95}L${cx-2.4} ${cy}L${cx-1.4} ${cy+.95}Z`} fill="rgba(69,137,255,1)" />
+          <circle cx={cx} cy={cy} r={1.4} fill="rgba(255,255,255,0.95)" />
+          <circle cx={cx} cy={cy} r={2.6} fill="rgba(69,137,255,0.2)" />
+          <path d={`M${cx+2.8} ${cy-2.8}L${cx+1.2} ${cy-1.2}`} stroke="rgba(69,137,255,0.5)" strokeWidth="0.7" strokeLinecap="round" />
+          <path d={`M${cx-2.8} ${cy-2.8}L${cx-1.2} ${cy-1.2}`} stroke="rgba(69,137,255,0.5)" strokeWidth="0.7" strokeLinecap="round" />
+          <path d={`M${cx+2.8} ${cy+2.8}L${cx+1.2} ${cy+1.2}`} stroke="rgba(69,137,255,0.5)" strokeWidth="0.7" strokeLinecap="round" />
+          <path d={`M${cx-2.8} ${cy+2.8}L${cx-1.2} ${cy+1.2}`} stroke="rgba(69,137,255,0.5)" strokeWidth="0.7" strokeLinecap="round" />
         </g>
       </svg>
     </span>
@@ -276,7 +263,7 @@ function CompactCard({
 
   const accentChip: React.CSSProperties = {
     ...chipBase,
-    background: "var(--purple-bg)",
+    background: "rgba(15,98,254,0.08)",
     color: "var(--accent)",
     borderColor: "var(--accent)",
     cursor: "default",
@@ -295,7 +282,7 @@ function CompactCard({
         <p className="voice-compact-why">{why}</p>
       )}
       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", paddingTop: "2px" }}>
-        <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "var(--purple-border)" }}>
+        <a href={infoHref} style={{ ...chipBase, color: "var(--accent)", borderColor: "rgba(15,98,254,0.35)" }}>
           Info ↗
         </a>
         {sessionId && !scheduled && (
@@ -397,7 +384,6 @@ export default function VoiceCompassButton({
   const [errorMsg,   setErrorMsg]   = useState("");
 
   const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null);
-  const [pendingSpeechText, setPendingSpeechText] = useState<string | null>(null);
   const [voiceTone, setVoiceTone] = useState<VoiceToneId>("guide");
   const [activeSession, setActiveSession] = useState<ScoredSession | null>(null);
 
@@ -445,10 +431,16 @@ export default function VoiceCompassButton({
     };
   }, []);
 
-  /** Prime audio during the user gesture so async TTS playback is allowed on iOS. */
+  /** Prime audio during the user gesture so async TTS playback is allowed. */
   const primeAudioUnlock = useCallback(() => {
-    const unlockedAudio = audioRef.current ?? configurePlaybackAudio(new Audio());
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    const unlockedAudio = new Audio();
+    unlockedAudio.preload = "auto";
     audioRef.current = unlockedAudio;
+
     unlockedAudio.muted = true;
     unlockedAudio.src = SILENT_WAV;
     void unlockedAudio.play().then(() => {
@@ -459,49 +451,24 @@ export default function VoiceCompassButton({
       unlockedAudio.load();
     }).catch(() => {
       unlockedAudio.muted = false;
+      unlockedAudio.removeAttribute("src");
+      unlockedAudio.load();
     });
 
     return unlockedAudio;
   }, []);
 
-  const speakWithBrowserVoice = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return false;
-
+  const fallbackToSpeechSynthesis = useCallback((text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    console.log("[VoiceCompass] Falling back to speechSynthesis");
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
     synthRef.current = utterance;
-
-    const start = () => {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    };
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        start();
-      };
-      window.speechSynthesis.getVoices();
-    } else {
-      start();
-    }
-    return true;
+    window.speechSynthesis.speak(utterance);
   }, []);
-
-  const fallbackToSpeechSynthesis = useCallback((text: string) => {
-    if (isMobileVoiceDevice()) {
-      console.warn("[VoiceCompass] Mobile browser voice requires tap — queuing speech");
-      setPendingSpeechText(text);
-      return;
-    }
-    console.log("[VoiceCompass] Falling back to speechSynthesis");
-    if (!speakWithBrowserVoice(text)) {
-      setPendingSpeechText(text);
-    }
-  }, [speakWithBrowserVoice]);
 
   // ── Cloud TTS → browser synthesis fallback only when fetch fails ─────────
   const speakCloudVoice = useCallback(async (
@@ -534,9 +501,14 @@ export default function VoiceCompassButton({
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.warn("[VoiceCompass] Cloud TTS unavailable — using browser voice", res.status, errorText.slice(0, 120));
-        fallbackToSpeechSynthesis(text);
-        return;
+        if (
+          (res.status === 502 || res.status === 503) &&
+          /default credentials|credentials|not configured/i.test(errorText)
+        ) {
+          fallbackToSpeechSynthesis(text);
+          return;
+        }
+        throw new Error(`/api/voice returned ${res.status}: ${errorText}`);
       }
 
       const contentType = res.headers.get("content-type") ?? "";
@@ -554,11 +526,16 @@ export default function VoiceCompassButton({
       blobUrl = URL.createObjectURL(blob);
       console.log("[VoiceCompass] Audio URL created", { bytes: blob.size, type: blob.type });
 
-      const targetAudio = audio ?? configurePlaybackAudio(audioRef.current ?? new Audio());
-      audioRef.current = targetAudio;
+      const targetAudio = audio ?? (() => {
+        const fallback = new Audio();
+        fallback.preload = "auto";
+        audioRef.current = fallback;
+        return fallback;
+      })();
 
       targetAudio.src = blobUrl;
       targetAudio.load();
+      audioRef.current = targetAudio;
       cloudAudioReady = true;
 
       targetAudio.onended = () => {
@@ -573,7 +550,6 @@ export default function VoiceCompassButton({
       try {
         await targetAudio.play();
         console.log("[VoiceCompass] Cloud playback started");
-        setPendingSpeechText(null);
       } catch (playErr) {
         if (playErr instanceof DOMException && playErr.name === "NotAllowedError") {
           console.warn("[VoiceCompass] Playback blocked — showing Play Compass voice");
@@ -676,6 +652,10 @@ export default function VoiceCompassButton({
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+    if (audioRef.current?.src) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
 
     setVoiceState("listening");
     setTranscript("");
@@ -743,7 +723,6 @@ export default function VoiceCompassButton({
     if (prev) URL.revokeObjectURL(prev);
     return null;
   });
-  setPendingSpeechText(null);
 }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -763,7 +742,7 @@ export default function VoiceCompassButton({
     : isGenerating  ? "Generating…"
     : showResult    ? "↻  Ask Again"
     : showError     ? "↻  Try Again"
-    : FORGE_PRODUCT.askCompassAi;
+    : "Ask Compass";
 
   function handleButtonClick() {
     if (isProcessing) return;
@@ -781,7 +760,8 @@ export default function VoiceCompassButton({
   const playPendingVoice = useCallback(async () => {
     const url = pendingAudioUrl;
     if (!url) return;
-    const audio = configurePlaybackAudio(audioRef.current ?? new Audio());
+    const audio = audioRef.current ?? new Audio();
+    audio.preload = "auto";
     audio.src = url;
     audio.load();
     audioRef.current = audio;
@@ -800,27 +780,17 @@ export default function VoiceCompassButton({
     }
   }, [pendingAudioUrl]);
 
-  const playPendingSpeech = useCallback(() => {
-    const text = pendingSpeechText;
-    if (!text) return;
-    if (speakWithBrowserVoice(text)) {
-      setPendingSpeechText(null);
-    }
-  }, [pendingSpeechText, speakWithBrowserVoice]);
-
-  const needsPlaybackTap = Boolean(pendingAudioUrl || pendingSpeechText);
-
   // Fallback activities matched to last transcript
   function getFallbackActivities(): ActivityItem[] {
     const t = transcript.toLowerCase();
     if (t.includes("fun") || t.includes("entertain") || t.includes("social"))
-      return FALLBACK_ACTIVITIES.filter(a => a.tags.includes("fun"));
+      return DEMO_ACTIVITIES.filter(a => a.tags.includes("fun"));
     if (t.includes("community") || t.includes("meet") || t.includes("people"))
-      return FALLBACK_ACTIVITIES.filter(a => a.tags.includes("community")).slice(0, 2);
+      return DEMO_ACTIVITIES.filter(a => a.tags.includes("community")).slice(0, 2);
     if (t.includes("certif") || t.includes("learn") || t.includes("session"))
-      return FALLBACK_ACTIVITIES.filter(a => a.tags.includes("learning")).slice(0, 2);
+      return DEMO_ACTIVITIES.filter(a => a.tags.includes("learning")).slice(0, 2);
     if (t.includes("partner"))
-      return FALLBACK_ACTIVITIES.filter(a => a.tags.includes("partner"));
+      return DEMO_ACTIVITIES.filter(a => a.tags.includes("partner"));
     return [];
   }
 
@@ -883,11 +853,11 @@ export default function VoiceCompassButton({
         .vcb-btn-results { background: var(--panel);   border-color: var(--accent);  color: var(--accent); }
         .vcb-btn-error   { background: var(--panel);   border-color: #DC2626;        color: #DC2626; }
         .compass-beacon-btn:hover .beacon-glow-radial { opacity:.7!important; }
-        .compass-beacon-btn:hover .beacon-star-group  { filter:drop-shadow(0 0 2px rgb(var(--accent-rgb) / 0.5)); }
+        .compass-beacon-btn:hover .beacon-star-group  { filter:drop-shadow(0 0 2px rgba(69,137,255,.9)); }
         .vcb-btn-companion {
           width: 72px; height: 72px; border-radius: 50%; padding: 0;
           justify-content: center; flex-shrink: 0;
-          box-shadow: 0 0 0 6px rgb(var(--accent-rgb) / 0.08);
+          box-shadow: 0 0 0 6px rgba(120, 169, 255, 0.08);
         }
         .vcb-btn-companion .vcb-btn-label { display: none; }
         @media(max-width:480px){ .vcb-btn:not(.vcb-btn-companion){width:100%;justify-content:center;} }
@@ -902,9 +872,9 @@ export default function VoiceCompassButton({
           <>
             {!embedInCommandCenter && (
               <CompassModuleHead
-                kicker={FORGE_PRODUCT.compassIntelligence}
-                title={`Sessions · Guides · ${FORGE_LABELS.learningPaths} · ${FORGE_LABELS.communities}`}
-                description={`Navigation and guidance for your week at ${FORGE_EVENT.shortName}.`}
+                kicker="Ask Compass"
+                title="Sessions. People. Certifications. IBM Community."
+                description="What would you like help with?"
               />
             )}
             <p className="compass-live-signal" aria-live="polite">
@@ -922,7 +892,6 @@ export default function VoiceCompassButton({
                     aria-label={btnLabel}
                     className={[
                       "ask-compass-trigger",
-                      "ask-compass-trigger--companion",
                       isListening  ? "ask-compass-trigger--listening"
                       : isProcessing ? "ask-compass-trigger--processing"
                       : showResult   ? "ask-compass-trigger--result"
@@ -930,29 +899,26 @@ export default function VoiceCompassButton({
                       :                "",
                     ].join(" ")}
                   >
-                    <span className="ask-compass-trigger-icon-wrap" aria-hidden="true">
-                      {isListening ? (
-                        <span className="ask-compass-trigger-wave">
-                          {[0,1,2,3,4].map(i => (
-                            <span key={i} style={{
-                              animation: `compass-wave ${0.45 + i * 0.1}s ease-in-out infinite`,
-                              animationDelay: `${i * 0.07}s`,
-                            }} />
-                          ))}
-                        </span>
-                      ) : (
-                        <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={44} />
-                      )}
-                    </span>
-                    <span className="ask-compass-trigger-copy">
-                      <span className="ask-compass-trigger-title">{FORGE_PRODUCT.askCompassAi}</span>
-                      <span className="ask-compass-trigger-sub">
-                        {isListening ? "Listening…"
-                          : isProcessing ? "Thinking…"
-                          : showResult ? "Tap to ask again"
-                          : showError ? "Tap to try again"
-                          : "Sessions, guides, and your next moment."}
+                    <span className="ask-compass-trigger-glow" aria-hidden="true" />
+                    {isListening ? (
+                      <span aria-hidden="true" className="ask-compass-trigger-wave">
+                        {[0,1,2,3,4].map(i => (
+                          <span key={i} style={{
+                            animation: `compass-wave ${0.45 + i * 0.1}s ease-in-out infinite`,
+                            animationDelay: `${i * 0.07}s`,
+                          }} />
+                        ))}
                       </span>
+                    ) : (
+                      <CompassBeacon state={isProcessing ? "thinking" : showResult ? "result" : "idle"} size={48} />
+                    )}
+                    <span className="ask-compass-trigger-title">Ask Compass</span>
+                    <span className="ask-compass-trigger-sub">
+                      {isListening ? "Listening…"
+                        : isProcessing ? "Thinking…"
+                        : showResult ? "Tap to ask again"
+                        : showError ? "Tap to try again"
+                        : "Prioritize your next move."}
                     </span>
                   </button>
                 )}
@@ -964,7 +930,7 @@ export default function VoiceCompassButton({
                   <p className="voice-assistant-prompt-text">&ldquo;{transcript}&rdquo;</p>
                 ) : (
                   <p className="voice-assistant-prompt-text">
-                    {isListening ? "Listening…" : "What should Compass prioritize?"}
+                    {isListening ? "Listening…" : "What should I do next?"}
                   </p>
                 )}
                 <p className="voice-assistant-prompt-hint">
@@ -974,7 +940,7 @@ export default function VoiceCompassButton({
 
               {/* Right — response panel */}
               <div className="voice-assistant-response" aria-live="polite">
-                <p className="voice-assistant-response-kicker">Compass guidance</p>
+                <p className="voice-assistant-response-kicker">Compass says</p>
                 {showError && (
                   <p className="voice-assistant-response-body" style={{ color: "#DC2626" }}>{errorMsg}</p>
                 )}
@@ -985,7 +951,7 @@ export default function VoiceCompassButton({
                   <p className="voice-assistant-response-body">{response.display}</p>
                 )}
                 {!showResult && !showError && !isProcessing && (
-                  <p className="voice-assistant-response-idle">Activate guidance to begin.</p>
+                  <p className="voice-assistant-response-idle">Tap the microphone to start.</p>
                 )}
               </div>
             </div>
@@ -1000,22 +966,21 @@ export default function VoiceCompassButton({
               </p>
             )}
 
-            {needsPlaybackTap && (
+            {pendingAudioUrl && (
               <button
                 type="button"
-                className="voice-playback-cta"
-                onClick={() => {
-                  if (pendingAudioUrl) void playPendingVoice();
-                  else playPendingSpeech();
+                onClick={() => { void playPendingVoice(); }}
+                style={{
+                  marginTop: "14px",
+                  border: "1px solid var(--accent)",
+                  background: "rgba(15,98,254,0.06)",
+                  color: "var(--accent)",
+                  padding: "8px 12px",
+                  fontSize: "0.84rem",
+                  cursor: "pointer",
                 }}
               >
-                <span className="voice-playback-cta__icon" aria-hidden="true">▶</span>
-                <span className="voice-playback-cta__copy">
-                  <span className="voice-playback-cta__title">Tap to hear Compass</span>
-                  <span className="voice-playback-cta__sub">
-                    {pendingAudioUrl ? "Google voice ready" : "Browser voice ready"}
-                  </span>
-                </span>
+                ▶ Play Compass voice
               </button>
             )}
 
@@ -1035,8 +1000,8 @@ export default function VoiceCompassButton({
                 )}
                 {showChampionCard && topChampion && (
                   <CompactCard
-                    title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? FORGE_LABELS.guide}
-                    type={FORGE_LABELS.guide}
+                    title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
+                    type="Champion"
                     meta={champMeta || undefined}
                     why={champWhy}
                     infoHref="/txc/champions"
@@ -1063,12 +1028,12 @@ export default function VoiceCompassButton({
                     )}
                     {response.action === "show_champions" && (
                       <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                        View {FORGE_LABELS.guides} →
+                        View Champions →
                       </a>
                     )}
                     {response.action === "show_communities" && (
                       <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                        {FORGE_LABELS.communities} →
+                        IBM Community →
                       </a>
                     )}
                   </div>
@@ -1141,7 +1106,7 @@ export default function VoiceCompassButton({
         {/* ── Idle hint — minimal one-liner ─────────────────────────────────── */}
         {voiceState === "idle" && !unsupported && (
           <p style={{ color: "var(--muted)", fontSize: "0.73rem", margin: "7px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
-            Try: &ldquo;What is {FORGE_EVENT.name}?&rdquo; &middot; &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Anything fun tonight?&rdquo;
+            Try: &ldquo;What is TechXchange?&rdquo; &middot; &ldquo;What&rsquo;s next?&rdquo; &middot; &ldquo;Anything fun tonight?&rdquo;
           </p>
         )}
 
@@ -1161,22 +1126,21 @@ export default function VoiceCompassButton({
               </p>
             )}
 
-            {needsPlaybackTap && (
+            {pendingAudioUrl && (
               <button
                 type="button"
-                className="voice-playback-cta"
-                onClick={() => {
-                  if (pendingAudioUrl) void playPendingVoice();
-                  else playPendingSpeech();
+                onClick={() => { void playPendingVoice(); }}
+                style={{
+                  marginTop: "10px",
+                  border: "1px solid var(--accent)",
+                  background: "rgba(15,98,254,0.06)",
+                  color: "var(--accent)",
+                  padding: "8px 12px",
+                  fontSize: "0.84rem",
+                  cursor: "pointer",
                 }}
               >
-                <span className="voice-playback-cta__icon" aria-hidden="true">▶</span>
-                <span className="voice-playback-cta__copy">
-                  <span className="voice-playback-cta__title">Tap to hear Compass</span>
-                  <span className="voice-playback-cta__sub">
-                    {pendingAudioUrl ? "Google voice ready" : "Browser voice ready"}
-                  </span>
-                </span>
+                ▶ Play Compass voice
               </button>
             )}
 
@@ -1195,8 +1159,8 @@ export default function VoiceCompassButton({
 
             {showChampionCard && topChampion && (
               <CompactCard
-                title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? FORGE_LABELS.guide}
-                type={FORGE_LABELS.guide}
+                title={(topChampion as unknown as Record<string, unknown>).display_name as string ?? "Champion"}
+                type="Champion"
                 meta={champMeta || undefined}
                 why={champWhy}
                 infoHref="/txc/champions"
@@ -1228,12 +1192,12 @@ export default function VoiceCompassButton({
                 )}
                 {response.action === "show_champions" && (
                   <a href="/txc/champions" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                    View {FORGE_LABELS.guides} →
+                    View Champions →
                   </a>
                 )}
                 {response.action === "show_communities" && (
                   <a href="/txc/communities" style={{ color: "var(--accent)", fontSize: "0.84rem", textDecoration: "none" }}>
-                    {FORGE_LABELS.communities} →
+                    IBM Community →
                   </a>
                 )}
                 {response.action === "show_day" && (

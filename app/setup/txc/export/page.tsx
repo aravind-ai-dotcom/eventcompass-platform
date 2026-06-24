@@ -97,12 +97,12 @@ export default function TxcExportSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="FORGE 2027 Compass"
+      eventLabel="TechXchange Compass"
       title="Export Documentation"
-      subtitle="Download Compass AI knowledge for study and review, plus legacy knowledgeBase exports"
+      subtitle="Download Voice Compass knowledge for study and review, plus legacy knowledgeBase exports"
     >
       <section className="setup-export-section" style={{ marginBottom: "32px" }}>
-        <h2>Compass AI knowledge (canonical)</h2>
+        <h2>Voice Compass knowledge (canonical)</h2>
         <p style={{ margin: "0 0 14px", color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.5, maxWidth: "42rem" }}>
           Unified voice knowledge for study and editorial review — {voiceLoading ? "loading…" : `${voiceSummary.total} records`}
           {" "}from <code>voice_knowledge</code>. Excel includes Voice Knowledge, Categories, Review Notes, and Needs Review sheets.
@@ -152,7 +152,7 @@ export default function TxcExportSetupPage() {
       <section className="setup-export-section">
         <h2>Legacy knowledgeBase</h2>
         <p style={{ margin: "0 0 14px", color: "var(--muted)", fontSize: "0.9rem", lineHeight: 1.5, maxWidth: "42rem" }}>
-          Guide, Event Logistics, and Compass Q&amp;A records from <code>knowledgeBase</code> ({records.length} records).
+          Champion, Event Logistics, and Compass Q&amp;A records from <code>knowledgeBase</code> ({records.length} records).
         </p>
         <div className="setup-toolbar">
           <button type="button" className="setup-btn setup-btn--secondary" onClick={downloadJson}>Export JSON</button>

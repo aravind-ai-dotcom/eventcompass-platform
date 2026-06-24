@@ -2,7 +2,6 @@
 
 import { displayFirstName } from "@/lib/personCardHelpers";
 import type { ScoredSpeaker } from "@/types/speaker";
-import { FORGE_LABELS } from "@/config/forgeBrand";
 
 interface SessionSpeakerIntelProps {
   speakers: ScoredSpeaker[];
@@ -46,7 +45,7 @@ export default function SessionSpeakerIntel({
           ) : (
             <p className="session-speaker-intel__meta">
               {[
-                primary.isChampion ? FORGE_LABELS.guide : null,
+                primary.isChampion ? "IBM Champion" : null,
                 primary.expertiseLabel ?? primary.expertiseAreas[0],
               ]
                 .filter(Boolean)

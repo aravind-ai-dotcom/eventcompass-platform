@@ -19,7 +19,7 @@ export default function TxcAnalyticsSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="FORGE 2027 Compass"
+      eventLabel="TechXchange Compass"
       title="Knowledge Analytics"
       subtitle="organizations/ibm/events/txc2026/knowledgeAnalytics"
     >
@@ -47,7 +47,7 @@ export default function TxcAnalyticsSetupPage() {
               ))}
             </tbody>
           </table>
-          {rows.length === 0 && <p>No analytics events yet. Ask Compass AI a knowledge question.</p>}
+          {rows.length === 0 && <p>No analytics events yet. Ask Voice Compass a knowledge question.</p>}
         </div>
       )}
     </SetupShell>

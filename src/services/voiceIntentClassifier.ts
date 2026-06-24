@@ -67,7 +67,6 @@ import {
   findEventMomentByQuery,
 } from "@/lib/eventMoments";
 import type { VoiceExperience } from "@/services/voice/voiceDictionaryTypes";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import {
   blocksEventRecommendations,
   classifyEventScope,
@@ -773,7 +772,7 @@ function buildPersonaResponse(
   const track = topTrack(ctx);
   const hasProfile = (ctx.participantTracks?.length ?? 0) > 0 || (ctx.participantGoals?.length ?? 0) > 0;
   const spoken = hasProfile
-    ? `${base} On ${FORGE_PRODUCT.myJourney}, your ${track} profile can sharpen session and people matches further.`
+    ? `${base} On My Compass, your ${track} profile can sharpen session and people matches further.`
     : base;
   return { spoken, display: displayOverride?.trim() || base };
 }
@@ -907,7 +906,7 @@ function tryConciergeRecovery(
     const keywords = champion.shared_keywords?.slice(0, 2).join(" and ") ?? topTrack(ctx);
     const spoken = fill(pickTemplate([
       "I found {name} because their expertise overlaps with {match}.",
-      `{name} is a strong match on {match}. Check ${FORGE_LABELS.guides} for details.`,
+      "{name} is a strong match on {match}. Check Champions for details.",
     ], seed), { name, match: keywords });
     const org = champion.organization ?? champion.company ?? "";
     return {
@@ -949,12 +948,12 @@ function isEnrolled(ctx: VoiceResponseContext): boolean {
 function notEnrolledResponse(locale: VoiceLocale = "en-US"): VoiceResponse {
   const spoken =
     locale === "zh-CN"
-      ? `请先构建 ${FORGE_PRODUCT.myJourney}，以便我为您提供个性化回答。`
-      : `You are exploring ${FORGE_EVENT.name}. Register to access your personal Compass — build your agenda, discover relevant sessions, connect with IBM Champions, and stay involved through IBM Community.`;
+      ? "请先构建 My Compass，以便我为您提供个性化回答。"
+      : "You are exploring TechXchange. Register to access your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.";
   const display =
     locale === "zh-CN"
-      ? `请先构建 ${FORGE_PRODUCT.myJourney} 以获取个性化语音回答。`
-      : `${FORGE_PRODUCT.buildMyJourney} · Register for personal Compass guidance`;
+      ? "请先构建 My Compass 以解锁个性化语音回答。"
+      : "Start Your TechXchange Journey · Register to access personal Compass guidance.";
   return { spoken, display };
 }
 
@@ -968,8 +967,8 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
   if (undecided && !enrolled) {
     return {
       spoken:
-        `Are you still deciding whether to attend ${FORGE_EVENT.name}? The conference includes technical sessions, certification paths, IBM Champions, and IBM Community experiences. If you register, Compass becomes your personal guide for the week.`,
-      display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
+        "Are you still deciding whether to attend TechXchange? The event includes learning, certifications, experts, and community experiences. If you decide to attend, registration will unlock your personal Compass experience.",
+      display: "Start Your TechXchange Journey · Register",
       action: "navigate_experience",
     };
   }
@@ -977,8 +976,8 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
   if (/should i attend|is it worth attending|why should i attend/.test(norm)) {
     return {
       spoken:
-        `That depends on your goals. ${FORGE_EVENT.name} is designed for developers, architects, AI practitioners, infrastructure teams, data experts, partners, and technology leaders looking to learn, connect, and build new skills.`,
-      display: `Evaluating ${FORGE_EVENT.name} attendance`,
+        "That depends on your goals. TechXchange is designed for developers, architects, AI practitioners, infrastructure teams, data experts, partners, and technology leaders looking to learn, connect, and build new skills.",
+      display: "Evaluating TechXchange attendance",
     };
   }
 
@@ -986,15 +985,15 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
     return {
       spoken:
         "Many attendees come to learn new technologies, pursue certifications, meet experts, discover communities, and connect with peers facing similar challenges.",
-      display: `What attendees gain from ${FORGE_EVENT.name}`,
+      display: "What attendees gain from TechXchange",
     };
   }
 
   if (!enrolled) {
     return {
       spoken:
-        `You're still exploring ${FORGE_EVENT.name}. The conference brings together hands-on learning, IBM Champions, certification paths, and IBM Community across AI, data, automation, cloud, infrastructure, security, and more. Register when you're ready — Compass will personalize your week.`,
-      display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
+        "You're still exploring TechXchange. The event brings together learning, hands-on experiences, experts, certifications, and community opportunities across AI, data, automation, cloud, infrastructure, security, and more. If you decide to attend, registration is the next step and will unlock your personal Compass experience.",
+      display: "Start Your TechXchange Journey · Register",
       action: "navigate_experience",
     };
   }
@@ -1003,7 +1002,7 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
     resolveEventKnowledgeText("event_overview") ?? EVENT_KNOWLEDGE.event_overview;
   return {
     spoken: overview,
-    display: `About ${FORGE_EVENT.name}`,
+    display: "About TechXchange",
   };
 }
 
@@ -1173,8 +1172,8 @@ export function buildVoiceResponse(
       if (primary?.type === "register") {
         return {
           spoken:
-            `You are exploring ${FORGE_EVENT.name}. Register to access your personal Compass — build your agenda, discover relevant sessions, connect with IBM Champions, and stay involved through IBM Community.`,
-          display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
+            "You are exploring TechXchange. Registering gives you access to your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.",
+          display: "Start Your TechXchange Journey · Register",
           action: "navigate_experience",
         };
       }
@@ -1185,7 +1184,7 @@ export function buildVoiceResponse(
             primary.headline.toLowerCase().includes("create")
               ? "Tell Compass about your interests, goals, and areas of focus so we can personalize your event experience."
               : "The more Compass knows about your interests and goals, the more relevant your recommendations become.",
-          display: `${primary.headline} · ${primary.ctaLabel ?? FORGE_PRODUCT.buildMyJourney}`,
+          display: `${primary.headline} · ${primary.ctaLabel ?? "Build My Compass"}`,
           action: "navigate_experience",
         };
       }
@@ -1315,8 +1314,8 @@ export function buildVoiceResponse(
 
       if (!champion) {
         return {
-          spoken:  `Open ${FORGE_LABELS.guides} to see experts matched to your profile, and check Live Opportunities for peer conversations.` + huddle,
-          display: `Browse ${FORGE_LABELS.guides} and Live Opportunities for people to meet.`,
+          spoken:  "Open Champions to see experts matched to your profile, and check Live Opportunities for peer conversations." + huddle,
+          display: "Browse Champions and Live Opportunities for people to meet.",
           action:  "show_champions",
         };
       }
@@ -1325,7 +1324,7 @@ export function buildVoiceResponse(
       const keywords = champion.shared_keywords?.slice(0, 2).join(" and ") ?? track;
       const templates = [
         "I found {name} because their expertise overlaps with {match}.{huddle}",
-        `{name} is a strong match on {match}. Check ${FORGE_LABELS.guides} for details.{huddle}`,
+        "{name} is a strong match on {match}. Check Champions for details.{huddle}",
         "Meet {name} — Compass matched you on {match}.{huddle}",
       ];
       const spoken = fill(pickTemplate(templates, seed), {
@@ -1354,14 +1353,14 @@ export function buildVoiceResponse(
         .join(" · ");
 
       const templates = [
-        `Communities have topic groups and user groups across many technology areas. Based on your profile, I'd explore {names}. These are persistent destinations — not live Huddles. Open ${FORGE_LABELS.communities} in Compass for links.`,
-        `After ${FORGE_EVENT.name}, communities are where the conversation continues — topic groups, user groups, and ${FORGE_LABELS.guides.toLowerCase()}. For you, I'd start with {names}. Visit ${FORGE_LABELS.communities} in Compass to join.`,
-        `For topic groups and user groups beyond the event, look at {names}. Communities are separate from live Huddles on ${FORGE_PRODUCT.myJourney}. I can show you links on the Communities page.`,
+        "IBM Community has more than five hundred thousand members, two hundred topic groups, and two hundred fifty user groups. Based on your profile, I'd explore {names}. These are persistent IBM destinations — not live Huddles. Open IBM Community in Compass for links.",
+        "After TechXchange, IBM Community is where the conversation continues — topic groups, user groups, and Champions. For you, I'd start with {names}. Visit IBM Community in Compass to join.",
+        "For IBM topic groups and user groups beyond the event, look at {names}. IBM Community is separate from live Huddles on My Compass. I can show you links on the IBM Community page.",
       ];
       const spoken = fill(pickTemplate(templates, seed), { names });
       return {
         spoken,
-        display: detail || `${FORGE_LABELS.communities} · topic groups · user groups`,
+        display: detail || "IBM Community · topic groups · user groups",
         action: "show_communities",
       };
     }
@@ -1398,7 +1397,7 @@ export function buildVoiceResponse(
       const spoken = fill(pickTemplate(templates, seed), {
         title: huddle.title,
         status: huddle.status,
-        location: huddle.location ?? FORGE_EVENT.name,
+        location: huddle.location ?? "TechXchange",
         joined: String(huddle.joinedCount),
       });
       return { spoken, display: `${huddle.title} · ${huddle.status}`, action: "navigate_experience" };
@@ -1413,8 +1412,8 @@ export function buildVoiceResponse(
         }
         const short = ctx.certificationJourney.shortTitle;
         return {
-          spoken: `You're working toward ${short}. Open Working Toward a Learning Path on ${FORGE_PRODUCT.myJourney} for sessions, experts, and communities matched to your path.`,
-          display: `Learning path · ${short}`,
+          spoken: `You're working toward ${short}. Open Working Toward a Certification on My Compass for sessions, experts, and communities matched to your path.`,
+          display: `Certification · ${short}`,
           action: "navigate_experience",
         };
       }
@@ -1428,9 +1427,9 @@ export function buildVoiceResponse(
         : "";
 
       const templates = [
-        `Compass can connect sessions, labs, study groups, and expert time{code} along your learning path. Set your goal in ${FORGE_PRODUCT.buildMyJourney}.{huddle}`,
-        `For your learning path{code}, focus on sessions, labs, and peers matched to {goal}.{huddle}`,
-        `Start with a learning path goal in ${FORGE_PRODUCT.buildMyJourney} — Sessions and Live Opportunities will surface what to learn, practice, and attend next.{huddle}`,
+        "Compass can connect sessions, labs, study groups, and expert time{code} along your certification journey. Set your goal in Build My Compass.{huddle}",
+        "For your certification journey{code}, focus on learning paths, labs, and peers matched to {goal}.{huddle}",
+        "Start with a certification goal in Build My Compass — Sessions and Live Opportunities will surface what to learn, practice, and attend next.{huddle}",
       ];
       const spoken = fill(pickTemplate(templates, seed), {
         code: codeBit,
@@ -1439,7 +1438,7 @@ export function buildVoiceResponse(
       });
       return {
         spoken,
-        display: `Learning path · ${goal}${certCode ? ` · ${certCode}` : ""}`,
+        display: `Certification journey · ${goal}${certCode ? ` · ${certCode}` : ""}`,
         action:  "show_sessions",
       };
     }
@@ -1545,13 +1544,13 @@ export function buildVoiceResponse(
         const fallback = getDefaultFallbackResponse();
         return {
           spoken: fallback,
-          display: `Try: What should I do now? · Who should I meet? · Anything fun tonight? · What is ${FORGE_LABELS.builderDay}?`,
+          display: "Try: What should I do now? · Who should I meet? · Anything fun tonight? · What is Community Day?",
         };
       }
       const fallback = getDefaultFallbackResponse();
       return {
         spoken: fallback,
-        display: `Try: What is ${FORGE_EVENT.name}? · How can you help me? · I'm a guide · Anything fun tonight?`,
+        display: "Try: What is TechXchange? · How can you help me? · I'm a champion · Anything fun tonight?",
       };
     }
   }

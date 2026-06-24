@@ -30,8 +30,6 @@ import {
   type SpeakerParticipantContext,
 } from "@/lib/speakerIntelligence";
 import type { SpeakerProfile } from "@/types/speaker";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
-import { THEME_VARS } from "@/config/chartColors";
 import {
   addSessionToBothLists,
   mergeSavedSessionIds,
@@ -39,6 +37,7 @@ import {
 } from "@/lib/participantAgenda";
 
 const BASE = "organizations/ibm/events/txc2026";
+const IBM_BLUE = "#0f62fe";
 
 const W = {
   track: 25,
@@ -318,7 +317,7 @@ function scoreSession(participant: RawDoc, raw: RawDoc): ScoredSession {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SessionActionBar — accent action buttons for each session card
+// SessionActionBar — Carbon-styled action buttons for each session card
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SessionActionBar({ session, sched, compact = false }: {
@@ -352,9 +351,9 @@ function SessionActionBar({ session, sched, compact = false }: {
 
   const savedBtn: React.CSSProperties = {
     ...baseBtn,
-    border: THEME_VARS.accentBorder,
-    color: THEME_VARS.accent,
-    background: THEME_VARS.accentBg,
+    border: "1px solid rgba(15, 98, 254, 0.35)",
+    color: IBM_BLUE,
+    background: "rgba(15, 98, 254, 0.04)",
   };
 
   const dnsLabel: React.CSSProperties = {
@@ -825,7 +824,7 @@ function SessionsPageContent() {
           const champSnap = await getDocs(collection(db, `${BASE}/champions`));
           setChampionSources(champSnap.docs.map(d => championFromRaw({ id: d.id, ...d.data() } as RawDoc)));
         } catch (champErr) {
-          console.warn("[SessionsPage] Guides catalog unavailable for speaker intel:", champErr);
+          console.warn("[SessionsPage] Champions catalog unavailable for speaker intel:", champErr);
         }
       } catch (err: unknown) {
         const e = err as { code?: string; message?: string };
@@ -1066,7 +1065,7 @@ function SessionsPageContent() {
           <p style={{ marginTop: "16px" }}>
             <Link href="/txc/login" className="btn-primary">Sign in</Link>
             {" "}
-            <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>{FORGE_PRODUCT.buildMyJourney}</Link>
+            <Link href="/txc/enroll" className="btn-ghost" style={{ marginLeft: "8px" }}>Build My Compass</Link>
           </p>
         )}
       </section>
@@ -1078,7 +1077,7 @@ function SessionsPageContent() {
       <section className="compact-hero story-hero--strong">
         {isCertificationView ? (
           <>
-            <div className="section-kicker">{FORGE_LABELS.learningPaths}</div>
+            <div className="section-kicker">Certification journeys</div>
             <h1>{learningPathCount} learning paths available.</h1>
             <p>{CERTIFICATION_JOURNEY_COPY.pathsSupporting}</p>
             {certLabel && (
@@ -1090,12 +1089,12 @@ function SessionsPageContent() {
           </>
         ) : (
           <>
-            <div className="section-kicker">Sessions</div>
-            <h1>Sessions for your week.</h1>
+            <div className="section-kicker">Session intelligence</div>
+            <h1>Sessions that fit your week.</h1>
             <p>
               {isLoggedIn
-                ? "Compass maps the program against your profile — priority matches, momentum, and seats filling fast."
-                : `Browse the ${FORGE_EVENT.shortName} catalog. Highlights reflect popularity and community interest — not profile matching.`}
+                ? "Compass reads sessions against your profile and surfaces what to prioritize: recommended matches, room momentum, and seats filling fast."
+                : "Browse the full TechXchange catalog below. Sign in or build your Compass to unlock personalized match scores."}
             </p>
           </>
         )}
@@ -1173,7 +1172,7 @@ function SessionsPageContent() {
             title={isLoggedIn ? "Your strongest matches." : "Sessions to explore."}
             desc={isLoggedIn
               ? "Highest-scored sessions against your goals, tracks, role, and needs."
-              : "Curated highlights from the catalog — sign in for personalized match scores and reasons."}
+              : "A sample of what is on the schedule — build your Compass for personalized recommendations."}
             sessions={recommended}
             sched={schedState}
             certLabel={certLabel}
@@ -1216,7 +1215,7 @@ function SessionsPageContent() {
       <section className="section">
         <div className="section-head">
           <div>
-            <div className="section-kicker">{isCertificationView ? `${FORGE_LABELS.learningPaths} catalog` : isFiltered ? "Filtered results" : "Browse all"}</div>
+            <div className="section-kicker">{isCertificationView ? "Certification catalog" : isFiltered ? "Filtered results" : "Browse all"}</div>
             <h2>
               {isCertificationView
                 ? `${catalogSessions.length} certification journey${catalogSessions.length !== 1 ? "s" : ""}`
@@ -1227,7 +1226,7 @@ function SessionsPageContent() {
           </div>
           <p>
             {isCertificationView
-              ? `One source of truth — learning paths live in the session catalog alongside everything else at ${FORGE_EVENT.name}.`
+              ? "One source of truth — certification journeys live in the session catalog alongside everything else at TechXchange."
               : "Sorted by day and time — match score breaks ties."}
           </p>
         </div>
@@ -1263,13 +1262,13 @@ function SessionsPageContent() {
           ) : (
             <>
               <h2>Tell Compass your intent.</h2>
-              <p>Build your journey for personalized session scores and your four-day plan.</p>
+              <p>Build your Compass profile to unlock personalized session scores and your four-day plan.</p>
             </>
           )}
         </div>
         {user && enrolled
-          ? <Link href="/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} &#8594;</Link>
-          : <Link href="/txc/enroll"     className="btn-primary">{FORGE_PRODUCT.buildMyJourney} &#8594;</Link>
+          ? <Link href="/experience" className="btn-primary">Open My Compass &#8594;</Link>
+          : <Link href="/txc/enroll"     className="btn-primary">Build My Compass &#8594;</Link>
         }
       </section>
 

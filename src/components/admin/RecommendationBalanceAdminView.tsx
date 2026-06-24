@@ -11,7 +11,6 @@ import {
   DEFAULT_PILLAR_WEIGHTS,
   type PillarWeights,
 } from "@/types/recommendationBalance";
-import { CHART_COLORS } from "@/config/chartColors";
 
 const S = {
   bg: "#161616",
@@ -19,8 +18,10 @@ const S = {
   text: "#f4f4f4",
   muted: "#a8a8a8",
   line: "#393939",
-  accent: CHART_COLORS.primaryLight,
+  accent: "#78a9ff",
 };
+
+const IBM = { blue: "#0f62fe" };
 
 const fieldLabel: CSSProperties = {
   color: S.muted,
@@ -45,8 +46,8 @@ const field: CSSProperties = {
 };
 
 const PILLAR_ROWS: Array<{ key: keyof PillarWeights; label: string; hint: string }> = [
-  { key: "learning", label: "Learning weight", hint: "Sessions, labs, breakouts, learning paths" },
-  { key: "people", label: "People weight", hint: "Guides, experts, networking matches" },
+  { key: "learning", label: "Learning weight", hint: "Sessions, labs, breakouts, certifications" },
+  { key: "people", label: "People weight", hint: "Champions, experts, networking matches" },
   { key: "community", label: "Community weight", hint: "Meetups, huddles, roundtables" },
   { key: "fun", label: "Fun weight", hint: "Social moments, keynotes, celebrations" },
 ];
@@ -131,7 +132,7 @@ export function RecommendationBalanceAdminView() {
                 disabled={saving}
                 style={{
                   padding: "8px 16px",
-                  background: CHART_COLORS.primary,
+                  background: IBM.blue,
                   border: "none",
                   color: "#fff",
                   fontSize: "0.82rem",

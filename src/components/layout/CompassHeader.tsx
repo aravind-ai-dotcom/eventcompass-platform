@@ -1,6 +1,7 @@
 "use client";
 
-import { FORGE_EVENT, FORGE_NAV, FORGE_PRODUCT } from "@/config/forgeBrand";
+// TechXchange header — only rendered on /txc/* routes via RouteChrome.
+
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,14 +12,14 @@ import { logOut } from "@/lib/auth";
 type Theme = "dark" | "light";
 
 const NAV_ITEMS = [
-  { href: "/txc/explore", label: FORGE_NAV.explore },
-  { href: "/txc/sessions", label: FORGE_NAV.sessions },
-  { href: "/txc/champions", label: FORGE_NAV.guides },
-  { href: "/txc/communities", label: FORGE_NAV.communities },
-  { href: "/txc/pulse", label: FORGE_NAV.pulse },
+  { href: "/txc/explore", label: "Explore" },
+  { href: "/txc/sessions", label: "Sessions" },
+  { href: "/txc/champions", label: "Champions" },
+  { href: "/txc/communities", label: "IBM Community" },
+  { href: "/txc/pulse", label: "Pulse" },
 ];
 
-const DRAWER_TAIL = { href: "/txc/experience", label: FORGE_NAV.myJourney };
+const DRAWER_TAIL = { href: "/txc/experience", label: "My Compass" };
 
 function SunIcon() {
   return (
@@ -87,7 +88,7 @@ export default function CompassHeader() {
   }
 
   const drawerLinks = [
-    { href: "/txc", label: FORGE_PRODUCT.name },
+    { href: "/txc", label: "Compass" },
     ...NAV_ITEMS,
     DRAWER_TAIL,
   ];
@@ -95,7 +96,7 @@ export default function CompassHeader() {
   return (
     <>
     <header className="site-header">
-      <Link href="/txc" className="brand" aria-label={`${FORGE_PRODUCT.name} home`}>
+      <Link href="/txc" className="brand" aria-label="TechXchange Compass home">
         <Image
           src={theme === "dark" ? "/compass-mark-white.jpeg" : "/compass-mark-black.png"}
           alt=""
@@ -105,11 +106,11 @@ export default function CompassHeader() {
           style={{ objectFit: "contain", flexShrink: 0 }}
           priority
         />
-        <span className="brand-word">{FORGE_PRODUCT.name}</span>
-        <span className="brand-sub">{FORGE_EVENT.name}</span>
+        <span className="brand-word">Compass</span>
+        <span className="brand-sub">TechXchange</span>
       </Link>
 
-      <nav className="site-nav" aria-label="Compass navigation">
+      <nav className="site-nav" aria-label="TechXchange navigation">
         {NAV_ITEMS.map(item => (
           <Link
             key={item.href}
@@ -132,9 +133,9 @@ export default function CompassHeader() {
         </button>
 
         {user && enrolled ? (
-          <Link href="/txc/experience" className="btn-primary site-header-cta">{FORGE_PRODUCT.myJourney}</Link>
+          <Link href="/txc/experience" className="btn-primary site-header-cta">My Compass</Link>
         ) : (
-          <Link href="/txc/enroll" className="btn-primary site-header-cta">{FORGE_PRODUCT.buildMyJourney}</Link>
+          <Link href="/txc/enroll" className="btn-primary site-header-cta">Build My Compass</Link>
         )}
 
         {user && (
@@ -157,7 +158,7 @@ export default function CompassHeader() {
 
     {menuOpen && (
       <div className="mobile-drawer" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-        <nav className="mobile-drawer-nav" aria-label="Compass navigation">
+        <nav className="mobile-drawer-nav" aria-label="TechXchange navigation">
           {drawerLinks.map(item => (
             <Link key={item.href} href={item.href} className="mobile-drawer-link">
               {item.label}

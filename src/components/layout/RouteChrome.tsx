@@ -25,12 +25,9 @@ export default function RouteChrome({ children }: { children: React.ReactNode })
   if (isTxcRoute(pathname)) {
     return (
       <AuthProvider>
-        <div className="forge-shell">
-          <div className="forge-grid" aria-hidden="true" />
-          <CompassHeader />
-          <main className="compass-main">{children}</main>
-          <CompassFooter />
-        </div>
+        <CompassHeader />
+        <main className="compass-main">{children}</main>
+        <CompassFooter />
       </AuthProvider>
     );
   }

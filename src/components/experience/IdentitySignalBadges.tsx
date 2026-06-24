@@ -1,6 +1,5 @@
 "use client";
 
-import { FORGE_EVENT } from "@/config/forgeBrand";
 import {
   formatAlumHistorySubtitle,
   getIdentityBadges,
@@ -32,7 +31,7 @@ export default function IdentitySignalBadges({
     <div className="identity-signal-badges">
       {welcome && <p className="identity-signal-badges__welcome">{welcome}</p>}
       {badges.length > 0 && (
-        <div className="identity-signal-badges__row" aria-label={`${FORGE_EVENT.name} identity`}>
+        <div className="identity-signal-badges__row" aria-label="TechXchange identity">
           {badges.map(badge => (
             <span
               key={badge.id}

@@ -1,5 +1,5 @@
 // =============================================================================
-// Forge governance seed — initialization only (not runtime source of truth)
+// TechXchange governance seed — initialization only (not runtime source of truth)
 // Run: node scripts/seed-txc-compass-governance-admin.cjs
 // =============================================================================
 
@@ -30,7 +30,7 @@ export const TXC_KNOWLEDGE_SEED: TechXchangeKnowledgeRecord[] = [
     category: "Compass",
     examples: ["what is compass", "what does compass do", "why was compass created", "how is compass different from the event app"],
     response:
-      "Compass is your personalized event companion. Instead of showing everyone the same information, Compass helps you discover the sessions, people, Guides, communities, certifications, and experiences that are most relevant to your goals. The more you share about your interests and intent, the better Compass can guide your journey.",
+      "Compass is your personalized event companion. Instead of showing everyone the same information, Compass helps you discover the sessions, people, Champions, communities, certifications, and experiences that are most relevant to your goals. The more you share about your interests and intent, the better Compass can guide your journey.",
     active: true,
     status: "active",
     priority: 100,
@@ -53,7 +53,7 @@ export const TXC_KNOWLEDGE_SEED: TechXchangeKnowledgeRecord[] = [
     intent: "HOW_TO_GET_THE_MOST_OUT_OF_THE_EVENT",
     category: "Compass",
     examples: [
-      "how do i get the most out of forge",
+      "how do i get the most out of techxchange",
       "how do i maximize my event experience",
       "what should i do first",
       "how do i succeed at this event",
@@ -76,44 +76,44 @@ export const TXC_KNOWLEDGE_SEED: TechXchangeKnowledgeRecord[] = [
       "how do i get ready for my exam",
     ],
     response:
-      "Compass can help you build a certification learning path. Start by identifying your certification goal, then explore related sessions, labs, workshops, and experts. You can also connect with Guides and attendees who have experience in the same technology area.",
+      "Compass can help you build a certification learning path. Start by identifying your certification goal, then explore related sessions, labs, workshops, and experts. You can also connect with Champions and attendees who have experience in the same technology area.",
     active: true,
     status: "active",
     priority: 88,
     tags: ["certification", "learning"],
   }),
   kb({
-    id: "kb-guide-match",
+    id: "kb-champion-match",
     intent: "CHAMPION_MATCH",
     category: "Champion",
     examples: [
-      "is there a guide you recommend",
+      "is there a champion you recommend",
       "who should i meet today",
-      "can i meet a guide",
-      "recommend a guide",
+      "can i meet a champion",
+      "recommend a champion",
     ],
     response:
-      "Guides are among the best people to meet because they bring real-world experience, community energy, and practical knowledge. Compass can recommend Guides based on your interests, products, role, and goals.",
+      "Champions are among the best people to meet because they bring real-world experience, community energy, and practical knowledge. Compass can recommend Champions based on your interests, products, role, and goals.",
     active: true,
     status: "active",
     priority: 85,
-    tags: ["guide", "networking"],
+    tags: ["champion", "networking"],
   }),
   kb({
-    id: "kb-guide-path",
+    id: "kb-champion-path",
     intent: "CHAMPION_PATH",
     category: "Champion",
     examples: [
-      "what can a guide do",
-      "i am a guide what should i do",
-      "how can guides help",
+      "what can a champion do",
+      "i am a champion what should i do",
+      "how can champions help",
     ],
     response:
-      "As a Guide, your path is to Discover, Connect, Contribute, and Inspire. Attend the sessions that strengthen your expertise, meet people who can benefit from your experience, share practical knowledge, and help others leave the event with greater confidence and clarity.\n\nGuide Journey:\n\nDISCOVER — Explore new technologies, ideas, and opportunities.\n\nCONNECT — Build relationships with peers, experts, and communities.\n\nCONTRIBUTE — Share knowledge, mentor others, and participate in discussions.\n\nINSPIRE — Help others see what is possible and leave the community stronger than you found it.",
+      "As a Champion, your path is to Discover, Connect, Contribute, and Inspire. Attend the sessions that strengthen your expertise, meet people who can benefit from your experience, share practical knowledge, and help others leave the event with greater confidence and clarity.\n\nChampion Journey:\n\nDISCOVER — Explore new technologies, ideas, and opportunities.\n\nCONNECT — Build relationships with peers, experts, and communities.\n\nCONTRIBUTE — Share knowledge, mentor others, and participate in discussions.\n\nINSPIRE — Help others see what is possible and leave the community stronger than you found it.",
     active: true,
     status: "active",
     priority: 84,
-    tags: ["guide", "journey"],
+    tags: ["champion", "journey"],
   }),
   kb({
     id: "kb-fun",
@@ -214,7 +214,7 @@ export const TXC_KNOWLEDGE_SEED: TechXchangeKnowledgeRecord[] = [
     category: "Partner",
     examples: ["i am a partner", "what should i not miss", "what should partners attend", "what should i do as a partner"],
     response:
-      "Partners should make the most of Partner Day, networking opportunities, solution showcases, technical sessions, and conversations with experts, clients, and communities. Compass can help identify the most relevant experiences based on your business goals and technology interests.",
+      "Partners should make the most of Partner Day, networking opportunities, solution showcases, technical sessions, and conversations with IBM experts, clients, and communities. Compass can help identify the most relevant experiences based on your business goals and technology interests.",
     active: true,
     status: "active",
     priority: 66,
@@ -250,11 +250,11 @@ export const TXC_KNOWLEDGE_SEED: TechXchangeKnowledgeRecord[] = [
     category: "Champion",
     examples: ["will there be superheroes", "are there superheroes at the event", "can i meet a superhero"],
     response:
-      "Not superheroes exactly, but we do have Guides. Guides are community leaders who share knowledge, help others learn, and contribute to the growth of the technical community. If you meet a Guide, say hello, thank them for their contributions, and ask what sessions or communities they recommend.",
+      "Not superheroes exactly, but we do have Champions. IBM Champions are community leaders who share knowledge, help others learn, and contribute to the growth of the technical community. If you meet a Champion, say hello, thank them for their contributions, and ask what sessions or communities they recommend.",
     active: true,
     status: "active",
     priority: 64,
-    tags: ["guide", "fun"],
+    tags: ["champion", "fun"],
   }),
   kb({
     id: "kb-out-of-scope",
@@ -295,13 +295,13 @@ function voice(
 }
 
 export const TXC_VOICE_DICTIONARY_SEED: VoiceDictionaryRecord[] = [
-  voice({ id: "vd-techxchange", displayText: "FORGE", spokenText: "Forge", active: true, notes: "Event name" }),
+  voice({ id: "vd-techxchange", displayText: "TechXchange", spokenText: "Tech Exchange", active: true, notes: "Event name" }),
   voice({ id: "vd-ai", displayText: "AI", spokenText: "A Eye", active: true }),
   voice({ id: "vd-ai-agents", displayText: "AI Agents", spokenText: "A Eye agents", active: true }),
-  voice({ id: "vd-AI platform", displayText: "AI platform", spokenText: "Watson Ex", active: true }),
+  voice({ id: "vd-watsonx", displayText: "watsonx", spokenText: "Watson Ex", active: true }),
   voice({ id: "vd-qiskit", displayText: "Qiskit", spokenText: "Kiss kit", active: true }),
-  voice({ id: "vd-openshift", displayText: "open platform container platform", spokenText: "open platform Open Shift", active: true }),
-  voice({ id: "vd-ibm-z", displayText: "mainframe platforms", spokenText: "I B M Z", active: true }),
+  voice({ id: "vd-openshift", displayText: "Red Hat OpenShift", spokenText: "Red Hat Open Shift", active: true }),
+  voice({ id: "vd-ibm-z", displayText: "IBM Z", spokenText: "I B M Z", active: true }),
   voice({ id: "vd-linuxone", displayText: "LinuxONE", spokenText: "Linux One", active: true }),
 ];
 
@@ -320,14 +320,14 @@ function stt(
 export const TXC_STT_NORMALIZATION_SEED: SttNormalizationRecord[] = [
   stt({
     id: "stt-techxchange",
-    canonicalText: "FORGE",
+    canonicalText: "TechXchange",
     heardAs: ["Tech Exchange", "tech exchange", "tech change", "text change"],
     active: true,
     notes: "Event name STT variants",
   }),
   stt({
-    id: "stt-AI platform",
-    canonicalText: "AI platform",
+    id: "stt-watsonx",
+    canonicalText: "watsonx",
     heardAs: ["Watson X", "Watson Ex", "Watson acts", "Watson axe"],
     active: true,
   }),

@@ -5,7 +5,6 @@ import CompassModuleHead from "@/components/experience/CompassModuleHead";
 import IbmCommunityCard from "@/components/communities/IbmCommunityCard";
 import { recommendIbmCommunities } from "@/lib/ibmCommunityMatching";
 import type { IbmCommunity } from "@/data/ibmCommunities";
-import { FORGE_EVENT, FORGE_LABELS } from "@/config/forgeBrand";
 
 interface Props {
   tracks?: string[];
@@ -49,12 +48,12 @@ export default function RecommendedIbmCommunities({
   return (
     <section className={embedded ? "compass-module-block" : "section no-top-border"}>
       <CompassModuleHead
-        kicker={`Recommended ${FORGE_LABELS.communities}`}
-        title={hasPersonalMatch ? "Groups aligned with your interests." : "Explore community destinations."}
+        kicker="Recommended IBM Communities"
+        title={hasPersonalMatch ? "Groups aligned with your interests." : "Explore IBM Community destinations."}
         description={
           hasPersonalMatch
-            ? "Persistent topic groups and user groups — separate from live event Huddles."
-            : `Join communities and programs that continue beyond ${FORGE_EVENT.name}.`
+            ? "Persistent IBM topic groups and user groups — separate from live event Huddles."
+            : "Join IBM topic groups, user groups, and programs that continue beyond TechXchange."
         }
       />
       <div className="ibm-community-grid">

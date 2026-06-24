@@ -19,7 +19,15 @@ import {
 import { voiceKnowledgeNeedsReview } from "@/lib/voiceKnowledgeResponse";
 import { loadUnifiedVoiceKnowledge } from "@/services/knowledge/txcFaqKnowledgeService";
 import type { VoiceKnowledgeCategoryMeta, VoiceKnowledgeRecord } from "@/types/voiceKnowledge";
-import { CHART_COLORS } from "@/config/chartColors";
+
+const IBM = {
+  blue: "#0f62fe",
+  blueLight: "#78a9ff",
+  green: "#24a148",
+  cyan: "#009d9a",
+  orange: "#ff832b",
+  purple: "#6929c4",
+};
 
 const S = {
   bg: "#161616",
@@ -50,7 +58,7 @@ function Panel({ children, style }: { children: ReactNode; style?: CSSProperties
   );
 }
 
-function StatCard({ label, value, tone = CHART_COLORS.primaryLight }: { label: string; value: number; tone?: string }) {
+function StatCard({ label, value, tone = IBM.blueLight }: { label: string; value: number; tone?: string }) {
   return (
     <Panel style={{ padding: "16px 18px" }}>
       <p style={{ margin: "0 0 8px", color: S.muted, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
@@ -81,7 +89,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div style={{ minHeight: "100vh", background: S.bg, display: "grid", placeItems: "center", padding: "24px" }}>
       <Panel style={{ width: "100%", maxWidth: "420px" }}>
-        <p style={{ margin: "0 0 6px", color: CHART_COLORS.primaryLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+        <p style={{ margin: "0 0 6px", color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
           TXC Admin
         </p>
         <h1 style={{ margin: "0 0 16px", color: S.text, fontSize: "1.35rem", fontWeight: 600 }}>TXC Knowledge Admin</h1>
@@ -95,7 +103,7 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={fieldStyle} autoComplete="current-password" />
           </label>
           {error && <p style={{ margin: 0, color: "#ff8389", fontSize: "0.82rem" }}>{error}</p>}
-          <button type="submit" style={{ height: "40px", border: `1px solid ${CHART_COLORS.primary}`, background: "rgb(var(--accent-rgb) / 0.12)", color: CHART_COLORS.primaryLight, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+          <button type="submit" style={{ height: "40px", border: `1px solid ${IBM.blue}`, background: "rgba(15,98,254,0.12)", color: IBM.blueLight, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
             Sign in
           </button>
         </form>
@@ -186,7 +194,7 @@ export default function TxcKnowledgeAdminView() {
     <div style={{ minHeight: "100vh", background: S.bg, color: S.text, padding: "24px 28px 40px" }}>
       <header style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "16px", marginBottom: "24px" }}>
         <div>
-          <p style={{ margin: "0 0 6px", color: CHART_COLORS.primaryLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          <p style={{ margin: "0 0 6px", color: IBM.blueLight, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
             TXC Admin · Voice Compass
           </p>
           <h1 style={{ margin: "0 0 8px", fontSize: "1.6rem", fontWeight: 600 }}>TXC Knowledge Admin</h1>
@@ -202,7 +210,7 @@ export default function TxcKnowledgeAdminView() {
           <button type="button" onClick={() => void refresh()} style={{ height: "36px", padding: "0 14px", border: `1px solid ${S.line}`, background: "transparent", color: S.soft, cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem" }}>
             Refresh
           </button>
-          <button type="button" onClick={handleExport} disabled={records.length === 0} style={{ height: "36px", padding: "0 14px", border: `1px solid ${CHART_COLORS.primary}`, background: "rgb(var(--accent-rgb) / 0.12)", color: CHART_COLORS.primaryLight, cursor: records.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", fontSize: "0.82rem", fontWeight: 600, opacity: records.length === 0 ? 0.5 : 1 }}>
+          <button type="button" onClick={handleExport} disabled={records.length === 0} style={{ height: "36px", padding: "0 14px", border: `1px solid ${IBM.blue}`, background: "rgba(15,98,254,0.12)", color: IBM.blueLight, cursor: records.length === 0 ? "not-allowed" : "pointer", fontFamily: "inherit", fontSize: "0.82rem", fontWeight: 600, opacity: records.length === 0 ? 0.5 : 1 }}>
             Export Knowledge XLSX
           </button>
           <button type="button" onClick={() => { clearTxcAdminSession(); setLoggedIn(false); }} style={{ height: "36px", padding: "0 14px", border: `1px solid ${S.line}`, background: "transparent", color: S.muted, cursor: "pointer", fontFamily: "inherit", fontSize: "0.82rem" }}>
@@ -219,13 +227,13 @@ export default function TxcKnowledgeAdminView() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: "12px", marginBottom: "20px" }}>
         <StatCard label="Total voice knowledge" value={summary.total} />
-        <StatCard label="Active records" value={summary.active} tone={CHART_COLORS.green} />
-        <StatCard label="Categories" value={summary.categories} tone={CHART_COLORS.cyan} />
+        <StatCard label="Active records" value={summary.active} tone={IBM.green} />
+        <StatCard label="Categories" value={summary.categories} tone={IBM.cyan} />
         <StatCard label="Direct answers" value={summary.directAnswer} />
-        <StatCard label="Official FAQ redirects" value={summary.officialFaq} tone={CHART_COLORS.purple} />
-        <StatCard label="Guest Services redirects" value={summary.guestServices} tone={CHART_COLORS.orange} />
+        <StatCard label="Official FAQ redirects" value={summary.officialFaq} tone={IBM.purple} />
+        <StatCard label="Guest Services redirects" value={summary.guestServices} tone={IBM.orange} />
         <StatCard label="External site redirects" value={summary.externalSite} />
-        <StatCard label="Missing utterances" value={summary.missingUtterances} tone={CHART_COLORS.orange} />
+        <StatCard label="Missing utterances" value={summary.missingUtterances} tone={IBM.orange} />
         <StatCard label="Low priority" value={summary.lowPriority} />
         <StatCard label="Inactive" value={summary.inactive} />
       </div>
@@ -292,7 +300,7 @@ export default function TxcKnowledgeAdminView() {
                       <td style={{ padding: "12px 14px", color: S.soft, verticalAlign: "top", minWidth: "260px", lineHeight: 1.45 }}>
                         {record.response}
                       </td>
-                      <td style={{ padding: "12px 14px", color: CHART_COLORS.primaryLight, verticalAlign: "top", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "12px 14px", color: IBM.blueLight, verticalAlign: "top", whiteSpace: "nowrap" }}>
                         {record.redirect_type ?? "—"}
                       </td>
                       <td style={{ padding: "12px 14px", color: S.muted, verticalAlign: "top", minWidth: "180px", fontSize: "0.76rem" }}>
@@ -309,7 +317,7 @@ export default function TxcKnowledgeAdminView() {
                         {record.source ?? "compass_seed"}
                       </td>
                       <td style={{ padding: "12px 14px", verticalAlign: "top" }}>
-                        <span style={{ display: "inline-flex", padding: "2px 8px", border: `1px solid ${record.enabled ? CHART_COLORS.green : S.line}`, color: record.enabled ? "#42be65" : S.dim, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                        <span style={{ display: "inline-flex", padding: "2px 8px", border: `1px solid ${record.enabled ? IBM.green : S.line}`, color: record.enabled ? "#42be65" : S.dim, fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>
                           {record.enabled ? "Yes" : "No"}
                         </span>
                       </td>

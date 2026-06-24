@@ -110,8 +110,6 @@ import SessionSpeakerIntel from "@/components/sessions/SessionSpeakerIntel";
 import type { ScoredSpeaker } from "@/types/speaker";
 import type { ConnectionVaultRecord, SaveReason } from "@/types/connectionVault";
 import type { HuddleParticipantPreview } from "@/types/huddleDataModel";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT, FORGE_HIGHLIGHTS } from "@/config/forgeBrand";
-import { THEME_VARS } from "@/config/chartColors";
 
 function extractSessionSpeakerNames(rawSessions: RawDoc[]): Set<string> {
   const names = new Set<string>();
@@ -155,6 +153,7 @@ function toRecommendedPerson(
 
 const BASE            = "organizations/ibm/events/txc2026";
 const DEV_FALLBACK_ID = "ATT-0001";
+const IBM_BLUE        = "#0f62fe";
 
 const W = {
   track:     25,
@@ -440,7 +439,7 @@ function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
   if ((raw.consent as RawDoc | undefined)?.allow_intro_requests === false) {
     return {
       id: String(raw.id ?? ""),
-      display_name: String(raw.display_name ?? FORGE_LABELS.guide),
+      display_name: String(raw.display_name ?? "Champion"),
       compass_score: 0,
       shared_keywords: [],
       compass_reasons: [],
@@ -478,7 +477,7 @@ function scoreChampion(participant: RawDoc, raw: RawDoc): ScoredChampion {
 
   return {
     id:           String(raw.id ?? ""),
-    display_name: String(raw.display_name ?? FORGE_LABELS.guide),
+    display_name: String(raw.display_name ?? "Champion"),
     title:        raw.title        as string | undefined,
     organization: raw.organization as string | undefined,
     profile:      raw.profile      as ScoredChampion["profile"],
@@ -552,7 +551,7 @@ function ExpSessionActionBar({ id, sched }: { id: string; sched: ExpScheduleStat
     cursor: "pointer", fontFamily: "inherit",
     letterSpacing: "0.01em", whiteSpace: "nowrap" as const, textDecoration: "none",
   };
-  const activeBtn = { ...base, border: THEME_VARS.accentBorder, color: THEME_VARS.accent, background: THEME_VARS.accentBg };
+  const activeBtn = { ...base, border: "1px solid rgba(15,98,254,0.35)", color: IBM_BLUE, background: "rgba(15,98,254,0.04)" };
   const badge = {
     fontSize: "0.68rem", color: "var(--muted)", padding: "2px 7px",
     border: "1px solid var(--line)", letterSpacing: "0.06em", textTransform: "uppercase" as const,
@@ -666,7 +665,7 @@ function downloadICS(sessions: ScoredSession[], _participantId: string) {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//EventCompass//FORGE 2027//EN",
+    "PRODID:-//EventCompass//TechXchange 2026//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
   ];
@@ -720,8 +719,8 @@ function ExportPanel({ participantId, sessions }: { participantId: string; sessi
   };
   const primary = {
     ...base,
-    border: `1px solid ${THEME_VARS.accent}`, color: THEME_VARS.accent,
-    background: THEME_VARS.accentBg,
+    border: `1px solid ${IBM_BLUE}`, color: IBM_BLUE,
+    background: "rgba(15,98,254,0.04)",
   };
 
   return (
@@ -736,7 +735,7 @@ function ExportPanel({ participantId, sessions }: { participantId: string; sessi
         </button>
         <button type="button" onClick={handlePrint} style={base}
           title="Print-optimised layout">
-          ⎙ Print {FORGE_PRODUCT.myJourney}
+          ⎙ Print My Experience
         </button>
       </div>
       <p style={{ color: "var(--muted)", fontSize: "0.76rem", margin: "10px 0 0", lineHeight: 1.4 }}>
@@ -752,13 +751,13 @@ function ExportPanel({ participantId, sessions }: { participantId: string; sessi
 // ─────────────────────────────────────────────────────────────────────────────
 
 const HIGHLIGHT_DATA = [
-  { id: "keynote",             title: "Opening Keynote",                  day: "Monday, Feb 16",    time: "9:00 AM",  location: "Main Hall",                     description: FORGE_HIGHLIGHTS.find(h => h.id === "keynote")!.description },
-  { id: "builder-day",         title: "Builder Day",                      day: "Sunday, Feb 15",    time: "All Day",  location: FORGE_EVENT.venue,             description: FORGE_HIGHLIGHTS.find(h => h.id === "builder-day")!.description },
-  { id: "innovation-showcase", title: "Innovation Showcase",              day: "Tuesday, Feb 17",   time: "10:00 AM", location: "Innovation Hall",               description: FORGE_HIGHLIGHTS.find(h => h.id === "innovation-showcase")!.description },
-  { id: "future-tech",         title: "Future Technologies Forum",        day: "Tuesday, Feb 17",   time: "2:00 PM",  location: "Forum Stage",                   description: FORGE_HIGHLIGHTS.find(h => h.id === "future-tech")!.description },
-  { id: "startup-pavilion",    title: "Startup Pavilion",                 day: "Wednesday, Feb 18", time: "11:00 AM", location: "Expo Floor",                    description: FORGE_HIGHLIGHTS.find(h => h.id === "startup-pavilion")!.description },
-  { id: "women-building",      title: "Women Building Technology Summit", day: "Wednesday, Feb 18", time: "1:00 PM",  location: "Summit Hall",                   description: FORGE_HIGHLIGHTS.find(h => h.id === "women-building")!.description },
-  { id: "closing",             title: "Closing Celebration",              day: "Thursday, Feb 19",  time: "4:00 PM",  location: "Main Hall",                     description: FORGE_HIGHLIGHTS.find(h => h.id === "closing")!.description },
+  { id: "community-day",     title: "Community Day",            day: "Sunday, Oct 26",    time: "All Day",  location: "Georgia World Congress Center", description: "The kickoff day for IBM Champions, communities, and first-time attendees." },
+  { id: "partner-day",       title: "Partner Day",              day: "Sunday, Oct 26",    time: "All Day",  location: "Georgia World Congress Center", description: "Dedicated programming for IBM Business Partners and ecosystem members." },
+  { id: "keynote-tuesday",   title: "Tuesday Keynote",          day: "Tuesday, Oct 28",   time: "8:30 AM",  location: "Ballroom A",                    description: "The main stage moment that sets the direction for the week." },
+  { id: "keynote-wednesday", title: "Wednesday Keynote",        day: "Wednesday, Oct 29", time: "8:30 AM",  location: "Ballroom A",                    description: "Day two main stage with product announcements and IBM leadership." },
+  { id: "sandbox",           title: "Sandbox Block Party",      day: "Tuesday, Oct 28",   time: "6:00 PM",  location: "Exhibit Hall",                  description: "The unmissable evening social with demos, music, and networking." },
+  { id: "tuesday-night",     title: "Tuesday Night Experience", day: "Tuesday, Oct 28",   time: "8:00 PM",  location: "TBA",                           description: "The signature evening event of TechXchange 2026." },
+  { id: "closing",           title: "Closing Session & Awards", day: "Thursday, Oct 30",  time: "3:00 PM",  location: "Ballroom A",                    description: "Celebrate the week, recognise excellence, and close TechXchange 2026." },
 ] as const;
 
 function HighlightActionCard({ h }: { h: typeof HIGHLIGHT_DATA[number] }) {
@@ -776,8 +775,8 @@ function HighlightActionCard({ h }: { h: typeof HIGHLIGHT_DATA[number] }) {
   };
   const addedBtn = {
     ...btn,
-    border: THEME_VARS.accentBorder, color: THEME_VARS.accent,
-    background: THEME_VARS.accentBg,
+    border: `1px solid rgba(15,98,254,0.35)`, color: IBM_BLUE,
+    background: "rgba(15,98,254,0.04)",
   };
 
   return (
@@ -886,8 +885,8 @@ function WhatYouToldCompass({ participant, embedded = false }: { participant: Ra
       <CompassModuleHead
         kicker="What you told Compass"
         title="Your profile signals"
-        description={`Compass uses these signals to personalize session scores, ${FORGE_LABELS.guide.toLowerCase()} matches, networking opportunities, and Networking · Learning · Fun activities.`}
-        action={<a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine {FORGE_PRODUCT.myJourney} →</a>}
+        description="Compass uses these signals to personalize session scores, champion matches, networking opportunities, and Networking · Learning · Fun activities."
+        action={<a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine My Compass →</a>}
         className="compass-module-head--with-action"
       />
 
@@ -1288,7 +1287,7 @@ export default function ClassicExperiencePage() {
     persistPrefs({ hidden_sessions: next });
   }, [hiddenSessions, persistPrefs]);
 
-  // ── Guide action handlers ────────────────────────────────────────────────
+  // ── Champion action handlers ────────────────────────────────────────────────
 
   const savedPeople = useMemo(
     () => connectionVault.map(r => r.personId),
@@ -1778,12 +1777,12 @@ export default function ClassicExperiencePage() {
   if (status === "loading") {
     return (
       <section className="section no-top-border">
-        <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
+        <div className="section-kicker">My Compass</div>
         <h2 style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", fontWeight: 520, letterSpacing: "-0.04em", margin: "12px 0 16px", color: "var(--text)" }}>
           Building your Compass&hellip;
         </h2>
         <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
-          Compass is scanning sessions, {FORGE_LABELS.guides.toLowerCase()}, and your profile to shape your {FORGE_EVENT.name} experience.
+          Compass is scanning sessions, Champions, and your profile to shape your TechXchange experience.
         </p>
       </section>
     );
@@ -1881,7 +1880,7 @@ export default function ClassicExperiencePage() {
 
       <section className="section no-top-border experience-hero-compact">
         <div className="experience-hero-toolbar">
-          <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
+          <div className="section-kicker">My Compass</div>
           <div className="focus-compass-hero__links">
             <button
               type="button"
@@ -1895,7 +1894,7 @@ export default function ClassicExperiencePage() {
               Edit profile
             </Link>
             <Link href="/txc/enroll?mode=edit&focus=intent" className="focus-compass-refine-btn">
-              Refine {FORGE_PRODUCT.myJourney} →
+              Refine My Compass →
             </Link>
           </div>
         </div>
@@ -1989,7 +1988,7 @@ export default function ClassicExperiencePage() {
               </div>
               {isMobile && HIGHLIGHT_DATA.length > 1 && (
                 <p className="compass-module-note">
-                  Expand {FORGE_LABELS.communities} below for more anchor moments.
+                  Expand IBM Community below for more anchor moments.
                 </p>
               )}
             </div>
@@ -2228,7 +2227,7 @@ export default function ClassicExperiencePage() {
 
       <footer className="focus-compass-classic-footer">
         <Link href="/txc/experience" className="focus-compass-advanced-link">
-          ← {FORGE_PRODUCT.myJourney} (Focus Mode)
+          ← My Compass (Focus Mode)
         </Link>
       </footer>
 
@@ -2239,7 +2238,7 @@ export default function ClassicExperiencePage() {
             Refine your profile to sharpen every recommendation.
           </p>
         </div>
-        <a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine {FORGE_PRODUCT.myJourney} →</a>
+        <a href="/txc/enroll?mode=edit&focus=intent" className="action-chip">Refine My Compass →</a>
       </section>
       </SpeakerIntelligenceProvider>
 

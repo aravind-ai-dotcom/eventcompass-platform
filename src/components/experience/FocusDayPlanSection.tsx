@@ -6,7 +6,6 @@ import FocusSessionCard from "@/components/experience/FocusSessionCard";
 import PlanModeSelector from "@/components/experience/PlanModeSelector";
 import {
   EVENT_DAYS,
-  EVENT_DAY_SHORT,
   groupDaySessions,
   type EventDay,
   type PlanConflictMode,
@@ -188,10 +187,9 @@ export default function FocusDayPlanSection({
             role="tab"
             aria-selected={activeDay === day}
             onClick={() => setActiveDay(day)}
-            aria-label={day}
             className={`day-tab${activeDay === day ? " is-active" : ""}`}
           >
-            {EVENT_DAY_SHORT[day]}
+            {day}
           </button>
         ))}
       </div>

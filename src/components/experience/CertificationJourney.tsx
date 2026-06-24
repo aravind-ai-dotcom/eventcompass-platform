@@ -313,7 +313,7 @@ export default function CertificationJourney({
                 )}
                 {plan.knowledge.certUrl && (
                   <a href={plan.knowledge.certUrl} target="_blank" rel="noopener noreferrer" className="cert-panel__btn">
-                    Learning resources ↗
+                    IBM Training ↗
                   </a>
                 )}
                 {plan.knowledge.preparationHours != null && (
@@ -376,7 +376,7 @@ export default function CertificationJourney({
             <StageTile
               label={CERTIFICATION_MILESTONES[3]}
               items={plan.connect}
-              emptyCopy="Add experts from recommendations or guides."
+              emptyCopy="Add experts from recommendations or Champions."
               stage="connect"
               available={plan.availableByStage.connect}
               onPin={item => onPinToStage("connect", item)}

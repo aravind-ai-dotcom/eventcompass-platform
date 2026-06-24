@@ -1,7 +1,7 @@
 "use client";
 
 export type DonutTone =
-  | "accent"
+  | "ibm-blue"
   | "teal"
   | "purple"
   | "green"
@@ -15,10 +15,10 @@ export interface DonutSegment {
 }
 
 const TONE_VAR: Record<DonutTone, string> = {
-  accent: "var(--accent)",
-  teal: "#22D3EE",
-  purple: "#A855F7",
-  green: "#6366F1",
+  "ibm-blue": "#0f62fe",
+  teal: "#009d9a",
+  purple: "#8a3ffc",
+  green: "#24a148",
   gray: "#6f6f6f",
   muted: "var(--line-strong)",
 };
@@ -41,7 +41,7 @@ function DonutChart({
   size = 120,
   stroke = 16,
   split = false,
-  centerFill = "var(--donut-center, var(--bg))",
+  centerFill = "var(--panel)",
 }: {
   segments: DonutSegment[];
   size?: number;
@@ -77,7 +77,7 @@ function DonutChart({
           cy={cy}
           r={radius}
           fill="none"
-          stroke="var(--donut-track, var(--line))"
+          stroke="var(--line)"
           strokeWidth={stroke}
           opacity={0.45}
         />
@@ -86,7 +86,7 @@ function DonutChart({
           cy={cy}
           r={radius}
           fill="none"
-          stroke={TONE_VAR[a.tone ?? "accent"]}
+          stroke={TONE_VAR[a.tone ?? "ibm-blue"]}
           strokeWidth={stroke}
           strokeDasharray={`${aDash} ${circumference - aDash}`}
           strokeLinecap="butt"
@@ -122,7 +122,7 @@ function DonutChart({
         cy={cy}
         r={radius}
         fill="none"
-        stroke="var(--donut-track, var(--line))"
+        stroke="var(--line)"
         strokeWidth={stroke}
         opacity={0.55}
       />
@@ -132,7 +132,7 @@ function DonutChart({
         const gap = circumference - dash;
         const startAngle = (segments.slice(0, index).reduce((sum, s) => sum + s.value, 0) / total) * 360;
         const rotation = -90 + startAngle;
-        const color = TONE_VAR[segment.tone ?? "accent"];
+        const color = TONE_VAR[segment.tone ?? "ibm-blue"];
 
         return (
           <circle
@@ -187,7 +187,7 @@ export default function PulseDonutBox({
         <li key={segment.label}>
           <span
             className="pulse-donut-box__swatch"
-            style={{ background: TONE_VAR[segment.tone ?? "accent"] }}
+            style={{ background: TONE_VAR[segment.tone ?? "ibm-blue"] }}
             aria-hidden="true"
           />
           <span className="pulse-donut-box__legend-copy">
@@ -248,32 +248,32 @@ export default function PulseDonutBox({
 
 export function alumniDonutSegments(returning: number, firstTime: number): DonutSegment[] {
   return [
-    { label: "Returning Attendees", value: returning, tone: "accent" as const },
+    { label: "Returning Attendees", value: returning, tone: "ibm-blue" as const },
     { label: "First-Time Attendees", value: firstTime, tone: "teal" as const },
   ].filter(s => s.value > 0);
 }
 
 export function championDonutSegments(
-  guides: number,
+  ibm: number,
   former: number,
   interested: number,
   nominee: number,
 ): DonutSegment[] {
   return [
-    { label: "Guides", value: guides, tone: "accent" as const },
-    { label: "Former Guides", value: former, tone: "purple" as const },
+    { label: "IBM Champions", value: ibm, tone: "ibm-blue" as const },
+    { label: "Former Champions", value: former, tone: "purple" as const },
     { label: "Nominees", value: nominee, tone: "teal" as const },
-    { label: "Rising Guides", value: interested, tone: "green" as const },
+    { label: "Rising Champions", value: interested, tone: "green" as const },
   ].filter(s => s.value > 0);
 }
 
-/** Public pulse — only show when at least two guide buckets have signal. */
+/** Public pulse — only show when at least two champion buckets have signal. */
 export function hasChampionCommunityMix(
-  guides: number,
+  ibm: number,
   former: number,
   interested: number,
   nominee: number,
 ): boolean {
-  const buckets = [guides, former, interested, nominee].filter(n => n > 0);
+  const buckets = [ibm, former, interested, nominee].filter(n => n > 0);
   return buckets.length >= 2;
 }

@@ -14,14 +14,6 @@ import {
 export const EVENT_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday"] as const;
 export type EventDay = (typeof EVENT_DAYS)[number];
 
-/** Compact labels for mobile learning plan tabs */
-export const EVENT_DAY_SHORT: Record<EventDay, string> = {
-  Monday: "MON",
-  Tuesday: "TUE",
-  Wednesday: "WED",
-  Thursday: "THU",
-};
-
 export type PlanConflictMode = "best-fit" | "show-both" | "capacity";
 
 function sessionCapacityRank(session: ExperienceScoredSession): number {

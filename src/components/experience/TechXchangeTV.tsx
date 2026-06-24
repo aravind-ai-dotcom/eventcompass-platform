@@ -1,5 +1,5 @@
 // =============================================================================
-// EventCompass — FORGE Live
+// EventCompass — TechXchange TV
 // src/components/experience/TechXchangeTV.tsx
 //
 // Phase 10: Live event channel placeholder.
@@ -8,8 +8,6 @@
 // =============================================================================
 
 "use client";
-
-import { FORGE_EVENT } from "@/config/forgeBrand";
 
 interface TVProgram {
   title:    string;
@@ -74,7 +72,7 @@ export default function TechXchangeTV({ programs = DEFAULT_PROGRAMS, viewerCount
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={{ color: "#FFFFFF", fontWeight: 700, fontSize: "0.95rem", letterSpacing: "-0.01em" }}>
-            FORGE Live
+            TechXchange TV
           </span>
           {liveProgram && <LiveDot />}
         </div>
@@ -125,7 +123,7 @@ export default function TechXchangeTV({ programs = DEFAULT_PROGRAMS, viewerCount
               Live programming coming soon.
             </p>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
-              {FORGE_EVENT.name} Live will broadcast keynotes, community sessions, and live event coverage during the event.
+              TechXchange TV will broadcast keynotes, community sessions, and live event coverage during the event.
             </p>
           </div>
         )}

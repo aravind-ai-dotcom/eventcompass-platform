@@ -21,7 +21,7 @@ interface Props {
 }
 
 const PILLAR_CONFIG = [
-  { key: "people"    as const, label: "People",    color: "#8a3ffc",        desc: "Guides, experts, and connections worth making" },
+  { key: "people"    as const, label: "People",    color: "#8a3ffc",        desc: "Champions, experts, and connections worth making" },
   { key: "learning"  as const, label: "Learning",  color: "var(--accent)", desc: "Breakouts, labs, and technical sessions" },
   { key: "community" as const, label: "Networking", color: "#0D9488",        desc: "Peer roundtables, meetups, and huddles" },
   { key: "fun"       as const, label: "Fun",        color: "#D97706",        desc: "Keynotes, receptions, and social moments" },

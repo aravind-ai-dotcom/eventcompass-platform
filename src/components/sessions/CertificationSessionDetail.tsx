@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { CertificationJourneyRecord } from "@/types/certificationSession";
 import { getCertificationEnrichment } from "@/lib/certificationProfile";
-import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 interface SessionDetailLike {
   id: string;
@@ -162,7 +161,7 @@ export default function CertificationSessionDetail({
           )}
           {certUrl && (
             <a href={certUrl} target="_blank" rel="noopener noreferrer" className="action-chip">
-              Learn more on professional learning ↗
+              Learn more on IBM Training ↗
             </a>
           )}
         </div>
@@ -211,7 +210,7 @@ export default function CertificationSessionDetail({
 
       <div className="cert-detail-actions">
         <Link href="/experience" className="action-chip" onClick={onClose}>
-          See your journey on {FORGE_PRODUCT.myJourney}
+          See your journey on My Compass
         </Link>
       </div>
     </>

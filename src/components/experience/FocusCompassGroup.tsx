@@ -16,7 +16,7 @@ interface FocusCompassGroupProps {
   children: ReactNode;
 }
 
-/** Focus Mode — collapsible grouped section with icon rail. */
+/** Focus Mode — collapsible grouped section with Carbon-style icon rail. */
 export default function FocusCompassGroup({
   id,
   icon,

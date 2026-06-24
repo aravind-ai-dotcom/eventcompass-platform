@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { TXC_EVENT_ID } from "@/lib/compassEventPaths";
-import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
-import { CHART_COLORS } from "@/config/chartColors";
 import {
   createVoiceDictionaryRecord,
   getCachedVoiceDictionaryRecords,
@@ -24,8 +22,10 @@ const S = {
   muted: "#a8a8a8",
   dim: "#6f6f6f",
   line: "#393939",
-  accent: CHART_COLORS.primaryLight,
+  accent: "#78a9ff",
 };
+
+const IBM = { blue: "#0f62fe", green: "#24a148", red: "#da1e28" };
 
 const fieldLabel: CSSProperties = {
   color: S.muted,
@@ -156,7 +156,7 @@ export function VoicePronunciationAdminView() {
     setError("");
     try {
       const count = await seedVoiceDictionaryIfEmpty(TXC_EVENT_ID);
-      setMessage(count ? `Seeded ${count} ${FORGE_EVENT.name} pronunciation entries.` : "Dictionary already populated.");
+      setMessage(count ? `Seeded ${count} TechXchange pronunciation entries.` : "Dictionary already populated.");
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Seed failed.");
@@ -184,7 +184,7 @@ export function VoicePronunciationAdminView() {
     <div>
       <SectionHead
         title="Voice pronunciation"
-        sub={`Map display text → spoken text for ${FORGE_PRODUCT.askCompassAi} TTS. Firestore: organizations/ibm/events/txc2026/voiceDictionary`}
+        sub="Map display text → spoken text for Ask Compass TTS (TechXchange only). Firestore: organizations/ibm/events/txc2026/voiceDictionary"
       />
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap", alignItems: "center" }}>
@@ -192,7 +192,7 @@ export function VoicePronunciationAdminView() {
           type="button"
           onClick={startAddWord}
           style={{
-            padding: "7px 14px", background: CHART_COLORS.primary, border: "none",
+            padding: "7px 14px", background: IBM.blue, border: "none",
             color: "#fff", fontSize: "0.82rem", fontFamily: "inherit", cursor: "pointer",
             fontWeight: 650,
           }}
@@ -220,10 +220,10 @@ export function VoicePronunciationAdminView() {
           Seed if empty
         </button>
         {message && (
-          <span style={{ color: CHART_COLORS.green, fontSize: "0.82rem" }}>{message}</span>
+          <span style={{ color: IBM.green, fontSize: "0.82rem" }}>{message}</span>
         )}
         {error && (
-          <span style={{ color: CHART_COLORS.red, fontSize: "0.82rem" }}>{error}</span>
+          <span style={{ color: IBM.red, fontSize: "0.82rem" }}>{error}</span>
         )}
       </div>
 
@@ -233,13 +233,13 @@ export function VoicePronunciationAdminView() {
             color: S.muted, fontSize: "0.68rem", fontWeight: 700,
             textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px",
           }}>
-            {FORGE_EVENT.name} dictionary ({txcRecords.length})
+            TechXchange dictionary ({txcRecords.length})
           </p>
           {loading ? (
             <p style={{ color: S.dim, fontSize: "0.84rem", margin: 0 }}>Loading…</p>
           ) : txcRecords.length === 0 ? (
             <p style={{ color: S.dim, fontSize: "0.84rem", margin: 0 }}>
-              No entries yet. Use &ldquo;Seed if empty&rdquo; to load {FORGE_EVENT.name} defaults (event name, product terms, acronyms).
+              No entries yet. Use &ldquo;Seed if empty&rdquo; to load TechXchange defaults (TechXchange, watsonx, IBM Z, etc.).
             </p>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -265,12 +265,12 @@ export function VoicePronunciationAdminView() {
                       style={{
                         borderBottom: `1px solid ${S.line}`,
                         cursor: "pointer",
-                        background: selected?.id === r.id ? "rgb(var(--accent-rgb) / 0.1)" : "transparent",
+                        background: selected?.id === r.id ? "rgba(15,98,254,0.1)" : "transparent",
                       }}
                     >
                       <td style={{ padding: "10px", color: S.text }}>{r.displayText}</td>
                       <td style={{ padding: "10px", color: S.soft }}>{r.spokenText}</td>
-                      <td style={{ padding: "10px", color: r.active ? CHART_COLORS.green : S.dim }}>
+                      <td style={{ padding: "10px", color: r.active ? IBM.green : S.dim }}>
                         {r.active ? "yes" : "no"}
                       </td>
                     </tr>
@@ -344,7 +344,7 @@ function VoiceEditor({
         <input
           style={field}
           value={draft.displayText}
-          placeholder={`e.g. ${FORGE_EVENT.name}`}
+          placeholder="e.g. TechXchange"
           onChange={e => setDraft({ ...draft, displayText: e.target.value })}
         />
       </label>
@@ -379,7 +379,7 @@ function VoiceEditor({
           disabled={saving || !canSave}
           onClick={() => onSave(draft)}
           style={{
-            padding: "8px 16px", background: saving || !canSave ? S.dim : CHART_COLORS.primary, border: "none",
+            padding: "8px 16px", background: saving || !canSave ? S.dim : IBM.blue, border: "none",
             color: "#fff", fontSize: "0.82rem", fontFamily: "inherit",
             cursor: saving || !canSave ? "default" : "pointer",
             fontWeight: 650,

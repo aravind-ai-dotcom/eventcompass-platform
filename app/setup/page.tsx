@@ -21,7 +21,7 @@ export default function SetupHubPage() {
             <Link href="/setup/sko/edition" className="setup-btn setup-btn--primary">Open SKO Admin →</Link>
           </article>
           <article className="setup-hub-card">
-            <h2>FORGE 2027</h2>
+            <h2>TechXchange 2026</h2>
             <p>Knowledge, voice pronunciation, STT normalization, and analytics.</p>
             <ul>
               <li><Link href="/setup/txc/knowledge">Knowledge</Link></li>

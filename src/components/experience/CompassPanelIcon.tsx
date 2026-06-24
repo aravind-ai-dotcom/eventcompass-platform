@@ -16,7 +16,7 @@ interface CompassPanelIconProps {
   className?: string;
 }
 
-/** Minimal stroke pictograms for Compass panels. */
+/** Minimal IBM Carbon–inspired stroke pictograms for Compass panels. */
 export default function CompassPanelIcon({ name, className = "" }: CompassPanelIconProps) {
   const common = {
     width: 20,

@@ -1,20 +1,51 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import ForgeArtwork from "@/components/media/ForgeArtwork";
-import { FORGE_PILLARS } from "@/config/forgeBrand";
 
-const LIFECYCLE_IMAGES = [
-  "/forge/hero-crystal-beam.png",
-  "/forge/visual-signals.svg",
-  "/forge/visual-trajectory.svg",
+const LIFECYCLE = [
+  {
+    id: "prepare",
+    kicker: "Prepare",
+    title: "Shape your goals before you arrive.",
+    body: "Tell Compass what matters — learning paths, certification targets, and connection intent.",
+    image: "/event/learning-lab.jpg",
+    objectPosition: "center top",
+    href: "/txc/enroll",
+    cta: "Build My Compass",
+  },
+  {
+    id: "meet",
+    kicker: "Meet",
+    title: "Find your people in the room.",
+    body: "Experts, mentors, peers, and community leaders matched to your interests and experience.",
+    image: "/event/people-v2.jpg",
+    objectPosition: "center 55%",
+    href: "/txc/champions",
+    cta: "Explore people",
+  },
+  {
+    id: "experience",
+    kicker: "Experience",
+    title: "Live TechXchange with clarity.",
+    body: "An AI-powered week plan — sessions prioritized, conflicts resolved, every day intentional.",
+    image: "/event/ibm_txc_banner_B.jpg",
+    objectPosition: "center center",
+    href: "/txc/experience",
+    cta: "Open My Compass",
+  },
+  {
+    id: "continue",
+    kicker: "Continue",
+    title: "Take it home.",
+    body: "Certification progress, connections, and learning paths that extend beyond the event.",
+    image: "/event/ibm_txc_banner_A.jpg",
+    objectPosition: "center top",
+    href: "/txc/explore",
+    cta: "See how Compass works",
+  },
 ] as const;
-
-const LIFECYCLE = FORGE_PILLARS.map((pillar, index) => ({
-  ...pillar,
-  image: LIFECYCLE_IMAGES[index],
-}));
 
 const ROTATE_MS = 7000;
 
@@ -50,7 +81,7 @@ export default function HomeLifecycleRotator() {
         }
       }}
     >
-      <div className="home-lifecycle-rotator-tabs" role="tablist" aria-label="Journey pillars">
+      <div className="home-lifecycle-rotator-tabs" role="tablist" aria-label="Compass lifecycle">
         {LIFECYCLE.map((item, index) => (
           <button
             key={item.id}
@@ -80,16 +111,19 @@ export default function HomeLifecycleRotator() {
         aria-labelledby={`lifecycle-tab-${phase.id}`}
         className="home-lifecycle-rotator-panel"
       >
-        <div className="home-lifecycle-rotator-media forge-visual-stage">
+        <div className="home-lifecycle-rotator-media">
           {LIFECYCLE.map((item, index) => (
             <div
               key={item.id}
               className={`home-lifecycle-rotator-slide${active === index ? " is-active" : ""}`}
               aria-hidden={active !== index}
             >
-              <ForgeArtwork
+              <Image
                 src={item.image}
-                className="forge-visual-stage__art"
+                alt=""
+                fill
+                sizes="(max-width: 768px) 100vw, 55vw"
+                style={{ objectFit: "cover", objectPosition: item.objectPosition }}
                 priority={index === 0}
               />
             </div>
@@ -119,7 +153,7 @@ export default function HomeLifecycleRotator() {
           <button
             type="button"
             className="home-lifecycle-nav-btn"
-            aria-label="Previous pillar"
+            aria-label="Previous phase"
             onClick={() => goTo(active - 1)}
           >
             ←
@@ -127,7 +161,7 @@ export default function HomeLifecycleRotator() {
           <button
             type="button"
             className="home-lifecycle-nav-btn"
-            aria-label="Next pillar"
+            aria-label="Next phase"
             onClick={() => goTo(active + 1)}
           >
             →

@@ -35,7 +35,7 @@ export default function TxcVoiceSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="FORGE 2027 Compass"
+      eventLabel="TechXchange Compass"
       title="Voice Pronunciation Dictionary"
       subtitle="displayText → spokenText for Google TTS (after response generation)"
     >

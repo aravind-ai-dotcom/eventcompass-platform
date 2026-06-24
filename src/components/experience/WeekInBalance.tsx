@@ -25,7 +25,7 @@ export default function WeekInBalance({
 
   const segments = [
     { label: "People", w: peopleW, color: "#8a3ffc" },
-    { label: "Learning", w: learnW, color: "var(--accent)" },
+    { label: "Learning", w: learnW, color: "#0f62fe" },
     { label: "Networking", w: commW, color: "var(--purple-soft)" },
     { label: "Fun", w: funW, color: "#009d9a" },
     { label: "Open", w: openW, color: "var(--line-strong)" },
@@ -67,7 +67,7 @@ export default function WeekInBalance({
           <div className="focus-metric-block__legend week-balance-legend">
             {[
               { label: "People", count: people, color: "#8a3ffc" },
-              { label: "Learning", count: learning, color: "var(--accent)" },
+              { label: "Learning", count: learning, color: "#0f62fe" },
               { label: "Networking", count: community, color: "var(--purple-soft)" },
               { label: "Fun", count: fun, color: "#009d9a" },
             ].map(item => (
@@ -92,7 +92,7 @@ export default function WeekInBalance({
         <div className="week-balance-legend">
           {[
             { label: "People", count: people, color: "#8a3ffc" },
-            { label: "Learning", count: learning, color: "var(--accent)" },
+            { label: "Learning", count: learning, color: "#0f62fe" },
             { label: "Networking", count: community, color: "var(--purple-soft)" },
             { label: "Fun", count: fun, color: "#009d9a" },
           ].map(item => (

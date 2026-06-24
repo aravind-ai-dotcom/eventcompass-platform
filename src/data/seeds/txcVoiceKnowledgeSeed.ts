@@ -1,5 +1,5 @@
 // =============================================================================
-// Forge Voice Intelligence — seed for voice_knowledge collection
+// TechXchange Voice Intelligence — seed for voice_knowledge collection
 // =============================================================================
 
 import {
@@ -37,12 +37,12 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
   vk(
     "event_techxchange_overview",
     "Event Knowledge",
-    "What is Forge?",
+    "What is TechXchange?",
     [
-      "what is forge",
-      "tell me about forge",
-      "describe forge",
-      "about forge",
+      "what is techxchange",
+      "tell me about techxchange",
+      "describe techxchange",
+      "about techxchange",
       "what is this event",
       "what is the event",
     ],
@@ -52,14 +52,14 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
   vk(
     "event_techxchange_dates",
     "Event Knowledge",
-    "When is Forge?",
+    "When is TechXchange?",
     [
-      "when is forge",
+      "when is techxchange",
       "when is the event",
-      "what dates is forge",
-      "when does forge",
-      "what day is forge",
-      "dates for forge",
+      "what dates is techxchange",
+      "when does techxchange",
+      "what day is techxchange",
+      "dates for techxchange",
       "when does it start",
     ],
     EVENT_KNOWLEDGE.event_dates,
@@ -68,14 +68,14 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
   vk(
     "event_location",
     "Event Knowledge",
-    "Where is Forge?",
+    "Where is TechXchange?",
     [
       "where is the event",
-      "where is forge",
+      "where is techxchange",
       "where is it located",
       "event location",
       "where is it",
-      "what city is forge",
+      "what city is techxchange",
     ],
     EVENT_KNOWLEDGE.event_location,
     "event_location",
@@ -146,16 +146,16 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "sandbox_block_party",
   ),
   vk(
-    "event_guides",
+    "event_champions",
     "Event Knowledge",
-    "What are Guides?",
+    "What are IBM Champions?",
     [
-      "what are guides",
-      "who are guides",
-      "what is the guides program",
-      "guides program",
-      "what is a guide",
-      "what is a guide at forge",
+      "what are ibm champions",
+      "who are ibm champions",
+      "what is the champions program",
+      "ibm champions program",
+      "what is an ibm champion",
+      "what is a champion at techxchange",
     ],
     EVENT_KNOWLEDGE.champions_program,
     "champions_program",
@@ -167,8 +167,8 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     [
       "what is the event about",
       "purpose of the event",
-      "why forge",
-      "why attend forge",
+      "why techxchange",
+      "why attend techxchange",
     ],
     EVENT_KNOWLEDGE.event_purpose,
     "event_purpose",
@@ -190,10 +190,10 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
   vk(
     "event_certifications",
     "Event Knowledge",
-    "Certification opportunities at Forge",
+    "Certification opportunities at TechXchange",
     [
       "certification opportunities",
-      "certification at forge",
+      "certification at techxchange",
       "certification program",
       "how do certifications work",
       "certification help at the event",
@@ -238,21 +238,21 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "partner",
   ),
   vk(
-    "persona_guide",
+    "persona_champion",
     "Persona Guidance",
-    "Guide",
+    "Champion",
     [
-      "i am a guide",
-      "i'm a guide",
-      "im a guide",
-      "i am a guide",
-      "i'm a guide",
-      "what should a guide do",
-      "what should guides do",
-      "guide guidance",
+      "i am a champion",
+      "i'm a champion",
+      "im a champion",
+      "i am an ibm champion",
+      "i'm an ibm champion",
+      "what should a champion do",
+      "what should champions do",
+      "champion guidance",
     ],
-    PERSONA_GUIDANCE.guide,
-    "guide",
+    PERSONA_GUIDANCE.champion,
+    "champion",
   ),
   vk(
     "persona_student",
@@ -291,7 +291,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
       "ai engineer guidance",
       "what should an ai engineer do",
     ],
-    "As an AI engineer, prioritize AI platform and AI track breakouts, hands-on labs, and expert roundtables. Live Huddles with practitioners building agents and models are strong follow-ups — and certification labs pair well if you are pursuing AI platform credentials.",
+    "As an AI engineer, prioritize watsonx and AI track breakouts, hands-on labs, and expert roundtables. Live Huddles with practitioners building agents and models are strong follow-ups — and certification labs pair well if you are pursuing watsonx credentials.",
     "ai_engineer",
   ),
   vk(
@@ -305,7 +305,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
       "what should a data expert do",
       "i work in data",
     ],
-    "As a data expert, anchor on Data Technical Summit programming, governance and engineering breakouts, and AI platform data sessions. Peer roundtables and Live Huddles with architects and practitioners surface the most practical patterns.",
+    "As a data expert, anchor on Data Technical Summit programming, governance and engineering breakouts, and watsonx data sessions. Peer roundtables and Live Huddles with architects and practitioners surface the most practical patterns.",
     "data_expert",
   ),
   vk(
@@ -318,7 +318,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
       "i'm an infrastructure engineer",
       "what should an infrastructure engineer do",
     ],
-    "As an infrastructure engineer, focus on Cloud, IT Optimization and Automation, Power, Storage, and mainframe platforms sessions. Architecture breakouts and Live Huddles with platform teams help you connect patterns to your environment.",
+    "As an infrastructure engineer, focus on Cloud, IT Optimization and Automation, Power, Storage, and IBM Z sessions. Architecture breakouts and Live Huddles with platform teams help you connect patterns to your environment.",
     "infrastructure_engineer",
   ),
   vk(
@@ -370,7 +370,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "Fun & Social",
     "Anything fun?",
     ["anything fun", "something fun today", "something fun", "fun activities", "fun thing"],
-    "Forge has signature evening experiences, the Sandbox Block Party, community meetups, and Live Huddles forming throughout the week.",
+    "TechXchange has signature evening experiences, the Sandbox Block Party, community meetups, and Live Huddles forming throughout the week.",
   ),
   vk(
     "fun_anything_social",
@@ -412,7 +412,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "Fun & Social",
     "Any meetups?",
     ["any meetups", "any meet up", "community meetups"],
-    "Community Day meetups kick off the week for guides and user groups. Throughout the week, Live Huddles surface peer meetups aligned to your tracks.",
+    "Community Day meetups kick off the week for champions and user groups. Throughout the week, Live Huddles surface peer meetups aligned to your tracks.",
   ),
   vk(
     "fun_gathering",
@@ -441,7 +441,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     [
       "how do i get certified",
       "how to get certified",
-      "get certified at forge",
+      "get certified at techxchange",
       "take a cert exam",
     ],
     "Set your certification goal in Build My Compass — Compass connects badge exams, instructor-led labs, study groups, and expert time across the week. Mention a cert code like C1000 for targeted help.",
@@ -471,7 +471,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
       "meet experts for cert",
       "who should i meet",
     ],
-    "Meet guides and practitioners who have earned the credential you are pursuing — Compass surfaces them on Guides and in your Certification Journey connect step.",
+    "Meet champions and practitioners who have earned the credential you are pursuing — Compass surfaces them on Champions and in your Certification Journey connect step.",
     "people",
   ),
   vk(
@@ -643,7 +643,7 @@ export const TXC_VOICE_KNOWLEDGE_SEED: VoiceKnowledgeRecord[] = [
     "Event Scope",
     "Event — People & networking",
     [
-      "guide",
+      "champion",
       "who should i meet",
       "networking",
       "huddle",
@@ -687,7 +687,7 @@ For local services, use venue resources or nearby maps.`,
     "Event Scope",
     "Low-confidence scope clarify",
     [],
-    "Are you asking about Forge activities or local services nearby? I can help with sessions, certifications, people, communities, and event activities — or point you to venue maps for logistics.",
+    "Are you asking about TechXchange activities or local services nearby? I can help with sessions, certifications, people, communities, and event activities — or point you to venue maps for logistics.",
     "scope_clarify",
   ),
 

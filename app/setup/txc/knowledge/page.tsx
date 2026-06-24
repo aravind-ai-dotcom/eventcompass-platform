@@ -18,19 +18,6 @@ const CATEGORIES: KnowledgeCategory[] = [
   "Networking", "Fun", "Privacy", "Fallback",
 ];
 
-/** FORGE-facing labels for internal category keys */
-const CATEGORY_LABELS: Record<KnowledgeCategory, string> = {
-  Compass: "Compass",
-  Champion: "Guide",
-  Certification: "Learning Path",
-  Partner: "Partner",
-  "Event Logistics": "Event Logistics",
-  Networking: "Networking",
-  Fun: "Fun",
-  Privacy: "Privacy",
-  Fallback: "Fallback",
-};
-
 export default function TxcKnowledgeSetupPage() {
   const [records, setRecords] = useState<TechXchangeKnowledgeRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +79,7 @@ export default function TxcKnowledgeSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="FORGE 2027 Compass"
+      eventLabel="TechXchange Compass"
       title="Knowledge Base"
       subtitle="Firestore source of truth — organizations/ibm/events/txc2026/knowledgeBase"
     >
@@ -105,7 +92,7 @@ export default function TxcKnowledgeSetupPage() {
         />
         <select className="setup-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="all">All categories</option>
-          {CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select className="setup-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All statuses</option>
@@ -137,7 +124,7 @@ export default function TxcKnowledgeSetupPage() {
                 {filtered.map(r => (
                   <tr key={r.id} className={selected?.id === r.id ? "is-selected" : ""} onClick={() => setSelected(r)}>
                     <td>{r.intent}</td>
-                    <td>{CATEGORY_LABELS[r.category]}</td>
+                    <td>{r.category}</td>
                     <td>{r.status}</td>
                     <td>{r.priority}</td>
                   </tr>
@@ -211,7 +198,7 @@ function KnowledgeEditor({
             value={draft.category}
             onChange={(e) => setDraft({ ...draft, category: e.target.value as KnowledgeCategory })}
           >
-            {CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
         <label>

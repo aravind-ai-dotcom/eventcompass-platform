@@ -5,7 +5,6 @@
 
 import type { Participant } from "@/types";
 import CompassScore from "./CompassScore";
-import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 interface Props {
   participant: Participant;
@@ -30,7 +29,7 @@ export default function ParticipantHero({ participant, topScore }: Props) {
       >
         {/* Identity */}
         <div>
-          <div className="section-kicker">{FORGE_PRODUCT.myJourney}</div>
+          <div className="section-kicker">My Compass</div>
           <h1
             style={{
               fontSize: "clamp(2.4rem, 4.5vw, 4.4rem)",

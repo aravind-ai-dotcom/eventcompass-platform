@@ -108,7 +108,7 @@ export default function ChampionDetailModal({
           </div>
         )}
         {!anonymous && champion.attendance?.available_for_1x1 && (
-          <p style={{ margin: "12px 0 0", fontSize: "0.82rem", color: "var(--accent)", fontWeight: 550 }}>
+          <p style={{ margin: "12px 0 0", fontSize: "0.82rem", color: "#0f62fe", fontWeight: 550 }}>
             Open to technical conversations
           </p>
         )}

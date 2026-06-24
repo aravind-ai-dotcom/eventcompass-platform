@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import TechXchangePulsePage from "@/components/pulse/TechXchangePulsePage";
-import { FORGE_EVENT } from "@/config/forgeBrand";
 
 export const metadata: Metadata = {
-  title: `Pulse | ${FORGE_EVENT.name}`,
+  title: "Pulse | IBM TechXchange 2026",
   description:
-    `Event intelligence for ${FORGE_EVENT.name} — audience intent, identity, IBM Champions presence, and communities forming.`,
+    "Live TechXchange audience signals — communities forming, conversations beginning, opportunities emerging.",
 };
 
 export default function TxcPulsePage() {

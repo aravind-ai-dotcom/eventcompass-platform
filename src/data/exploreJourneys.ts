@@ -25,14 +25,14 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "certification",
     title: "Earn a certification",
-    image: "/forge/visual-trajectory.svg",
-    accent: "#6366F1",
-    outcome: "Walk into your learning path with a focused plan built around TechXchange.",
+    image: "/event/ibm_txc_banner_4.jpg",
+    accent: "#a56eff",
+    outcome: "Walk into your exam with a focused study plan built around TechXchange.",
     helps: [
       "Recommend learning sessions aligned to your certification goal",
       "Identify labs and prep opportunities at the event",
       "Connect you with practitioners who teach the material",
-      "Suggest communities for ongoing study support",
+      "Suggest IBM Communities for ongoing study support",
     ],
     anonymousPreviews: [
       {
@@ -43,7 +43,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "certification",
-        kicker: "Learning path",
+        kicker: "Certification path",
         title: "A prep path shaped around your target credential",
         meta: "Sessions, labs, and study moments in one plan",
       },
@@ -59,11 +59,11 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "session",
         kicker: "Your learning plan",
         title: "Prep sessions prioritized for your certification goal",
-        meta: "See titles, times, and match reasons in My Journey",
+        meta: "See titles, times, and match reasons in My Compass",
       },
       {
         kind: "certification",
-        kicker: "Learning path",
+        kicker: "Certification path",
         title: "Opportunities mapped to your enrolled credentials",
         meta: "Labs and study blocks added to your week",
       },
@@ -71,16 +71,16 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "expert",
         kicker: "Expert access",
         title: "Practitioner conversations matched to your study focus",
-        meta: "Names and meeting context live in My Journey",
+        meta: "Names and meeting context live in My Compass",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
   {
     id: "experts",
     title: "Meet the right experts",
-    image: "/forge/visual-signals.svg",
-    accent: "#3B82F6",
+    image: "/event/ibm_txc_banner_1.jpg",
+    accent: "#0f62fe",
     outcome: "Spend your time with practitioners who match your technology and role.",
     helps: [
       "Surface speakers and technical leaders aligned to your interests",
@@ -93,7 +93,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "expert",
         kicker: "Expert matching",
         title: "Practitioners in your technology areas",
-        meta: "Personalized after you share role, products, and interests",
+        meta: "Unlocked after you share role, products, and interests",
       },
       {
         kind: "session",
@@ -107,27 +107,27 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "expert",
         kicker: "People to meet",
         title: "Experts ranked for your profile and intent",
-        meta: "Open My Journey for names, context, and why they match",
+        meta: "Open My Compass for names, context, and why they match",
       },
       {
         kind: "session",
         kicker: "Meet the Expert",
         title: "High-intent sessions on your calendar",
-        meta: "Times, locations, and match detail in My Journey",
+        meta: "Times, locations, and match detail in My Compass",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
   {
     id: "networking",
     title: "Build meaningful connections",
-    image: "/forge/visual-constellation.svg",
-    accent: "#3B82F6",
+    image: "/event/ibm_txc_banner_5.jpg",
+    accent: "#005d5d",
     outcome: "Meet alumni, peers, and practitioners who share your goals — not random hallway luck.",
     helps: [
       "Match you with people who share products and interests",
       "Prioritize mutual-intent networking opportunities",
-      "Suggest IBM Community groups to continue conversations after TechXchange",
+      "Suggest communities to continue conversations after TXC",
       "Surface huddles and small-group moments worth joining",
     ],
     anonymousPreviews: [
@@ -139,7 +139,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       },
       {
         kind: "community",
-        kicker: "Community",
+        kicker: "IBM Community",
         title: "Groups aligned to your technology focus",
         meta: "Continue conversations after the event",
       },
@@ -149,22 +149,22 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "networking",
         kicker: "People to meet",
         title: "Connections ranked for your goals and overlap",
-        meta: "Profiles and context available in My Journey",
+        meta: "Profiles and context available in My Compass",
       },
       {
         kind: "community",
-        kicker: "Community",
+        kicker: "IBM Community",
         title: "Communities recommended from your interests",
         meta: "Join paths surfaced in your plan",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
   {
     id: "challenge",
     title: "Bring a challenge",
-    image: "/forge/hero-crystal-beam.png",
-    accent: "#22D3EE",
+    image: "/event/expo.jpg",
+    accent: "#da1e28",
     outcome: "Turn a real problem into sessions, experts, and peer conversations that move it forward.",
     helps: [
       "Map your challenge to relevant sessions and labs",
@@ -191,39 +191,39 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "session",
         kicker: "Your challenge plan",
         title: "Sessions mapped to the problem you shared",
-        meta: "Full list and scheduling detail in My Journey",
+        meta: "Full list and scheduling detail in My Compass",
       },
       {
         kind: "expert",
         kicker: "Practitioner match",
         title: "Experts aligned to your challenge and domain",
-        meta: "Conversation starters and profiles in My Journey",
+        meta: "Conversation starters and profiles in My Compass",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
   {
     id: "technology",
     title: "Discover what's next",
-    image: "/forge/visual-constellation.svg",
-    accent: "#A855F7",
-    outcome: "Explore emerging tech through hands-on sessions, labs, and IBM Community — not brochure browsing.",
+    image: "/event/community-v2.jpg",
+    accent: "#b45309",
+    outcome: "Explore emerging tech through hands-on sessions, demos, and communities — not brochure browsing.",
     helps: [
       "Prioritize sessions on technologies you want to evaluate",
       "Surface labs and demos with limited capacity early",
-      "Connect interests to community groups",
+      "Connect interests to IBM Community groups",
       "Balance depth sessions with expo discovery time",
     ],
     anonymousPreviews: [
       {
         kind: "session",
         kicker: "Discovery sessions",
-        title: "Hands-on sessions in your interest areas",
+        title: "Demos and breakouts in your interest areas",
         meta: "Ranked after you share technologies to explore",
       },
       {
         kind: "community",
-        kicker: "Community",
+        kicker: "IBM Community",
         title: "Topic groups for ongoing learning",
         meta: "Matched to the domains you care about",
       },
@@ -233,22 +233,22 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "session",
         kicker: "Trending for you",
         title: "Emerging-tech sessions in your personalized plan",
-        meta: "Scores, times, and labs in My Journey",
+        meta: "Scores, times, and labs in My Compass",
       },
       {
         kind: "community",
-        kicker: "Community",
+        kicker: "IBM Community",
         title: "Groups connected to your learning path",
-        meta: "See recommendations in My Journey",
+        meta: "See recommendations in My Compass",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
   {
     id: "champions",
     title: "Inspire and connect",
-    image: "/forge/visual-signals.svg",
-    accent: "#3B82F6",
+    image: "/event/ibm-champion-journey.png",
+    accent: "#0f62fe",
     outcome: "Find attendees and community members who benefit from your experience — and vice versa.",
     helps: [
       "Highlight people seeking guidance in your domains",
@@ -261,7 +261,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "networking",
         kicker: "Mentoring opportunities",
         title: "Attendees seeking guidance in your areas",
-        meta: "Personalized after you share your expertise",
+        meta: "Matches unlock after you share your expertise",
       },
       {
         kind: "community",
@@ -275,16 +275,16 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "networking",
         kicker: "Give and receive",
         title: "People who benefit from your experience — and vice versa",
-        meta: "Profiles and mutual-fit signals in My Journey",
+        meta: "Profiles and mutual-fit signals in My Compass",
       },
       {
         kind: "community",
         kicker: "Community programs",
-        title: "Guide and community moments in your plan",
-        meta: "Details and links in My Journey — not on this page",
+        title: "Champion and community moments in your plan",
+        meta: "Details and links in My Compass — not on this page",
       },
     ],
-    cta: { href: "/txc/enroll", label: "Build My Journey" },
+    cta: { href: "/txc/enroll", label: "Build My Compass" },
   },
 ];
 
@@ -300,13 +300,13 @@ export function resolveJourneyCta(
 ): { href: string; label: string } {
   if (enrolled) {
     if (journey.cta.href === "/txc/enroll") {
-      return { href: "/txc/experience", label: "Open My Journey" };
+      return { href: "/txc/experience", label: "Open My Compass" };
     }
     return journey.cta;
   }
 
   if (GATED_DESTINATIONS.has(journey.cta.href)) {
-    return { href: "/txc/enroll", label: "Build My Journey" };
+    return { href: "/txc/enroll", label: "Build My Compass" };
   }
 
   return journey.cta;
@@ -314,7 +314,7 @@ export function resolveJourneyCta(
 
 export function explorePreviewGateCopy(enrolled: boolean): string {
   if (enrolled) {
-    return "Your matched sessions and IBM Champions appear in My Journey — with scores and reasons for each recommendation.";
+    return "Session titles, expert profiles, and match detail live in My Compass — not on this page.";
   }
-  return "Build your journey to see personalized sessions, Champions, and communities — tailored to your goals.";
+  return "Compass does not show specific sessions or people until you sign in and build your profile.";
 }

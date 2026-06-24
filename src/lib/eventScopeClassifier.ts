@@ -133,7 +133,7 @@ I can help with:
 For local services, use venue resources or nearby maps.`;
 
 export const DEFAULT_SCOPE_CLARIFY_RESPONSE =
-  "Are you asking about FORGE 2027 activities or local services nearby? I can help with sessions, learning paths, guides, communities, and event activities — or point you to venue maps for logistics.";
+  "Are you asking about TechXchange activities or local services nearby? I can help with sessions, certifications, people, communities, and event activities — or point you to venue maps for logistics.";
 
 function normalise(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9'\s]/g, " ").replace(/\s+/g, " ").trim();

@@ -8,7 +8,6 @@ import {
   type BalancedRecommendationInput,
 } from "@/lib/recommendationBalancing";
 import type { NextBestMove, ScoredChampion } from "@/types";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 import type { LiveOpportunity } from "@/types/liveOpportunity";
 
 export interface NextBestMoveEngineInput {
@@ -173,7 +172,7 @@ function buildChampionMove(champion: ScoredChampion, whyItMatters: string): Next
   return {
     type: "champion",
     headline: `Meet ${champion.display_name}`,
-    subline: [champion.title, champion.organization].filter(Boolean).join(" · ") || FORGE_LABELS.guide,
+    subline: [champion.title, champion.organization].filter(Boolean).join(" · ") || "IBM Champion",
     reason: whyItMatters,
     whyItMatters,
     score: champion.compass_score,
@@ -449,7 +448,7 @@ function pickAfterEventMove(
     return gateMove(
       "explore",
       "Follow Up With Your Connections",
-      `Keep momentum from ${FORGE_EVENT.name}`,
+      "Keep momentum from TechXchange",
       "Networking opportunity — follow up while conversations are still fresh.",
       "Review Connections",
       "/txc/experience#people",
@@ -461,7 +460,7 @@ function pickAfterEventMove(
     return gateMove(
       "explore",
       "Continue Certification Preparation",
-      `Build on what you learned at ${FORGE_EVENT.name}`,
+      "Build on what you learned at TechXchange",
       "Supports your certification goal — keep learning while momentum is high.",
       "View Certification Journey",
       "/txc/experience#goals",
@@ -483,10 +482,10 @@ function pickAfterEventMove(
 
   return gateMove(
     "explore",
-    `Review Your ${FORGE_EVENT.name} Experience`,
+    "Review Your TechXchange Experience",
     "Reflect and plan your next steps",
     "Popular among peers — revisit highlights and sharpen your learning plan.",
-    FORGE_PRODUCT.myJourney,
+    "Open My Compass",
     "/txc/experience",
     6,
   );
@@ -509,8 +508,8 @@ export function determineNextBestMove(input: NextBestMoveEngineInput): NextBestM
   if (!input.user?.uid) {
     return gateMove(
       "register",
-      `Start Your ${FORGE_EVENT.name} Journey`,
-      `You’re exploring ${FORGE_EVENT.name}.`,
+      "Start Your TechXchange Journey",
+      "You’re exploring TechXchange.",
       "Registering gives you access to your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.",
       "Register",
       "/txc/enroll",
@@ -523,9 +522,9 @@ export function determineNextBestMove(input: NextBestMoveEngineInput): NextBestM
     return gateMove(
       "profile",
       "Create Your Compass",
-      `Start personalizing your ${FORGE_EVENT.name} experience`,
+      "Start personalizing your TechXchange experience",
       "Tell Compass about your interests, goals, and areas of focus so we can personalize your event experience.",
-      FORGE_PRODUCT.buildMyJourney,
+      "Build My Compass",
       "/txc/enroll?mode=edit",
       2,
     );
@@ -538,7 +537,7 @@ export function determineNextBestMove(input: NextBestMoveEngineInput): NextBestM
       "Refine Your Compass",
       "Improve recommendation quality with better signals",
       "The more Compass knows about your interests and goals, the more relevant your recommendations become.",
-      `Refine ${FORGE_PRODUCT.myJourney}`,
+      "Refine My Compass",
       "/txc/enroll?mode=edit",
       3,
     );

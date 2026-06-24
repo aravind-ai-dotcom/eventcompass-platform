@@ -1,44 +1,32 @@
 "use client";
-
+// =============================================================================
+// EventCompass — Home
+// Lifetime value: Prepare → Meet → Experience → Continue
+// =============================================================================
 import Link from "next/link";
-import ForgeHeroVisual from "@/components/home/ForgeHeroVisual";
 import HomeCompassPreview from "@/components/home/HomeCompassPreview";
 import HomeLifecycleRotator from "@/components/home/HomeLifecycleRotator";
 import HomeProofStrip from "@/components/home/HomeProofStrip";
-import { FORGE_EVENT, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export default function HomePage() {
   return (
     <>
-      <section className="forge-hero forge-hero--visual">
-        <div className="forge-hero__beams" aria-hidden="true">
-          <span className="forge-beam" style={{ left: "8%", top: 0, height: "100%", opacity: 0.2 }} />
-          <span className="forge-beam" style={{ left: "92%", top: 0, height: "100%", opacity: 0.15 }} />
-        </div>
-        <div className="forge-hero__copy">
-          <p className="forge-hero-eyebrow">
-            <span className="forge-hero-meta__dates">{FORGE_EVENT.dates}</span>
-            <span className="forge-hero-eyebrow__sep" aria-hidden="true">·</span>
-            <span>{FORGE_EVENT.city}</span>
-          </p>
-          <h1 className="forge-hero-title" aria-label={FORGE_PRODUCT.tagline}>
-            <span className="forge-hero-title__brand forge-wordmark">{FORGE_PRODUCT.name}</span>
+      <section className="hero-shell hero-shell--home hero-shell--compact hero-shell--with-preview">
+        <div className="hero-copy">
+          <span className="eyebrow">IBM TechXchange 2026</span>
+          <h1 className="home-hero-title">
+            See who is here, what is moving, and where opportunities are forming.
           </h1>
-          <p className="forge-hero-tagline">{FORGE_PRODUCT.tagline}</p>
-          <p className="forge-hero__lede">
-            {FORGE_EVENT.shortName} is IBM&apos;s strategic attendee experience — what to learn,
-            who to meet, and how to stay involved before, during, and after the conference.
+          <p>
+            Compass starts before the event and continues after you return home —
+            prepare, meet, experience, and continue your momentum.
           </p>
-          <div className="forge-hero-meta forge-hero-meta--venue">
-            <span>{FORGE_EVENT.venue}</span>
-          </div>
-          <div className="forge-hero-actions">
-            <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney}</Link>
-            <Link href="/txc/sessions" className="btn-secondary">Explore sessions</Link>
-            <Link href="/txc/experience#compass-ai" className="btn-ghost">{FORGE_PRODUCT.askCompassAi}</Link>
+          <div className="hero-actions">
+            <Link href="/txc/enroll" className="btn-primary">Build My Compass</Link>
+            <Link href="/txc/explore" className="btn-secondary">How Compass works</Link>
           </div>
         </div>
-        <ForgeHeroVisual />
+        <HomeCompassPreview />
       </section>
 
       <HomeProofStrip />
@@ -47,19 +35,12 @@ export default function HomePage() {
         <HomeLifecycleRotator />
       </section>
 
-      <section className="forge-panel forge-laser" style={{ padding: "1.25rem", marginBottom: "2rem" }}>
-        <HomeCompassPreview />
-      </section>
-
-      <section className="final-band forge-card">
+      <section className="final-band">
         <div>
-          <h2>Plan with purpose.</h2>
-          <p>
-            Compass helps you answer what to learn, who to meet, and how to stay involved —
-            from registration through IBM Community long after Las Vegas.
-          </p>
+          <h2>Start before you arrive.</h2>
+          <p>Tell Compass what matters and walk into TechXchange with a plan.</p>
         </div>
-        <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
+        <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
       </section>
     </>
   );

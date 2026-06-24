@@ -1,7 +1,7 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import ForgeArtwork from "@/components/media/ForgeArtwork";
 import {
   explorePreviewGateCopy,
   resolveJourneyCta,
@@ -24,8 +24,17 @@ export default function ExploreJourneyPanel({ journey, enrolled = false }: Explo
       aria-labelledby={`journey-feature-${journey.id}`}
       style={{ "--journey-accent": journey.accent } as React.CSSProperties}
     >
-      <div className="explore-journey-feature__media forge-visual-stage">
-        <ForgeArtwork src={journey.image} className="forge-visual-stage__art" />
+      <div className="explore-journey-feature__media">
+        <Image
+          src={journey.image}
+          alt=""
+          fill
+          sizes="(max-width: 768px) 100vw, 420px"
+          style={{
+            objectFit: "cover",
+            objectPosition: journey.id === "certification" ? "72% center" : "center center",
+          }}
+        />
       </div>
 
       <div className="explore-journey-feature__body">

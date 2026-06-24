@@ -40,7 +40,7 @@ export default function TxcSttSetupPage() {
 
   return (
     <SetupShell
-      eventLabel="FORGE 2027 Compass"
+      eventLabel="TechXchange Compass"
       title="STT Normalization"
       subtitle="heardAs aliases → canonicalText (runs before intent matching)"
     >

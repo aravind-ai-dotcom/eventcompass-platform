@@ -3,7 +3,6 @@
 import { useState } from "react";
 import type { InboundConnectionSignal, SavedPersonSignal } from "@/types/connectionSignals";
 import { SAMPLE_INBOUND_SIGNALS, inboundShowsMutual } from "@/lib/sampleConnectionSignals";
-import { FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 interface ConnectionSignalsProps {
   savedPeople: SavedPersonSignal[];
@@ -198,7 +197,7 @@ export default function ConnectionSignals({
           <h3 className="connection-signals-column-title">People I&apos;ve Saved</h3>
           {savedPeople.length === 0 ? (
             <p className="connection-signals-empty">
-              No saved people yet. Save experts from {FORGE_LABELS.guides} or {FORGE_PRODUCT.myJourney} to build your list.
+              No saved people yet. Save experts from Champions or My Compass to build your list.
             </p>
           ) : (
             <ul className="connection-signals-list">

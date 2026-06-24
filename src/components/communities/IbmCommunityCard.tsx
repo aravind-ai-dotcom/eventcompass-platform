@@ -33,7 +33,7 @@ export default function IbmCommunityCard({ community, matchReasons, compact = fa
       <article className="opportunity-card focus-moment-card ibm-community-card--focus">
         <div className="card-meta">
           <span>{community.type}</span>
-          {members ? <span>{members}</span> : <span>Community</span>}
+          {members ? <span>{members}</span> : <span>IBM Community</span>}
         </div>
         <h3>{community.name}</h3>
         {matchReasons && matchReasons.length > 0 && (

@@ -8,7 +8,6 @@ import { useState } from "react";
 import ExploreJourneyPanel from "@/components/explore/ExploreJourneyPanel";
 import { EXPLORE_JOURNEYS } from "@/data/exploreJourneys";
 import { useAuth } from "@/context/AuthContext";
-import { FORGE_PRODUCT } from "@/config/forgeBrand";
 
 export default function ExplorePage() {
   const { user, enrolled } = useAuth();
@@ -19,9 +18,9 @@ export default function ExplorePage() {
     <>
       <section className="story-hero story-hero--strong story-hero--spacious explore-hero">
         <div className="section-kicker">Explore</div>
-        <h1>What should you accomplish?</h1>
+        <h1>What do you want to accomplish?</h1>
         <p className="explore-hero-lead">
-          Choose an intent — Compass shows how it prioritizes sessions, IBM Champions, and IBM Community for that outcome.
+          Pick your intent. See how Compass helps — specific sessions and people unlock after you build your profile.
         </p>
       </section>
 
@@ -58,7 +57,7 @@ export default function ExplorePage() {
           {user && enrolled ? (
             <>
               <h2>Your path is taking shape.</h2>
-              <p>Open {FORGE_PRODUCT.myJourney} to see recommendations matched to your goals.</p>
+              <p>Open My Compass to see recommendations matched to your goals.</p>
             </>
           ) : (
             <>
@@ -68,9 +67,9 @@ export default function ExplorePage() {
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/txc/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
         ) : (
-          <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
+          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
         )}
       </section>
     </>

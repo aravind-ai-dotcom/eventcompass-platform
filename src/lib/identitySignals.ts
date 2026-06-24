@@ -28,19 +28,19 @@ export interface ActivityMemory {
 }
 
 export const CHAMPION_STATUS_OPTIONS: Array<{ id: ChampionStatus; label: string }> = [
-  { id: "ibm_champion", label: "Guide" },
-  { id: "former_champion", label: "Former Guide" },
-  { id: "champion_nominee", label: "Guide Nominee" },
-  { id: "interested_in_becoming_champion", label: "Interested in becoming a Guide" },
+  { id: "ibm_champion", label: "IBM Champion" },
+  { id: "former_champion", label: "Former IBM Champion" },
+  { id: "champion_nominee", label: "Champion Nominee" },
+  { id: "interested_in_becoming_champion", label: "Interested in becoming a Champion" },
   { id: "not_applicable", label: "Not Applicable" },
   { id: "prefer_not_to_answer", label: "Prefer not to answer" },
 ];
 
 export const TXC_HISTORY_EVENTS: Array<{ id: string; label: string }> = [
-  { id: "txc2023_las_vegas", label: "FORGE 2023 — San Francisco" },
-  { id: "txc2024_emea_barcelona", label: "FORGE 2024 EMEA — Barcelona" },
-  { id: "txc2024_las_vegas", label: "FORGE 2024 — San Francisco" },
-  { id: "txc2025_orlando", label: "FORGE 2025 — Austin" },
+  { id: "txc2023_las_vegas", label: "TechXchange 2023 — Las Vegas" },
+  { id: "txc2024_emea_barcelona", label: "TechXchange 2024 EMEA — Barcelona" },
+  { id: "txc2024_las_vegas", label: "TechXchange 2024 — Las Vegas" },
+  { id: "txc2025_orlando", label: "TechXchange 2025 — Orlando" },
 ];
 
 export const TXC_HISTORY_LABEL_BY_ID = new Map(TXC_HISTORY_EVENTS.map(e => [e.id, e.label]));
@@ -113,15 +113,15 @@ export function getIdentityBadges(signals: IdentitySignals | null): IdentityBadg
   const badges: IdentityBadge[] = [];
 
   if (signals.champion_status === "ibm_champion") {
-    badges.push({ id: "champion", label: "Guide", variant: "champion" });
+    badges.push({ id: "champion", label: "IBM Champion", variant: "champion" });
   } else if (signals.champion_status === "former_champion") {
-    badges.push({ id: "former-champion", label: "Former Guide", variant: "champion" });
+    badges.push({ id: "former-champion", label: "Former IBM Champion", variant: "champion" });
   }
 
   if (signals.attended_txc_before === true) {
-    badges.push({ id: "alum", label: "FORGE Alum", variant: "alum" });
+    badges.push({ id: "alum", label: "TechXchange Alum", variant: "alum" });
   } else if (signals.attended_txc_before === false) {
-    badges.push({ id: "first-time", label: "First-time FORGE attendee", variant: "first-time" });
+    badges.push({ id: "first-time", label: "First-time TechXchange attendee", variant: "first-time" });
   }
 
   return badges;
@@ -134,16 +134,16 @@ export function getIdentityWelcomeLine(signals: IdentitySignals | null, firstNam
   const greeting = firstName?.trim() ? `Welcome back, ${firstName.trim()}` : "Welcome back";
 
   if (isChampion && signals.attended_txc_before === true) {
-    return `${greeting} — Guide and FORGE Alum.`;
+    return `${greeting} — IBM Champion and TechXchange Alum.`;
   }
   if (signals.champion_status === "ibm_champion") {
-    return `${greeting}, Guide.`;
+    return `${greeting}, IBM Champion.`;
   }
   if (signals.attended_txc_before === true) {
-    return `${greeting} to FORGE.`;
+    return `${greeting} to TechXchange.`;
   }
   if (signals.attended_txc_before === false) {
-    return "Your first FORGE — Compass is here to help you make the most of it.";
+    return "Your first TechXchange — Compass is here to help you make the most of it.";
   }
   return null;
 }
@@ -152,7 +152,7 @@ export function formatAlumHistorySubtitle(history: string[]): string | null {
   if (history.length === 0) return null;
   const latest = history[history.length - 1];
   const label = TXC_HISTORY_LABEL_BY_ID.get(latest) ?? latest;
-  const short = label.replace(/^FORGE\s+/, "").replace(/\s+—\s+/, " · ");
+  const short = label.replace(/^TechXchange\s+/, "").replace(/\s+—\s+/, " · ");
   return history.length === 1
     ? `Returning attendee · ${short}`
     : `Returning attendee since ${short}`;

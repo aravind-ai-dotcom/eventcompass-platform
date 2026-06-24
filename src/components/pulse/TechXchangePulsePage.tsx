@@ -1,5 +1,5 @@
 "use client";
-// FORGE participant pulse — preserved for /explore and admin references.
+// TechXchange participant pulse — preserved for /explore and admin references.
 // SKO sellers use /pulse (SkoPulseView).
 
 import { useEffect, useState } from "react";
@@ -17,7 +17,6 @@ import PulseDonutBox, {
   championDonutSegments,
   hasChampionCommunityMix,
 } from "@/components/pulse/PulseDonutBox";
-import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
 
 function pct(count: number, total: number): number {
   if (total <= 0) return 0;
@@ -70,8 +69,8 @@ function NostalgiaBox({
   );
 }
 
-const JOURNEY_LEAD = "TechXchange alumni and first-time attendees shaping the same week.";
-const GUIDE_LEAD = "IBM Champions and community advocates already in the room.";
+const JOURNEY_LEAD = "Veterans and newcomers shaping the same week.";
+const CHAMPION_LEAD = "Expert voices already in the room.";
 
 export default function TechXchangePulsePage() {
   const { user, enrolled } = useAuth();
@@ -136,11 +135,10 @@ export default function TechXchangePulsePage() {
   return (
     <>
       <section className="compact-hero">
-        <div className="section-kicker">Event intelligence</div>
-        <h1>Who is in the room.</h1>
+        <div className="section-kicker">Event pulse</div>
+        <h1>The room is taking shape.</h1>
         <p style={{ color: "var(--muted)", maxWidth: "640px", marginTop: "12px", lineHeight: 1.55 }}>
-          Audience intent, identity, and momentum — TechXchange alumni, IBM Champions, and the
-          communities forming around shared interests.
+          A living read on who is arriving, what they care about, and the conversations waiting to begin.
         </p>
       </section>
 
@@ -164,12 +162,12 @@ export default function TechXchangePulsePage() {
           <section className="story-section">
             <span className="narrative-kicker">Audience snapshot</span>
             <p className="pulse-snapshot-lead">
-              Intent, identity, and momentum in one view. See what people are building toward, where they come from, and who is returning to {FORGE_EVENT.name}.
+              Intent, identity, and momentum in one view. See what people are building toward, where they come from, and who is returning to TechXchange.
             </p>
             <div className="nostalgia-grid nostalgia-grid--pulse">
               {showJourney && (
                 <PulseDonutBox
-                  title={`${FORGE_EVENT.name} Journey`}
+                  title="TechXchange Journey"
                   lead={JOURNEY_LEAD}
                   segments={alumniSegments}
                   split
@@ -177,8 +175,8 @@ export default function TechXchangePulsePage() {
               )}
               {showChampionCommunity && (
                 <PulseDonutBox
-                  title={`${FORGE_LABELS.guides} Community`}
-                  lead={GUIDE_LEAD}
+                  title="Champion Community"
+                  lead={CHAMPION_LEAD}
                   segments={championSegments}
                 />
               )}
@@ -209,7 +207,7 @@ export default function TechXchangePulsePage() {
         <section className="story-section story-section--spacious">
           <span className="narrative-kicker">Connection intent</span>
           <p style={{ color: "var(--muted)", maxWidth: "640px", margin: "0 0 16px", lineHeight: 1.5, fontSize: "0.92rem" }}>
-            Who is open to the conversations that make {FORGE_EVENT.name} personal: alumni ties, colleagues, careers, and mentoring.
+            Who is open to the conversations that make TechXchange personal: alumni ties, colleagues, careers, and mentoring.
           </p>
           <div className="pulse-intent-cards">
             {connectionItems.map(item => (
@@ -232,14 +230,14 @@ export default function TechXchangePulsePage() {
           ) : (
             <>
               <h2>Add your signal to the room.</h2>
-              <p>{FORGE_PRODUCT.buildMyJourney} to share your intent and discover who is here for the same reasons you are.</p>
+              <p>Build My Compass to share your intent and discover who is here for the same reasons you are.</p>
             </>
           )}
         </div>
         {user && enrolled ? (
-          <Link href="/txc/experience" className="btn-primary">Open {FORGE_PRODUCT.myJourney} →</Link>
+          <Link href="/txc/experience" className="btn-primary">Open My Compass →</Link>
         ) : (
-          <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
+          <Link href="/txc/enroll" className="btn-primary">Build My Compass →</Link>
         )}
       </section>
     </>

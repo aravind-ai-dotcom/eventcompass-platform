@@ -65,10 +65,10 @@ function parseSessionDateTime(
   return fallbackSessionTime(index);
 }
 
-/** Download FORGE plan as .ics (Apple Calendar, Google, Outlook). */
+/** Download TechXchange plan as .ics (Apple Calendar, Google, Outlook). */
 export function downloadIcsPlan(
   sessions: ExperienceScoredSession[],
-  filename = "my-forge-plan.ics",
+  filename = "my-techxchange-plan.ics",
 ): void {
   if (typeof window === "undefined") return;
 
@@ -81,10 +81,10 @@ export function downloadIcsPlan(
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//EventCompass//FORGE 2027//EN",
+    "PRODID:-//EventCompass//IBM TechXchange 2026//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:My FORGE Plan",
+    "X-WR-CALNAME:My TechXchange Plan",
   ];
 
   usable.forEach((s, index) => {
