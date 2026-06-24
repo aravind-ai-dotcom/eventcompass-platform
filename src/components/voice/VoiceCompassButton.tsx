@@ -502,14 +502,9 @@ export default function VoiceCompassButton({
 
       if (!res.ok) {
         const errorText = await res.text();
-        if (
-          (res.status === 502 || res.status === 503) &&
-          /default credentials|credentials|not configured/i.test(errorText)
-        ) {
-          fallbackToSpeechSynthesis(text);
-          return;
-        }
-        throw new Error(`/api/voice returned ${res.status}: ${errorText}`);
+        console.warn("[VoiceCompass] Cloud TTS unavailable — using browser voice", res.status, errorText.slice(0, 120));
+        fallbackToSpeechSynthesis(text);
+        return;
       }
 
       const contentType = res.headers.get("content-type") ?? "";

@@ -247,7 +247,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
   {
     id: "champions",
     title: "Inspire and connect",
-    image: "/forge/hero-crystal-prism.png",
+    image: "/forge/visual-signals.svg",
     accent: "#3B82F6",
     outcome: "Find attendees and community members who benefit from your experience — and vice versa.",
     helps: [
