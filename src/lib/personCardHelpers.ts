@@ -30,8 +30,11 @@ export function deriveIntentSnapshot(person: PersonLike): string[] {
     items.push("Open to technical conversations");
   }
   const title = (person.title ?? "").toLowerCase();
+  if (/champion|ibm champion/i.test(title)) {
+    items.push("IBM Champion — mentorship and community leadership");
+  }
   if (/mentor/.test(title)) {
-    items.push("Open to mentoring");
+    items.push("Open to mentoring conversations");
   }
   if (/alumni|graduate/.test(title)) {
     items.push("Open to alumni connections");
@@ -39,8 +42,11 @@ export function deriveIntentSnapshot(person: PersonLike): string[] {
   if (/career|talent|hiring|recruit/.test(title)) {
     items.push("Open to career conversations");
   }
-  if (/community|advocate|leader/.test(title)) {
-    items.push("Open to community conversations");
+  if (/certif|credential|exam prep/i.test(title)) {
+    items.push("Certification support and study guidance");
+  }
+  if (/community|advocate|leader/.test(title) && !items.some(i => i.includes("IBM Community"))) {
+    items.push("Active in IBM Community programs");
   }
   const domains = [
     ...(person.profile?.domains ?? []),

@@ -1091,11 +1091,11 @@ function SessionsPageContent() {
         ) : (
           <>
             <div className="section-kicker">Sessions</div>
-            <h1>Sessions engineered for your week.</h1>
+            <h1>Sessions for your week.</h1>
             <p>
               {isLoggedIn
                 ? "Compass maps the program against your profile — priority matches, momentum, and seats filling fast."
-                : `Browse the full ${FORGE_EVENT.name} program. Sign in or build your journey to unlock match scores.`}
+                : `Browse the ${FORGE_EVENT.shortName} catalog. Highlights reflect popularity and community interest — not profile matching.`}
             </p>
           </>
         )}
@@ -1173,7 +1173,7 @@ function SessionsPageContent() {
             title={isLoggedIn ? "Your strongest matches." : "Sessions to explore."}
             desc={isLoggedIn
               ? "Highest-scored sessions against your goals, tracks, role, and needs."
-              : "A sample of what is on the schedule — build your Compass for personalized recommendations."}
+              : "Curated highlights from the catalog — sign in for personalized match scores and reasons."}
             sessions={recommended}
             sched={schedState}
             certLabel={certLabel}
@@ -1263,7 +1263,7 @@ function SessionsPageContent() {
           ) : (
             <>
               <h2>Tell Compass your intent.</h2>
-              <p>Build your Compass profile to unlock personalized session scores and your four-day plan.</p>
+              <p>Build your journey for personalized session scores and your four-day plan.</p>
             </>
           )}
         </div>

@@ -70,8 +70,8 @@ function NostalgiaBox({
   );
 }
 
-const JOURNEY_LEAD = "Veterans and newcomers shaping the same week.";
-const GUIDE_LEAD = "Expert voices already in the room.";
+const JOURNEY_LEAD = "TechXchange alumni and first-time attendees shaping the same week.";
+const GUIDE_LEAD = "IBM Champions and community advocates already in the room.";
 
 export default function TechXchangePulsePage() {
   const { user, enrolled } = useAuth();
@@ -136,10 +136,11 @@ export default function TechXchangePulsePage() {
   return (
     <>
       <section className="compact-hero">
-        <div className="section-kicker">Event pulse</div>
-        <h1>The room is taking shape.</h1>
+        <div className="section-kicker">Event intelligence</div>
+        <h1>Who is in the room.</h1>
         <p style={{ color: "var(--muted)", maxWidth: "640px", marginTop: "12px", lineHeight: 1.55 }}>
-          A living read on who is arriving, what they care about, and the conversations waiting to begin.
+          Audience intent, identity, and momentum — TechXchange alumni, IBM Champions, and the
+          communities forming around shared interests.
         </p>
       </section>
 

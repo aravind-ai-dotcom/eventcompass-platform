@@ -24,10 +24,10 @@ export default function CommunitiesPage() {
     <>
       <section className="compact-hero">
         <div className="section-kicker">{FORGE_LABELS.communities}</div>
-        <h1>Communities that endure.</h1>
+        <h1>IBM Community at TechXchange.</h1>
         <p>
-          Browse {IBM_COMMUNITIES.length} {FORGE_EVENT.name} communities — filter by category and keyword to find your people.
-          The conversation continues long after the week ends.
+          Topic groups, user groups, and Champions programs — the persistent home for learning
+          and networking. Compass connects your interests to the right IBM Community destinations.
         </p>
       </section>
 
@@ -52,8 +52,9 @@ export default function CommunitiesPage() {
             <h2>Topic groups, user groups, and programs.</h2>
           </div>
           <p>
-            Communities are the persistent home for learning and peer connection after the event.
-            Live Huddles on {FORGE_PRODUCT.myJourney} are for in-the-moment {FORGE_EVENT.name} conversations — communities are where the conversation continues.
+            Communities are part of IBM Community — not a separate Compass network.
+            Live Huddles on {FORGE_PRODUCT.myJourney} are for in-the-moment {FORGE_EVENT.shortName} conversations;
+            IBM Community is where knowledge sharing continues year-round.
           </p>
         </div>
 

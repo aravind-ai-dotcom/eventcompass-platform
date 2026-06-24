@@ -569,10 +569,10 @@ export default function ChampionsPage() {
     <>
       <section className="compact-hero champions-hero">
         <div className="section-kicker">{FORGE_LABELS.guides}</div>
-        <h1>Guides worth your time.</h1>
+        <h1>IBM Champions worth your time.</h1>
         <p>
-          Compass surfaces experts, mentors, and technical leaders
-          aligned to what you build and where you&apos;re headed.
+          Every recommendation answers why a conversation matters — shared expertise,
+          certification support, mentorship, and community relevance aligned to your profile.
         </p>
       </section>
 

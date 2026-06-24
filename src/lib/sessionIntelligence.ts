@@ -32,7 +32,7 @@ export const SESSION_BADGE_LABELS: Record<SessionBadgeId, string> = {
   "champion-led": "Featured Session",
   "community-favorite": "Community Favorite",
   popular: "Popular Session",
-  "limited-capacity": "High Attendance Interest",
+  "limited-capacity": "Must Attend",
   networking: "Networking Opportunity",
   executive: "TechXchange Highlight",
 };
@@ -41,11 +41,10 @@ export const SESSION_BADGE_LABELS: Record<SessionBadgeId, string> = {
 export const PUBLIC_SESSION_HIGHLIGHTS = [
   "Popular Session",
   "Community Favorite",
-  "High Attendance Interest",
+  "Must Attend",
   "Hands-On Learning",
   "Featured Session",
   "Networking Opportunity",
-  "Editor's Pick",
   "TechXchange Highlight",
 ] as const;
 
@@ -53,7 +52,7 @@ const BADGE_TO_PUBLIC_HIGHLIGHT: Partial<Record<SessionBadgeId, string>> = {
   "hands-on": "Hands-On Learning",
   "community-favorite": "Community Favorite",
   popular: "Popular Session",
-  "limited-capacity": "High Attendance Interest",
+  "limited-capacity": "Must Attend",
   networking: "Networking Opportunity",
   "champion-led": "Featured Session",
   executive: "TechXchange Highlight",

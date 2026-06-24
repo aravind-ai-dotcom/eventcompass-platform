@@ -950,11 +950,11 @@ function notEnrolledResponse(locale: VoiceLocale = "en-US"): VoiceResponse {
   const spoken =
     locale === "zh-CN"
       ? `请先构建 ${FORGE_PRODUCT.myJourney}，以便我为您提供个性化回答。`
-      : `You are exploring ${FORGE_EVENT.name}. Register to access your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.`;
+      : `You are exploring ${FORGE_EVENT.name}. Register to access your personal Compass — build your agenda, discover relevant sessions, connect with IBM Champions, and stay involved through IBM Community.`;
   const display =
     locale === "zh-CN"
-      ? `请先构建 ${FORGE_PRODUCT.myJourney} 以解锁个性化语音回答。`
-      : `Start Your ${FORGE_EVENT.name} Journey · Register to access personal Compass guidance.`;
+      ? `请先构建 ${FORGE_PRODUCT.myJourney} 以获取个性化语音回答。`
+      : `${FORGE_PRODUCT.buildMyJourney} · Register for personal Compass guidance`;
   return { spoken, display };
 }
 
@@ -968,8 +968,8 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
   if (undecided && !enrolled) {
     return {
       spoken:
-        `Are you still deciding whether to attend ${FORGE_EVENT.name}? The event includes learning, learning paths, experts, and community experiences. If you decide to attend, registration will unlock your personal Compass experience.`,
-      display: `Start Your ${FORGE_EVENT.name} Journey · Register`,
+        `Are you still deciding whether to attend ${FORGE_EVENT.name}? The conference includes technical sessions, certification paths, IBM Champions, and IBM Community experiences. If you register, Compass becomes your personal guide for the week.`,
+      display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
       action: "navigate_experience",
     };
   }
@@ -993,8 +993,8 @@ function buildAttendanceStatusResponse(norm: string, ctx: VoiceResponseContext):
   if (!enrolled) {
     return {
       spoken:
-        `You're still exploring ${FORGE_EVENT.name}. The event brings together learning, hands-on experiences, experts, learning paths, and community opportunities across AI, data, automation, cloud, infrastructure, security, and more. If you decide to attend, registration is the next step and will unlock your personal Compass experience.`,
-      display: `Start Your ${FORGE_EVENT.name} Journey · Register`,
+        `You're still exploring ${FORGE_EVENT.name}. The conference brings together hands-on learning, IBM Champions, certification paths, and IBM Community across AI, data, automation, cloud, infrastructure, security, and more. Register when you're ready — Compass will personalize your week.`,
+      display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
       action: "navigate_experience",
     };
   }
@@ -1173,8 +1173,8 @@ export function buildVoiceResponse(
       if (primary?.type === "register") {
         return {
           spoken:
-            `You are exploring ${FORGE_EVENT.name}. Registering gives you access to your personal Compass, where you can build your agenda, discover relevant sessions, connect with experts, and participate in the event experience.`,
-          display: `Start Your ${FORGE_EVENT.name} Journey · Register`,
+            `You are exploring ${FORGE_EVENT.name}. Register to access your personal Compass — build your agenda, discover relevant sessions, connect with IBM Champions, and stay involved through IBM Community.`,
+          display: `${FORGE_PRODUCT.buildMyJourney} · Register`,
           action: "navigate_experience",
         };
       }

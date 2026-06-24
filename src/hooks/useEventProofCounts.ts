@@ -19,15 +19,6 @@ export interface EventProofCounts {
   isLive: boolean;
 }
 
-const FALLBACK = {
-  sessions: 1400,
-  champions: 600,
-  communities: 200,
-  attendees: 10000,
-  alumniReturning: 540,
-  alumniFirstTime: 612,
-} as const;
-
 function parseMetricPlus(value: string): number {
   const digits = value.replace(/[^0-9]/g, "");
   return digits ? Number(digits) : 0;
@@ -54,12 +45,12 @@ export function useEventProofCounts(eventId = TXC_EVENT_ID): EventProofCounts {
     const db = tryGetDb();
     if (!db) {
       setCounts({
-        sessions: FALLBACK.sessions,
-        champions: FALLBACK.champions,
-        communities: parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups) || FALLBACK.communities,
-        attendees: FALLBACK.attendees,
-        alumniReturning: FALLBACK.alumniReturning,
-        alumniFirstTime: FALLBACK.alumniFirstTime,
+        sessions: 0,
+        champions: 0,
+        communities: parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups),
+        attendees: 0,
+        alumniReturning: null,
+        alumniFirstTime: null,
         loading: false,
         isLive: false,
       });
@@ -81,10 +72,10 @@ export function useEventProofCounts(eventId = TXC_EVENT_ID): EventProofCounts {
         const hasAlumniMix = returning > 0 && firstTime > 0;
 
         setCounts({
-          sessions: sessionsSnap.size || FALLBACK.sessions,
-          champions: championsSnap.size || FALLBACK.champions,
-          communities: communitiesSnap.size || parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups) || FALLBACK.communities,
-          attendees: participantsSnap.size || FALLBACK.attendees,
+          sessions: sessionsSnap.size,
+          champions: championsSnap.size,
+          communities: communitiesSnap.size || parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups),
+          attendees: participantsSnap.size,
           alumniReturning: hasAlumniMix ? returning : null,
           alumniFirstTime: hasAlumniMix ? firstTime : null,
           loading: false,
@@ -93,12 +84,12 @@ export function useEventProofCounts(eventId = TXC_EVENT_ID): EventProofCounts {
       })
       .catch(() => {
         setCounts({
-          sessions: FALLBACK.sessions,
-          champions: FALLBACK.champions,
-          communities: parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups) || FALLBACK.communities,
-          attendees: FALLBACK.attendees,
-          alumniReturning: FALLBACK.alumniReturning,
-          alumniFirstTime: FALLBACK.alumniFirstTime,
+          sessions: 0,
+          champions: 0,
+          communities: parseMetricPlus(IBM_COMMUNITY_METRICS.topicGroups),
+          attendees: 0,
+          alumniReturning: null,
+          alumniFirstTime: null,
           loading: false,
           isLive: false,
         });
@@ -108,10 +99,7 @@ export function useEventProofCounts(eventId = TXC_EVENT_ID): EventProofCounts {
   return counts;
 }
 
-export function proofCountLabel(value: number, fallback: number, isLive: boolean): string {
-  if (isLive && value > 0 && value !== fallback) {
-    return value.toLocaleString();
-  }
-  const display = value > 0 ? value : fallback;
-  return formatProofCount(display, true);
+export function proofCountLabel(value: number, isLive: boolean): string {
+  if (!isLive || value <= 0) return "—";
+  return value.toLocaleString();
 }

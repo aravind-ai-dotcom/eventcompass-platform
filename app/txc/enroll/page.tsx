@@ -1025,7 +1025,7 @@ export default function EnrollPage() {
             <StepLabel
               step="Optional"
               title="Deepen your matches."
-              subtitle="School, employers, and role details unlock alumni and colleague connections. Add these now or refine later from My Journey."
+              subtitle="School, employers, and role details help Compass surface alumni and colleague connections. Add these now or refine later from My Journey."
             />
 
             <div style={{ display: "grid", gap: "14px", marginBottom: "20px" }}>

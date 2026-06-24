@@ -27,7 +27,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     title: "Earn a certification",
     image: "/forge/visual-trajectory.svg",
     accent: "#6366F1",
-    outcome: "Walk into your learning path with a focused plan built around FORGE.",
+    outcome: "Walk into your learning path with a focused plan built around TechXchange.",
     helps: [
       "Recommend learning sessions aligned to your certification goal",
       "Identify labs and prep opportunities at the event",
@@ -93,7 +93,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "expert",
         kicker: "Expert matching",
         title: "Practitioners in your technology areas",
-        meta: "Unlocked after you share role, products, and interests",
+        meta: "Personalized after you share role, products, and interests",
       },
       {
         kind: "session",
@@ -127,7 +127,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     helps: [
       "Match you with people who share products and interests",
       "Prioritize mutual-intent networking opportunities",
-      "Suggest communities to continue conversations after FORGE",
+      "Suggest IBM Community groups to continue conversations after TechXchange",
       "Surface huddles and small-group moments worth joining",
     ],
     anonymousPreviews: [
@@ -207,7 +207,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
     title: "Discover what's next",
     image: "/forge/visual-constellation.svg",
     accent: "#A855F7",
-    outcome: "Explore emerging tech through hands-on sessions, demos, and communities — not brochure browsing.",
+    outcome: "Explore emerging tech through hands-on sessions, labs, and IBM Community — not brochure browsing.",
     helps: [
       "Prioritize sessions on technologies you want to evaluate",
       "Surface labs and demos with limited capacity early",
@@ -218,7 +218,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
       {
         kind: "session",
         kicker: "Discovery sessions",
-        title: "Demos and breakouts in your interest areas",
+        title: "Hands-on sessions in your interest areas",
         meta: "Ranked after you share technologies to explore",
       },
       {
@@ -261,7 +261,7 @@ export const EXPLORE_JOURNEYS: ExploreJourney[] = [
         kind: "networking",
         kicker: "Mentoring opportunities",
         title: "Attendees seeking guidance in your areas",
-        meta: "Matches unlock after you share your expertise",
+        meta: "Personalized after you share your expertise",
       },
       {
         kind: "community",
@@ -314,7 +314,7 @@ export function resolveJourneyCta(
 
 export function explorePreviewGateCopy(enrolled: boolean): string {
   if (enrolled) {
-    return "Session titles, expert profiles, and match detail live in My Journey — not on this page.";
+    return "Your matched sessions and IBM Champions appear in My Journey — with scores and reasons for each recommendation.";
   }
-  return "Compass holds specific sessions and people until you sign in and share what matters to you.";
+  return "Build your journey to see personalized sessions, Champions, and communities — tailored to your goals.";
 }

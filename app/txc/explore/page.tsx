@@ -19,9 +19,9 @@ export default function ExplorePage() {
     <>
       <section className="story-hero story-hero--strong story-hero--spacious explore-hero">
         <div className="section-kicker">Explore</div>
-        <h1>What are you building?</h1>
+        <h1>What should you accomplish?</h1>
         <p className="explore-hero-lead">
-          Define your intent. Compass maps sessions, guides, and moments to your goals.
+          Choose an intent — Compass shows how it prioritizes sessions, IBM Champions, and IBM Community for that outcome.
         </p>
       </section>
 

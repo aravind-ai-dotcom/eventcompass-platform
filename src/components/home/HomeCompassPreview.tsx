@@ -8,26 +8,26 @@ const ANONYMOUS_ITEMS = [
   {
     kind: "session",
     kicker: "Sessions",
-    title: "Labs and breakouts matched to your goals",
-    meta: `Unlocked after you ${FORGE_PRODUCT.buildMyJourney.toLowerCase()}`,
+    title: "Prioritized labs and breakouts for your role",
+    meta: "Personalized once you build your journey",
   },
   {
     kind: "expert",
-    kicker: "Guide access",
-    title: "Experts in your technology areas",
-    meta: "Names and context stay private until you enroll",
+    kicker: "IBM Champions",
+    title: "Experts aligned to your technology focus",
+    meta: "Champion profiles appear once you build your journey",
   },
   {
     kind: "certification",
-    kicker: "Learning path",
-    title: "A plan around your professional learning goals",
-    meta: "Sessions and experiences added to your week",
+    kicker: "Certification",
+    title: "Learning path around your credential goals",
+    meta: "Sessions, labs, and study blocks in one plan",
   },
   {
     kind: "networking",
-    kicker: "People to meet",
-    title: "Attendees with shared interests and intent",
-    meta: "Matches appear once Compass knows your goals",
+    kicker: "People",
+    title: "Peers and mentors worth your time",
+    meta: "Introductions based on your stated intent",
   },
 ] as const;
 
@@ -41,7 +41,7 @@ const ENROLLED_ITEMS = [
   {
     kind: "expert",
     kicker: "People to meet",
-    title: "Guides and peers matched to you",
+    title: "IBM Champions and peers matched to you",
     meta: `Profiles and reasons live in ${FORGE_PRODUCT.myJourney}`,
   },
   {
@@ -68,8 +68,8 @@ export default function HomeCompassPreview() {
         <span className="home-compass-preview__kicker">{FORGE_PRODUCT.compassIntelligence}</span>
         <p className="home-compass-preview__note">
           {user && enrolled
-            ? `Signals aligned to your profile — recommendations live in ${FORGE_PRODUCT.myJourney}.`
-            : "Opportunities appear once Compass understands your goals. Build your journey to activate guidance."}
+            ? `Recommendations aligned to your profile — see your plan in ${FORGE_PRODUCT.myJourney}.`
+            : "What to learn, who to meet, and how to stay involved — personalized when you build your journey."}
         </p>
       </div>
       <ul className="home-compass-preview__list">

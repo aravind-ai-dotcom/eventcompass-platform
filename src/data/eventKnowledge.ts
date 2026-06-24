@@ -5,24 +5,26 @@
 // Structured facts for deterministic voice responses. No LLM generation.
 // =============================================================================
 
+import { FORGE_EVENT, FORGE_LABELS, FORGE_PRODUCT } from "@/config/forgeBrand";
+
 export const EVENT_KNOWLEDGE = {
   event_overview:
-    "FORGE 2027 is the gathering for builders, engineers, and innovators — four days of technical sessions, learning paths, guide access, communities, and hands-on experience in San Francisco.",
+    `${FORGE_EVENT.name} is IBM's premier technology conference — five days of technical sessions, hands-on labs, IBM Champions, IBM Community, and certification learning in ${FORGE_EVENT.city}.`,
 
   event_dates:
-    "FORGE runs February 16–19, 2027 at the Bayfront Innovation Center in San Francisco, California.",
+    `${FORGE_EVENT.shortName} runs ${FORGE_EVENT.dates} at ${FORGE_EVENT.venue} in ${FORGE_EVENT.city}.`,
 
   event_location:
-    "San Francisco, California — Bayfront Innovation Center, with sessions, labs, showcases, and community experiences across the venue.",
+    `${FORGE_EVENT.locationLine} — sessions, labs, showcases, and community experiences across the venue.`,
 
   event_purpose:
-    "FORGE brings together learning, craft, expert access, community, and hands-on building — so attendees leave with skills, connections, and a clearer path forward.",
+    `${FORGE_EVENT.shortName} brings together learning, expert access, IBM Community, and hands-on building — so attendees leave with skills, connections, and a clearer path forward.`,
 
   tracks:
-    "Major tracks include Artificial Intelligence, Cloud & Platform Engineering, Data & Analytics, Cybersecurity, Software Engineering, Product & Experience, Emerging Technologies, and Leadership & Transformation.",
+    "Major tracks include Artificial Intelligence, Automation, Cloud, Data & Analytics, Infrastructure, Security, Integration, and Industry Solutions.",
 
   community_day:
-    "Community programming connects builders, guides, and peer groups — meetups, mentoring moments, and shared interests across the technical community.",
+    "Community programming connects practitioners, IBM Champions, and peer groups — user groups, mentoring moments, and shared interests across IBM Community.",
 
   partner_day:
     "Partner and ecosystem programming features joint customer stories, sponsor experiences, and networking with practitioners and platform teams.",
@@ -31,25 +33,25 @@ export const EVENT_KNOWLEDGE = {
     "Deep technical programming for data practitioners — governance, engineering, analytics, and AI, with breakouts, labs, and expert roundtables throughout the week.",
 
   student_day:
-    "Student and early-career programming welcomes university technologists with career sessions, hands-on labs, mentor access, and peer conversations alongside guides and experts.",
+    "Student and early-career programming welcomes university technologists with career sessions, hands-on labs, mentor access, and peer conversations alongside IBM Champions.",
 
   sandbox_block_party:
-    "Evening experiences include showcases, builder gatherings, and open networking — signature social moments after the day's sessions.",
+    "Evening experiences include showcases, community gatherings, and open networking — signature social moments after the day's sessions.",
 
   certification_program:
-    "FORGE includes professional learning paths all week — labs, study groups, and credentials. Compass connects your learning journey to the right sessions, labs, guides, and peers.",
+    `${FORGE_EVENT.shortName} includes professional learning paths all week — labs, study groups, and credentials. Compass connects your learning journey to the right sessions, labs, IBM Champions, and peers.`,
 
   certifications_available:
-    "Learning paths include AI Foundations, Cloud Architecture, Platform Engineering, Cybersecurity, Data Engineering, and more. Set your journey in My Journey, or mention a path for targeted guidance.",
+    "Learning paths include AI Foundations, Cloud Architecture, Data Engineering, Cybersecurity, Automation, Integration, IBM Z, and IBM Power. Set your journey in My Journey, or mention a path for targeted guidance.",
 
   champions_program:
-    "Guides are practitioners and community leaders who share real-world expertise, mentor peers, and help attendees find the right communities, sessions, and conversations during FORGE.",
+    `${FORGE_LABELS.guides} are practitioners and community leaders who share real-world expertise, mentor peers, and help attendees find the right IBM Community groups, sessions, and conversations during ${FORGE_EVENT.shortName}.`,
 
   compass_about:
-    "I'm Compass — FORGE event intelligence. I help you prioritize sessions, guides, learning paths, live huddles, and community moments that fit your goals.",
+    `I'm Compass — your guide to ${FORGE_EVENT.shortName}. I help you prioritize sessions, IBM Champions, learning paths, live huddles, and IBM Community moments that fit your goals.`,
 
   compass_biggest_concern:
-    "The biggest challenge most attendees face is trying to do everything. FORGE has hundreds of sessions, dozens of communities, learning paths, meetups, and evening experiences. Compass helps you focus on what matters most.",
+    `The biggest challenge most attendees face is trying to do everything. ${FORGE_EVENT.shortName} has hundreds of sessions, dozens of community groups, learning paths, meetups, and evening experiences. Compass helps you focus on what matters most.`,
 } as const;
 
 export type EventKnowledgeKey = keyof typeof EVENT_KNOWLEDGE;
@@ -60,13 +62,13 @@ export const FUN_ACTIVITIES = [
     title: "Innovation Showcase Evening",
     when: "Wednesday · 6:00 PM",
     location: "Main Hall",
-    blurb: "The signature evening social with demos, builder energy, and networking.",
+    blurb: "The signature evening social with hands-on experiences, builder energy, and networking.",
   },
   {
     id: "tuesday-night",
     title: "Wednesday Night Experience",
     when: "Wednesday · 8:00 PM",
-    location: "Bayfront Innovation Center",
+    location: FORGE_EVENT.venue,
     blurb: "The week's headline evening experience after the showcase.",
   },
   {
@@ -78,23 +80,23 @@ export const FUN_ACTIVITIES = [
   },
   {
     id: "arcade",
-    title: "FORGE Experience Lab",
+    title: "Innovation Showcase",
     when: "Expo hours",
     location: "Experience Zone",
-    blurb: "Interactive demos and community moments during the day.",
+    blurb: "Hands-on experiences and community moments during the day.",
   },
   {
     id: "community-meetups",
-    title: "Community meetups",
-    when: "Sunday, Feb 15",
-    location: "Bayfront Innovation Center",
-    blurb: "Guide-led and user-group gatherings to start the week.",
+    title: "IBM Community meetups",
+    when: "Sunday, Oct 25",
+    location: FORGE_EVENT.venue,
+    blurb: "Champion-led and user-group gatherings to start the week.",
   },
   {
     id: "live-huddles",
     title: "Live Huddles",
     when: "Throughout the week",
-    location: "My Experience",
+    location: FORGE_PRODUCT.myJourney,
     blurb: "Peer conversations forming around your tracks and interests.",
   },
 ] as const;
@@ -103,19 +105,19 @@ export type FunActivity = (typeof FUN_ACTIVITIES)[number];
 
 export const COMPASS_CONVERSATION = {
   role:
-    "I'm Compass — FORGE event intelligence. I help you understand the gathering, discover what's worth your time, meet the right guides, and build a plan that fits your goals.",
+    `I'm Compass — your guide to ${FORGE_EVENT.shortName}. I help you understand the conference, discover what's worth your time, meet the right IBM Champions, and build a plan that fits your goals.`,
 
   help:
-    "I can explain FORGE programming, suggest sessions and guides, surface live huddles and meetups, help with learning path planning, and guide your day or week. Ask naturally — like 'what's worth my time tomorrow?' or 'I'm focused on platform engineering.'",
+    `I can explain ${FORGE_EVENT.shortName} programming, suggest sessions and IBM Champions, surface live huddles and meetups, help with certification planning, and guide your day or week. Ask naturally — like "what's worth my time tomorrow?" or "I'm focused on cloud architecture."`,
 
   focus:
-    "Start with one anchor goal — a learning path, a track, or a community — then let Compass fill in sessions, guides, and live conversations around it.",
+    "Start with one anchor goal — a certification path, a track, or an IBM Community group — then let Compass fill in sessions, Champions, and live conversations around it.",
 
   too_much:
-    "The biggest challenge most attendees face is trying to do everything. Compass helps you prioritize the sessions, guides, learning paths, and conversations that matter most.",
+    "The biggest challenge most attendees face is trying to do everything. Compass helps you prioritize the sessions, IBM Champions, learning paths, and conversations that matter most.",
 
   why_generic:
-    "Compass weighs your goals, learning tracks, and connection intent against sessions, guides, and live opportunities — then surfaces what aligns strongest for you right now.",
+    "Compass weighs your goals, learning tracks, and connection intent against sessions, IBM Champions, and live opportunities — then surfaces what aligns strongest for you right now.",
 } as const;
 
 export type CompassConversationKey = keyof typeof COMPASS_CONVERSATION;
@@ -125,19 +127,19 @@ export const PERSONA_GUIDANCE: Record<string, string> = {
     "As a partner, anchor on Partner Day and ecosystem programming — joint customer sessions, sponsor experiences, and networking with practitioners and platform teams. Add evening showcases and partner meetups for the best mix of learning and relationship-building.",
 
   champion:
-    "As a guide, community programming is your home base — meetups, mentoring moments, user-group energy, and helping attendees find their communities. Join Live Huddles you can host or amplify, and point peers to sessions that match their goals.",
+    `As an IBM Champion, community programming is your home base — meetups, mentoring moments, user-group energy, and helping attendees find their IBM Community groups. Join Live Huddles you can host or amplify, and point peers to sessions that match their goals.`,
 
   student:
-    "As a student, explore Student Dev Day, career-focused breakouts, hands-on labs, and mentor conversations. Guides and peer roundtables are great places to build confidence and connections early in the week.",
+    "As a student, explore Student Day, career-focused breakouts, hands-on labs, and mentor conversations. IBM Champions and peer roundtables are great places to build confidence and connections early in the week.",
 
   executive:
-    "As an executive, prioritize keynotes, strategic breakouts, customer stories, and high-value networking — Executive Leadership circles and partner conversations often deliver the strongest ROI on your time.",
+    "As an executive, prioritize keynotes, strategic breakouts, customer stories, and high-value networking — Executive Exchange and partner conversations often deliver the strongest ROI on your time.",
 
   finops:
-    "In financial operations, explore Business Management and FinOps, cloud cost optimization, automation, and architecture sessions. Peer roundtables and Live Huddles with architects and finance leaders are strong follow-ups.",
+    "In financial operations, explore cloud cost optimization, automation, and architecture sessions. Peer roundtables and Live Huddles with architects and finance leaders are strong follow-ups.",
 
   developer:
-    "As a developer, start with hands-on labs, engineering and cloud tracks, and Live Huddles with practitioners building production systems. Learning path labs pair well if you are pursuing a credential this week.",
+    "As a developer, start with hands-on labs, engineering and cloud tracks, and Live Huddles with practitioners building production systems. Certification labs pair well if you are pursuing a credential this week.",
 
   architect:
     "As an architect, focus on cross-track architecture sessions in Cloud, Data, and Integration, plus expert roundtables and design-focused breakouts. Live Huddles often surface the most practical peer patterns.",
@@ -146,7 +148,7 @@ export const PERSONA_GUIDANCE: Record<string, string> = {
     "In banking and financial services, prioritize data governance, AI for risk and compliance, hybrid cloud, and FinOps sessions. Connect with architects in peer roundtables and industry meetups.",
 
   healthcare:
-    "In healthcare, focus on data governance, AI for clinical and operational use cases, security, and regulated cloud patterns. Meet experts in breakouts and community meetups aligned to your industry.",
+    "In healthcare, focus on data governance, AI for clinical and operational use cases, security, and regulated cloud patterns. Meet experts in breakouts and IBM Community meetups aligned to your industry.",
 };
 
 export type PersonaKey = keyof typeof PERSONA_GUIDANCE;
@@ -183,9 +185,9 @@ export function formatFunDiscoverySpoken(
   const parts = activities.map(a => `${a.title} (${a.when}, ${a.location})`);
   if (huddleTitle) parts.push(`${huddleTitle} forming now in Live Huddles`);
   if (parts.length === 0) {
-    return "Start with Sandbox Block Party Tuesday evening and check Live Huddles on My Experience for conversations forming around you.";
+    return `Start with the Innovation Showcase Wednesday evening and check Live Huddles on ${FORGE_PRODUCT.myJourney} for conversations forming around you.`;
   }
-  return `A few good options: ${parts.join(". ")}. Open My Experience for Live Huddles and your Fun plan.`;
+  return `A few good options: ${parts.join(". ")}. Open ${FORGE_PRODUCT.myJourney} for Live Huddles and your evening plan.`;
 }
 
 export function formatFunDiscoveryDisplay(

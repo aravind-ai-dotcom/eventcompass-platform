@@ -21,21 +21,20 @@ export default function HomePage() {
             <span className="forge-hero-eyebrow__sep" aria-hidden="true">·</span>
             <span>{FORGE_EVENT.city}</span>
           </p>
-          <h1 className="forge-hero-title" aria-label={`${FORGE_EVENT.name} — ${FORGE_EVENT.tagline}`}>
-            <span className="forge-hero-title__brand forge-wordmark">FORGE</span>
-            <span className="forge-hero-title__year">2027</span>
+          <h1 className="forge-hero-title" aria-label={FORGE_PRODUCT.tagline}>
+            <span className="forge-hero-title__brand forge-wordmark">{FORGE_PRODUCT.name}</span>
           </h1>
-          <p className="forge-hero-tagline">{FORGE_EVENT.tagline}</p>
+          <p className="forge-hero-tagline">{FORGE_PRODUCT.tagline}</p>
           <p className="forge-hero__lede">
-            The operating system for a world-class technology gathering.
-            Intelligence, precision, and human connection — powered by Compass.
+            {FORGE_EVENT.shortName} is IBM&apos;s strategic attendee experience — what to learn,
+            who to meet, and how to stay involved before, during, and after the conference.
           </p>
           <div className="forge-hero-meta forge-hero-meta--venue">
             <span>{FORGE_EVENT.venue}</span>
           </div>
           <div className="forge-hero-actions">
             <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney}</Link>
-            <Link href="/txc/sessions" className="btn-secondary">Explore Sessions</Link>
+            <Link href="/txc/sessions" className="btn-secondary">Explore sessions</Link>
             <Link href="/txc/experience#compass-ai" className="btn-ghost">{FORGE_PRODUCT.askCompassAi}</Link>
           </div>
         </div>
@@ -54,8 +53,11 @@ export default function HomePage() {
 
       <section className="final-band forge-card">
         <div>
-          <h2>Opportunities aligned.</h2>
-          <p>Compass maps your week before you arrive — sessions, guides, and signals engineered for you.</p>
+          <h2>Plan with purpose.</h2>
+          <p>
+            Compass helps you answer what to learn, who to meet, and how to stay involved —
+            from registration through IBM Community long after Las Vegas.
+          </p>
         </div>
         <Link href="/txc/enroll" className="btn-primary">{FORGE_PRODUCT.buildMyJourney} →</Link>
       </section>
